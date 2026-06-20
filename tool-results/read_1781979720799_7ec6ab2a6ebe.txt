@@ -1,0 +1,602 @@
+   600→Increase in weight per unit time; simple, intuitive growth measure.
+   601→Example
+   602→W₁=10 g at day 20, W₂=40 g at day 40 → AGR = 1.5 g/day.
+   603→
+   604→--- Table 35 ---
+   605→8.9  Harvest Index (HI) | 8.9  Harvest Index (HI)
+   606→HI (%) = Economic yield / Biological yield × 100 | HI (%) = Economic yield / Biological yield × 100
+   607→Variables
+   608→Economic yield = grain, fiber, tuber (marketed)
+   609→Biological yield = total above-ground biomass | Purpose
+   610→Efficiency of converting biomass to marketable product.
+   611→Example
+   612→Grain=5 t/ha, biomass=12 t/ha → HI = 41.7%.
+   613→⚠ Pitfall: Typical range 30–50% for cereals; below 30% indicates poor partitioning.
+   614→
+   615→--- Table 36 ---
+   616→8.12  Growing Degree Days (GDD) | 8.12  Growing Degree Days (GDD)
+   617→GDD = Σ ((Tmax + Tmin)/2 − Tbase) | GDD = Σ ((Tmax + Tmin)/2 − Tbase)
+   618→Variables
+   619→Tbase = biological zero (e.g. 10°C for maize)
+   620→Sum daily across growth period | Purpose
+   621→Heat unit accumulation governing phenology and maturity timing.
+   622→Example
+   623→Tmax=28°C, Tmin=16°C, Tbase=10°C → GDD/day = 12.
+   624→⚠ Pitfall: Use crop-specific Tbase; avoid truncating negative values inconsistently.
+   625→
+   626→--- Table 37 ---
+   627→Metric | Formula | Use
+   628→AGR | (W₂−W₁)/(t₂−t₁) | Growth rate per plant
+   629→RGR | (lnW₂−lnW₁)/(t₂−t₁) | Relative growth efficiency
+   630→CGR | AGR×1/A | Biomass per unit ground area
+   631→LAI | Leaf area/Ground area | Canopy status (optimal 3–5)
+   632→HI | Economic/Biological×100 | Harvest efficiency (30–50%)
+   633→GDD | Σ(Tavg−Tbase) | Thermal time accumulation
+   634→HUE | Yield/GDD | Heat use efficiency
+   635→
+   636→--- Table 38 ---
+   637→♻  Sustainability Note: LAI, HI, and HUE are critical for breeding climate-smart crops that use light, water, and heat more efficiently.
+   638→
+   639→--- Table 39 ---
+   640→9.1  NDVI – Normalized Difference Vegetation Index | 9.1  NDVI – Normalized Difference Vegetation Index
+   641→NDVI = (NIR − Red) / (NIR + Red) | NDVI = (NIR − Red) / (NIR + Red)
+   642→Variables
+   643→NIR = near-infrared reflectance
+   644→Red = red band reflectance
+   645→Range: −1 to +1 | Purpose
+   646→Most widely used vegetation vigor index; correlates with LAI and biomass.
+   647→Example
+   648→NIR=0.65, Red=0.25 → NDVI = 0.44 (moderate-good cover).
+   649→⚠ Pitfall: Saturates at high LAI; use EVI for dense canopies.
+   650→
+   651→--- Table 40 ---
+   652→9.2  SAVI – Soil-Adjusted Vegetation Index | 9.2  SAVI – Soil-Adjusted Vegetation Index
+   653→SAVI = (NIR − Red)(1+L) / (NIR + Red + L) | SAVI = (NIR − Red)(1+L) / (NIR + Red + L)
+   654→Variables
+   655→L = soil adjustment factor (0.5 default)
+   656→Reduces soil background effect | Purpose
+   657→Corrects NDVI for bare soil influence in sparse canopies.
+   658→Example
+   659→Same bands as NDVI, L=0.5; preferred for < 15% cover.
+   660→
+   661→--- Table 41 ---
+   662→9.5  VHI – Vegetation Health Index | 9.5  VHI – Vegetation Health Index
+   663→VHI = a × VCI + (1−a) × TCI | VHI = a × VCI + (1−a) × TCI
+   664→Variables
+   665→VCI = Vegetation Condition Index (greenness vs history)
+   666→TCI = Temperature Condition Index
+   667→a = weight (typically 0.5) | Purpose
+   668→Combines greenness and thermal stress into a drought composite.
+   669→Example
+   670→VCI=37.5%, TCI=50%, a=0.5 → VHI = 43.75 (moderate stress).
+   671→
+   672→--- Table 42 ---
+   673→Index | Formula | Use
+   674→NDVI | (NIR−Red)/(NIR+Red) | Vegetation vigor & LAI
+   675→SAVI | (NIR−Red)(1+L)/(NIR+Red+L) | Soil-adjusted greenness
+   676→EVI | G(NIR−Red)/(NIR+C₁Red−C₂Blue+L) | High biomass sensitivity
+   677→VCI | (NDVI−NDVImin)/range×100 | Relative greenness (drought)
+   678→TCI | (BTmax−BT)/range×100 | Heat/drought stress
+   679→VHI | aVCI+(1−a)TCI | Combined stress index
+   680→NDWI | (NIR−SWIR)/(NIR+SWIR) | Canopy water content
+   681→PRI | (R531−R570)/(R531+R570) | Photosynthetic efficiency
+   682→
+   683→--- Table 43 ---
+   684→♻  Sustainability Note: Remote sensing reduces reliance on destructive sampling and enables early warning of stress, supporting climate resilience.
+   685→
+   686→--- Table 44 ---
+   687→10.1  Dry Matter Intake (DMI) | 10.1  Dry Matter Intake (DMI)
+   688→DMI = Feed offered − Feed refused  [kg/day] | DMI = Feed offered − Feed refused  [kg/day]
+   689→Variables
+   690→Typical: 2.5–4% of body weight for dairy cows | Purpose
+   691→Quantifies actual dry matter consumed; basis for ration formulation.
+   692→Example
+   693→Cow offered 25 kg DM, refused 3 kg → DMI = 22 kg/day.
+   694→
+   695→--- Table 45 ---
+   696→10.6  Feed Conversion Ratio (FCR) | 10.6  Feed Conversion Ratio (FCR)
+   697→FCR = Feed intake / Weight gain  [kg feed/kg gain] | FCR = Feed intake / Weight gain  [kg feed/kg gain]
+   698→Variables
+   699→Lower FCR = better efficiency
+   700→Typical: broilers 1.6–2.0, beef 6–8 | Purpose
+   701→Industry benchmark for feed efficiency.
+   702→Example
+   703→Lamb: 40 kg feed, 10 kg gain → FCR = 4.0.
+   704→⚠ Pitfall: Must specify the feed basis (as-fed vs dry matter).
+   705→
+   706→--- Table 46 ---
+   707→10.9  Energy-Corrected Milk (ECM) | 10.9  Energy-Corrected Milk (ECM)
+   708→ECM (kg) = 0.327×Milk + 12.95×Fat + 7.20×Protein | ECM (kg) = 0.327×Milk + 12.95×Fat + 7.20×Protein
+   709→Variables
+   710→Milk = kg/day; Fat, Protein = kg/day (not %) | Purpose
+   711→Standardizes milk yield for fat and protein content to allow fair comparisons.
+   712→Example
+   713→25 kg milk, 0.95 kg fat, 0.80 kg protein → ECM = 32.7 kg/day.
+   714→⚠ Pitfall: Convert % to kg by multiplying by milk yield first.
+   715→
+   716→--- Table 47 ---
+   717→Metric | Formula | Use
+   718→DMI | Offered − Refused | Intake measure (kg/day)
+   719→CP | N × 6.25 | Crude protein (%)
+   720→TDN | DCP×2.25+DCF+DNFE | Energy content of feed
+   721→ME | DE × 0.82 (MJ/kg) | Metabolizable energy
+   722→FCR | Feed/Weight gain | Efficiency (lower=better)
+   723→PER | Weight gain/Protein intake | Protein efficiency
+   724→ECM | 0.327M+12.95F+7.20P | Standardized milk yield
+   725→BRI | Supplied/Requirement×100 | Ration adequacy (90–110%=ok)
+   726→
+   727→--- Table 48 ---
+   728→♻  Sustainability Note: Improving FCR reduces feed demand, land pressure, and methane emissions per unit of product.
+   729→
+   730→--- Table 49 ---
+   731→11.1  Average Daily Gain (ADG) | 11.1  Average Daily Gain (ADG)
+   732→ADG = (Final weight − Initial weight) / Days  [kg/day or g/day] | ADG = (Final weight − Initial weight) / Days  [kg/day or g/day]
+   733→Variables
+   734→Weigh animals at consistent times (morning, after overnight fast) | Purpose
+   735→Standard growth measurement across species and production systems.
+   736→Example
+   737→Calf: 320 kg final − 200 kg initial, 120 days → ADG = 1.0 kg/day.
+   738→⚠ Pitfall: Use multiple weighing periods to smooth measurement error.
+   739→
+   740→--- Table 50 ---
+   741→11.4  Kleiber Ratio (KR) | 11.4  Kleiber Ratio (KR)
+   742→KR = ADG / Metabolic weight  where Metabolic weight = BW^0.75 | KR = ADG / Metabolic weight  where Metabolic weight = BW^0.75
+   743→Variables
+   744→BW = body weight (kg)
+   745→Allows growth comparison across breeds/sizes | Purpose
+   746→Growth efficiency index independent of animal size.
+   747→Example
+   748→ADG=1 kg, BW=300 kg → MW=73.1 → KR = 0.014.
+   749→
+   750→--- Table 51 ---
+   751→Metric | Formula | Use
+   752→ADG | (W₂−W₁)/days | Daily growth rate
+   753→GR | (W₂−W₁)/W₁×100 | % weight increase
+   754→KR | ADG/BW^0.75 | Size-corrected efficiency
+   755→GER | ADG/Feed intake | Gain per kg feed consumed
+   756→BCS | Visual 1–5 or 1–9 scale | Energy reserve estimate
+   757→CGE | Total gain/Total feed | Lifetime efficiency
+   758→
+   759→--- Table 52 ---
+   760→♻  Sustainability Note: Selecting animals with high ADG and Kleiber Ratio improves productivity while reducing resource use and emissions per unit product.
+   761→
+   762→--- Table 53 ---
+   763→12.1  Conception Rate (CR) | 12.1  Conception Rate (CR)
+   764→CR (%) = Animals conceived / Animals inseminated × 100 | CR (%) = Animals conceived / Animals inseminated × 100
+   765→Variables
+   766→Target: >60% for dairy cattle with good heat detection | Purpose
+   767→Efficiency of a single insemination or mating event.
+   768→Example
+   769→100 cows inseminated, 45 conceived → CR = 45% (below target).
+   770→⚠ Pitfall: Low CR may reflect heat detection failure, not poor fertility.
+   771→
+   772→--- Table 54 ---
+   773→12.6  Calving Interval (CI) | 12.6  Calving Interval (CI)
+   774→CI = Gestation length + Days open  [days] | CI = Gestation length + Days open  [days]
+   775→Variables
+   776→Days open = days from calving to next conception
+   777→Target: 365–400 days | Purpose
+   778→Fundamental dairy efficiency metric linking reproduction and lactation.
+   779→Example
+   780→Gestation 280 days, days open 90 → CI = 370 days (good).
+   781→
+   782→--- Table 55 ---
+   783→12.10  Genetic Gain (ΔG) | 12.10  Genetic Gain (ΔG)
+   784→ΔG = i × r × σA / L  [units/year] | ΔG = i × r × σA / L  [units/year]
+   785→Variables
+   786→i = selection intensity
+   787→r = accuracy of selection
+   788→σA = additive genetic SD
+   789→L = generation interval (years) | Purpose
+   790→Predicts annual genetic progress from a selection program.
+   791→Example
+   792→i=1.2, r=0.7, σA=10, L=5 yrs → ΔG = 1.68 units/year.
+   793→
+   794→--- Table 56 ---
+   795→Metric | Formula | Use
+   796→CR | Conceived/Inseminated×100 | AI success rate
+   797→PR | Pregnant/Eligible×100 | Herd-level conception
+   798→SPC | Inseminations/Conceptions | Target: 1.5–2
+   799→CI | Gestation + Days open | Calving interval (target 365 d)
+   800→ΔG | i×r×σA/L | Annual genetic progress
+   801→SI | Σbi×xi | Multi-trait breeding index
+   802→
+   803→--- Table 57 ---
+   804→♻  Sustainability Note: Improving reproductive efficiency reduces replacement pressure, methane emissions, and resource use per unit of milk/meat.
+   805→
+   806→--- Table 58 ---
+   807→13.2  Fat-Corrected Milk (FCM) | 13.2  Fat-Corrected Milk (FCM)
+   808→FCM (kg) = 0.4 × Milk + 15 × Fat  [standardized to 4% fat] | FCM (kg) = 0.4 × Milk + 15 × Fat  [standardized to 4% fat]
+   809→Variables
+   810→Milk = kg/day
+   811→Fat = kg/day | Purpose
+   812→Standardizes milk yield to 4% fat basis for comparisons.
+   813→Example
+   814→30 kg milk at 3.5% fat (1.05 kg fat): FCM = 0.4×30 + 15×1.05 = 27.75 kg.
+   815→
+   816→--- Table 59 ---
+   817→13.6  Persistency Index (PI) | 13.6  Persistency Index (PI)
+   818→PI (%) = Milk yield later / Peak yield × 100 | PI (%) = Milk yield later / Peak yield × 100
+   819→Variables
+   820→Compare a standard reference period to peak production | Purpose
+   821→Measures how well cows sustain production after peak lactation.
+   822→Example
+   823→Peak 45 kg/day, month 7 yield 32 kg/day → PI = 71%.
+   824→
+   825→--- Table 60 ---
+   826→13.8  Somatic Cell Score (SCS) | 13.8  Somatic Cell Score (SCS)
+   827→SCS = log₂(SCC/100,000) + 3 | SCS = log₂(SCC/100,000) + 3
+   828→Variables
+   829→SCC = somatic cell count (cells/mL)
+   830→SCS < 4.5 = healthy udder | Purpose
+   831→Log-transformed SCC; more normally distributed for genetic analysis.
+   832→Example
+   833→SCC=200,000 → SCS = log₂(2)+3 = 4.0 (acceptable).
+   834→
+   835→--- Table 61 ---
+   836→Metric | Formula | Use
+   837→FCM | 0.4M + 15F | Standardized milk (4% fat)
+   838→ECM | 0.327M+12.95F+7.20P | Standardized milk (fat+protein)
+   839→MYE | Milk/Body weight | Productivity relative to size
+   840→PI | Later yield/Peak×100 | Lactation persistency
+   841→DER | Milk/DMI | Feed-to-milk efficiency
+   842→SCS | log₂(SCC/100,000)+3 | Udder health indicator
+   843→CIM | Lactation milk/Calving interval | Reproductive-adjusted yield
+   844→
+   845→--- Table 62 ---
+   846→♻  Sustainability Note: Improving DER and PI reduces feed use, methane, and land pressure per unit of milk.
+   847→
+   848→--- Table 63 ---
+   849→14.1  Dressing Percentage (DP) | 14.1  Dressing Percentage (DP)
+   850→DP (%) = Carcass weight / Live weight × 100 | DP (%) = Carcass weight / Live weight × 100
+   851→Variables
+   852→Cattle: 55–65%
+   853→Sheep/goats: 45–55%
+   854→Broilers: 70–75% | Purpose
+   855→Basic measure of proportion of live weight becoming saleable carcass.
+   856→Example
+   857→Sheep: live 40 kg, carcass 20 kg → DP = 50%.
+   858→⚠ Pitfall: Confounding effects: gut fill, hide, breed type.
+   859→
+   860→--- Table 64 ---
+   861→14.5  Broiler Performance Efficiency Factor (BPEF / EBI) | 14.5  Broiler Performance Efficiency Factor (BPEF / EBI)
+   862→EBI = (Livability% × BW kg) / (Age days × FCR) × 100 | EBI = (Livability% × BW kg) / (Age days × FCR) × 100
+   863→Variables
+   864→Livability = % surviving
+   865→BW = body weight at slaughter
+   866→FCR = feed conversion ratio | Purpose
+   867→Industry composite index of broiler production efficiency.
+   868→Example
+   869→95% livability, 2.0 kg BW, 40 days, FCR 1.8 → EBI = 263.
+   870→
+   871→--- Table 65 ---
+   872→Metric | Formula | Use
+   873→DP | Carcass/Live wt×100 | % live weight marketed
+   874→CY | Edible meat/Carcass×100 | True meat yield
+   875→MBR | Meat weight/Bone weight | Meatiness (higher=better)
+   876→EBI/BPEF | (Livability×BW)/(Age×FCR)×100 | Broiler composite index
+   877→LEA | Longissimus dorsi area cm² | Muscling predictor
+   878→
+   879→--- Table 66 ---
+   880→♻  Sustainability Note: Improving FCR, DP, and EBI reduces feed use, water, and land footprint per unit of meat.
+   881→
+   882→--- Table 67 ---
+   883→15.1  Hen-Day Egg Production (HDEP) | 15.1  Hen-Day Egg Production (HDEP)
+   884→HDEP (%) = Eggs produced / Hens present that day × 100 | HDEP (%) = Eggs produced / Hens present that day × 100
+   885→Variables
+   886→Measured daily
+   887→Reflects current flock productivity | Purpose
+   888→Daily productivity benchmark excluding mortality effects.
+   889→Example
+   890→950 eggs from 1,000 hens present → HDEP = 95%.
+   891→⚠ Pitfall: Does not account for cumulative mortality; use HHEP for that.
+   892→
+   893→--- Table 68 ---
+   894→15.8  Haugh Unit (HU) | 15.8  Haugh Unit (HU)
+   895→HU = 100 × log₁₀(H − 1.7W^0.37 + 7.6) | HU = 100 × log₁₀(H − 1.7W^0.37 + 7.6)
+   896→Variables
+   897→H = albumen height (mm)
+   898→W = egg weight (g)
+   899→HU > 72 = Grade AA; < 60 = Grade B | Purpose
+   900→Standard measure of egg interior quality (freshness).
+   901→Example
+   902→H=8 mm, W=60 g → HU ≈ 88 (excellent quality).
+   903→
+   904→--- Table 69 ---
+   905→Metric | Formula | Use
+   906→HDEP | Eggs/Hens present×100 | Daily layer productivity
+   907→HHEP | Total eggs/Hens housed at start×100 | Cumulative productivity
+   908→Egg Mass | HDEP(%)×Egg weight(g)/100 | Production×weight combined
+   909→FCR (eggs) | Feed kg/Egg mass kg | Layer feed efficiency
+   910→Livability | 100−Mortality% | Flock survival
+   911→PEF | (Livability×BW)/(Age×FCR)×100 | Broiler composite
+   912→Haugh Unit | 100×log₁₀(H−1.7W^0.37+7.6) | Egg freshness/quality
+   913→
+   914→--- Table 70 ---
+   915→♻  Sustainability Note: Improved FCR in poultry has the lowest environmental footprint per unit protein among all livestock — ongoing optimization matters.
+   916→
+   917→--- Table 71 ---
+   918→16.1  Aridity Index (AI) | 16.1  Aridity Index (AI)
+   919→AI = Annual precipitation / Potential evapotranspiration | AI = Annual precipitation / Potential evapotranspiration
+   920→Variables
+   921→AI < 0.05 = hyper-arid
+   922→0.05–0.2 = arid
+   923→0.2–0.5 = semi-arid
+   924→0.5–0.65 = dry sub-humid | Purpose
+   925→Classifies climate zones and guides crop selection and water management.
+   926→Example
+   927→P=300 mm, PET=800 mm → AI = 0.375 (semi-arid).
+   928→
+   929→--- Table 72 ---
+   930→16.2  Moisture Deficit Index (MDI) | 16.2  Moisture Deficit Index (MDI)
+   931→MDI = (PET − P) / PET | MDI = (PET − P) / PET
+   932→Variables
+   933→PET = potential evapotranspiration
+   934→P = precipitation
+   935→Range 0–1 | Purpose
+   936→Proportion of water demand not met by rainfall.
+   937→Example
+   938→PET=700, P=300 → MDI = 0.57 (moderate deficit).
+   939→
+   940→--- Table 73 ---
+   941→Metric | Formula/Scale | Use
+   942→Aridity Index | P/PET | Climate zone classification
+   943→MDI | (PET−P)/PET | Water deficit severity
+   944→Heat Stress Hrs | Hours above threshold Temp | Crop/livestock risk
+   945→GHG Intensity | CO₂-eq/unit output | Environmental efficiency
+   946→Water footprint | m³/tonne product | Water accounting
+   947→
+   948→--- Table 74 ---
+   949→17.1  Benefit-Cost Ratio (B:C) | 17.1  Benefit-Cost Ratio (B:C)
+   950→B:C = Total gross returns / Total costs | B:C = Total gross returns / Total costs
+   951→Variables
+   952→B:C > 1 = profitable
+   953→Include all variable and fixed costs | Purpose
+   954→Simple profitability assessment for farm enterprises.
+   955→Example
+   956→Returns $5,000, Costs $3,500 → B:C = 1.43 (profitable).
+   957→⚠ Pitfall: Ignores time value of money; use NPV for multi-year investments.
+   958→
+   959→--- Table 75 ---
+   960→17.2  Gross Margin (GM) | 17.2  Gross Margin (GM)
+   961→GM = Gross revenue − Variable costs  [$/ha or $/head] | GM = Gross revenue − Variable costs  [$/ha or $/head]
+   962→Variables
+   963→Does not deduct fixed/overhead costs | Purpose
+   964→Most common farm enterprise comparison metric.
+   965→Example
+   966→Revenue $4,000/ha, variable costs $1,800/ha → GM = $2,200/ha.
+   967→
+   968→--- Table 76 ---
+   969→17.3  Net Present Value (NPV) | 17.3  Net Present Value (NPV)
+   970→NPV = Σ [CFt / (1+r)^t] − Initial investment | NPV = Σ [CFt / (1+r)^t] − Initial investment
+   971→Variables
+   972→CFt = cash flow in year t
+   973→r = discount rate
+   974→NPV > 0 = invest | Purpose
+   975→Time-adjusted profitability for capital investments (irrigation, livestock housing).
+   976→Example
+   977→Use 10–12% discount rate for agricultural investments in developing markets.
+   978→
+   979→--- Table 77 ---
+   980→Metric | Formula | Interpretation
+   981→B:C Ratio | Returns/Costs | >1 profitable
+   982→Gross Margin | Revenue − Variable costs | Enterprise comparison
+   983→NPV | Σ CFt/(1+r)^t − Investment | >0 = invest
+   984→IRR | Rate where NPV = 0 | >Opportunity cost = invest
+   985→Payback period | Investment/Annual profit | Years to recover capital
+   986→
+   987→--- Table 78 ---
+   988→♻  Sustainability Note: Gross margin analysis combined with environmental cost accounting is the pathway toward true sustainability accounting in farming systems.
+   989→
+   990→--- Table 79 ---
+   991→Design | When to Use | Key Feature
+   992→CRD | Homogeneous environment, lab/greenhouse | All treatments randomized; simplest analysis
+   993→RCBD | Field with known gradient | Blocks control one direction of variation
+   994→Latin Square | Two-way gradient | Rows and columns both blocked
+   995→Split-Plot | Factor with different precision needs | Main plots and subplots
+   996→Strip-Plot | Two large-scale factors | Both factors in strips across field
+   997→Alpha-Lattice | Large number of genotypes | Incomplete blocks within reps
+   998→
+   999→--- Table 80 ---
+  1000→Tool | Format | Application
+  1001→Crop growth calculator | Excel/Python | GDD, LAI, HI tracking
+  1002→Livestock efficiency tracker | Excel/R | FCR, ADG, ECM monitoring
+  1003→Farm economics model | R/Google Sheets | B:C, NPV, gross margin
+  1004→Climate footprint calculator | Web tool | GHG, water footprint
+  1005→NDVI time series | Python/GEE | Crop stress monitoring
+  1006→
+  1007→--- Table 81 ---
+  1008→22.1  Shannon Diversity Index (H') | 22.1  Shannon Diversity Index (H')
+  1009→H' = −Σ (pi × ln pi) | H' = −Σ (pi × ln pi)
+  1010→Variables
+  1011→pi = proportion of species i in community
+  1012→Higher H' = greater diversity | Purpose
+  1013→Measures species diversity combining richness and evenness.
+  1014→Example
+  1015→4 equal species: H' = −4×(0.25×ln0.25) = 1.39.
+  1016→
+  1017→--- Table 82 ---
+  1018→Index | Formula | Use
+  1019→Shannon H' | −Σ pi×ln pi | Species diversity
+  1020→Simpson's D | 1−Σ pi² | Dominance-corrected diversity
+  1021→PSI | Pollinator abundance × crop dependence | Pollination service
+  1022→ATI | Composite transition score | Agroecological progress
+  1023→ESV | Service quantity × unit value | Ecosystem service valuation
+  1024→
+  1025→--- Table 83 ---
+  1026→♻  Sustainability Note: Integrating biodiversity indices into farm management connects productivity with ecosystem resilience, beneficial insect populations, and soil biota health.
+  1027→
+  1028→--- Table 84 ---
+  1029→Case Study | Key Indices Applied | Main Outcome
+  1030→Crop–Livestock Farm (50 ha maize+cattle) | LER=1.25, CRUE=70%, NRE=65% | Reduced fertilizer costs, better feed availability
+  1031→Dairy Farm (40-cow, semi-arid) | DER=1.4, CIM=7,800 L/yr, CF=1.8 kg CO₂/L | Improved efficiency, lower GHG intensity
+  1032→Maize+Cowpea Intercrop (10 ha) | LER=1.35, WUE=2.2 kg/m³, SPI=12.5 MJ/ha/day | Higher food security, better soil fertility
+  1033→Commercial Layer Unit (5,000 hens) | HDEP=92%, FCR=2.1, Livability=96% | Efficient egg production, low mortality
+  1034→
+  1035→--- Table 85 ---
+  1036→Abbreviation | Full Name | Brief Definition
+  1037→AGR | Absolute Growth Rate | Rate of biomass increase per unit time
+  1038→LAI | Leaf Area Index | Ratio of leaf area to ground area
+  1039→LER | Land Equivalent Ratio | Intercrop efficiency vs monocrop
+  1040→WUE | Water Use Efficiency | Yield per unit water consumed
+  1041→BD | Bulk Density | Mass of dry soil per unit volume
+  1042→AWC | Available Water Capacity | FC minus PWP
+  1043→GDD | Growing Degree Days | Accumulated heat units for phenology
+  1044→NDVI | Normalized Difference Vegetation Index | Satellite-based vegetation vigor
+  1045→
+  1046→--- Table 86 ---
+  1047→Abbreviation | Full Name | Brief Definition
+  1048→ADG | Average Daily Gain | Daily weight gain of animals
+  1049→FCR | Feed Conversion Ratio | Feed consumed per unit of weight gain
+  1050→BCS | Body Condition Score | Visual scoring of animal fat reserves
+  1051→ECM | Energy-Corrected Milk | Milk yield adjusted for fat and protein
+  1052→DMI | Dry Matter Intake | Feed consumed on dry matter basis
+  1053→SPC | Services per Conception | AI events needed per pregnancy
+  1054→DP | Dressing Percentage | Carcass as % of live weight
+  1055→HDEP | Hen-Day Egg Production | % of hens laying eggs daily
+  1056→
+  1057→--- Table 87 ---
+  1058→Abbreviation | Full Name | Brief Definition
+  1059→GHG | Greenhouse Gas | Climate-forcing gases (CO₂, CH₄, N₂O)
+  1060→GHGI | GHG Intensity | Emissions per unit of product
+  1061→NPV | Net Present Value | Time-adjusted profitability measure
+  1062→IRR | Internal Rate of Return | Discount rate where NPV = 0
+  1063→B:C | Benefit-Cost Ratio | Returns divided by total costs
+  1064→LCA | Life Cycle Assessment | Full supply-chain environmental accounting
+  1065→H' | Shannon Diversity Index | Species richness and evenness measure
+  1066→
+  1067→--- Table 88 ---
+  1068→Step | Action | Status
+  1069→1 | Frame the problem — what decision depends on this number? | ☐
+  1070→2 | Write equation with units for every term | ☐
+  1071→3 | List data sources (date, method, instrument, lab) | ☐
+  1072→4 | State all assumptions (moisture basis, temperature, stage) | ☐
+  1073→5 | Estimate uncertainty (range / sensitivity) | ☐
+  1074→6 | Interpret result against threshold or benchmark | ☐
+  1075→7 | Record recommended action, responsible person, and timeline | ☐
+  1076→
+  1077→--- Table 89 ---
+  1078→29.1  Microbial Biomass Carbon (MBC) | 29.1  Microbial Biomass Carbon (MBC)
+  1079→MBC = (C_fumigated − C_control) / kEC  [mg C kg⁻¹ soil] | MBC = (C_fumigated − C_control) / kEC  [mg C kg⁻¹ soil]
+  1080→Variables
+  1081→kEC = extraction efficiency factor (0.45 commonly used)
+  1082→Measured by chloroform fumigation-extraction (CFE)
+  1083→Typical range: 100–1500 mg C/kg | Purpose
+  1084→Estimates the mass of living microbial cells in soil; sensitive early indicator of soil quality change.
+  1085→Example
+  1086→Fumigated soil C = 250 mg/kg, control = 140 mg/kg → MBC = (250−140)/0.45 = 244 mg C/kg.
+  1087→⚠ Pitfall: Highly sensitive to sampling date, soil moisture, and temperature — standardize conditions.
+  1088→
+  1089→--- Table 90 ---
+  1090→29.2  Metabolic Quotient (qCO₂) | 29.2  Metabolic Quotient (qCO₂)
+  1091→qCO₂ = Soil respiration / MBC  [mg CO₂-C g⁻¹ MBC h⁻¹] | qCO₂ = Soil respiration / MBC  [mg CO₂-C g⁻¹ MBC h⁻¹]
+  1092→Variables
+  1093→Soil respiration = CO₂ evolved per unit time
+  1094→MBC = microbial biomass carbon
+  1095→Lower qCO₂ = more efficient microbial community | Purpose
+  1096→Measures metabolic efficiency of soil microbial community. High qCO₂ indicates stress.
+  1097→Example
+  1098→Respiration = 0.08 mg CO₂-C/g/h, MBC = 400 mg/kg → qCO₂ = 0.0002.
+  1099→
+  1100→--- Table 91 ---
+  1101→29.3  Soil Enzyme Activity Index (EAI) | 29.3  Soil Enzyme Activity Index (EAI)
+  1102→EAI = (Enzyme activity observed / Enzyme activity reference) × 100 | EAI = (Enzyme activity observed / Enzyme activity reference) × 100
+  1103→Variables
+  1104→Key enzymes: urease, phosphatase, dehydrogenase, β-glucosidase
+  1105→Reference = optimal baseline for soil type
+  1106→Units vary by enzyme (μg product g⁻¹ h⁻¹) | Purpose
+  1107→Composite of enzyme activities reflecting nutrient cycling capacity.
+  1108→Example
+  1109→Dehydrogenase = 45 μg TPF/g/24h; reference = 60 → EAI = 75% (reduced activity).
+  1110→
+  1111→--- Table 92 ---
+  1112→29.4  Fungal:Bacterial (F:B) Ratio | 29.4  Fungal:Bacterial (F:B) Ratio
+  1113→F:B = Fungal biomass / Bacterial biomass  [from PLFA or qPCR] | F:B = Fungal biomass / Bacterial biomass  [from PLFA or qPCR]
+  1114→Variables
+  1115→Estimated from phospholipid fatty acid (PLFA) profiles
+  1116→F:B > 1 common in undisturbed or high-OM soils
+  1117→Fungi dominate carbon cycling in agroforestry | Purpose
+  1118→Indicates decomposition pathways and soil disturbance history.
+  1119→Example
+  1120→Fungal PLFA = 22 nmol/g, bacterial PLFA = 44 nmol/g → F:B = 0.50.
+  1121→
+  1122→--- Table 93 ---
+  1123→29.5  Microbial Biomass Nitrogen (MBN) | 29.5  Microbial Biomass Nitrogen (MBN)
+  1124→MBN = (N_fumigated − N_control) / kEN  [mg N kg⁻¹ soil] | MBN = (N_fumigated − N_control) / kEN  [mg N kg⁻¹ soil]
+  1125→Variables
+  1126→kEN = 0.54 (extraction coefficient)
+  1127→MBN:MBC ratio reflects microbial C:N constraint | Purpose
+  1128→Estimates nitrogen immobilized in microbial biomass; important for N release timing.
+  1129→Example
+  1130→MBC:MBN ratio < 5 → excess N release; > 15 → N immobilization risk.
+  1131→
+  1132→--- Table 94 ---
+  1133→Metric | Formula | Healthy Range | Use
+  1134→MBC | (Cfum−Ccon)/kEC | 200–800 mg/kg | Living biomass indicator
+  1135→qCO₂ | Respiration/MBC | <0.001 (efficient) | Stress indicator
+  1136→EAI | Observed/Reference×100 | >70% | Nutrient cycling capacity
+  1137→F:B ratio | Fungal/Bacterial biomass | 0.3–1.5 | Decomposition pathway
+  1138→MBN | (Nfum−Ncon)/kEN | 20–100 mg/kg | N cycling capacity
+  1139→MBC:SOC | MBC/SOC×100 | 1–4% | Substrate availability
+  1140→
+  1141→--- Table 95 ---
+  1142→♻  Sustainability Note: MBC and qCO₂ respond rapidly to management changes — they are leading indicators of soil health trajectories years before SOC changes are detectable.
+  1143→
+  1144→--- Table 96 ---
+  1145→BBCH Stage | Principal Growth Stage | Key Management Window
+  1146→00–09 | Germination / sprouting | Seed priming, soil temperature monitoring
+  1147→10–19 | Leaf development | Pre-emergence herbicides, P/K application
+  1148→20–29 | Tillering (cereals) | Early N top-dressing, tiller count assessment
+  1149→30–39 | Stem elongation | Second N split, growth regulator application
+  1150→40–49 | Booting / rosette | Disease monitoring (Septoria, Fusarium)
+  1151→50–59 | Inflorescence emergence | Fungicide timing, irrigation critical period
+  1152→60–69 | Flowering | Pollination stress watch, bee protection
+  1153→70–79 | Fruit / grain development | K application, moisture stress monitoring
+  1154→80–89 | Ripening / maturation | Harvest scheduling, pre-harvest interval
+  1155→90–99 | Senescence / dormancy | Residue management, cover crop establishment
+  1156→
+  1157→--- Table 97 ---
+  1158→30.2  Leaf Appearance Rate (LAR) | 30.2  Leaf Appearance Rate (LAR)
+  1159→LAR = Number of leaves / Thermal time elapsed  [leaves °Cd⁻¹] | LAR = Number of leaves / Thermal time elapsed  [leaves °Cd⁻¹]
+  1160→Variables
+  1161→Thermal time = cumulative GDD from emergence
+  1162→Species-specific: maize ≈ 1 leaf per 60–80°Cd | Purpose
+  1163→Predicts leaf number at any thermal time; used to time management interventions.
+  1164→Example
+  1165→Maize at 400 GDD: LAR = 0.014 leaves/°Cd → ≈ 5.6 leaves expected.
+  1166→
+  1167→--- Table 98 ---
+  1168→30.3  Phyllochron | 30.3  Phyllochron
+  1169→Phyllochron = Thermal time between successive leaf appearances  [°Cd leaf⁻¹] | Phyllochron = Thermal time between successive leaf appearances  [°Cd leaf⁻¹]
+  1170→Variables
+  1171→Inverse of LAR
+  1172→Maize: 45–80°Cd
+  1173→Wheat: 90–110°Cd
+  1174→Used in crop simulation models | Purpose
+  1175→Fundamental parameter for crop development models (CERES, APSIM).
+  1176→Example
+  1177→Two leaves appear over 120°Cd → phyllochron = 60°Cd/leaf.
+  1178→
+  1179→--- Table 99 ---
+  1180→Crop | Tbase (°C) | GDD to Anthesis | GDD to Maturity
+  1181→Maize | 10 | 800–1000 | 1400–1700
+  1182→Wheat | 0 | 1000–1400 | 1700–2000
+  1183→Soybean | 10 | 700–900 | 1100–1400
+  1184→Cotton | 15 | 600–800 | 1400–1600
+  1185→Sunflower | 6 | 900–1200 | 1400–1700
+  1186→Sorghum | 10 | 700–950 | 1200–1500
+  1187→
+  1188→--- Table 100 ---
+  1189→♻  Sustainability Note: Phenology-based management reduces input waste — fungicide applications at BBCH 39–59 in wheat are 30–50% more effective than calendar-based timing.
+  1190→
+  1191→--- Table 101 ---
+  1192→31.1  Daily Light Integral (DLI) | 31.1  Daily Light Integral (DLI)
+  1193→DLI = PPFD × 3600 × photoperiod / 1,000,000  [mol m⁻² d⁻¹] | DLI = PPFD × 3600 × photoperiod / 1,000,000  [mol m⁻² d⁻¹]
+  1194→Variables
+  1195→PPFD = photosynthetic photon flux density (μmol m⁻² s⁻¹)
+  1196→Photoperiod = hours of light per day
+  1197→Target: leafy greens 12–17; tomato 20–30 mol/m²/d | Purpose
+  1198→Quantifies total photosynthetically active radiation received in a day; main driver of greenhouse crop yield.
+  1199→Example
+
+[showing lines 600-1199 of 3385; use offset=1200 with limit to continue reading]

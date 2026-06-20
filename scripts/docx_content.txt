@@ -1,0 +1,3384 @@
+=== TOTAL PARAGRAPHS: 753 ===
+=== TOTAL TABLES: 326 ===
+
+[P3][None] A  P R A C T I C A L  H A N D B O O K  F O R
+[P4][None] CROP & ANIMAL PRODUCTION
+[P7][None] Agri-Formulas
+[P8][None] & Metrics
+[P11][None] Calculations · Indices · Decision Rules · Worked Examples
+[P13][None]  PART I · PART II · PART III · PART IV · PART V · PART VI 
+[P15][None] TABLE OF CONTENTS
+[P18][Heading 1] Introduction
+[P20][None] Why This Book
+[P22][None] Agriculture runs on numbers. From plant population and seed rate to feed conversion ratio and genetic gain, clear formulas turn field observations into decisions. This handbook assembles the core calculations, indices, and decision rules used in crop and animal production, and wraps them with worked examples, assumptions, and pitfalls so you can apply them confidently in research, extension, and farm management.
+[P23][None] Unlike a bare list of equations, each metric here is placed in context: what it measures, when to use it, what inputs you need, how sensitive it is to measurement error, and what to do next once you've computed it.
+[P25][Heading 2] Who This Book Is For
+[P26][None] • Researchers & graduate students who need defensible, citable calculations and experimental design quickrefs.
+[P27][None] • Extension professionals & agribusiness advisors who make rapid recommendations under uncertainty.
+[P28][None] • Farm managers & technicians who convert measurements into actions.
+[P29][None] • Policy and development practitioners who compare systems using harmonized sustainability and economics metrics.
+[P31][Heading 2] How to Use This Book
+[P32][None] Quick lookup: Each formula page shows purpose → equation → variables/units → assumptions → common mistakes → next actions.
+[P33][None] Worked example: At least one crop and one animal example per section with step-by-step arithmetic and unit checks.
+[P34][None] Decision support: Flow boxes connect results to management choices.
+[P35][None] Companion tools: Spreadsheet tabs and short R/Python scripts mirror each formula for reproducible calculations.
+[P41][None] Part I
+[P42][None] Foundations of Agriculture
+[P43][Heading 1] Chapter 1  Units, Conversions & Calculation Hygiene
+[P45][None] Most calculation errors in agronomy and animal production are not due to the formulas themselves but to unit mismatches, rounding errors, or using industry vs. SI conventions inconsistently.
+[P46][Heading 2] 1.1 Core Unit Systems
+[P47][None] SI Units (default in this book): Length: meter (m) · Area: ha (10,000 m²) · Volume: liter (L) · Mass: kg · Temperature: °C · Energy: MJ
+[P48][None] Agricultural practice units (still common): Acre (0.405 ha) · Inch of water · Cusec (ft³/s) · Bushel · lb, gal, cwt in livestock.
+[P49][None] ⚠  Pitfall: Many indices mix SI and non-SI in extension bulletins. Always normalize to SI, then convert back for reporting if needed.
+[P51][Heading 2] 1.2 Essential Conversion Factors
+[P52][None] Quick Reference
+[P54][Heading 2] 1.3 Calculation Hygiene Rules
+[P55][None] 1. Write the equation with units before inserting numbers.
+[P56][None] 2. Convert all terms to SI; if final answer needed in local units, convert last.
+[P57][None] 3. Keep significant figures until final step; then round.
+[P58][None] 4. Check plausibility against typical ranges.
+[P59][None] 5. Document sources: field measurement, lab test, or extension reference.
+[P63][None] Part II
+[P64][None] Crop Production Formulas
+[P65][Heading 1] Chapter 2  Plant Population & Seed Rate
+[P67][None] Plant population and seed rate calculations are the foundation of crop establishment. Too low a population wastes land; too high creates competition, weak plants, and lodging.
+[P72][None] Quick Reference
+[P75][Heading 1] Chapter 3  Cropping Systems & Intercropping Indices
+[P77][None] Cropping system indices allow comparison of productivity, sustainability, and profitability of different field patterns, helping farmers and researchers choose optimal configurations.
+[P81][None] Quick Reference
+[P84][Heading 1] Chapter 4  Fertilizer & Nutrient Management
+[P86][None] Nutrient management is central to productivity and sustainability. Correct fertilizer calculation avoids both underfeeding (yield loss) and overuse (wasted input, pollution).
+[P91][None] Quick Reference
+[P94][Heading 1] Chapter 5  Weed, Pest & Disease Management
+[P96][None] Quantitative indices allow researchers and practitioners to compare treatments, assess control effectiveness, and guide integrated pest management (IPM) decisions.
+[P99][None] Quick Reference
+[P102][Heading 1] Chapter 6  Irrigation & Water Management
+[P104][None] Water is often the most limiting factor in agriculture. Efficient irrigation ensures crops get what they need without waste, salinity buildup, or environmental damage.
+[P108][None] Quick Reference
+[P111][Heading 1] Chapter 7  Soil Properties & Soil Health
+[P113][None] Soil is the foundation of both crop and livestock systems. These indices evaluate physical, chemical, and biological properties for sustainable productivity.
+[P117][None] Quick Reference
+[P120][Heading 1] Chapter 8  Crop Growth & Yield Indices
+[P122][None] Growth and yield indices allow researchers to quantify how efficiently plants convert resources into biomass and grain. Critical for evaluating varieties, management practices, and stress effects.
+[P126][None] Quick Reference
+[P129][Heading 1] Chapter 9  Remote Sensing & Digital Agronomy
+[P131][None] Remote sensing offers rapid, non-destructive monitoring of crops at field to regional scales. Indices from satellite or drone imagery help assess vegetation health, biomass, stress, and yield potential.
+[P135][None] Quick Reference
+[P140][None] Part III
+[P141][None] Animal Production Formulas
+[P142][Heading 1] Chapter 10  Animal Nutrition & Feed Efficiency
+[P144][None] Nutrition is the backbone of animal productivity. Proper feed formulation ensures growth, reproduction, milk, meat, and egg yield while minimizing waste and costs.
+[P148][None] Quick Reference
+[P151][Heading 1] Chapter 11  Growth Performance & Body Condition
+[P153][None] Measuring animal growth and condition is critical for monitoring herd performance, adjusting nutrition, and making breeding and culling decisions.
+[P156][None] Quick Reference
+[P159][Heading 1] Chapter 12  Reproduction & Breeding Metrics
+[P161][None] Reproductive efficiency drives productivity in livestock systems. Breeding indices guide genetic improvement, while reproductive rates determine profitability.
+[P165][None] Quick Reference
+[P168][Heading 1] Chapter 13  Dairy Production Metrics
+[P170][None] Standardized milk yield indices allow fair comparison across cows, breeds, and management systems, and help optimize feeding and breeding strategies.
+[P174][None] Quick Reference
+[P177][Heading 1] Chapter 14  Meat Production & Carcass Indices
+[P179][None] Carcass indices provide objective measures of yield, quality, and efficiency, supporting breeding, nutrition, and market decisions.
+[P182][None] Quick Reference
+[P185][Heading 1] Chapter 15  Poultry Production Metrics
+[P187][None] Poultry systems are among the most efficient converters of feed into animal protein. Monitoring egg and meat indices is essential for benchmarking performance and sustainability.
+[P190][None] Quick Reference
+[P195][None] Part IV
+[P196][None] Sustainability & Farm Economics
+[P197][Heading 1] Chapter 16  Climate-Smart Agriculture Metrics
+[P199][None] Climate variability is the dominant risk in modern farming. These indices quantify heat/cold stress, aridity, and water–carbon–energy interactions.
+[P202][None] Quick Reference
+[P204][Heading 1] Chapter 17  Farm Economics
+[P206][None] Economic indices translate agronomic and production data into profitability and investment metrics for decision-making at farm and policy level.
+[P210][None] Quick Reference
+[P215][None] Part V
+[P216][None] Tools & Applications
+[P217][Heading 1] Chapter 20  Experimental Design & Agricultural Statistics
+[P219][None] Sound experimental design is the backbone of credible research. This chapter provides quickrefs for standard designs and statistical analysis in crop and animal science.
+[P220][Heading 2] Design Quick Reference
+[P221][None] Quick Reference
+[P223][Heading 2] Sample Size Guidelines
+[P224][None] For CRD/RCBD field trials: minimum 3 reps, usually 4–6. For livestock trials: >10 animals per treatment (more for highly variable traits like milk yield).
+[P225][Heading 1] Chapter 21  Precision Agriculture & Digital Tools
+[P227][None] Precision agriculture integrates GPS, remote sensing, IoT sensors, and data analytics to optimize inputs and management at sub-field resolution.
+[P228][Heading 2] Key Digital Tools & Applications
+[P229][None] Quick Reference
+[P231][Heading 1] Chapter 22  Agroecology & Ecosystem Services
+[P233][None] Agroecological approaches quantify biodiversity, soil biology, and ecosystem services as part of holistic farm system assessment.
+[P235][None] Quick Reference
+[P240][None] Part VI
+[P241][None] Appendices
+[P242][Heading 1] Chapter 26  Case Studies
+[P244][None] Case studies illustrate how integrated analysis of indices leads to better management, profitability, and sustainability across real farming systems.
+[P245][None] Quick Reference
+[P247][Heading 1] Chapter 27  Glossary
+[P249][Heading 2] Crop & Soil Terms
+[P250][None] Quick Reference
+[P252][Heading 2] Animal Production Terms
+[P253][None] Quick Reference
+[P255][Heading 2] Sustainability & Economics Terms
+[P256][None] Quick Reference
+[P258][Heading 1] Chapter 28  Reporting Checklist
+[P260][None] Use this checklist for every major calculation to ensure reproducibility and decision quality:
+[P261][None] Quick Reference
+[P264][None] Part VII
+[P265][None] Advanced Crop Science
+[P266][Heading 1] Chapter 29  Soil Microbiology & Biological Health Metrics
+[P268][None] Soil biological properties are increasingly recognized as critical indicators of long-term productivity. These indices quantify the living component of soils — the microbial engine that drives nutrient cycling, organic matter decomposition, and disease suppression.
+[P274][None] Quick Reference
+[P277][Heading 1] Chapter 30  Phenology & Crop Staging
+[P279][None] Standardized growth stage systems allow precise communication about crop development timing, linking management decisions (fertilization, irrigation, pest control) to specific developmental windows where they have maximum impact.
+[P280][Heading 2] 30.1 BBCH Universal Growth Stage Scale
+[P281][None] The BBCH (Biologische Bundesanstalt, Bundessortenamt, CHemische Industrie) decimal scale uses two digits: the first denotes the principal growth stage (0–9), the second the secondary stage within it.
+[P282][None] Quick Reference
+[P286][None] Quick Reference
+[P289][Heading 1] Chapter 31  Greenhouse & Protected Agriculture Metrics
+[P291][None] Controlled environment agriculture (CEA) requires a different set of metrics from field production. Optimization of light, CO₂, temperature, humidity, and nutrient solution are the primary levers.
+[P296][None] Quick Reference
+[P299][Heading 1] Chapter 32  Agroforestry Systems Metrics
+[P301][None] Agroforestry integrates trees with crops and/or livestock on the same land unit. The interactions — competition and complementarity for light, water, and nutrients — require adapted metrics beyond standard intercropping indices.
+[P305][None] Quick Reference
+[P308][Heading 1] Chapter 33  Post-Harvest & Storage Metrics
+[P310][None] Post-harvest losses consume 30–40% of food production in many developing regions. Quantifying losses along the supply chain identifies intervention priorities and measures the effectiveness of storage improvements.
+[P316][None] Quick Reference
+[P321][None] Part VIII
+[P322][None] Advanced Animal Science
+[P323][Heading 1] Chapter 34  Aquaculture Production Metrics
+[P325][None] Aquaculture is the world's fastest-growing food production sector, supplying over 50% of fish for human consumption. These metrics apply across finfish, shrimp, and bivalve culture systems in freshwater and marine environments.
+[P331][None] Quick Reference
+[P334][Heading 1] Chapter 35  Pasture & Grazing Management
+[P336][None] Pasture is the critical interface between crop and animal production. Effective grazing management balances forage supply with livestock demand, maintaining plant productivity while maximizing animal performance and soil health.
+[P342][None] Quick Reference
+[P345][Heading 1] Chapter 36  Beekeeping & Apiculture Metrics
+[P347][None] Apiculture provides direct income from honey and other hive products, and indirect value through pollination services estimated at $235–577 billion in global crop value annually. These metrics support both commercial beekeeping and crop pollination management.
+[P352][None] Quick Reference
+[P355][Heading 1] Chapter 37  Animal Stress Physiology & Welfare Metrics
+[P357][None] Stress directly reduces feed intake, growth, reproduction, and immune function. Quantifying stress load allows producers to make evidence-based management decisions that improve both animal welfare and production efficiency.
+[P362][None] Quick Reference
+[P367][None] Part IX
+[P368][None] Digital Agriculture & Technology
+[P369][Heading 1] Chapter 38  AI & Machine Learning Model Metrics
+[P371][None] Machine learning models are increasingly used for crop yield prediction, disease detection, soil mapping, and livestock monitoring. Understanding model evaluation metrics is essential for critically interpreting AI tools in agricultural decision-making.
+[P376][None] Quick Reference
+[P379][Heading 1] Chapter 39  Drone & UAV Mission Planning Formulas
+[P381][None] Unmanned aerial vehicles (UAVs) are now routine tools for crop scouting, multispectral imaging, and precision spraying. Effective mission planning requires understanding coverage, resolution, and safety parameters.
+[P386][None] Quick Reference
+[P389][Heading 1] Chapter 40  IoT Sensors & Data Quality Metrics
+[P391][None] Agricultural IoT sensors generate continuous streams of field data. Understanding data quality, calibration, and validation metrics is essential for making reliable decisions from sensor-derived measurements.
+[P395][None] Quick Reference
+[P398][Heading 1] Chapter 41  Carbon Markets & MRV Metrics
+[P400][None] Measurement, Reporting, and Verification (MRV) frameworks enable farmers to generate and sell carbon credits. Understanding these calculations is increasingly important as voluntary carbon markets expand in agriculture.
+[P404][None] Quick Reference
+[P409][None] Part X
+[P410][None] Advanced Farm Economics
+[P411][Heading 1] Chapter 42  Supply Chain & Value Chain Analysis
+[P413][None] Understanding where value is created and captured along the agricultural value chain reveals opportunities for smallholder income improvement, investment, and policy intervention.
+[P418][None] Quick Reference
+[P420][Heading 1] Chapter 43  Agricultural Risk & Insurance Metrics
+[P422][None] Agriculture is inherently risky. Quantifying production and price risk is essential for farm planning, lending decisions, insurance product design, and government safety net programs.
+[P427][None] Quick Reference
+[P430][Heading 1] Chapter 44  Water Economics & Valuation
+[P432][None] As water scarcity intensifies, economic metrics are needed to allocate water efficiently, set prices, and evaluate investments in water-saving technologies.
+[P436][None] Quick Reference
+[P438][Heading 1] Chapter 45  Gender, Equity & Social Metrics
+[P440][None] Agricultural development outcomes depend on who has access to resources and decision-making. Gender and social metrics quantify inclusion, equity, and empowerment in farming systems.
+[P444][None] Quick Reference
+[P449][None] Part XI
+[P450][None] Reference Materials & Formula Index
+[P451][Heading 1] Chapter 46  Comprehensive Conversion Tables
+[P453][Heading 2] 46.1 Area Conversions
+[P454][None] Quick Reference
+[P456][Heading 2] 46.2 Water & Irrigation Conversions
+[P457][None] Quick Reference
+[P459][Heading 2] 46.3 Weight & Yield Conversions
+[P460][None] Quick Reference
+[P462][Heading 2] 46.4 Nutrient & Fertilizer Conversions
+[P463][None] Quick Reference
+[P465][Heading 2] 46.5 Energy Conversions
+[P466][None] Quick Reference
+[P468][Heading 1] Chapter 47  Master Formula Index
+[P470][None] Complete alphabetical index of all formulas, indices, and metrics in this handbook with chapter reference.
+[P471][None] Quick Reference
+[P473][Heading 1] Chapter 48  Printable Formula Quick-Reference Cards
+[P475][None] The following pages contain standalone formula cards — one per key metric — designed for printing, laminating, and use in field training, extension workshops, and farm management. Each card includes the formula, variables, a worked example, and the critical pitfall to avoid.
+[P491][None] Part XII
+[P492][None] Soil & Crop Science — Advanced Topics
+[P493][Heading 1] Chapter 49  Salinity & Salt-Affected Soil Management
+[P495][None] More than 250 million hectares of agricultural land globally are affected by salinity, with an additional 1–2 million ha lost each year to secondary salinization from irrigation. These metrics guide reclamation planning, crop selection, and long-term salt balance management.
+[P500][None] Quick Reference
+[P503][Heading 1] Chapter 50  Cover Crop & Crop Rotation Metrics
+[P505][None] Cover crops and diverse rotations are foundational to regenerative agriculture. These metrics quantify their contribution to soil health, weed suppression, nitrogen fixation, and cropping system productivity.
+[P510][None] Quick Reference
+[P513][Heading 1] Chapter 51  Seed Technology & Vigour Metrics
+[P515][None] Seed quality determines the foundation of every crop. Vigour testing goes beyond standard germination to predict field emergence under stress — the conditions that matter most.
+[P520][None] Quick Reference
+[P523][Heading 1] Chapter 52  Crop Simulation & Modelling Fundamentals
+[P525][None] Crop simulation models (DSSAT, APSIM, AquaCrop, WOFOST) are increasingly used in research, breeding, and policy. Understanding their key parameters and outputs allows practitioners to interpret and apply model results critically.
+[P529][None] Quick Reference
+[P532][Heading 1] Chapter 53  Mycorrhizal & Symbiotic Nitrogen Fixation Metrics
+[P534][None] Root symbioses with mycorrhizal fungi and rhizobia bacteria are among the most valuable biological services in agriculture. Quantifying these relationships justifies inoculant use and management decisions that preserve soil biology.
+[P538][None] Quick Reference
+[P543][None] Part XIII
+[P544][None] Animal Science — Specialist Topics
+[P545][Heading 1] Chapter 54  Rumen Function & Fermentation Metrics
+[P547][None] Rumen fermentation is the engine of ruminant productivity. Indices of rumen health, volatile fatty acid profiles, and fiber digestion allow nutritionists to optimize rations for efficiency, health, and methane mitigation.
+[P552][None] Quick Reference
+[P555][Heading 1] Chapter 55  Small Ruminant Production Metrics
+[P557][None] Sheep and goat production systems have distinct biological characteristics requiring adapted metrics. Applying bovine benchmarks to small ruminants leads to systematic errors in ration formulation, breeding decisions, and economic analysis.
+[P561][None] Quick Reference
+[P564][Heading 1] Chapter 56  Insect Farming Production Metrics
+[P566][None] Insect farming is among the fastest-growing food and feed sectors globally. Black soldier fly (Hermetia illucens), mealworm (Tenebrio molitor), and house cricket (Acheta domesticus) are the dominant commercial species, with distinct production metrics.
+[P571][None] Quick Reference
+[P574][Heading 1] Chapter 57  Equine Performance & Management Metrics
+[P576][None] Equine science bridges sport, work, and breeding applications. These metrics apply across racing, sport horse, and draught horse contexts, and are absent from most livestock handbooks.
+[P580][None] Quick Reference
+[P585][None] Part XIV
+[P586][None] Technology, Traceability & Automation
+[P587][Heading 1] Chapter 58  Hyperspectral & Advanced Remote Sensing Indices
+[P589][None] Hyperspectral sensors capture 100–400 narrow spectral bands, enabling detection of specific plant biochemical compounds invisible to standard multispectral cameras. These indices are moving from research into commercial precision agriculture applications.
+[P593][None] Quick Reference
+[P596][Heading 1] Chapter 59  Farm Management Software KPIs
+[P598][None] Modern farm management software (FMS) generates dashboards of KPIs. Understanding which metrics to prioritize, how they are calculated, and what actions they trigger is essential for translating digital tools into farm profit.
+[P602][None] Quick Reference
+[P604][Heading 1] Chapter 60  Blockchain & Food Traceability Metrics
+[P606][None] Traceability systems — whether blockchain-based or conventional — must be evaluated on their completeness, speed, and reliability. These metrics help producers and buyers assess system performance and justify premium pricing.
+[P610][None] Quick Reference
+[P612][Heading 1] Chapter 61  Agricultural Robotics & Automation Metrics
+[P614][None] Autonomous tractors, harvesting robots, and seeding drones are entering commercial scale. Economic and performance metrics for these systems help producers make adoption and investment decisions.
+[P618][None] Quick Reference
+[P623][None] Part XV
+[P624][None] Advanced Farm Economics & Policy
+[P625][Heading 1] Chapter 62  Life Cycle Assessment (LCA) in Agriculture
+[P627][None] Life Cycle Assessment quantifies environmental impacts of a product across its entire supply chain — from raw material inputs through production, processing, and disposal. Agricultural LCAs are increasingly required by food companies, lenders, and regulators.
+[P631][None] Quick Reference
+[P634][Heading 1] Chapter 63  Smallholder Profitability Toolkit
+[P636][None] Standard economic analysis methods assume reliable data, market access, and monetized production. This chapter adapts core economic metrics for smallholder and subsistence farming contexts where data is sparse and food security is paramount.
+[P641][None] Quick Reference
+[P644][Heading 1] Chapter 64  Land Rent & Tenure Economics
+[P646][None] Land access and tenure security are fundamental determinants of agricultural investment and productivity. These metrics are essential for policy analysis, land valuation, and farm business planning involving leased or shared land.
+[P650][None] Quick Reference
+[P652][Heading 1] Chapter 65  Circular Economy on the Farm
+[P654][None] Circular agriculture minimizes waste by converting farm by-products into inputs for other system components. These metrics quantify resource cycling efficiency and guide investment in circular infrastructure.
+[P659][None] Quick Reference
+[P664][None] Part XVI
+[P665][None] Visual Guides, Decision Tools & Global Content
+[P666][Heading 1] Chapter 66  Management Decision Flowcharts
+[P668][None] Decision trees translate index values into clear management actions. These visual guides are the highest-value extension tool — bridging the gap between "what does this number mean" and "what should I do about it."
+[P669][Heading 2] 66.1 Crop Nutrient Management Decision Tree
+[P670][None] Quick Reference
+[P672][Heading 2] 66.2 Irrigation Scheduling Decision Tree
+[P673][None] Quick Reference
+[P675][Heading 2] 66.3 Livestock Health Decision Tree
+[P676][None] Quick Reference
+[P678][Heading 2] 66.4 Soil Health Intervention Decision Tree
+[P679][None] Quick Reference
+[P682][Heading 1] Chapter 67  Multilingual Glossary of Key Terms
+[P684][None] This glossary provides translations of the most important agricultural metrics and abbreviations in Arabic, French, Spanish, and Swahili — the four languages covering the largest agricultural readership outside English.
+[P685][Heading 2] 67.1 Core Formula Terms — 4-Language Reference
+[P686][None] Quick Reference
+[P688][Heading 2] 67.2 Regional Unit Name Variants
+[P689][None] Quick Reference
+[P691][Heading 1] Chapter 68  Tropical & Subtropical Crop Metrics
+[P693][None] The handbook was originally weighted toward temperate crops. This chapter extends coverage to major tropical staples and cash crops of Sub-Saharan Africa, South and Southeast Asia, and Latin America.
+[P698][None] Quick Reference
+[P701][Heading 1] Chapter 69  Dryland & Rainfed Farming Metrics
+[P703][None] Over 80% of global cropland is rainfed. Metrics adapted for water-limited, low-input systems are essential for the majority of the world's farmers, yet are underrepresented in most agronomy references.
+[P708][None] Quick Reference
+[P711][Heading 1] Chapter 70  Food Systems & Nutrition Metrics
+[P713][None] Agricultural productivity metrics must ultimately connect to human nutritional outcomes. Food systems metrics bridge the gap between farm yield and dietary quality, increasingly required by development funders, governments, and food companies.
+[P717][None] Quick Reference
+[P722][None] Part XVII
+[P723][None] Benchmark Database & Seasonal Calendars
+[P724][Heading 1] Chapter 71  Global Benchmark Reference Database
+[P726][None] This chapter provides typical ranges, global benchmarks, and regional norms for the key metrics in this handbook. Use these ranges to check plausibility of your calculations and identify performance gaps.
+[P727][Heading 2] 71.1 Crop Yield Benchmarks
+[P728][None] Quick Reference
+[P730][Heading 2] 71.2 Livestock Performance Benchmarks
+[P731][None] Quick Reference
+[P733][Heading 2] 71.3 Soil Health Benchmark Ranges
+[P734][None] Quick Reference
+[P736][Heading 2] 71.4 Water & Irrigation Benchmarks
+[P737][None] Quick Reference
+[P739][Heading 1] Chapter 72  Seasonal Farm Management Calendars
+[P741][None] Linking metric monitoring to the seasonal farm calendar transforms a reference handbook into an operational management guide. This chapter shows when each key metric should be measured, monitored, and acted upon across major farming systems.
+[P742][Heading 2] 72.1 Wheat Production Monitoring Calendar
+[P743][None] Quick Reference
+[P745][Heading 2] 72.2 Dairy Herd Monthly KPI Calendar
+[P746][None] Quick Reference
+[P748][Heading 2] 72.3 Integrated Crop-Livestock Annual Calendar
+[P749][None] Quick Reference
+
+
+=== TABLES ===
+
+--- Table 0 ---
+♻  Sustainability Note: This handbook integrates crop–livestock interactions, sustainability metrics, climate-smart indices, and digital agronomy tools for comprehensive decision support.
+
+--- Table 1 ---
+Quantity | SI Unit | Common Alternative | Conversion
+Area | ha | acre | 1 ha = 2.47 acres
+Water | mm/ha | acre-inch | 1 mm/ha = 10 m³
+Weight | kg | lb, ton | 1 kg = 2.2 lb
+Milk | L, kg | gal | 1 gal = 3.785 L
+Energy | MJ | kcal | 1 MJ = 239 kcal
+Nutrients (P) | kg P | kg P₂O₅ | P = 0.43 × P₂O₅
+Nutrients (K) | kg K | kg K₂O | K = 0.83 × K₂O
+Protein | g CP | g N | CP = N × 6.25
+
+--- Table 2 ---
+♻  Sustainability Note: Converting to SI simplifies carbon/water footprinting, as most global protocols use SI.
+
+--- Table 3 ---
+2.1  Plant Population (PP) | 2.1  Plant Population (PP)
+PP = (Area m² × 10,000) / (Row Spacing cm × Plant Spacing cm) | PP = (Area m² × 10,000) / (Row Spacing cm × Plant Spacing cm)
+Variables
+Area = m²
+Spacing = cm
+Output = plants/ha | Purpose
+Estimate plants per hectare based on chosen spacing.
+Example
+Maize at 75 cm × 25 cm: PP = 10,000 / (0.75 × 0.25) = 53,333 plants/ha.
+⚠ Pitfall: Confusing cm and m; forgetting field mortality.
+
+--- Table 4 ---
+2.2  Seed Rate (SR) | 2.2  Seed Rate (SR)
+SR = (Target Population × Test Weight g) / (1000 × 100 × Germination% × Purity%) | SR = (Target Population × Test Weight g) / (1000 × 100 × Germination% × Purity%)
+Variables
+Test Weight = g per 1000 seeds
+Germination & Purity = decimal (0.90 not 90) | Purpose
+Translate target population to kg seed to purchase.
+Example
+350,000 plants/ha, 35 g TW, 90% germ, 98% purity → SR = 126 kg/ha.
+⚠ Pitfall: Misplacing % as whole number instead of decimal.
+
+--- Table 5 ---
+2.3  Real Value of Seed (RVS) | 2.3  Real Value of Seed (RVS)
+RVS (%) = Purity (%) × Germination (%) / 100 | RVS (%) = Purity (%) × Germination (%) / 100
+Variables
+Purity = % pure seed by weight
+Germination = % viable | Purpose
+Proportion of seed lot that is viable and pure.
+Example
+Purity 98%, germination 90% → RVS = 88.2%.
+
+--- Table 6 ---
+▲  Decision: Order 5–10% more seed than calculated to cover field losses; calibrate seeder before planting.
+
+--- Table 7 ---
+Formula | Variable | Units | Key Use
+PP | Plants/ha | cm, m² | Spacing planning
+SR | kg/ha | g, % | Seed purchase, drill calibration
+RVS | % | % | Seed quality check
+SRR | % | kg | Seed adoption monitoring
+
+--- Table 8 ---
+♻  Sustainability Note: Seed replacement rate is a proxy for improved genetics adoption, but must be balanced with biodiversity conservation of local landraces.
+
+--- Table 9 ---
+3.1  Cropping Intensity (CI) | 3.1  Cropping Intensity (CI)
+CI (%) = Gross Cropped Area / Net Cultivable Area × 100 | CI (%) = Gross Cropped Area / Net Cultivable Area × 100
+Variables
+Gross Cropped Area = total area sown across all seasons | Purpose
+Measures how many times land is cropped in a year.
+Example
+200 ha gross cropped on 100 ha land → CI = 200%.
+
+--- Table 10 ---
+3.9  Land Equivalent Ratio (LER) ★ Key Index | 3.9  Land Equivalent Ratio (LER) ★ Key Index
+LER = Yia/Ysa + Yib/Ysb | LER = Yia/Ysa + Yib/Ysb
+Variables
+Yia, Yib = intercrop yields of species a and b
+Ysa, Ysb = sole crop yields | Purpose
+Measures yield advantage of intercropping vs. monoculture.
+Example
+Maize/cowpea intercrop with LER = 1.35 → 35% land advantage.
+⚠ Pitfall: Always compare to same season sole crop controls.
+
+--- Table 11 ---
+3.14  Monetary Advantage Index (MAI) | 3.14  Monetary Advantage Index (MAI)
+MAI = ((LER-1) / LER) × Total Monetary Value | MAI = ((LER-1) / LER) × Total Monetary Value
+Variables
+LER = Land Equivalent Ratio
+TMV = monetary value of total intercrop produce | Purpose
+Captures the financial advantage of intercropping over monoculture.
+Example
+LER = 1.35, TMV = $2000/ha → MAI = $518/ha.
+
+--- Table 12 ---
+Index | Formula | Threshold | Use
+LER | Yia/Ysa + Yib/Ysb | >1 beneficial | Yield advantage of intercrop
+LEC | La × Lb | >0.25 positive | Intercrop advantage
+ATER | Adjusted LER by duration | Higher = better | Time-adjusted yield
+MAI | ((LER-1)/LER) × TMV | Positive = profitable | Economic gain
+CI | Gross/Net area ×100 | >100% = multiple crop | Land use intensity
+
+--- Table 13 ---
+♻  Sustainability Note: Diversity indices (DI, HDI) link directly to resilience against pests, climate variability, and market shocks.
+
+--- Table 14 ---
+4.1  Fertilizer Requirement | 4.1  Fertilizer Requirement
+Fertilizer (kg/ha) = 100 × Recommended Rate (kg/ha) / Nutrient% in product | Fertilizer (kg/ha) = 100 × Recommended Rate (kg/ha) / Nutrient% in product
+Variables
+Recommended rate = nutrient element (N, P, K)
+Nutrient % = label value | Purpose
+Convert nutrient requirement to commercial fertilizer quantity.
+Example
+120 kg N/ha needed; urea 46% N → 261 kg urea/ha.
+⚠ Pitfall: Confusing element rate with oxide form (P vs P₂O₅).
+
+--- Table 15 ---
+4.8a  Agronomic Efficiency (AE) | 4.8a  Agronomic Efficiency (AE)
+AE = (Yf − Yu) / N_applied  [kg yield / kg nutrient] | AE = (Yf − Yu) / N_applied  [kg yield / kg nutrient]
+Variables
+Yf = yield with fertilizer
+Yu = yield without fertilizer
+N_applied = kg/ha | Purpose
+Yield gain per kg of nutrient applied.
+Example
+Yf=5 t/ha, Yu=3 t/ha, N=100 kg/ha → AE = 20 kg grain/kg N.
+⚠ Pitfall: Always specify which NUE metric is reported; they differ substantially.
+
+--- Table 16 ---
+4.8b  Apparent Nutrient Recovery (ANR) | 4.8b  Apparent Nutrient Recovery (ANR)
+ANR (%) = (NUf − NUu) / N_applied × 100 | ANR (%) = (NUf − NUu) / N_applied × 100
+Variables
+NUf, NUu = nutrient uptake with/without fertilizer (kg/ha) | Purpose
+Percentage of applied nutrient recovered by the crop.
+Example
+NUf=120, NUu=60, N=100 → ANR = 60%.
+
+--- Table 17 ---
+4.8c  Partial Factor Productivity (PFP) | 4.8c  Partial Factor Productivity (PFP)
+PFP = Y / N_applied  [kg yield / kg nutrient] | PFP = Y / N_applied  [kg yield / kg nutrient]
+Variables
+Y = total yield including soil contribution | Purpose
+Total yield per unit of nutrient applied; broadest NUE measure.
+Example
+Y=5 t/ha, N=100 kg → PFP = 50 kg/kg.
+
+--- Table 18 ---
+Metric | Equation | Interpretation
+AE | (Yf−Yu)/N | Yield gain per kg nutrient
+PE | (Yf−Yu)/(NUf−NUu) | Conversion of absorbed nutrient
+ANR | (NUf−NUu)/N×100 | % of nutrient recovered
+PFP | Y/N | Yield per unit input
+NHI | Grain N ÷ total N×100 | Allocation efficiency
+
+--- Table 19 ---
+♻  Sustainability Note: High NUE reduces runoff, leaching, and GHG emissions while saving input costs.
+
+--- Table 20 ---
+5.1  Weed Control Efficiency (WCE) | 5.1  Weed Control Efficiency (WCE)
+WCE (%) = (WDc − WDt) / WDc × 100 | WCE (%) = (WDc − WDt) / WDc × 100
+Variables
+WDc = weed dry weight in control
+WDt = weed dry weight in treatment | Purpose
+Measures how effectively a treatment reduces weed biomass.
+Example
+Control=500 g/m², treatment=150 g/m² → WCE = 70%.
+
+--- Table 21 ---
+5.7  Economic Threshold Level (ETL) | 5.7  Economic Threshold Level (ETL)
+ETL = C / (V × I × D × K) | ETL = C / (V × I × D × K)
+Variables
+C = cost of control
+V = crop market value/unit
+I = injury per pest
+D = pest density
+K = proportion of damage avoided | Purpose
+Determines when pest control becomes economically justifiable.
+Example
+Spray only when pest density exceeds the ETL threshold.
+⚠ Pitfall: ETL is dynamic — recalculate when crop prices or pest densities change.
+
+--- Table 22 ---
+Metric | Formula | Use
+WCE | (WDc−WDt)/WDc×100 | Weed control effectiveness
+WI | (Ywc−Yt)/Ywc×100 | Yield loss due to weeds
+WSE | (WDmono−WDinter)/WDmono×100 | Weed suppression by intercrop
+ICE | (Pc−Pt)/Pc×100 | Insect control efficiency
+PUE | (Yt−Yu)/Pesticide dose | Pesticide efficiency
+HEI | (Yt−Yu)/(Ywf−Yu)×100 | Herbicide efficiency
+ETL | C/(V×I×D×K) | Decision threshold for pest control
+
+--- Table 23 ---
+♻  Sustainability Note: PUE and ETL emphasize minimizing pesticide use to protect beneficial organisms, reduce residues, and delay resistance.
+
+--- Table 24 ---
+6.1  Net Irrigation Requirement (NIR) | 6.1  Net Irrigation Requirement (NIR)
+NIR = ETc − Pe  [mm or m³/ha] | NIR = ETc − Pe  [mm or m³/ha]
+Variables
+ETc = crop evapotranspiration (mm)
+Pe = effective rainfall (mm) | Purpose
+Net water needed by the crop from irrigation.
+Example
+ETc=450 mm, Pe=120 mm → NIR = 330 mm.
+
+--- Table 25 ---
+6.2  Gross Irrigation Requirement (GIR) | 6.2  Gross Irrigation Requirement (GIR)
+GIR = NIR / Ea  [mm] | GIR = NIR / Ea  [mm]
+Variables
+Ea = application efficiency (decimal, e.g. 0.75) | Purpose
+Total water to apply at field level, accounting for losses.
+Example
+NIR=330 mm, Ea=0.75 → GIR = 440 mm.
+⚠ Pitfall: Forgetting that Ea < 1 means GIR always exceeds NIR.
+
+--- Table 26 ---
+6.4  Water Use Efficiency (WUE) | 6.4  Water Use Efficiency (WUE)
+WUE = Yield / Water used  [kg/mm or kg/m³] | WUE = Yield / Water used  [kg/mm or kg/m³]
+Variables
+Yield = economic yield (kg/ha)
+Water used = total ET or applied irrigation | Purpose
+Measures crop productivity per unit of water consumed.
+Example
+5 t grain/ha with 450 mm water → WUE = 11.1 kg/mm.
+
+--- Table 27 ---
+Metric | Formula | Use
+NIR | ETc − Pe | Net crop water demand
+GIR | NIR/Ea | Water to apply at field
+Ea | Ws/Wf×100 | Application efficiency (%)
+WUE | Yield/Water used | Crop water productivity
+IW/CPE | Depth/Pan Evaporation | Irrigation scheduling trigger
+LR | ECiw/ECdw | Salinity – leaching requirement
+CU | Christiansen formula | Sprinkler uniformity (%)
+
+--- Table 28 ---
+♻  Sustainability Note: Improving Ea and CU reduces groundwater depletion and energy use in pumping while improving yields.
+
+--- Table 29 ---
+7.1  Bulk Density (BD) | 7.1  Bulk Density (BD)
+BD = Oven-dry soil mass / Total soil volume  [g/cm³] | BD = Oven-dry soil mass / Total soil volume  [g/cm³]
+Variables
+Typical range: 1.1–1.6 g/cm³ for mineral soils | Purpose
+Indicator of compaction and porosity.
+Example
+Mass 130 g, volume 100 cm³ → BD = 1.3 g/cm³.
+⚠ Pitfall: Use undisturbed core samples only.
+
+--- Table 30 ---
+7.3  Porosity | 7.3  Porosity
+n (%) = (1 − BD/PD) × 100 | n (%) = (1 − BD/PD) × 100
+Variables
+BD = bulk density
+PD = particle density (≈2.65 g/cm³ for mineral soil) | Purpose
+Indicates soil aeration and water holding capacity.
+Example
+BD=1.3, PD=2.65 → n = 51%.
+
+--- Table 31 ---
+7.10  Sodium Adsorption Ratio (SAR) | 7.10  Sodium Adsorption Ratio (SAR)
+SAR = [Na⁺] / √(([Ca²⁺]+[Mg²⁺])/2)  [mmol/L]⁰·⁵ | SAR = [Na⁺] / √(([Ca²⁺]+[Mg²⁺])/2)  [mmol/L]⁰·⁵
+Variables
+All ions in mmol/L or meq/L
+SAR > 13 = sodicity hazard | Purpose
+Assess irrigation water quality and sodicity risk.
+Example
+Na=12, Ca=4, Mg=2 → SAR = 12/√3 = 6.9 (safe).
+
+--- Table 32 ---
+Metric | Formula | Threshold
+BD | Mass dry / volume | >1.6 g/cm³ = compaction risk
+Porosity | (1−BD/PD)×100 | <40% = poor aeration
+AWC | FC − PWP | Higher = better water storage
+SOC/OM | OM = SOC×1.724 | >2% OM = healthy soil
+ESP | Na/CEC×100 | >15% = sodic soil
+SAR | Na/√((Ca+Mg)/2) | >13 = sodicity hazard
+CEC | Sum of cations/kg soil | Higher = more fertile
+
+--- Table 33 ---
+♻  Sustainability Note: Improving SOC improves fertility, resilience to drought, and carbon sequestration, contributing to climate mitigation.
+
+--- Table 34 ---
+8.1  Absolute Growth Rate (AGR) | 8.1  Absolute Growth Rate (AGR)
+AGR = (W₂ − W₁) / (t₂ − t₁)  [g plant⁻¹ day⁻¹] | AGR = (W₂ − W₁) / (t₂ − t₁)  [g plant⁻¹ day⁻¹]
+Variables
+W = plant dry weight (g)
+t = time (days) | Purpose
+Increase in weight per unit time; simple, intuitive growth measure.
+Example
+W₁=10 g at day 20, W₂=40 g at day 40 → AGR = 1.5 g/day.
+
+--- Table 35 ---
+8.9  Harvest Index (HI) | 8.9  Harvest Index (HI)
+HI (%) = Economic yield / Biological yield × 100 | HI (%) = Economic yield / Biological yield × 100
+Variables
+Economic yield = grain, fiber, tuber (marketed)
+Biological yield = total above-ground biomass | Purpose
+Efficiency of converting biomass to marketable product.
+Example
+Grain=5 t/ha, biomass=12 t/ha → HI = 41.7%.
+⚠ Pitfall: Typical range 30–50% for cereals; below 30% indicates poor partitioning.
+
+--- Table 36 ---
+8.12  Growing Degree Days (GDD) | 8.12  Growing Degree Days (GDD)
+GDD = Σ ((Tmax + Tmin)/2 − Tbase) | GDD = Σ ((Tmax + Tmin)/2 − Tbase)
+Variables
+Tbase = biological zero (e.g. 10°C for maize)
+Sum daily across growth period | Purpose
+Heat unit accumulation governing phenology and maturity timing.
+Example
+Tmax=28°C, Tmin=16°C, Tbase=10°C → GDD/day = 12.
+⚠ Pitfall: Use crop-specific Tbase; avoid truncating negative values inconsistently.
+
+--- Table 37 ---
+Metric | Formula | Use
+AGR | (W₂−W₁)/(t₂−t₁) | Growth rate per plant
+RGR | (lnW₂−lnW₁)/(t₂−t₁) | Relative growth efficiency
+CGR | AGR×1/A | Biomass per unit ground area
+LAI | Leaf area/Ground area | Canopy status (optimal 3–5)
+HI | Economic/Biological×100 | Harvest efficiency (30–50%)
+GDD | Σ(Tavg−Tbase) | Thermal time accumulation
+HUE | Yield/GDD | Heat use efficiency
+
+--- Table 38 ---
+♻  Sustainability Note: LAI, HI, and HUE are critical for breeding climate-smart crops that use light, water, and heat more efficiently.
+
+--- Table 39 ---
+9.1  NDVI – Normalized Difference Vegetation Index | 9.1  NDVI – Normalized Difference Vegetation Index
+NDVI = (NIR − Red) / (NIR + Red) | NDVI = (NIR − Red) / (NIR + Red)
+Variables
+NIR = near-infrared reflectance
+Red = red band reflectance
+Range: −1 to +1 | Purpose
+Most widely used vegetation vigor index; correlates with LAI and biomass.
+Example
+NIR=0.65, Red=0.25 → NDVI = 0.44 (moderate-good cover).
+⚠ Pitfall: Saturates at high LAI; use EVI for dense canopies.
+
+--- Table 40 ---
+9.2  SAVI – Soil-Adjusted Vegetation Index | 9.2  SAVI – Soil-Adjusted Vegetation Index
+SAVI = (NIR − Red)(1+L) / (NIR + Red + L) | SAVI = (NIR − Red)(1+L) / (NIR + Red + L)
+Variables
+L = soil adjustment factor (0.5 default)
+Reduces soil background effect | Purpose
+Corrects NDVI for bare soil influence in sparse canopies.
+Example
+Same bands as NDVI, L=0.5; preferred for < 15% cover.
+
+--- Table 41 ---
+9.5  VHI – Vegetation Health Index | 9.5  VHI – Vegetation Health Index
+VHI = a × VCI + (1−a) × TCI | VHI = a × VCI + (1−a) × TCI
+Variables
+VCI = Vegetation Condition Index (greenness vs history)
+TCI = Temperature Condition Index
+a = weight (typically 0.5) | Purpose
+Combines greenness and thermal stress into a drought composite.
+Example
+VCI=37.5%, TCI=50%, a=0.5 → VHI = 43.75 (moderate stress).
+
+--- Table 42 ---
+Index | Formula | Use
+NDVI | (NIR−Red)/(NIR+Red) | Vegetation vigor & LAI
+SAVI | (NIR−Red)(1+L)/(NIR+Red+L) | Soil-adjusted greenness
+EVI | G(NIR−Red)/(NIR+C₁Red−C₂Blue+L) | High biomass sensitivity
+VCI | (NDVI−NDVImin)/range×100 | Relative greenness (drought)
+TCI | (BTmax−BT)/range×100 | Heat/drought stress
+VHI | aVCI+(1−a)TCI | Combined stress index
+NDWI | (NIR−SWIR)/(NIR+SWIR) | Canopy water content
+PRI | (R531−R570)/(R531+R570) | Photosynthetic efficiency
+
+--- Table 43 ---
+♻  Sustainability Note: Remote sensing reduces reliance on destructive sampling and enables early warning of stress, supporting climate resilience.
+
+--- Table 44 ---
+10.1  Dry Matter Intake (DMI) | 10.1  Dry Matter Intake (DMI)
+DMI = Feed offered − Feed refused  [kg/day] | DMI = Feed offered − Feed refused  [kg/day]
+Variables
+Typical: 2.5–4% of body weight for dairy cows | Purpose
+Quantifies actual dry matter consumed; basis for ration formulation.
+Example
+Cow offered 25 kg DM, refused 3 kg → DMI = 22 kg/day.
+
+--- Table 45 ---
+10.6  Feed Conversion Ratio (FCR) | 10.6  Feed Conversion Ratio (FCR)
+FCR = Feed intake / Weight gain  [kg feed/kg gain] | FCR = Feed intake / Weight gain  [kg feed/kg gain]
+Variables
+Lower FCR = better efficiency
+Typical: broilers 1.6–2.0, beef 6–8 | Purpose
+Industry benchmark for feed efficiency.
+Example
+Lamb: 40 kg feed, 10 kg gain → FCR = 4.0.
+⚠ Pitfall: Must specify the feed basis (as-fed vs dry matter).
+
+--- Table 46 ---
+10.9  Energy-Corrected Milk (ECM) | 10.9  Energy-Corrected Milk (ECM)
+ECM (kg) = 0.327×Milk + 12.95×Fat + 7.20×Protein | ECM (kg) = 0.327×Milk + 12.95×Fat + 7.20×Protein
+Variables
+Milk = kg/day; Fat, Protein = kg/day (not %) | Purpose
+Standardizes milk yield for fat and protein content to allow fair comparisons.
+Example
+25 kg milk, 0.95 kg fat, 0.80 kg protein → ECM = 32.7 kg/day.
+⚠ Pitfall: Convert % to kg by multiplying by milk yield first.
+
+--- Table 47 ---
+Metric | Formula | Use
+DMI | Offered − Refused | Intake measure (kg/day)
+CP | N × 6.25 | Crude protein (%)
+TDN | DCP×2.25+DCF+DNFE | Energy content of feed
+ME | DE × 0.82 (MJ/kg) | Metabolizable energy
+FCR | Feed/Weight gain | Efficiency (lower=better)
+PER | Weight gain/Protein intake | Protein efficiency
+ECM | 0.327M+12.95F+7.20P | Standardized milk yield
+BRI | Supplied/Requirement×100 | Ration adequacy (90–110%=ok)
+
+--- Table 48 ---
+♻  Sustainability Note: Improving FCR reduces feed demand, land pressure, and methane emissions per unit of product.
+
+--- Table 49 ---
+11.1  Average Daily Gain (ADG) | 11.1  Average Daily Gain (ADG)
+ADG = (Final weight − Initial weight) / Days  [kg/day or g/day] | ADG = (Final weight − Initial weight) / Days  [kg/day or g/day]
+Variables
+Weigh animals at consistent times (morning, after overnight fast) | Purpose
+Standard growth measurement across species and production systems.
+Example
+Calf: 320 kg final − 200 kg initial, 120 days → ADG = 1.0 kg/day.
+⚠ Pitfall: Use multiple weighing periods to smooth measurement error.
+
+--- Table 50 ---
+11.4  Kleiber Ratio (KR) | 11.4  Kleiber Ratio (KR)
+KR = ADG / Metabolic weight  where Metabolic weight = BW^0.75 | KR = ADG / Metabolic weight  where Metabolic weight = BW^0.75
+Variables
+BW = body weight (kg)
+Allows growth comparison across breeds/sizes | Purpose
+Growth efficiency index independent of animal size.
+Example
+ADG=1 kg, BW=300 kg → MW=73.1 → KR = 0.014.
+
+--- Table 51 ---
+Metric | Formula | Use
+ADG | (W₂−W₁)/days | Daily growth rate
+GR | (W₂−W₁)/W₁×100 | % weight increase
+KR | ADG/BW^0.75 | Size-corrected efficiency
+GER | ADG/Feed intake | Gain per kg feed consumed
+BCS | Visual 1–5 or 1–9 scale | Energy reserve estimate
+CGE | Total gain/Total feed | Lifetime efficiency
+
+--- Table 52 ---
+♻  Sustainability Note: Selecting animals with high ADG and Kleiber Ratio improves productivity while reducing resource use and emissions per unit product.
+
+--- Table 53 ---
+12.1  Conception Rate (CR) | 12.1  Conception Rate (CR)
+CR (%) = Animals conceived / Animals inseminated × 100 | CR (%) = Animals conceived / Animals inseminated × 100
+Variables
+Target: >60% for dairy cattle with good heat detection | Purpose
+Efficiency of a single insemination or mating event.
+Example
+100 cows inseminated, 45 conceived → CR = 45% (below target).
+⚠ Pitfall: Low CR may reflect heat detection failure, not poor fertility.
+
+--- Table 54 ---
+12.6  Calving Interval (CI) | 12.6  Calving Interval (CI)
+CI = Gestation length + Days open  [days] | CI = Gestation length + Days open  [days]
+Variables
+Days open = days from calving to next conception
+Target: 365–400 days | Purpose
+Fundamental dairy efficiency metric linking reproduction and lactation.
+Example
+Gestation 280 days, days open 90 → CI = 370 days (good).
+
+--- Table 55 ---
+12.10  Genetic Gain (ΔG) | 12.10  Genetic Gain (ΔG)
+ΔG = i × r × σA / L  [units/year] | ΔG = i × r × σA / L  [units/year]
+Variables
+i = selection intensity
+r = accuracy of selection
+σA = additive genetic SD
+L = generation interval (years) | Purpose
+Predicts annual genetic progress from a selection program.
+Example
+i=1.2, r=0.7, σA=10, L=5 yrs → ΔG = 1.68 units/year.
+
+--- Table 56 ---
+Metric | Formula | Use
+CR | Conceived/Inseminated×100 | AI success rate
+PR | Pregnant/Eligible×100 | Herd-level conception
+SPC | Inseminations/Conceptions | Target: 1.5–2
+CI | Gestation + Days open | Calving interval (target 365 d)
+ΔG | i×r×σA/L | Annual genetic progress
+SI | Σbi×xi | Multi-trait breeding index
+
+--- Table 57 ---
+♻  Sustainability Note: Improving reproductive efficiency reduces replacement pressure, methane emissions, and resource use per unit of milk/meat.
+
+--- Table 58 ---
+13.2  Fat-Corrected Milk (FCM) | 13.2  Fat-Corrected Milk (FCM)
+FCM (kg) = 0.4 × Milk + 15 × Fat  [standardized to 4% fat] | FCM (kg) = 0.4 × Milk + 15 × Fat  [standardized to 4% fat]
+Variables
+Milk = kg/day
+Fat = kg/day | Purpose
+Standardizes milk yield to 4% fat basis for comparisons.
+Example
+30 kg milk at 3.5% fat (1.05 kg fat): FCM = 0.4×30 + 15×1.05 = 27.75 kg.
+
+--- Table 59 ---
+13.6  Persistency Index (PI) | 13.6  Persistency Index (PI)
+PI (%) = Milk yield later / Peak yield × 100 | PI (%) = Milk yield later / Peak yield × 100
+Variables
+Compare a standard reference period to peak production | Purpose
+Measures how well cows sustain production after peak lactation.
+Example
+Peak 45 kg/day, month 7 yield 32 kg/day → PI = 71%.
+
+--- Table 60 ---
+13.8  Somatic Cell Score (SCS) | 13.8  Somatic Cell Score (SCS)
+SCS = log₂(SCC/100,000) + 3 | SCS = log₂(SCC/100,000) + 3
+Variables
+SCC = somatic cell count (cells/mL)
+SCS < 4.5 = healthy udder | Purpose
+Log-transformed SCC; more normally distributed for genetic analysis.
+Example
+SCC=200,000 → SCS = log₂(2)+3 = 4.0 (acceptable).
+
+--- Table 61 ---
+Metric | Formula | Use
+FCM | 0.4M + 15F | Standardized milk (4% fat)
+ECM | 0.327M+12.95F+7.20P | Standardized milk (fat+protein)
+MYE | Milk/Body weight | Productivity relative to size
+PI | Later yield/Peak×100 | Lactation persistency
+DER | Milk/DMI | Feed-to-milk efficiency
+SCS | log₂(SCC/100,000)+3 | Udder health indicator
+CIM | Lactation milk/Calving interval | Reproductive-adjusted yield
+
+--- Table 62 ---
+♻  Sustainability Note: Improving DER and PI reduces feed use, methane, and land pressure per unit of milk.
+
+--- Table 63 ---
+14.1  Dressing Percentage (DP) | 14.1  Dressing Percentage (DP)
+DP (%) = Carcass weight / Live weight × 100 | DP (%) = Carcass weight / Live weight × 100
+Variables
+Cattle: 55–65%
+Sheep/goats: 45–55%
+Broilers: 70–75% | Purpose
+Basic measure of proportion of live weight becoming saleable carcass.
+Example
+Sheep: live 40 kg, carcass 20 kg → DP = 50%.
+⚠ Pitfall: Confounding effects: gut fill, hide, breed type.
+
+--- Table 64 ---
+14.5  Broiler Performance Efficiency Factor (BPEF / EBI) | 14.5  Broiler Performance Efficiency Factor (BPEF / EBI)
+EBI = (Livability% × BW kg) / (Age days × FCR) × 100 | EBI = (Livability% × BW kg) / (Age days × FCR) × 100
+Variables
+Livability = % surviving
+BW = body weight at slaughter
+FCR = feed conversion ratio | Purpose
+Industry composite index of broiler production efficiency.
+Example
+95% livability, 2.0 kg BW, 40 days, FCR 1.8 → EBI = 263.
+
+--- Table 65 ---
+Metric | Formula | Use
+DP | Carcass/Live wt×100 | % live weight marketed
+CY | Edible meat/Carcass×100 | True meat yield
+MBR | Meat weight/Bone weight | Meatiness (higher=better)
+EBI/BPEF | (Livability×BW)/(Age×FCR)×100 | Broiler composite index
+LEA | Longissimus dorsi area cm² | Muscling predictor
+
+--- Table 66 ---
+♻  Sustainability Note: Improving FCR, DP, and EBI reduces feed use, water, and land footprint per unit of meat.
+
+--- Table 67 ---
+15.1  Hen-Day Egg Production (HDEP) | 15.1  Hen-Day Egg Production (HDEP)
+HDEP (%) = Eggs produced / Hens present that day × 100 | HDEP (%) = Eggs produced / Hens present that day × 100
+Variables
+Measured daily
+Reflects current flock productivity | Purpose
+Daily productivity benchmark excluding mortality effects.
+Example
+950 eggs from 1,000 hens present → HDEP = 95%.
+⚠ Pitfall: Does not account for cumulative mortality; use HHEP for that.
+
+--- Table 68 ---
+15.8  Haugh Unit (HU) | 15.8  Haugh Unit (HU)
+HU = 100 × log₁₀(H − 1.7W^0.37 + 7.6) | HU = 100 × log₁₀(H − 1.7W^0.37 + 7.6)
+Variables
+H = albumen height (mm)
+W = egg weight (g)
+HU > 72 = Grade AA; < 60 = Grade B | Purpose
+Standard measure of egg interior quality (freshness).
+Example
+H=8 mm, W=60 g → HU ≈ 88 (excellent quality).
+
+--- Table 69 ---
+Metric | Formula | Use
+HDEP | Eggs/Hens present×100 | Daily layer productivity
+HHEP | Total eggs/Hens housed at start×100 | Cumulative productivity
+Egg Mass | HDEP(%)×Egg weight(g)/100 | Production×weight combined
+FCR (eggs) | Feed kg/Egg mass kg | Layer feed efficiency
+Livability | 100−Mortality% | Flock survival
+PEF | (Livability×BW)/(Age×FCR)×100 | Broiler composite
+Haugh Unit | 100×log₁₀(H−1.7W^0.37+7.6) | Egg freshness/quality
+
+--- Table 70 ---
+♻  Sustainability Note: Improved FCR in poultry has the lowest environmental footprint per unit protein among all livestock — ongoing optimization matters.
+
+--- Table 71 ---
+16.1  Aridity Index (AI) | 16.1  Aridity Index (AI)
+AI = Annual precipitation / Potential evapotranspiration | AI = Annual precipitation / Potential evapotranspiration
+Variables
+AI < 0.05 = hyper-arid
+0.05–0.2 = arid
+0.2–0.5 = semi-arid
+0.5–0.65 = dry sub-humid | Purpose
+Classifies climate zones and guides crop selection and water management.
+Example
+P=300 mm, PET=800 mm → AI = 0.375 (semi-arid).
+
+--- Table 72 ---
+16.2  Moisture Deficit Index (MDI) | 16.2  Moisture Deficit Index (MDI)
+MDI = (PET − P) / PET | MDI = (PET − P) / PET
+Variables
+PET = potential evapotranspiration
+P = precipitation
+Range 0–1 | Purpose
+Proportion of water demand not met by rainfall.
+Example
+PET=700, P=300 → MDI = 0.57 (moderate deficit).
+
+--- Table 73 ---
+Metric | Formula/Scale | Use
+Aridity Index | P/PET | Climate zone classification
+MDI | (PET−P)/PET | Water deficit severity
+Heat Stress Hrs | Hours above threshold Temp | Crop/livestock risk
+GHG Intensity | CO₂-eq/unit output | Environmental efficiency
+Water footprint | m³/tonne product | Water accounting
+
+--- Table 74 ---
+17.1  Benefit-Cost Ratio (B:C) | 17.1  Benefit-Cost Ratio (B:C)
+B:C = Total gross returns / Total costs | B:C = Total gross returns / Total costs
+Variables
+B:C > 1 = profitable
+Include all variable and fixed costs | Purpose
+Simple profitability assessment for farm enterprises.
+Example
+Returns $5,000, Costs $3,500 → B:C = 1.43 (profitable).
+⚠ Pitfall: Ignores time value of money; use NPV for multi-year investments.
+
+--- Table 75 ---
+17.2  Gross Margin (GM) | 17.2  Gross Margin (GM)
+GM = Gross revenue − Variable costs  [$/ha or $/head] | GM = Gross revenue − Variable costs  [$/ha or $/head]
+Variables
+Does not deduct fixed/overhead costs | Purpose
+Most common farm enterprise comparison metric.
+Example
+Revenue $4,000/ha, variable costs $1,800/ha → GM = $2,200/ha.
+
+--- Table 76 ---
+17.3  Net Present Value (NPV) | 17.3  Net Present Value (NPV)
+NPV = Σ [CFt / (1+r)^t] − Initial investment | NPV = Σ [CFt / (1+r)^t] − Initial investment
+Variables
+CFt = cash flow in year t
+r = discount rate
+NPV > 0 = invest | Purpose
+Time-adjusted profitability for capital investments (irrigation, livestock housing).
+Example
+Use 10–12% discount rate for agricultural investments in developing markets.
+
+--- Table 77 ---
+Metric | Formula | Interpretation
+B:C Ratio | Returns/Costs | >1 profitable
+Gross Margin | Revenue − Variable costs | Enterprise comparison
+NPV | Σ CFt/(1+r)^t − Investment | >0 = invest
+IRR | Rate where NPV = 0 | >Opportunity cost = invest
+Payback period | Investment/Annual profit | Years to recover capital
+
+--- Table 78 ---
+♻  Sustainability Note: Gross margin analysis combined with environmental cost accounting is the pathway toward true sustainability accounting in farming systems.
+
+--- Table 79 ---
+Design | When to Use | Key Feature
+CRD | Homogeneous environment, lab/greenhouse | All treatments randomized; simplest analysis
+RCBD | Field with known gradient | Blocks control one direction of variation
+Latin Square | Two-way gradient | Rows and columns both blocked
+Split-Plot | Factor with different precision needs | Main plots and subplots
+Strip-Plot | Two large-scale factors | Both factors in strips across field
+Alpha-Lattice | Large number of genotypes | Incomplete blocks within reps
+
+--- Table 80 ---
+Tool | Format | Application
+Crop growth calculator | Excel/Python | GDD, LAI, HI tracking
+Livestock efficiency tracker | Excel/R | FCR, ADG, ECM monitoring
+Farm economics model | R/Google Sheets | B:C, NPV, gross margin
+Climate footprint calculator | Web tool | GHG, water footprint
+NDVI time series | Python/GEE | Crop stress monitoring
+
+--- Table 81 ---
+22.1  Shannon Diversity Index (H') | 22.1  Shannon Diversity Index (H')
+H' = −Σ (pi × ln pi) | H' = −Σ (pi × ln pi)
+Variables
+pi = proportion of species i in community
+Higher H' = greater diversity | Purpose
+Measures species diversity combining richness and evenness.
+Example
+4 equal species: H' = −4×(0.25×ln0.25) = 1.39.
+
+--- Table 82 ---
+Index | Formula | Use
+Shannon H' | −Σ pi×ln pi | Species diversity
+Simpson's D | 1−Σ pi² | Dominance-corrected diversity
+PSI | Pollinator abundance × crop dependence | Pollination service
+ATI | Composite transition score | Agroecological progress
+ESV | Service quantity × unit value | Ecosystem service valuation
+
+--- Table 83 ---
+♻  Sustainability Note: Integrating biodiversity indices into farm management connects productivity with ecosystem resilience, beneficial insect populations, and soil biota health.
+
+--- Table 84 ---
+Case Study | Key Indices Applied | Main Outcome
+Crop–Livestock Farm (50 ha maize+cattle) | LER=1.25, CRUE=70%, NRE=65% | Reduced fertilizer costs, better feed availability
+Dairy Farm (40-cow, semi-arid) | DER=1.4, CIM=7,800 L/yr, CF=1.8 kg CO₂/L | Improved efficiency, lower GHG intensity
+Maize+Cowpea Intercrop (10 ha) | LER=1.35, WUE=2.2 kg/m³, SPI=12.5 MJ/ha/day | Higher food security, better soil fertility
+Commercial Layer Unit (5,000 hens) | HDEP=92%, FCR=2.1, Livability=96% | Efficient egg production, low mortality
+
+--- Table 85 ---
+Abbreviation | Full Name | Brief Definition
+AGR | Absolute Growth Rate | Rate of biomass increase per unit time
+LAI | Leaf Area Index | Ratio of leaf area to ground area
+LER | Land Equivalent Ratio | Intercrop efficiency vs monocrop
+WUE | Water Use Efficiency | Yield per unit water consumed
+BD | Bulk Density | Mass of dry soil per unit volume
+AWC | Available Water Capacity | FC minus PWP
+GDD | Growing Degree Days | Accumulated heat units for phenology
+NDVI | Normalized Difference Vegetation Index | Satellite-based vegetation vigor
+
+--- Table 86 ---
+Abbreviation | Full Name | Brief Definition
+ADG | Average Daily Gain | Daily weight gain of animals
+FCR | Feed Conversion Ratio | Feed consumed per unit of weight gain
+BCS | Body Condition Score | Visual scoring of animal fat reserves
+ECM | Energy-Corrected Milk | Milk yield adjusted for fat and protein
+DMI | Dry Matter Intake | Feed consumed on dry matter basis
+SPC | Services per Conception | AI events needed per pregnancy
+DP | Dressing Percentage | Carcass as % of live weight
+HDEP | Hen-Day Egg Production | % of hens laying eggs daily
+
+--- Table 87 ---
+Abbreviation | Full Name | Brief Definition
+GHG | Greenhouse Gas | Climate-forcing gases (CO₂, CH₄, N₂O)
+GHGI | GHG Intensity | Emissions per unit of product
+NPV | Net Present Value | Time-adjusted profitability measure
+IRR | Internal Rate of Return | Discount rate where NPV = 0
+B:C | Benefit-Cost Ratio | Returns divided by total costs
+LCA | Life Cycle Assessment | Full supply-chain environmental accounting
+H' | Shannon Diversity Index | Species richness and evenness measure
+
+--- Table 88 ---
+Step | Action | Status
+1 | Frame the problem — what decision depends on this number? | ☐
+2 | Write equation with units for every term | ☐
+3 | List data sources (date, method, instrument, lab) | ☐
+4 | State all assumptions (moisture basis, temperature, stage) | ☐
+5 | Estimate uncertainty (range / sensitivity) | ☐
+6 | Interpret result against threshold or benchmark | ☐
+7 | Record recommended action, responsible person, and timeline | ☐
+
+--- Table 89 ---
+29.1  Microbial Biomass Carbon (MBC) | 29.1  Microbial Biomass Carbon (MBC)
+MBC = (C_fumigated − C_control) / kEC  [mg C kg⁻¹ soil] | MBC = (C_fumigated − C_control) / kEC  [mg C kg⁻¹ soil]
+Variables
+kEC = extraction efficiency factor (0.45 commonly used)
+Measured by chloroform fumigation-extraction (CFE)
+Typical range: 100–1500 mg C/kg | Purpose
+Estimates the mass of living microbial cells in soil; sensitive early indicator of soil quality change.
+Example
+Fumigated soil C = 250 mg/kg, control = 140 mg/kg → MBC = (250−140)/0.45 = 244 mg C/kg.
+⚠ Pitfall: Highly sensitive to sampling date, soil moisture, and temperature — standardize conditions.
+
+--- Table 90 ---
+29.2  Metabolic Quotient (qCO₂) | 29.2  Metabolic Quotient (qCO₂)
+qCO₂ = Soil respiration / MBC  [mg CO₂-C g⁻¹ MBC h⁻¹] | qCO₂ = Soil respiration / MBC  [mg CO₂-C g⁻¹ MBC h⁻¹]
+Variables
+Soil respiration = CO₂ evolved per unit time
+MBC = microbial biomass carbon
+Lower qCO₂ = more efficient microbial community | Purpose
+Measures metabolic efficiency of soil microbial community. High qCO₂ indicates stress.
+Example
+Respiration = 0.08 mg CO₂-C/g/h, MBC = 400 mg/kg → qCO₂ = 0.0002.
+
+--- Table 91 ---
+29.3  Soil Enzyme Activity Index (EAI) | 29.3  Soil Enzyme Activity Index (EAI)
+EAI = (Enzyme activity observed / Enzyme activity reference) × 100 | EAI = (Enzyme activity observed / Enzyme activity reference) × 100
+Variables
+Key enzymes: urease, phosphatase, dehydrogenase, β-glucosidase
+Reference = optimal baseline for soil type
+Units vary by enzyme (μg product g⁻¹ h⁻¹) | Purpose
+Composite of enzyme activities reflecting nutrient cycling capacity.
+Example
+Dehydrogenase = 45 μg TPF/g/24h; reference = 60 → EAI = 75% (reduced activity).
+
+--- Table 92 ---
+29.4  Fungal:Bacterial (F:B) Ratio | 29.4  Fungal:Bacterial (F:B) Ratio
+F:B = Fungal biomass / Bacterial biomass  [from PLFA or qPCR] | F:B = Fungal biomass / Bacterial biomass  [from PLFA or qPCR]
+Variables
+Estimated from phospholipid fatty acid (PLFA) profiles
+F:B > 1 common in undisturbed or high-OM soils
+Fungi dominate carbon cycling in agroforestry | Purpose
+Indicates decomposition pathways and soil disturbance history.
+Example
+Fungal PLFA = 22 nmol/g, bacterial PLFA = 44 nmol/g → F:B = 0.50.
+
+--- Table 93 ---
+29.5  Microbial Biomass Nitrogen (MBN) | 29.5  Microbial Biomass Nitrogen (MBN)
+MBN = (N_fumigated − N_control) / kEN  [mg N kg⁻¹ soil] | MBN = (N_fumigated − N_control) / kEN  [mg N kg⁻¹ soil]
+Variables
+kEN = 0.54 (extraction coefficient)
+MBN:MBC ratio reflects microbial C:N constraint | Purpose
+Estimates nitrogen immobilized in microbial biomass; important for N release timing.
+Example
+MBC:MBN ratio < 5 → excess N release; > 15 → N immobilization risk.
+
+--- Table 94 ---
+Metric | Formula | Healthy Range | Use
+MBC | (Cfum−Ccon)/kEC | 200–800 mg/kg | Living biomass indicator
+qCO₂ | Respiration/MBC | <0.001 (efficient) | Stress indicator
+EAI | Observed/Reference×100 | >70% | Nutrient cycling capacity
+F:B ratio | Fungal/Bacterial biomass | 0.3–1.5 | Decomposition pathway
+MBN | (Nfum−Ncon)/kEN | 20–100 mg/kg | N cycling capacity
+MBC:SOC | MBC/SOC×100 | 1–4% | Substrate availability
+
+--- Table 95 ---
+♻  Sustainability Note: MBC and qCO₂ respond rapidly to management changes — they are leading indicators of soil health trajectories years before SOC changes are detectable.
+
+--- Table 96 ---
+BBCH Stage | Principal Growth Stage | Key Management Window
+00–09 | Germination / sprouting | Seed priming, soil temperature monitoring
+10–19 | Leaf development | Pre-emergence herbicides, P/K application
+20–29 | Tillering (cereals) | Early N top-dressing, tiller count assessment
+30–39 | Stem elongation | Second N split, growth regulator application
+40–49 | Booting / rosette | Disease monitoring (Septoria, Fusarium)
+50–59 | Inflorescence emergence | Fungicide timing, irrigation critical period
+60–69 | Flowering | Pollination stress watch, bee protection
+70–79 | Fruit / grain development | K application, moisture stress monitoring
+80–89 | Ripening / maturation | Harvest scheduling, pre-harvest interval
+90–99 | Senescence / dormancy | Residue management, cover crop establishment
+
+--- Table 97 ---
+30.2  Leaf Appearance Rate (LAR) | 30.2  Leaf Appearance Rate (LAR)
+LAR = Number of leaves / Thermal time elapsed  [leaves °Cd⁻¹] | LAR = Number of leaves / Thermal time elapsed  [leaves °Cd⁻¹]
+Variables
+Thermal time = cumulative GDD from emergence
+Species-specific: maize ≈ 1 leaf per 60–80°Cd | Purpose
+Predicts leaf number at any thermal time; used to time management interventions.
+Example
+Maize at 400 GDD: LAR = 0.014 leaves/°Cd → ≈ 5.6 leaves expected.
+
+--- Table 98 ---
+30.3  Phyllochron | 30.3  Phyllochron
+Phyllochron = Thermal time between successive leaf appearances  [°Cd leaf⁻¹] | Phyllochron = Thermal time between successive leaf appearances  [°Cd leaf⁻¹]
+Variables
+Inverse of LAR
+Maize: 45–80°Cd
+Wheat: 90–110°Cd
+Used in crop simulation models | Purpose
+Fundamental parameter for crop development models (CERES, APSIM).
+Example
+Two leaves appear over 120°Cd → phyllochron = 60°Cd/leaf.
+
+--- Table 99 ---
+Crop | Tbase (°C) | GDD to Anthesis | GDD to Maturity
+Maize | 10 | 800–1000 | 1400–1700
+Wheat | 0 | 1000–1400 | 1700–2000
+Soybean | 10 | 700–900 | 1100–1400
+Cotton | 15 | 600–800 | 1400–1600
+Sunflower | 6 | 900–1200 | 1400–1700
+Sorghum | 10 | 700–950 | 1200–1500
+
+--- Table 100 ---
+♻  Sustainability Note: Phenology-based management reduces input waste — fungicide applications at BBCH 39–59 in wheat are 30–50% more effective than calendar-based timing.
+
+--- Table 101 ---
+31.1  Daily Light Integral (DLI) | 31.1  Daily Light Integral (DLI)
+DLI = PPFD × 3600 × photoperiod / 1,000,000  [mol m⁻² d⁻¹] | DLI = PPFD × 3600 × photoperiod / 1,000,000  [mol m⁻² d⁻¹]
+Variables
+PPFD = photosynthetic photon flux density (μmol m⁻² s⁻¹)
+Photoperiod = hours of light per day
+Target: leafy greens 12–17; tomato 20–30 mol/m²/d | Purpose
+Quantifies total photosynthetically active radiation received in a day; main driver of greenhouse crop yield.
+Example
+PPFD = 250 μmol/m²/s for 16 hours → DLI = 250×3600×16/1,000,000 = 14.4 mol/m²/d.
+⚠ Pitfall: Do not confuse PPFD (instantaneous) with DLI (daily sum).
+
+--- Table 102 ---
+31.2  Vapor Pressure Deficit (VPD) | 31.2  Vapor Pressure Deficit (VPD)
+VPD = SVP × (1 − RH/100)  [kPa]  where SVP = 0.6108 × e^(17.27T/(T+237.3)) | VPD = SVP × (1 − RH/100)  [kPa]  where SVP = 0.6108 × e^(17.27T/(T+237.3))
+Variables
+T = air temperature (°C)
+RH = relative humidity (%)
+Target: 0.8–1.5 kPa for most crops | Purpose
+Drives transpiration and stomatal behavior; key climate parameter for greenhouse management.
+Example
+T=22°C, RH=70%: SVP=2.64 kPa → VPD = 2.64×0.30 = 0.79 kPa (low-moderate).
+⚠ Pitfall: High VPD (>2 kPa) causes stomatal closure and yield loss; low VPD (<0.4 kPa) promotes disease.
+
+--- Table 103 ---
+31.3  CO₂ Enrichment Efficiency (CEE) | 31.3  CO₂ Enrichment Efficiency (CEE)
+CEE = (Yield_enriched − Yield_ambient) / CO₂ added  [kg yield / kg CO₂] | CEE = (Yield_enriched − Yield_ambient) / CO₂ added  [kg yield / kg CO₂]
+Variables
+Ambient CO₂ ≈ 420 ppm; enrichment target 800–1200 ppm for C3 crops
+C4 crops (maize, sorghum) do not respond significantly | Purpose
+Measures economic benefit of CO₂ enrichment against gas cost.
+Example
+Tomato: yield gain 3 kg/m², CO₂ used 0.6 kg/m² → CEE = 5 kg tomato/kg CO₂.
+
+--- Table 104 ---
+31.4  Nutrient Solution EC & pH Management | 31.4  Nutrient Solution EC & pH Management
+EC target (dS/m) varies by crop growth stage and species | EC target (dS/m) varies by crop growth stage and species
+Variables
+Seedling: 0.8–1.2 dS/m
+Vegetative: 1.5–2.5 dS/m
+Fruiting: 2.0–4.0 dS/m
+pH target: 5.8–6.2 for most crops | Purpose
+EC guides nutrient concentration; deviation indicates dilution (overwatering) or buildup (underwatering).
+Example
+EC drops from 2.2 to 1.6 dS/m → plants consuming water faster than nutrients; increase feed concentration.
+
+--- Table 105 ---
+Parameter | Crop Group | Target Range | Consequence of Deviation
+DLI (mol/m²/d) | Leafy greens | 12–17 | <10 = poor quality; >20 = tip burn
+DLI (mol/m²/d) | Fruiting crops | 20–30 | <15 = yield loss; >35 = heat stress
+VPD (kPa) | All crops | 0.8–1.5 | <0.4 = disease; >2.0 = wilt/abortion
+CO₂ (ppm) | C3 crops | 800–1200 | Diminishing returns above 1200 ppm
+EC (dS/m) | Lettuce | 1.2–2.0 | >2.5 = tip burn and bitterness
+EC (dS/m) | Tomato/Pepper | 2.0–4.0 | <1.5 = poor flavor; >5.0 = osmotic stress
+pH | Hydroponics | 5.8–6.2 | Nutrient lockout outside 5.5–6.8
+
+--- Table 106 ---
+♻  Sustainability Note: CEA uses 70–95% less water than field production and eliminates pesticide runoff — metrics that quantify these savings are key for sustainability reporting.
+
+--- Table 107 ---
+32.1  Shade Equivalency Ratio (SER) | 32.1  Shade Equivalency Ratio (SER)
+SER = Yield_agroforestry / Yield_open_field  [dimensionless] | SER = Yield_agroforestry / Yield_open_field  [dimensionless]
+Variables
+SER > 1 = shade-tolerant crop benefits from tree shade
+SER < 1 = light competition dominant | Purpose
+Measures the yield response of an understory crop to tree-induced shade.
+Example
+Coffee under Acacia: 1.8 t/ha vs 1.4 t/ha in full sun → SER = 1.29.
+
+--- Table 108 ---
+32.2  Agroforestry LER (AF-LER) | 32.2  Agroforestry LER (AF-LER)
+AF-LER = Ytree/Stree + Ycrop/Scrop + Ylivestock/Slivestock | AF-LER = Ytree/Stree + Ycrop/Scrop + Ylivestock/Slivestock
+Variables
+Ytree = timber, fruit, or fodder yield from trees
+Stree = tree monoculture yield
+Sum all components present in system | Purpose
+Extends the standard LER to include tree products; AF-LER > 1 confirms land use advantage.
+Example
+Timber partial LER=0.6, crop partial LER=0.9 → AF-LER = 1.5 (50% land advantage).
+
+--- Table 109 ---
+32.3  Carbon Sequestration Rate (CSR) | 32.3  Carbon Sequestration Rate (CSR)
+CSR = ΔC_biomass + ΔC_soil  [t CO₂-eq ha⁻¹ yr⁻¹] | CSR = ΔC_biomass + ΔC_soil  [t CO₂-eq ha⁻¹ yr⁻¹]
+Variables
+ΔC_biomass = annual increment in tree + crop biomass C
+ΔC_soil = annual change in soil organic C
+Use allometric equations for tree biomass | Purpose
+Quantifies annual carbon sink of the agroforestry system for climate reporting.
+Example
+Tree biomass C gain = 2.5 t/ha/yr, soil C gain = 0.3 t/ha/yr → CSR = 2.8 t C = 10.3 t CO₂-eq/ha/yr.
+
+--- Table 110 ---
+System Type | Primary Index | Typical Range | Key Benefit
+Alley cropping | AF-LER | 1.2–1.8 | Fertilizer N from legume trees
+Silvopasture | Stocking rate + tree density | Site-specific | Shade reduces heat stress
+Multistrata (coffee/cocoa) | SER + biodiversity index | SER 0.9–1.5 | Microclimate buffering
+Windbreaks | Crop yield in sheltered zone | +5–20% | Wind erosion reduction
+Taungya | AF-LER | 1.1–1.4 | Land use during reforestation
+All systems | CSR (t CO₂/ha/yr) | 2–15 | Carbon market eligibility
+
+--- Table 111 ---
+♻  Sustainability Note: Agroforestry is among the most effective land-based climate solutions — well-designed systems can sequester 2–10 t CO₂-eq/ha/yr while maintaining or improving food production.
+
+--- Table 112 ---
+33.1  Weight Loss Percentage (WL%) | 33.1  Weight Loss Percentage (WL%)
+WL% = (Initial weight − Final weight) / Initial weight × 100 | WL% = (Initial weight − Final weight) / Initial weight × 100
+Variables
+Measured at specific intervals (7, 14, 30 days)
+Include all loss pathways: respiration, moisture, pest damage | Purpose
+Most basic and universally used post-harvest loss metric.
+Example
+Onions: 50 kg stored, 43 kg after 30 days → WL% = 14%.
+⚠ Pitfall: Distinguish physiological loss (normal) from pathological loss (preventable).
+
+--- Table 113 ---
+33.2  Respiration Rate (RR) | 33.2  Respiration Rate (RR)
+RR = CO₂ evolved / (Weight × Time)  [mg CO₂ kg⁻¹ h⁻¹] | RR = CO₂ evolved / (Weight × Time)  [mg CO₂ kg⁻¹ h⁻¹]
+Variables
+Higher RR = faster deterioration
+Temperature doubles RR for every 10°C rise (Q₁₀ rule)
+Used to predict shelf life | Purpose
+Measures metabolic rate of fresh produce; higher respiration = faster quality loss.
+Example
+Strawberries at 20°C: 60 mg CO₂/kg/h (high) vs at 4°C: 12 mg CO₂/kg/h (manageable).
+
+--- Table 114 ---
+33.3  Q₁₀ Temperature Coefficient | 33.3  Q₁₀ Temperature Coefficient
+Q₁₀ = (RR at T+10) / (RR at T)  [dimensionless, typically 2–3] | Q₁₀ = (RR at T+10) / (RR at T)  [dimensionless, typically 2–3]
+Variables
+Q₁₀ ≈ 2 for most fresh produce
+Used to estimate storage life extension from cooling | Purpose
+Quantifies the acceleration of deterioration with temperature; basis for cold chain design.
+Example
+Q₁₀=2.5: cooling from 25°C to 5°C → 2.5² = 6.25× longer shelf life.
+
+--- Table 115 ---
+33.4  Safe Storage Moisture Content | 33.4  Safe Storage Moisture Content
+EMC equilibrium charts: Grain moisture % where aw < 0.7 prevents mold | EMC equilibrium charts: Grain moisture % where aw < 0.7 prevents mold
+Variables
+Maize: < 13.5% MC for long-term storage
+Wheat: < 13.0%
+Rice (paddy): < 14%
+Legumes: < 12% | Purpose
+Critical threshold below which mold growth, mycotoxin production, and insect activity are suppressed.
+Example
+Grain at 15% MC must be dried to 13.5% before hermetic storage to prevent aflatoxin.
+⚠ Pitfall: MC varies with temperature — use temperature-corrected charts.
+
+--- Table 116 ---
+33.5  Cold Chain Energy Efficiency (CCEE) | 33.5  Cold Chain Energy Efficiency (CCEE)
+CCEE = Tonnes of product stored × days / Energy consumed (kWh) | CCEE = Tonnes of product stored × days / Energy consumed (kWh)
+Variables
+Higher = more efficient cold storage
+Benchmark: modern CA stores 4–8 t·day/kWh | Purpose
+Evaluates energy cost of cold storage for economic and carbon footprint analysis.
+Example
+500 t apple store, 150 days, 12,000 kWh → CCEE = 6.25 t·day/kWh.
+
+--- Table 117 ---
+Metric | Formula | Action Threshold
+Weight Loss % | (Wi−Wf)/Wi×100 | >5% signals significant problem
+Respiration Rate | CO₂/weight/time | Design modified atmosphere below critical RR
+Q₁₀ | RR(T+10)/RR(T) | Use to size cooling capacity
+Safe MC | Equilibrium moisture charts | Dry to species-specific safe MC before storage
+Aflatoxin risk | MC × temperature matrix | MC>14% at 25°C = high risk
+Germination % | Viable seeds/total×100 | >80% for seed lots; >90% certified
+
+--- Table 118 ---
+♻  Sustainability Note: Reducing post-harvest losses by 10% is equivalent to increasing production by 10% — with zero additional land, water, or input use.
+
+--- Table 119 ---
+34.1  Specific Growth Rate (SGR) | 34.1  Specific Growth Rate (SGR)
+SGR (% BW/day) = (ln W₂ − ln W₁) / (t₂ − t₁) × 100 | SGR (% BW/day) = (ln W₂ − ln W₁) / (t₂ − t₁) × 100
+Variables
+W₁, W₂ = initial and final body weight (g)
+t = days between weighings
+Typical: tilapia 1.5–3.5%/day, shrimp 2–4%/day | Purpose
+Standard growth metric for aquaculture species; accounts for the exponential nature of fish growth.
+Example
+Tilapia: W₁=50g, W₂=180g, 60 days → SGR = (ln180−ln50)/60×100 = 2.1%/day.
+⚠ Pitfall: Do not use simple ADG for aquaculture — SGR is the industry standard.
+
+--- Table 120 ---
+34.2  Feed Conversion Ratio (FCR – Aquaculture) | 34.2  Feed Conversion Ratio (FCR – Aquaculture)
+FCR = Feed fed (dry) / Weight gain (wet)  [kg feed/kg fish] | FCR = Feed fed (dry) / Weight gain (wet)  [kg feed/kg fish]
+Variables
+Best practice: salmon 1.0–1.2; tilapia 1.3–1.8; shrimp 1.5–2.5; catfish 1.5–2.0
+Must specify dry feed vs wet feed basis | Purpose
+Primary efficiency measure; lower FCR = less feed waste and lower nitrogen discharge.
+Example
+Pond: 500 kg feed, 300 kg gain → FCR = 1.67.
+⚠ Pitfall: FCR worsens with poor water quality, disease, or feed quality — investigate root cause.
+
+--- Table 121 ---
+34.3  Survival Rate (SR) | 34.3  Survival Rate (SR)
+SR (%) = Number harvested / Number stocked × 100 | SR (%) = Number harvested / Number stocked × 100
+Variables
+Shrimp target: >70–80%
+Tilapia cage: >90–95%
+Salmon marine: >85–92% | Purpose
+Key indicator of husbandry success, disease management, and water quality control.
+Example
+50,000 shrimp stocked, 37,000 harvested → SR = 74%.
+
+--- Table 122 ---
+34.4  Stocking Density & Biomass | 34.4  Stocking Density & Biomass
+Biomass (kg/m³) = Number of fish × Average weight (kg) / Volume (m³) | Biomass (kg/m³) = Number of fish × Average weight (kg) / Volume (m³)
+Variables
+Tilapia RAS: 30–80 kg/m³
+Salmon net pen: 15–30 kg/m³
+Shrimp pond: 0.3–1.0 kg/m³ | Purpose
+Current standing crop; used to determine feeding rate and predict oxygen demand.
+Example
+2000 tilapia × 0.25 kg / 10 m³ = 50 kg/m³ (at upper limit — monitor DO closely).
+
+--- Table 123 ---
+34.5  Water Quality Index (WQI – Aquaculture) | 34.5  Water Quality Index (WQI – Aquaculture)
+WQI = Σ(Wi × qi)  where Wi = weight and qi = quality score for each parameter | WQI = Σ(Wi × qi)  where Wi = weight and qi = quality score for each parameter
+Variables
+Parameters: DO, NH₃, NO₂, pH, Temperature, Turbidity, Alkalinity
+DO critical threshold: >5 mg/L for most species | Purpose
+Composite index of water quality suitable for aquaculture production.
+Example
+Monitor daily DO, weekly nutrients, monthly full WQI.
+
+--- Table 124 ---
+Species | SGR (%/day) | FCR Target | SR Target | DO Min (mg/L)
+Atlantic salmon | 0.8–1.2 | 1.0–1.2 | >90% | 7
+Tilapia (RAS) | 1.5–3.0 | 1.3–1.8 | >92% | 5
+Shrimp (L. vannamei) | 2.0–4.0 | 1.5–2.5 | >75% | 4
+Channel catfish | 1.0–2.0 | 1.5–2.2 | >90% | 5
+Carp (polyculture) | 1.2–2.5 | 2.0–3.0 | >85% | 5
+Oyster/mussel | Condition index | N/A (filter feeder) | >90% | 6
+
+--- Table 125 ---
+♻  Sustainability Note: Aquaculture FCR of 1.2–1.5 for salmon compares favorably with beef (6–8) and pork (2.5–3.5) — aquaculture protein has among the lowest environmental footprints.
+
+--- Table 126 ---
+35.1  Carrying Capacity (CC) | 35.1  Carrying Capacity (CC)
+CC = Forage available (kg DM/ha) / (Animal requirement kg DM/day × Grazing days) | CC = Forage available (kg DM/ha) / (Animal requirement kg DM/day × Grazing days)
+Variables
+Also expressed as Livestock Units (LSU) per hectare
+1 LSU = 450 kg cow consuming 12 kg DM/day
+Typical: semi-arid 0.3–0.8 LSU/ha; humid 2–4 LSU/ha | Purpose
+Maximum animal load a pasture can sustain without degradation.
+Example
+Pasture: 3,500 kg DM/ha, 70% utilization = 2,450 kg available. One LSU needs 12 kg/day × 30 days = 360 kg. CC = 6.8 LSU/ha for one month.
+⚠ Pitfall: Never use full potential — target 60–70% utilization to maintain plant cover.
+
+--- Table 127 ---
+35.2  Pasture Growth Rate (PGR) | 35.2  Pasture Growth Rate (PGR)
+PGR = (Dry matter at end − Dry matter at start) / Days  [kg DM ha⁻¹ day⁻¹] | PGR = (Dry matter at end − Dry matter at start) / Days  [kg DM ha⁻¹ day⁻¹]
+Variables
+Measured by excluding grazing in a cage
+Highly seasonal — varies from 0 (drought) to 100+ kg/ha/day | Purpose
+Actual daily forage production rate; used to plan rotation timing and supplement programs.
+Example
+Start: 1,200 kg DM/ha, End: 2,800 kg after 21 days → PGR = 76.2 kg DM/ha/day.
+
+--- Table 128 ---
+35.3  Stocking Rate (SR) | 35.3  Stocking Rate (SR)
+SR = Number of animal units × Days grazed / Hectares grazed  [AU-days/ha] | SR = Number of animal units × Days grazed / Hectares grazed  [AU-days/ha]
+Variables
+AU = animal unit (450 kg beef cow equivalent)
+Actual vs recommended SR ratio = grazing pressure | Purpose
+Expresses grazing intensity; compare to carrying capacity to assess over/understocking.
+Example
+50 cows (AU=1) on 25 ha for 120 days → SR = 50×120/25 = 240 AU-days/ha.
+
+--- Table 129 ---
+35.4  Rotational Grazing Rest Period (RP) | 35.4  Rotational Grazing Rest Period (RP)
+RP = (Target leaf area recovery / PGR) × adjustment factor  [days] | RP = (Target leaf area recovery / PGR) × adjustment factor  [days]
+Variables
+Warm season grasses: 30–45 day rest
+Cool season grasses: 20–35 days
+Adjust by season and growth rate | Purpose
+Time required for pasture to recover adequate leaf area and root reserves before re-grazing.
+Example
+Summer: PGR=60 kg/day, target 2500 kg regrowth → RP ≈ 42 days.
+
+--- Table 130 ---
+35.5  Forage Utilization Efficiency (FUE) | 35.5  Forage Utilization Efficiency (FUE)
+FUE (%) = Forage consumed by animals / Forage grown × 100 | FUE (%) = Forage consumed by animals / Forage grown × 100
+Variables
+Target: 50–70% for rotational; 30–50% for continuous
+Unutilized forage: trampled, rejected, or senesced | Purpose
+Efficiency of converting forage growth into animal product; key for system profitability.
+Example
+PGR gives 4,000 kg DM/ha, animals consume 2,600 kg → FUE = 65%.
+
+--- Table 131 ---
+Metric | Formula | Target | Use
+Carrying Capacity | Forage/(Need×Days) | LSU/ha | Stocking rate planning
+PGR | (DM₂−DM₁)/days | >40 kg/ha/day | Rotation planning
+FUE | Consumed/Grown×100 | 60–70% | System efficiency
+Rest Period | Recovery days | 20–45 days | Rotation scheduling
+Utilization % | Consumed/Available×100 | 60–70% | Avoid overgrazing
+Pre-graze mass | kg DM/ha at entry | 2500–3500 | Grazing trigger
+
+--- Table 132 ---
+♻  Sustainability Note: Well-managed rotational grazing can sequester 0.5–1.5 t C/ha/yr in soils while maintaining or improving livestock productivity — one of the most accessible on-farm climate interventions.
+
+--- Table 133 ---
+36.1  Colony Strength Index (CSI) | 36.1  Colony Strength Index (CSI)
+CSI = (Frames of brood × 2) + Frames of bees + (Frames of stores × 0.5) | CSI = (Frames of brood × 2) + Frames of bees + (Frames of stores × 0.5)
+Variables
+Score out of maximum possible for hive size
+Healthy spring colony: CSI > 15 (10-frame hive)
+Correlates with honey production potential | Purpose
+Rapid assessment of colony productive potential without disassembly.
+Example
+4 brood frames, 8 bee frames, 6 store frames → CSI = 8+8+3 = 19 (strong).
+⚠ Pitfall: Calibrate scoring to local race and season — Africanized colonies build faster.
+
+--- Table 134 ---
+36.2  Varroa Mite Infestation Rate (VIR) | 36.2  Varroa Mite Infestation Rate (VIR)
+VIR (%) = Mites counted / Bees sampled × 100 | VIR (%) = Mites counted / Bees sampled × 100
+Variables
+Threshold: >2% = treat; >3% = urgent; alcohol wash or sugar roll method
+300-bee sample standard | Purpose
+Primary indicator of varroa destructor infestation; key for treatment timing.
+Example
+9 mites in 300-bee sample → VIR = 3.0% (immediate treatment required).
+⚠ Pitfall: Sample from brood nest bees, not foragers — foragers underestimate infestation.
+
+--- Table 135 ---
+36.3  Honey Yield per Colony (HY) | 36.3  Honey Yield per Colony (HY)
+HY = Honey harvested (kg) / Number of colonies  [kg/colony] | HY = Honey harvested (kg) / Number of colonies  [kg/colony]
+Variables
+World average: 20–25 kg
+Intensive managed: 40–80 kg
+Depends heavily on forage area and season | Purpose
+Primary productivity measure for commercial beekeeping operations.
+Example
+600 kg extracted from 18 colonies → HY = 33.3 kg/colony.
+
+--- Table 136 ---
+36.4  Pollination Service Index (PSI) | 36.4  Pollination Service Index (PSI)
+PSI = Colony density × Foraging radius × Crop dependence ratio | PSI = Colony density × Foraging radius × Crop dependence ratio
+Variables
+Colony density = hives/ha
+Foraging radius = effective range (typically 2 km)
+Crop dependence: 0 (self-fertile) to 1 (fully dependent) | Purpose
+Estimates pollination service delivery to a target crop.
+Example
+Almond (dependence=0.65): 2 hives/ha × effective 3 km range → high PSI.
+
+--- Table 137 ---
+Metric | Formula | Target / Threshold | Action
+Colony Strength | Brood×2+Bees+Stores×0.5 | >15 = productive | Combine weak colonies
+Varroa Rate | Mites/Bees×100 | <2% = acceptable | >3% = treat immediately
+Honey Yield | kg/colony | >30 kg commercial | Audit forage and queen age
+Winter Loss Rate | Dead colonies/Total×100 | <15% acceptable | >30% = systemic problem
+Queen Acceptance | Accepted/Introduced×100 | >85% | Evaluate queen quality
+Forager Activity | Bees/min entering hive | >100 = strong | Monitor forage availability
+
+--- Table 138 ---
+♻  Sustainability Note: A single honey bee colony pollinates crops worth $2,000–$20,000/year depending on crop type. Colony health directly determines both honey yield and pollination service value.
+
+--- Table 139 ---
+37.1  Temperature-Humidity Index (THI) | 37.1  Temperature-Humidity Index (THI)
+THI = (1.8T + 32) − (0.55 − 0.0055×RH) × (1.8T − 26) | THI = (1.8T + 32) − (0.55 − 0.0055×RH) × (1.8T − 26)
+Variables
+T = dry-bulb temperature (°C)
+RH = relative humidity (%)
+Dairy cattle: >68 = mild stress; >72 = moderate; >78 = severe | Purpose
+Single index combining temperature and humidity effects on heat stress in cattle.
+Example
+T=28°C, RH=70%: THI = (82.4)−(0.55−0.0385)×(50.4−26) = 72.1 (moderate stress).
+⚠ Pitfall: THI thresholds differ by species: poultry stress begins at THI>75; pigs at THI>70.
+
+--- Table 140 ---
+37.2  Respiration Rate (RR) as Heat Stress Proxy | 37.2  Respiration Rate (RR) as Heat Stress Proxy
+Normal: cattle 10–30 breaths/min; Mild stress: 40–60; Severe: >80 | Normal: cattle 10–30 breaths/min; Mild stress: 40–60; Severe: >80
+Variables
+Non-invasive field measurement
+Count flank movements for 15 seconds × 4
+Most reliable stress indicator in absence of instruments | Purpose
+Rapid field assessment of heat stress severity without equipment.
+Example
+Cow showing 72 breaths/min on hot day → severe heat stress, shade and water immediately.
+
+--- Table 141 ---
+37.3  Body Condition Score Change Rate (BCSCR) | 37.3  Body Condition Score Change Rate (BCSCR)
+BCSCR = (BCS₂ − BCS₁) / Days  [BCS units/day] | BCSCR = (BCS₂ − BCS₁) / Days  [BCS units/day]
+Variables
+BCS loss > 1 point in first 60 days post-calving = high NEB risk
+Target: < 0.5 BCS loss in transition period | Purpose
+Tracks rate of energy mobilization from body reserves; key transition management tool.
+Example
+BCS drops from 3.5 to 2.8 in 45 days → BCSCR = −0.016/day (acceptable).
+
+--- Table 142 ---
+37.4  Animal Welfare Index (AWI) | 37.4  Animal Welfare Index (AWI)
+AWI = Σ(Domain score × Domain weight) / Total weight  [0–100 scale] | AWI = Σ(Domain score × Domain weight) / Total weight  [0–100 scale]
+Variables
+Domains: nutrition, environment, health, behavior, mental state
+Based on Five Freedoms / Five Domains framework
+Score > 80 = good welfare | Purpose
+Composite welfare assessment for certification, insurance, or improvement planning.
+Example
+Score domains 1–5 on 0–20 scale each → sum / 100 for normalized AWI.
+
+--- Table 143 ---
+Metric | Formula/Scale | Threshold | Species
+THI | (1.8T+32)−(0.55−0.0055RH)×(1.8T−26) | >72 = moderate stress | Cattle
+THI – Poultry | Modified formula | >75 = stress | Broilers & layers
+Respiration Rate | Breaths/min | >40 = mild; >80 = severe | Cattle
+Panting Score | 0–3 visual scale | >2 = intervention | Sheep/cattle
+BCS Change Rate | ΔBCS/days | <0.02/day loss ideal | Dairy cattle
+Cortisol (blood) | ng/mL | Baseline <10 ng/mL | All species
+
+--- Table 144 ---
+♻  Sustainability Note: Reducing heat stress in dairy cattle by THI management can recover 10–25% of lost milk production — returning $100–300/cow/summer in affected regions.
+
+--- Table 145 ---
+38.1  Root Mean Square Error (RMSE) | 38.1  Root Mean Square Error (RMSE)
+RMSE = √(Σ(Predicted − Observed)² / n)  [same units as variable] | RMSE = √(Σ(Predicted − Observed)² / n)  [same units as variable]
+Variables
+n = number of observations
+Lower RMSE = better prediction accuracy
+Compare to mean value: RMSE/mean < 10% = excellent | Purpose
+Most common accuracy metric for continuous predictions (yield, weight, milk production).
+Example
+Yield model: 10 plots, RMSE = 0.45 t/ha vs mean yield 4.2 t/ha → RMSE% = 10.7% (acceptable).
+⚠ Pitfall: RMSE penalizes large errors more than small — better than MAE for outlier-sensitive applications.
+
+--- Table 146 ---
+38.2  Mean Absolute Error (MAE) | 38.2  Mean Absolute Error (MAE)
+MAE = Σ|Predicted − Observed| / n  [same units as variable] | MAE = Σ|Predicted − Observed| / n  [same units as variable]
+Variables
+More interpretable than RMSE
+Equally weights all errors
+Compare RMSE/MAE: ratio > 1.2 suggests outliers present | Purpose
+Average prediction error in original units; easier to explain to non-technical stakeholders.
+Example
+MAE = 0.3 t/ha for yield prediction → on average predictions are within 300 kg/ha.
+
+--- Table 147 ---
+38.3  Confusion Matrix Metrics (Classification) | 38.3  Confusion Matrix Metrics (Classification)
+Precision = TP/(TP+FP)  ·  Recall = TP/(TP+FN)  ·  F1 = 2×P×R/(P+R) | Precision = TP/(TP+FP)  ·  Recall = TP/(TP+FN)  ·  F1 = 2×P×R/(P+R)
+Variables
+TP=true positive, FP=false positive, FN=false negative
+Disease detection: prioritize Recall (minimize missed cases)
+Weed mapping: prioritize Precision (minimize false spraying) | Purpose
+Evaluates binary classification models (disease yes/no, pest present/absent).
+Example
+Disease detector: Precision=0.88, Recall=0.91, F1=0.895 → good balanced performance.
+⚠ Pitfall: Accuracy alone is misleading with class imbalance (rare disease = high accuracy by always predicting "no disease").
+
+--- Table 148 ---
+38.4  R² (Coefficient of Determination) | 38.4  R² (Coefficient of Determination)
+R² = 1 − (SS_residual / SS_total)  [0–1, higher is better] | R² = 1 − (SS_residual / SS_total)  [0–1, higher is better]
+Variables
+R² > 0.85 = good model fit for agricultural applications
+R² can be negative for poorly fitted models
+Always report alongside RMSE — R² alone misleads | Purpose
+Proportion of variation in the outcome explained by the model.
+Example
+Yield prediction: R²=0.87 → model explains 87% of yield variation.
+
+--- Table 149 ---
+Metric | Formula | Good Threshold | Application
+RMSE | √(Σ(P−O)²/n) | <10% of mean | Yield, weight, milk prediction
+MAE | Σ|P−O|/n | <5% of mean | Interpretable error reporting
+R² | 1−SS_res/SS_tot | >0.85 | Model fit for regression
+Precision | TP/(TP+FP) | >0.90 | Weed/object detection
+Recall | TP/(TP+FN) | >0.85 | Disease/pest detection
+F1 Score | 2×P×R/(P+R) | >0.87 | Balanced classification
+
+--- Table 150 ---
+♻  Sustainability Note: AI-powered variable-rate application guided by field-level models can reduce fertilizer use by 15–25% and pesticide use by 20–30% with maintained or improved yields.
+
+--- Table 151 ---
+39.1  Ground Sampling Distance (GSD) | 39.1  Ground Sampling Distance (GSD)
+GSD (cm/px) = (Altitude m × Sensor width mm) / (Focal length mm × Image width px) | GSD (cm/px) = (Altitude m × Sensor width mm) / (Focal length mm × Image width px)
+Variables
+Lower GSD = higher resolution
+Plant counting requires GSD < 2 cm
+Canopy cover mapping: GSD < 5 cm sufficient | Purpose
+Defines the spatial resolution of captured imagery; drives altitude and flight time planning.
+Example
+DJI Phantom 4 Multispectral at 120 m: GSD ≈ 5.3 cm — suitable for NDVI mapping.
+⚠ Pitfall: GSD doubles when altitude doubles — balance coverage speed vs resolution needed.
+
+--- Table 152 ---
+39.2  Flight Coverage Rate | 39.2  Flight Coverage Rate
+Coverage (ha/hr) = Speed (m/s) × Swath width (m) × 3600 / 10000 | Coverage (ha/hr) = Speed (m/s) × Swath width (m) × 3600 / 10000
+Variables
+Include turnaround time at field edges
+Typical: 15–50 ha/hr for imaging; 5–10 ha/hr for spraying | Purpose
+Mission planning metric to estimate number of flights and battery requirements.
+Example
+Speed=8 m/s, swath=60 m → Coverage = 8×60×3600/10000 = 172.8 ha/hr (imaging mode).
+
+--- Table 153 ---
+39.3  Spray Drone Application Rate | 39.3  Spray Drone Application Rate
+Application rate (L/ha) = Flow rate (L/min) × 60 / (Speed m/s × Swath m × 0.36) | Application rate (L/ha) = Flow rate (L/min) × 60 / (Speed m/s × Swath m × 0.36)
+Variables
+Typical application rate: 10–30 L/ha for spray drones
+Ultra-low volume (ULV): 1–3 L/ha for specialized formulations | Purpose
+Ensures correct pesticide dosage when using spray drones.
+Example
+Flow=1.2 L/min, speed=4 m/s, swath=4 m → Rate = 72/5.76 = 12.5 L/ha.
+⚠ Pitfall: Calibrate flow meter before each field — temperature affects nozzle output.
+
+--- Table 154 ---
+39.4  Image Overlap for Orthomosaic | 39.4  Image Overlap for Orthomosaic
+Front overlap: 75–85%  |  Side overlap: 65–75% | Front overlap: 75–85%  |  Side overlap: 65–75%
+Variables
+Higher overlap = better photogrammetry accuracy but more images and processing time
+80/70 overlap standard for agricultural mapping
+Windy conditions require higher overlap (85/80) | Purpose
+Ensures sufficient image pairs for photogrammetric reconstruction of orthomap.
+Example
+Field with 85/75 overlap at 5 m/s → approximately 3× more images than 70/60 overlap.
+
+--- Table 155 ---
+Parameter | Imaging Mission | Spray Mission | Notes
+Altitude | 60–150 m AGL | 3–10 m AGL | Check regulations for max altitude
+GSD target | <5 cm (mapping) | N/A | Adjust altitude to achieve GSD
+Overlap | 80% front / 70% side | 30% for coverage confirmation | Higher in wind
+Speed | 5–12 m/s | 3–6 m/s | Slower in wind
+Coverage/hr | 15–50 ha | 5–15 ha | Battery-limited
+Application rate | N/A | 10–30 L/ha | Crop and product specific
+
+--- Table 156 ---
+♻  Sustainability Note: Precision spraying drones guided by NDVI maps can reduce pesticide application by 30–50% through targeted application to problem zones only.
+
+--- Table 157 ---
+40.1  Sensor Accuracy & Drift | 40.1  Sensor Accuracy & Drift
+Drift rate = (Reading at time t − Initial calibrated value) / Elapsed days  [units/day] | Drift rate = (Reading at time t − Initial calibrated value) / Elapsed days  [units/day]
+Variables
+Cross-validate against manual measurements monthly
+Temperature sensors: acceptable drift < 0.1°C/month
+Soil EC sensors: recalibrate when drift >5% detected | Purpose
+Quantifies systematic sensor error accumulation over time.
+Example
+Soil moisture sensor reads 32%, manual gravimetric = 29% → Error = 3%, consider recalibration.
+
+--- Table 158 ---
+40.2  Data Completeness Index (DCI) | 40.2  Data Completeness Index (DCI)
+DCI (%) = Records received / Expected records × 100 | DCI (%) = Records received / Expected records × 100
+Variables
+Target: >95% for critical sensors
+<80% indicates connectivity or power problem
+Weight by sensor importance for composite DCI | Purpose
+Measures reliability of sensor data transmission; critical for systems using sensor data for automation.
+Example
+Weather station sends 95 of expected 96 hourly records → DCI = 99.0%.
+
+--- Table 159 ---
+40.3  Alert Threshold Setting | 40.3  Alert Threshold Setting
+Alert Z-score = (Observation − Rolling mean) / Rolling SD | Alert Z-score = (Observation − Rolling mean) / Rolling SD
+Variables
+Z > 2.5 = unusual reading (alert)
+Z > 3.5 = sensor fault likely
+Window: 7–30 days rolling baseline | Purpose
+Statistical approach to distinguish genuine anomalies from sensor noise.
+Example
+Soil moisture drops to Z=3.1 → genuine irrigation need or sensor disconnection — investigate.
+
+--- Table 160 ---
+Sensor Type | Calibration Frequency | Acceptable Drift | Validation Method
+Soil moisture (capacitance) | 3–6 months | <5% VWC | Gravimetric samples
+Soil temperature | Annual | <0.2°C | Calibrated thermometer
+Air temperature/RH | 6 months | <0.5°C / <3%RH | Weather station comparison
+Rainfall | Monthly | <2% | Manual rain gauge
+Soil EC | 6 months | <5% | Solution standards
+Leaf wetness | Seasonal | N/A – binary | Visual observation
+
+--- Table 161 ---
+♻  Sustainability Note: High-quality sensor data can reduce over-irrigation by 20–30% and enable precise fertilization — but only if data completeness and calibration are actively managed.
+
+--- Table 162 ---
+41.1  Soil Carbon Stock (SCS) | 41.1  Soil Carbon Stock (SCS)
+SCS (t C/ha) = SOC (%) × BD (g/cm³) × Depth (cm) × 100 / 100 | SCS (t C/ha) = SOC (%) × BD (g/cm³) × Depth (cm) × 100 / 100
+Variables
+Multiply by 3.67 to convert C to CO₂-equivalent
+Measure in 0–30 cm and 30–100 cm layers separately | Purpose
+Baseline measurement for soil carbon projects; repeated sampling detects change over time.
+Example
+SOC=1.5%, BD=1.25 g/cm³, depth=30 cm → SCS = 1.5×1.25×30×100/100 = 56.25 t C/ha = 206 t CO₂-eq/ha.
+⚠ Pitfall: Ensure same BD sampling method and depth at baseline and monitoring — inconsistency is largest source of error.
+
+--- Table 163 ---
+41.2  Annual Soil Carbon Change | 41.2  Annual Soil Carbon Change
+ΔC (t CO₂-eq/ha/yr) = (SCS_monitoring − SCS_baseline) / Years × 3.67 | ΔC (t CO₂-eq/ha/yr) = (SCS_monitoring − SCS_baseline) / Years × 3.67
+Variables
+Minimum 2–3 years monitoring before crediting
+Typical creditable change: 0.3–1.5 t CO₂-eq/ha/yr for improved management | Purpose
+Annual carbon sequestration rate eligible for carbon credit generation.
+Example
+SCS change: +2.1 t C/ha over 3 years → ΔC = 0.70 t C/ha/yr = 2.57 t CO₂-eq/ha/yr.
+
+--- Table 164 ---
+41.3  N₂O Emissions from Fertilizer (IPCC Tier 1) | 41.3  N₂O Emissions from Fertilizer (IPCC Tier 1)
+N₂O (kg N/ha) = N_applied × EF1  where EF1 = 0.01 (1% default) | N₂O (kg N/ha) = N_applied × EF1  where EF1 = 0.01 (1% default)
+Variables
+Convert to CO₂-eq: × 298 (GWP of N₂O)
+Accounts for direct emissions only; add indirect (leaching, volatilization)
+EF1 varies 0.003–0.03 regionally | Purpose
+Default method for estimating direct N₂O emissions from synthetic and organic N applications.
+Example
+150 kg N/ha urea → N₂O = 1.5 kg N/ha = 2.4 kg N₂O/ha = 711 kg CO₂-eq/ha.
+
+--- Table 165 ---
+Component | Formula / Method | Unit | Source
+Soil C stock | SOC×BD×depth×100 | t C/ha | Lab analysis + bulk density
+Annual ΔC | (SCS₂−SCS₁)/years×3.67 | t CO₂-eq/ha/yr | Repeated soil sampling
+N₂O (Tier 1) | N_applied×0.01×44/28×298 | kg CO₂-eq/ha | IPCC default factor
+CH₄ from rice | EF × SF × days | kg CH₄/ha | IPCC Chapter 5
+Enteric CH₄ | EF × animal numbers × 25 | kg CO₂-eq/year | IPCC Tier 1 by livestock type
+Carbon credits | ΔC − Leakage − Buffer | tCO₂-eq (VCUs) | After verification
+
+--- Table 166 ---
+♻  Sustainability Note: Farmers in verified carbon programs receive $15–80/t CO₂-eq — a 1 t/ha/yr improvement across 50 ha generates $750–4,000/year additional income with no additional inputs.
+
+--- Table 167 ---
+42.1  Marketing Margin (MM) | 42.1  Marketing Margin (MM)
+MM = Consumer price − Farm-gate price  [per unit or %] | MM = Consumer price − Farm-gate price  [per unit or %]
+Variables
+MM% = (Consumer price − Farm price) / Consumer price × 100
+Identify which chain actors capture most value | Purpose
+Measures the share of final price that does not return to the farmer.
+Example
+Consumer pays $2.50/kg tomato; farmer receives $0.60/kg → MM% = 76% captured by chain.
+
+--- Table 168 ---
+42.2  Farm-Gate Price Ratio (FGPR) | 42.2  Farm-Gate Price Ratio (FGPR)
+FGPR = Farm-gate price / Reference (world/regional) price | FGPR = Farm-gate price / Reference (world/regional) price
+Variables
+FGPR < 1 = farmer receiving below reference (market distortion or inefficiency)
+FGPR > 1 = premium (quality, certification, proximity) | Purpose
+Benchmarks local farm prices against reference prices to identify market failures.
+Example
+Maize farm gate: $180/t vs regional reference $220/t → FGPR = 0.82 (18% below reference).
+
+--- Table 169 ---
+42.3  Value Chain Node Profitability | 42.3  Value Chain Node Profitability
+Node margin = Selling price − Buying price − Processing/transport costs  [per unit] | Node margin = Selling price − Buying price − Processing/transport costs  [per unit]
+Variables
+Apply to each node: farm → collection → processor → retailer
+Identifies bottlenecks and opportunities for vertical integration | Purpose
+Decomposes value chain margins by actor to reveal distribution of profit.
+Example
+Collector buys at $0.60, sells at $0.90, transport $0.10/kg → Node margin = $0.20/kg.
+
+--- Table 170 ---
+42.4  Price Transmission Coefficient (PTC) | 42.4  Price Transmission Coefficient (PTC)
+PTC = ΔFarm price / ΔConsumer price  [0–1] | PTC = ΔFarm price / ΔConsumer price  [0–1]
+Variables
+PTC = 1 = perfect transmission (competitive market)
+PTC < 0.5 = poor farm price linkage (market power problem)
+Estimated via regression of price time series | Purpose
+Measures how price changes at consumer level are passed back to farmers.
+Example
+Consumer prices rose 20%, farm prices rose 8% → PTC = 0.40 (farmers poorly connected).
+
+--- Table 171 ---
+Metric | Formula | Interpretation
+Marketing Margin % | (Consumer−Farm)/Consumer×100 | Higher = less to farmer
+FGPR | Farm price/Reference price | <1 = below reference
+Node margin | Sell−Buy−Costs | Profit per chain node
+Price Transmission | ΔFarm/ΔConsumer | <0.5 = weak linkage
+Value addition ratio | Final value/Raw value | >2 = strong processing value
+
+--- Table 172 ---
+43.1  Coefficient of Variation (CV) | 43.1  Coefficient of Variation (CV)
+CV (%) = (Standard deviation of yield / Mean yield) × 100 | CV (%) = (Standard deviation of yield / Mean yield) × 100
+Variables
+CV < 15% = low risk crop/variety
+CV 15–25% = moderate risk
+CV > 25% = high risk — consider insurance or diversification | Purpose
+Measures yield variability relative to the mean; primary risk assessment metric.
+Example
+10-year maize: mean=4.2 t/ha, SD=0.84 → CV = 20% (moderate variability).
+⚠ Pitfall: Use at least 10 years of data for reliable CV estimation.
+
+--- Table 173 ---
+43.2  Value at Risk (VaR) | 43.2  Value at Risk (VaR)
+VaR (95%) = Mean yield − 1.645 × SD  [t/ha] | VaR (95%) = Mean yield − 1.645 × SD  [t/ha]
+Variables
+Assumes normal distribution of yields
+1.645 SD = 95th percentile loss threshold
+Reports worst expected yield in 1-in-20 years | Purpose
+Worst-case yield in a 1-in-20 year scenario; key for lender and insurer risk assessment.
+Example
+Mean=4.2, SD=0.84 → VaR(95%) = 4.2−1.38 = 2.82 t/ha (worst 5% of years).
+
+--- Table 174 ---
+43.3  Insurance Premium Rate | 43.3  Insurance Premium Rate
+Premium rate (%) = Expected loss / Sum insured × Loading factor | Premium rate (%) = Expected loss / Sum insured × Loading factor
+Variables
+Expected loss = mean shortfall below threshold × probability
+Loading factor: 1.1–1.4 (insurer expenses + profit)
+Index insurance: uses rainfall or NDVI trigger not actual loss | Purpose
+Actuarially fair premium basis for crop insurance product design.
+Example
+Expected loss = $200/ha, sum insured = $1,000/ha, loading 1.2 → Premium = 24%.
+
+--- Table 175 ---
+43.4  Basis Risk (Index Insurance) | 43.4  Basis Risk (Index Insurance)
+Basis risk = Correlation between index trigger and actual loss  [R²] | Basis risk = Correlation between index trigger and actual loss  [R²]
+Variables
+R² > 0.70 = acceptable basis risk for index insurance
+High basis risk = farmers experience loss but do not receive payout | Purpose
+Key metric for evaluating index-based insurance product quality.
+Example
+Rainfall index vs yield loss R²=0.62 → moderate basis risk, consider spatial refinement.
+
+--- Table 176 ---
+Metric | Formula | Interpretation
+CV | SD/Mean×100 | <15% low; >25% high risk
+VaR(95%) | Mean−1.645×SD | Worst 1-in-20 year yield
+Sharpe-like ratio | (Mean−Target)/SD | Higher = better risk-adj return
+Insurance premium | Expected loss/Sum insured×Loading | Actuarially fair rate
+Basis risk (R²) | Index vs loss correlation | >0.70 = acceptable
+
+--- Table 177 ---
+♻  Sustainability Note: Well-designed agricultural insurance can increase smallholder adoption of improved inputs by 20–40% — risk protection enables investment in productivity.
+
+--- Table 178 ---
+44.1  Economic Water Productivity (EWP) | 44.1  Economic Water Productivity (EWP)
+EWP = Gross value of production / Volume of water consumed  [$/m³] | EWP = Gross value of production / Volume of water consumed  [$/m³]
+Variables
+Includes both irrigation and effective rainfall
+Benchmark: > $0.50/m³ for water-scarce regions
+Higher crops command higher EWP | Purpose
+Links water use to economic output; guides crop selection in water-limited environments.
+Example
+Tomato: $3,000/ha value, 4,500 m³/ha water → EWP = $0.67/m³.
+
+--- Table 179 ---
+44.2  Shadow Price of Water (SPW) | 44.2  Shadow Price of Water (SPW)
+SPW = Marginal increase in profit / Marginal increase in water  [$/m³] | SPW = Marginal increase in profit / Marginal increase in water  [$/m³]
+Variables
+Derived from linear programming or production function estimation
+Represents true economic value of water in production | Purpose
+Reflects opportunity cost of water; used for pricing and allocation decisions.
+Example
+Profit increases $400/ha with additional 800 m³ irrigation → SPW = $0.50/m³.
+
+--- Table 180 ---
+44.3  Groundwater Depletion Rate (GDR) | 44.3  Groundwater Depletion Rate (GDR)
+GDR = Extraction rate − Recharge rate  [m³/yr or mm/yr] | GDR = Extraction rate − Recharge rate  [m³/yr or mm/yr]
+Variables
+Positive GDR = unsustainable extraction
+Monitor water table depth over time
+Aquifer-specific safe yield estimates needed | Purpose
+Identifies mining of groundwater beyond sustainable yield; critical for long-term planning.
+Example
+Extraction 250 mm/yr, recharge 80 mm/yr → GDR = 170 mm/yr depletion.
+
+--- Table 181 ---
+Metric | Formula | Use
+EWP | Revenue/Water volume | Crop selection in scarce areas
+Shadow price | ΔProfit/ΔWater | Irrigation investment decisions
+WUE (crop) | Yield/ET | Variety comparison
+GDR | Extraction−Recharge | Aquifer sustainability
+IWRM score | Composite governance index | Basin management benchmark
+
+--- Table 182 ---
+45.1  Women's Empowerment in Agriculture Index (WEAI) | 45.1  Women's Empowerment in Agriculture Index (WEAI)
+WEAI = (5DE score × 0.9) + (GPI × 0.1) | WEAI = (5DE score × 0.9) + (GPI × 0.1)
+Variables
+5DE = 5 Domains of Empowerment score (0–1)
+GPI = Gender Parity Index
+Score > 0.8 = empowered; < 0.6 = disempowered | Purpose
+USAID/IFPRI tool measuring women's agency, resources, and leadership in agriculture.
+Example
+Five domains: production decisions, resources, income, leadership, time allocation.
+
+--- Table 183 ---
+45.2  Labor Productivity | 45.2  Labor Productivity
+Labor productivity = Gross output value / Total labor hours (paid + unpaid) | Labor productivity = Gross output value / Total labor hours (paid + unpaid)
+Variables
+Disaggregate by gender, age, task type
+Compare across farm types and regions | Purpose
+Measures output per labor unit; reveals efficiency gaps and unpaid labor burdens.
+Example
+Farm output $5,000, 800 labor hours → LP = $6.25/hr.
+⚠ Pitfall: Capture unpaid family labor in time-use surveys — commonly underestimated by 40–60%.
+
+--- Table 184 ---
+45.3  Household Food Security Score (HFSS) | 45.3  Household Food Security Score (HFSS)
+HFSS = Σ(Dietary diversity score + Food access score + Stability score) / 3 | HFSS = Σ(Dietary diversity score + Food access score + Stability score) / 3
+Variables
+Based on FIES (Food Insecurity Experience Scale) or HDDS (Household Dietary Diversity Score)
+Scores: 1–8 food groups = better diversity
+FIES severe: < 3 groups regularly consumed | Purpose
+Composite household food security and nutrition adequacy assessment.
+Example
+Score 4 food groups regularly → moderate food security.
+
+--- Table 185 ---
+Metric | Scale | Interpretation | Source
+WEAI | 0–1 | >0.8 empowered | USAID/IFPRI survey tool
+Labor productivity | $/hr | Compare by gender/task | Farm enterprise records + time use
+HDDS | 0–12 food groups | >6 = good dietary diversity | 24hr recall survey
+Youth in agriculture | % under 35 | >30% = sector vitality | Census/survey
+Access to credit | % with formal access | >50% = good inclusion | Financial inclusion survey
+
+--- Table 186 ---
+♻  Sustainability Note: Closing the gender gap in agricultural productivity (access to inputs, extension, land) could increase yields by 20–30% among women farmers — equivalent to lifting 100–150 million people from hunger.
+
+--- Table 187 ---
+From | To | Multiply by | Notes
+hectare (ha) | acre | 2.471 | Standard agricultural unit
+acre | hectare (ha) | 0.4047 | 
+km² | ha | 100 | 
+m² | ha | 0.0001 | 
+feddan (Egypt) | ha | 0.4200 | Regional unit
+bigha (India) | ha | 0.1682 | Varies by state
+
+--- Table 188 ---
+From | To | Multiply by | Notes
+mm/ha | m³/ha | 10 | Key irrigation conversion
+mm/ha | liters/ha | 10,000 | 
+cusec (ft³/s) | L/s | 28.317 | Common in south Asia
+acre-inch | m³ | 102.79 | 
+US gallon | liter | 3.785 | 
+imperial gallon | liter | 4.546 | 
+
+--- Table 189 ---
+From | To | Multiply by | Notes
+kg/ha | lb/acre | 0.892 | 
+t/ha | bu/acre (wheat) | 14.87 | Wheat: 60 lb/bu
+t/ha | bu/acre (maize) | 15.93 | Maize: 56 lb/bu
+t/ha | bu/acre (soybean) | 14.87 | Soy: 60 lb/bu
+pound (lb) | kilogram (kg) | 0.4536 | 
+short ton | metric ton (t) | 0.9072 | 
+
+--- Table 190 ---
+Oxide form | Element form | Factor | Common use
+P₂O₅ | P | × 0.436 | Phosphate to elemental P
+P | P₂O₅ | × 2.291 | Elemental P to oxide form
+K₂O | K | × 0.830 | Potash to elemental K
+K | K₂O | × 1.205 | Elemental K to oxide form
+CaO | Ca | × 0.715 | Lime oxide to Ca
+MgO | Mg | × 0.603 | Magnesia to Mg
+N | Protein | × 6.25 | Crude protein from N
+
+--- Table 191 ---
+From | To | Multiply by
+MJ | kcal | 239.0
+kcal | MJ | 0.00418
+MJ/kg DM (TDN) | Mcal/kg | 0.239
+Mcal/kg (NE) | MJ/kg | 4.184
+kWh | MJ | 3.600
+BTU | MJ | 0.001055
+
+--- Table 192 ---
+Formula / Index | Symbol | Chapter | Domain
+Absolute Growth Rate | AGR | 8 | Crop growth
+Activity Index (Slow Release) | AI | 4 | Fertilizer
+Agronomic Efficiency | AE | 4 | Nutrient management
+Animal Welfare Index | AWI | 37 | Livestock welfare
+Apparent Nutrient Recovery | ANR | 4 | Nutrient management
+Aridity Index | AI | 16 | Climate
+Area-Time Equivalent Ratio | ATER | 3 | Cropping systems
+Average Daily Gain | ADG | 11 | Animal growth
+Body Condition Score | BCS | 11 | Animal condition
+Benefit-Cost Ratio | B:C | 17 | Economics
+Biomass Duration | BMD | 8 | Crop growth
+Broiler Performance Efficiency | BPEF/EBI | 14/15 | Poultry
+Bulk Density | BD | 7 | Soil
+Calving Interval | CI | 12 | Reproduction
+Carbon Sequestration Rate | CSR | 32 | Agroforestry/Climate
+Carrying Capacity | CC | 35 | Grazing
+Conception Rate | CR | 12 | Reproduction
+Crop Growth Rate | CGR | 8 | Crop growth
+Cropping Intensity | CI | 3 | Cropping systems
+Coefficient of Variation | CV | 43 | Risk
+Colony Strength Index | CSI | 36 | Apiculture
+Daily Light Integral | DLI | 31 | Greenhouse
+Dairy Efficiency Ratio | DER | 13 | Dairy
+Data Completeness Index | DCI | 40 | IoT/Digital
+Dressing Percentage | DP | 14 | Meat
+Dry Matter Intake | DMI | 10 | Animal nutrition
+Economic Threshold Level | ETL | 5 | Pest management
+Economic Water Productivity | EWP | 44 | Water economics
+Energy-Corrected Milk | ECM | 10/13 | Dairy
+Enhanced Vegetation Index | EVI | 9 | Remote sensing
+Exchangeable Sodium % | ESP | 7 | Soil
+F1 Score | F1 | 38 | AI/ML
+Fat-Corrected Milk | FCM | 13 | Dairy
+Feed Conversion Ratio | FCR | 10/34 | Animal/Aquaculture
+Feed Efficiency | FE | 10 | Animal nutrition
+Fertilizer Requirement | -- | 4 | Nutrient management
+Forage Utilization Efficiency | FUE | 35 | Grazing
+Gender Parity Index | GPI | 45 | Social metrics
+Genetic Gain | ΔG | 12 | Breeding
+Gross Irrigation Requirement | GIR | 6 | Irrigation
+Gross Margin | GM | 17 | Economics
+Ground Sampling Distance | GSD | 39 | Drone/UAV
+Growing Degree Days | GDD | 8 | Crop phenology
+Groundwater Depletion Rate | GDR | 44 | Water economics
+Harvest Index | HI | 8 | Crop yield
+Haugh Unit | HU | 15 | Egg quality
+Heat Use Efficiency | HUE | 8 | Crop growth
+Hen-Day Egg Production | HDEP | 15 | Poultry
+Herbicide Efficiency Index | HEI | 5 | Weed management
+Honey Yield per Colony | HY | 36 | Apiculture
+Insect Control Efficiency | ICE | 5 | Pest management
+Internal Rate of Return | IRR | 17 | Economics
+Irrigation Water Requirement | IR | 6 | Irrigation
+Kleiber Ratio | KR | 11 | Animal growth
+Labor Productivity | -- | 45 | Social metrics
+Land Equivalent Ratio | LER | 3/32 | Intercropping/Agroforestry
+Leaf Area Index | LAI | 8 | Crop growth
+Leaching Requirement | LR | 6 | Irrigation/Salinity
+Marketing Margin | MM | 42 | Value chain
+Mean Absolute Error | MAE | 38 | AI/ML
+Metabolic Quotient | qCO₂ | 29 | Soil biology
+Metabolizable Energy | ME | 10 | Animal nutrition
+Microbial Biomass Carbon | MBC | 29 | Soil biology
+Moisture Deficit Index | MDI | 16 | Climate
+Monetary Advantage Index | MAI | 3 | Intercropping
+Net Irrigation Requirement | NIR | 6 | Irrigation
+Net Present Value | NPV | 17 | Economics
+N₂O Emissions | -- | 41 | Carbon/GHG
+NDVI | NDVI | 9 | Remote sensing
+Nutrient Use Efficiency | NUE | 4 | Nutrient management
+Partial Factor Productivity | PFP | 4 | Nutrient management
+Pasture Growth Rate | PGR | 35 | Grazing
+Persistency Index | PI | 13 | Dairy
+Phyllochron | -- | 30 | Crop phenology
+Plant Population | PP | 2 | Crop establishment
+Pollination Service Index | PSI | 36 | Apiculture
+Porosity | n | 7 | Soil
+Pregnancy Rate | PR | 12 | Reproduction
+Price Transmission Coefficient | PTC | 42 | Value chain
+Protein Efficiency Ratio | PER | 10/14 | Animal nutrition/Meat
+Q₁₀ Coefficient | Q₁₀ | 33 | Post-harvest
+R² (Coefficient of Determination) | R² | 38 | AI/ML
+Real Value of Seed | RVS | 2 | Crop establishment
+Relative Growth Rate | RGR | 8/11 | Crop/Animal growth
+Respiration Rate | RR | 33/37 | Post-harvest/Animal stress
+RMSE | RMSE | 38 | AI/ML
+Rotational Grazing Rest Period | RP | 35 | Grazing
+SAVI | SAVI | 9 | Remote sensing
+Seed Rate | SR | 2 | Crop establishment
+Selection Index | SI | 12 | Breeding
+Sensor Drift Rate | -- | 40 | IoT/Digital
+Shannon Diversity Index | H' | 22/32 | Agroecology
+Sodium Adsorption Ratio | SAR | 7 | Soil/Water quality
+Soil Carbon Stock | SCS | 41 | Carbon markets
+Soil Enzyme Activity Index | EAI | 29 | Soil biology
+Soil Quality Index | SQI | 7 | Soil health
+Somatic Cell Score | SCS | 13 | Dairy health
+Specific Growth Rate (aqua) | SGR | 34 | Aquaculture
+Spray Drone Application Rate | -- | 39 | Drone/UAV
+Stocking Rate | SR | 35 | Grazing
+Survival Rate | SR | 34 | Aquaculture
+Temperature-Humidity Index | THI | 37 | Animal stress
+Total Digestible Nutrients | TDN | 10 | Animal nutrition
+Value at Risk | VaR | 43 | Risk
+Value Chain Node Profitability | -- | 42 | Value chain
+Vapor Pressure Deficit | VPD | 31 | Greenhouse
+Varroa Mite Infestation Rate | VIR | 36 | Apiculture
+Vegetation Health Index | VHI | 9 | Remote sensing
+Water Quality Index (aqua) | WQI | 34 | Aquaculture
+Water Use Efficiency | WUE | 6 | Irrigation
+Weed Control Efficiency | WCE | 5 | Weed management
+Weed Index | WI | 5 | Weed management
+Women's Empowerment Index | WEAI | 45 | Social metrics
+
+--- Table 193 ---
+PLANT POPULATION
+PP = 10,000 / (Row spacing m × Plant spacing m)
+Variables: Spacing in meters. Output: plants/ha.
+Example: Maize 0.75m×0.25m → PP = 53,333 plants/ha
+⚠  Pitfall: Mixing cm and m units
+
+--- Table 194 ---
+SEED RATE
+SR = PP × TW / (10,000,000 × Germ% × Purity%)
+Variables: TW = 1000-grain weight (g). Output: kg/ha.
+Example: 350,000 plants, TW=35g, 90%germ, 98%pur → 126 kg/ha
+⚠  Pitfall: Using % as whole number instead of decimal
+
+--- Table 195 ---
+HARVEST INDEX
+HI (%) = Economic yield / Biological yield × 100
+Variables: Yields in same units. Output: %.
+Example: Grain 5 t/ha, Biomass 12 t/ha → HI = 41.7%
+⚠  Pitfall: Using fresh weight instead of dry weight
+
+--- Table 196 ---
+LER
+LER = Yi_a/Ys_a + Yi_b/Ys_b
+Variables: Yi = intercrop yield, Ys = sole crop yield.
+Example: LER = 0.65 + 0.75 = 1.40 → 40% land advantage
+⚠  Pitfall: Comparing to different-season sole crops
+
+--- Table 197 ---
+WATER USE EFFICIENCY
+WUE = Yield (kg/ha) / Water used (mm)
+Variables: Water = total ET or irrigation applied.
+Example: Wheat: 4,500 kg/ha ÷ 380 mm = 11.8 kg/mm
+⚠  Pitfall: Using irrigation only, ignoring rainfall
+
+--- Table 198 ---
+FEED CONVERSION RATIO
+FCR = Feed intake (kg) / Weight gain (kg)
+Variables: Both must be on same moisture basis.
+Example: Lamb: 40 kg feed ÷ 10 kg gain = FCR 4.0
+⚠  Pitfall: Mixing as-fed and dry matter basis
+
+--- Table 199 ---
+AVERAGE DAILY GAIN
+ADG = (W₂ − W₁) / Days  [kg/day]
+Variables: Weigh after overnight fast at same time of day.
+Example: Calf: (320−200) kg ÷ 120 days = 1.0 kg/day
+⚠  Pitfall: Not standardizing weighing conditions
+
+--- Table 200 ---
+ENERGY-CORRECTED MILK
+ECM = 0.327M + 12.95F + 7.20P
+Variables: M=kg milk, F=kg fat, P=kg protein (not %).
+Example: 28kg milk, 1.06kg fat, 0.90kg protein → ECM=36.1kg
+⚠  Pitfall: Using % directly without converting to kg
+
+--- Table 201 ---
+NDVI
+NDVI = (NIR − Red) / (NIR + Red)
+Variables: NIR and Red = reflectance values (0–1).
+Example: NIR=0.65, Red=0.25 → NDVI = 0.44
+⚠  Pitfall: Saturates at LAI>3; use EVI for dense canopies
+
+--- Table 202 ---
+GDD
+GDD = Σ((Tmax + Tmin)/2 − Tbase)
+Variables: Sum daily across season. Tbase is crop-specific.
+Example: Tmax=28, Tmin=16, Tbase=10°C → 12 GDD/day
+⚠  Pitfall: Using wrong Tbase for the crop species
+
+--- Table 203 ---
+N FERTILIZER RATE
+Product (kg/ha) = 100 × N rate / Nutrient %
+Variables: N rate in kg/ha, Nutrient % from bag label.
+Example: 120 kg N/ha, Urea 46% N → 261 kg urea/ha
+⚠  Pitfall: Confusing P element with P₂O₅ oxide form
+
+--- Table 204 ---
+BULK DENSITY
+BD = Oven-dry mass (g) / Volume (cm³)  [g/cm³]
+Variables: Use undisturbed core sample.
+Example: 130g dry mass / 100cm³ → BD = 1.30 g/cm³
+⚠  Pitfall: Using disturbed samples — always use cores
+
+--- Table 205 ---
+49.1  Leaching Requirement for Reclamation (LR) | 49.1  Leaching Requirement for Reclamation (LR)
+LR = ECiw / (5 × ECe_threshold − ECiw) | LR = ECiw / (5 × ECe_threshold − ECiw)
+Variables
+ECiw = EC of irrigation water (dS/m)
+ECe_threshold = maximum tolerable soil EC for crop (dS/m)
+LR expressed as fraction of irrigation water that must drain | Purpose
+Fraction of applied water needed to leach salt below root zone to achieve target ECe.
+Example
+ECiw=2.0 dS/m, ECe threshold for wheat=6.0: LR = 2/(30−2) = 0.071 (7.1% of applied water must drain).
+⚠ Pitfall: Does not account for rainfall contribution to leaching — subtract effective rainfall from leaching need.
+
+--- Table 206 ---
+49.2  Gypsum Requirement (GR) | 49.2  Gypsum Requirement (GR)
+GR (t/ha) = (ESP_initial − ESP_target) × CEC × BD × depth / (100 × 1.72) | GR (t/ha) = (ESP_initial − ESP_target) × CEC × BD × depth / (100 × 1.72)
+Variables
+ESP = exchangeable sodium percentage (%)
+CEC = cation exchange capacity (cmol/kg)
+BD = bulk density (g/cm³), depth in cm
+1.72 = conversion factor for CaSO₄·2H₂O purity | Purpose
+Tonnes of gypsum needed to replace sodium on exchange sites to reach target ESP.
+Example
+ESP_i=25%, ESP_t=10%, CEC=20, BD=1.3, depth=30cm → GR ≈ 7.2 t/ha.
+⚠ Pitfall: Account for gypsum purity (commercial grades: 70–95% CaSO₄·2H₂O).
+
+--- Table 207 ---
+49.3  Relative Yield under Salinity (Threshold-Slope Model) | 49.3  Relative Yield under Salinity (Threshold-Slope Model)
+RY (%) = 100 − b × (ECe − ECe_threshold)  when ECe > threshold | RY (%) = 100 − b × (ECe − ECe_threshold)  when ECe > threshold
+Variables
+ECe_threshold = salinity at which yield begins to decline (dS/m)
+b = slope (% yield loss per dS/m above threshold)
+RY = 100% below threshold; decreases linearly above | Purpose
+Van Genuchten-Hoffman model predicting crop yield loss from soil salinity.
+Example
+Tomato: threshold=2.5, b=9.9%/dS/m. At ECe=5: RY=100−9.9×(5−2.5)=75.25%.
+⚠ Pitfall: Threshold and slope values are crop- and cultivar-specific — use published tables.
+
+--- Table 208 ---
+49.4  Salt Balance Equation | 49.4  Salt Balance Equation
+ΔSalt = Salt_in (irrigation + fertilizer) − Salt_out (drainage + uptake) | ΔSalt = Salt_in (irrigation + fertilizer) − Salt_out (drainage + uptake)
+Variables
+Salt_in = ECiw × Volume applied × 0.64 (converts dS/m·m³ to kg salt)
+Target: ΔSalt ≤ 0 for sustainable irrigated agriculture
+Monitor seasonal salt balance; reclamation needed if positive | Purpose
+Annual audit of salt inputs vs outputs in an irrigated field.
+Example
+ECiw=1.5 dS/m, 6000 m³/ha applied → Salt_in = 5,760 kg/ha. Must drain ≥5,760 kg to balance.
+
+--- Table 209 ---
+Crop | ECe Threshold (dS/m) | Slope b (%/dS/m) | Tolerance Class
+Date palm | 4.0 | 3.6 | Tolerant
+Cotton | 7.7 | 5.2 | Tolerant
+Barley | 8.0 | 5.0 | Tolerant
+Wheat | 6.0 | 7.1 | Moderate
+Maize | 1.7 | 12.0 | Sensitive
+Bean | 1.0 | 19.0 | Sensitive
+Tomato | 2.5 | 9.9 | Moderate
+Strawberry | 1.0 | 33.0 | Very sensitive
+
+--- Table 210 ---
+♻  Sustainability Note: Irrigating with high-ECw water without adequate drainage is the leading cause of land degradation in arid zones — salt balance audits should be annual practice.
+
+--- Table 211 ---
+50.1  Nitrogen Fixation Credit (NFC) | 50.1  Nitrogen Fixation Credit (NFC)
+NFC (kg N/ha) = Biomass DM × N% × Ndfa fraction | NFC (kg N/ha) = Biomass DM × N% × Ndfa fraction
+Variables
+Ndfa = proportion of N derived from atmosphere (0.6–0.9 for well-nodulated legumes)
+Biomass N from lab analysis or default values
+Credit available to following cash crop after decomposition | Purpose
+Nitrogen contribution of legume cover crop to the following crop, reducing synthetic N need.
+Example
+Vetch: 4 t DM/ha, 3.5% N, Ndfa=0.75 → NFC = 4×35×0.75 = 105 kg N/ha.
+⚠ Pitfall: Only a fraction (30–60%) mineralizes in the same season — adjust timing accordingly.
+
+--- Table 212 ---
+50.2  Biomass Production Index (BPI) | 50.2  Biomass Production Index (BPI)
+BPI = Cover crop DM (kg/ha) / Days of growth | BPI = Cover crop DM (kg/ha) / Days of growth
+Variables
+Higher BPI = faster biomass accumulation
+Compare species and management options
+Minimum: 2,000 kg DM/ha for effective soil coverage | Purpose
+Productivity rate of cover crop; used to compare species and optimize termination timing.
+Example
+Cereal rye: 3,800 kg DM in 90 days → BPI = 42.2 kg/ha/day.
+
+--- Table 213 ---
+50.3  Rotation Diversity Index (RDI) | 50.3  Rotation Diversity Index (RDI)
+RDI = 1 − Σ(pi²)  where pi = proportion of rotation occupied by crop i | RDI = 1 − Σ(pi²)  where pi = proportion of rotation occupied by crop i
+Variables
+Adapted from Simpson diversity index
+RDI = 0 (monoculture) to approaching 1 (maximum diversity)
+Minimum RDI of 0.5 recommended for sustainable rotations | Purpose
+Measures crop sequence diversity; higher RDI associated with lower disease pressure and better soil health.
+Example
+Maize 50%, soybean 25%, wheat 25%: RDI = 1−(0.25+0.0625+0.0625) = 0.625.
+
+--- Table 214 ---
+50.4  Soil Cover Percentage (SCP) | 50.4  Soil Cover Percentage (SCP)
+SCP (%) = Covered area / Total area × 100  (measured by point-quadrat or image analysis) | SCP (%) = Covered area / Total area × 100  (measured by point-quadrat or image analysis)
+Variables
+Target: >70% during critical rainfall erosion periods
+Below 30% = unprotected soil, high erosion risk | Purpose
+Proportion of soil surface protected by living or dead mulch; key erosion protection metric.
+Example
+Count 50 points: 38 covered → SCP = 76% (adequate protection).
+
+--- Table 215 ---
+Cover Crop Type | Primary Benefit | NFC (kg N/ha) | BPI (kg/ha/day)
+Vetch (Vicia sativa) | N fixation | 80–130 | 30–50
+Crimson clover | N fixation | 70–120 | 25–40
+Cereal rye | Biomass, weed suppression | 0 | 35–55
+Radish (Raphanus) | Compaction, nutrient cycling | 0–20 | 40–70
+Sunn hemp | N fixation, nematodes | 100–200 | 50–80
+Oat | Erosion protection, biomass | 0 | 30–50
+
+--- Table 216 ---
+♻  Sustainability Note: Diverse rotations with legume cover crops can replace 50–150 kg synthetic N/ha/yr, reducing both input costs and N₂O emissions substantially.
+
+--- Table 217 ---
+51.1  Germination Index (GI) | 51.1  Germination Index (GI)
+GI = Σ(Gt / Dt)  where Gt = seeds germinated on day t, Dt = days from start | GI = Σ(Gt / Dt)  where Gt = seeds germinated on day t, Dt = days from start
+Variables
+Higher GI = faster, more uniform germination
+Sensitive to seed lot differences that standard germination misses | Purpose
+Combines speed and uniformity of germination into a single index.
+Example
+Day 3: 20 seeds, Day 5: 50 seeds, Day 7: 30 seeds → GI = 20/3+50/5+30/7 = 6.67+10+4.29 = 20.96.
+
+--- Table 218 ---
+51.2  Seedling Vigour Index (SVI) | 51.2  Seedling Vigour Index (SVI)
+SVI = (Shoot length + Root length) mm × Germination %  / 100 | SVI = (Shoot length + Root length) mm × Germination %  / 100
+Variables
+Measured at end of standard germination test (7–10 days)
+SVI > 1500 = high vigour; < 500 = poor vigour | Purpose
+Combines seedling size and germination rate; predicts field emergence better than germination alone.
+Example
+Shoot=65mm, Root=80mm, Germination=88% → SVI = 145×0.88 = 127.6 (moderate).
+⚠ Pitfall: Standardize growth media, temperature, and measurement method between comparisons.
+
+--- Table 219 ---
+51.3  Mean Germination Time (MGT) | 51.3  Mean Germination Time (MGT)
+MGT = Σ(ti × ni) / Σni  [days] | MGT = Σ(ti × ni) / Σni  [days]
+Variables
+ti = time in days
+ni = number germinating on day ti
+Lower MGT = faster germination | Purpose
+Average time to germination; lower is better for field crop establishment.
+Example
+Seeds germinate on days 3,4,5: 20,50,30 seeds → MGT=(3×20+4×50+5×30)/100 = 4.1 days.
+
+--- Table 220 ---
+51.4  Emergence Rate Index (ERI) | 51.4  Emergence Rate Index (ERI)
+ERI = Σ(ni × k / ti)  where k = number of counting periods | ERI = Σ(ni × k / ti)  where k = number of counting periods
+Variables
+Similar to GI but field-based
+Higher ERI = faster field establishment | Purpose
+Field version of germination index; measures speed of crop emergence under actual conditions.
+Example
+Count at 7, 10, 14 days post-sowing with k=3 counting periods.
+
+--- Table 221 ---
+Test | What It Measures | Standard | Good Threshold
+Standard germination | Viable seeds (%) | ISTA rules | >85% certified seed
+Germination Index (GI) | Speed + uniformity | Calculated | Higher = better
+SVI | Seedling size × germination | ISTA/AOSA | >1500 high vigour
+MGT | Average time to germinate | Calculated | <4 days for cereals
+Accelerated aging | Stress tolerance | 41°C, 100% RH, 48h | >70% germination after
+Cold test | Cold tolerance | 10°C, 7 days | >80% emergence
+
+--- Table 222 ---
+♻  Sustainability Note: Using certified high-vigour seed can improve field emergence by 15–25% compared to farm-saved seed, often returning more value than the premium cost.
+
+--- Table 223 ---
+52.1  Radiation Use Efficiency (RUE) | 52.1  Radiation Use Efficiency (RUE)
+RUE = Aboveground biomass / Intercepted PAR  [g DM / MJ] | RUE = Aboveground biomass / Intercepted PAR  [g DM / MJ]
+Variables
+PAR = photosynthetically active radiation (400–700 nm)
+Intercepted PAR = incoming PAR × (1 − e^(−k × LAI))
+Typical values: wheat 1.2–1.8, maize 1.5–2.0, soybean 0.9–1.4 g/MJ | Purpose
+Core efficiency parameter in radiation-driven crop models; varies by species, N status, and water stress.
+Example
+Maize: 15 t DM/ha over season, intercepted PAR = 900 MJ/m² → RUE = 150/900 = 1.67 g/MJ.
+⚠ Pitfall: RUE declines under water, N, or heat stress — use as a diagnostic of limiting factors.
+
+--- Table 224 ---
+52.2  Transpiration Efficiency Coefficient (TEC) | 52.2  Transpiration Efficiency Coefficient (TEC)
+TE = Biomass produced / Water transpired  [g DM / kg H₂O]  or  [kg / mm] | TE = Biomass produced / Water transpired  [g DM / kg H₂O]  or  [kg / mm]
+Variables
+TEC relates to vapour pressure deficit: TE × VPD ≈ constant for a species
+C4 crops (maize): TEC ≈ 8–12; C3 crops (wheat): TEC ≈ 4–8 | Purpose
+Links water use to biomass production; used in water-limited model simulations.
+Example
+Wheat: 8 t DM/ha, 300 mm transpired → TE = 80/300 = 0.27 kg DM/mm.
+
+--- Table 225 ---
+52.3  Yield Gap Analysis | 52.3  Yield Gap Analysis
+Yield gap = Potential yield − Actual yield  [t/ha] | Yield gap = Potential yield − Actual yield  [t/ha]
+Variables
+Potential yield = water + nutrient unlimited, pest free (radiation limited only)
+Water-limited yield = nutrient unlimited, pest free
+Actual yield = farmer field average | Purpose
+Decomposes the gap between what farmers achieve and what is physically possible.
+Example
+Wheat: potential=10 t/ha, water-limited=7 t/ha, actual=3.5 t/ha → Exploitable gap = 3.5 t/ha.
+
+--- Table 226 ---
+Model | Primary Use | Key Inputs | Outputs
+DSSAT/CERES | Crop growth, N, water | Daily weather, soil, genotype coefficients | Yield, N uptake, water use
+APSIM | Farming systems, rotations | Weather, soil, management | Yield, SOC, erosion
+AquaCrop (FAO) | Water productivity | ETo, rainfall, soil, crop parameters | Yield, WUE, biomass
+WOFOST | European crop growth | Weather, soil, crop parameters | Yield, LAI, biomass
+SWAP | Soil-water-atmosphere | Soil hydraulics, weather | Water balance, drainage
+
+--- Table 227 ---
+♻  Sustainability Note: Yield gap analysis consistently shows that closing 50% of the exploitable gap globally would produce enough food for 10 billion people — without expanding agricultural land.
+
+--- Table 228 ---
+53.1  Root Colonization Index (RCI) | 53.1  Root Colonization Index (RCI)
+RCI (%) = Colonized root segments / Total root segments examined × 100 | RCI (%) = Colonized root segments / Total root segments examined × 100
+Variables
+Gridline intersect or magnified root staining method
+Target: >50% for effective mycorrhizal benefit
+Arbuscular mycorrhizal fungi (AMF): look for hyphae, vesicles, arbuscules | Purpose
+Proportion of root system colonized by mycorrhizal fungi; indicates potential P and water uptake benefit.
+Example
+Examine 100 root segments: 64 show AMF structures → RCI = 64%.
+⚠ Pitfall: High P fertilization suppresses AMF colonization — monitor when reducing inputs.
+
+--- Table 229 ---
+53.2  Nitrogen Fixation Efficiency (NFE) | 53.2  Nitrogen Fixation Efficiency (NFE)
+NFE = Shoot N in inoculated / Shoot N in uninoculated (no N fertilizer control) | NFE = Shoot N in inoculated / Shoot N in uninoculated (no N fertilizer control)
+Variables
+NFE > 1.5 indicates effective fixation
+Measure at peak vegetative stage
+Nodule count and colour also diagnostic (pink/red = active) | Purpose
+Compares N accumulation of inoculated vs uninoculated legumes without fertilizer N.
+Example
+Inoculated soybean: 180 kg N/ha; control: 90 kg N/ha → NFE = 2.0 (excellent fixation).
+
+--- Table 230 ---
+53.3  Mycorrhizal Dependency (MD) | 53.3  Mycorrhizal Dependency (MD)
+MD (%) = (Yield with AMF − Yield without AMF) / Yield with AMF × 100 | MD (%) = (Yield with AMF − Yield without AMF) / Yield with AMF × 100
+Variables
+High MD = crop highly dependent on AMF for growth
+Cassava MD ≈ 80–95%; maize ≈ 20–40%; barley ≈ 10–30% | Purpose
+Crop-level requirement for AMF; guides inoculant prioritization by crop species.
+Example
+Cassava with AMF: 12 t/ha; without: 4 t/ha → MD = (12−4)/12×100 = 67%.
+
+--- Table 231 ---
+Metric | Method | Good Result | Crop Relevance
+Root colonization (RCI) | Staining + microscopy | >50% colonization | All AMF-host crops
+Nodule count | Root excavation at flowering | >10 pink nodules/plant | Legumes
+NFE ratio | Shoot N comparison | >1.5 | Legumes
+Mycorrhizal dependency | Yield comparison ±AMF | >40% = high dependency | Cassava, leek, alliums
+Spore density | Wet sieving per 100g soil | >20 spores = active AMF | All crops
+Glomalin (GRSP) | Bradford protein assay | >3 mg/g soil | Soil stability proxy
+
+--- Table 232 ---
+♻  Sustainability Note: Well-functioning mycorrhizal networks can reduce phosphorus fertilizer needs by 30–50% in highly dependent crops — an underutilized biological lever in soil fertility management.
+
+--- Table 233 ---
+54.1  Acetate:Propionate Ratio (A:P) | 54.1  Acetate:Propionate Ratio (A:P)
+A:P = Molar proportion of acetate / Molar proportion of propionate | A:P = Molar proportion of acetate / Molar proportion of propionate
+Variables
+A:P = 3:1 typical for high-forage diet; 2:1 for high-concentrate
+A:P < 2.2 = risk of sub-acute ruminal acidosis (SARA)
+Acetate → fat; Propionate → glucose | Purpose
+Reflects fermentation pattern and energy substrate supply; shifts with diet composition.
+Example
+Rumen fluid: acetate 65mol%, propionate 20mol%, butyrate 15mol% → A:P = 3.25.
+⚠ Pitfall: Sample via rumenocentesis or stomach tube — timing relative to feeding affects values.
+
+--- Table 234 ---
+54.2  Effective NDF (eNDF) | 54.2  Effective NDF (eNDF)
+eNDF (% of diet DM) = NDF% × Physical effectiveness factor (pef) | eNDF (% of diet DM) = NDF% × Physical effectiveness factor (pef)
+Variables
+pef = 1.0 for long forage; 0.5–0.8 for chopped; 0.2–0.4 for TMR grains
+Minimum eNDF: 22% of diet DM for dairy cows
+Below minimum → SARA risk, fat depression | Purpose
+NDF adjusted for particle size effect on rumen mat and chewing stimulation.
+Example
+Silage NDF=40%, pef=0.8 → contributes 32% eNDF; grain NDF=10%, pef=0.2 → 2% eNDF.
+
+--- Table 235 ---
+54.3  Neutral Detergent Fiber Digestibility (NDFD) | 54.3  Neutral Detergent Fiber Digestibility (NDFD)
+NDFD (%) = (NDF consumed − NDF in feces) / NDF consumed × 100 | NDFD (%) = (NDF consumed − NDF in feces) / NDF consumed × 100
+Variables
+30-hour NDFD most used (in vitro): benchmark >55% for good forages
+Higher NDFD → more energy from same NDF level
+Drives DMI differences between forage sources | Purpose
+True digestibility of fiber fraction; major driver of dairy cow energy intake and yield.
+Example
+Forage A: NDFD=62% (excellent); Forage B: NDFD=45% (poor) → choose A for dairy.
+
+--- Table 236 ---
+54.4  Sub-Acute Ruminal Acidosis Risk Index (SARA-RI) | 54.4  Sub-Acute Ruminal Acidosis Risk Index (SARA-RI)
+SARA-RI = Hours per day rumen pH < 5.8 | SARA-RI = Hours per day rumen pH < 5.8
+Variables
+SARA diagnosed when pH < 5.8 for > 3 hours/day
+Measured by continuous bolus pH loggers or spot rumenocentesis
+Risk increases with high starch, low eNDF, rapid diet transition | Purpose
+Quantifies acidosis exposure time; defines SARA threshold for management intervention.
+Example
+pH logger shows 4.5 hrs below 5.8 → SARA confirmed, increase buffer and forage particle size.
+
+--- Table 237 ---
+Rumen Parameter | Normal Range | Alert Threshold | Action
+Rumen pH | 6.0–6.8 | <5.8 for >3 hr | Add buffer, increase eNDF
+A:P ratio | 2.2–3.5 | <2.2 | Reduce starch, add forage
+eNDF (% diet) | >22% | <18% | Add long-stem forage
+NDFD 30h | >55% | <45% | Review forage source
+Ammonia N (mg/dL) | 5–25 | >30 or <5 | Adjust protein level
+Total VFA (mmol/L) | 100–150 | <80 or >160 | Review fermentation pattern
+
+--- Table 238 ---
+♻  Sustainability Note: Optimizing rumen fermentation can reduce enteric methane production by 15–30% while maintaining or improving productivity — a key lever in livestock GHG mitigation.
+
+--- Table 239 ---
+55.1  Litter Size Index (LSI) | 55.1  Litter Size Index (LSI)
+LSI = Total lambs/kids born alive / Total ewes/does that lambed | LSI = Total lambs/kids born alive / Total ewes/does that lambed
+Variables
+Prolific breeds (Romanov, Booroola): LSI > 2.0
+Merino: LSI 1.1–1.3; Dorper: 1.4–1.6
+Does (goats) typically higher than ewes: 1.6–2.2 | Purpose
+Average number of offspring per parturition; key breeding selection and nutritional management metric.
+Example
+100 ewes lamb, 148 lambs born alive → LSI = 1.48.
+
+--- Table 240 ---
+55.2  Fleece Weight & Fiber Quality Index | 55.2  Fleece Weight & Fiber Quality Index
+Clean fleece weight (kg) = Greasy fleece × (100 − Vegetable matter% − Grease%) / 100 | Clean fleece weight (kg) = Greasy fleece × (100 − Vegetable matter% − Grease%) / 100
+Variables
+Fiber diameter in microns: superfine <17μm; fine 17–19; medium 23–26; strong >30μm
+Comfort factor = % fibers < 30μm (target >95% for next-to-skin wear) | Purpose
+Clean wool yield and quality assessment for Merino and wool breed management.
+Example
+Greasy fleece 5.5 kg, 18% grease, 5% VM → Clean fleece = 5.5×0.77 = 4.24 kg.
+
+--- Table 241 ---
+55.3  Milk-to-Liveweight Ratio (MLR) — Dairy Goats | 55.3  Milk-to-Liveweight Ratio (MLR) — Dairy Goats
+MLR = Daily milk yield (kg) / Doe body weight (kg) | MLR = Daily milk yield (kg) / Doe body weight (kg)
+Variables
+High-producing Saanen does: MLR 0.08–0.12
+Alpine: 0.07–0.10
+Used to compare breeds of different body size | Purpose
+Size-corrected milk production measure for dairy goat breed comparison.
+Example
+Saanen doe: 4.5 kg/day, BW=65 kg → MLR = 0.069.
+
+--- Table 242 ---
+Species | Metric | Target Range | Notes
+Sheep | Litter size index | 1.2–2.0+ | Breed-specific
+Sheep (Merino) | Clean fleece (kg) | 4–6 | Age and nutrition dependent
+Sheep (Merino) | Fiber diameter (μm) | 17–21 | Superfine premium
+Goat (dairy) | Milk yield (kg/day) | 3–6 | Saanen, Alpine
+Goat (dairy) | Lactation length (days) | 270–300 | Depends on milking policy
+Goat (meat) | Dressing percentage | 42–50% | Lower than cattle
+Both | Kidding/Lambing rate | 120–200% | Born alive/exposed
+
+--- Table 243 ---
+♻  Sustainability Note: Small ruminants are the primary livestock of smallholder and pastoral communities — their productivity metrics are essential for food security and income monitoring in the Global South.
+
+--- Table 244 ---
+56.1  Substrate Conversion Efficiency (SCE) | 56.1  Substrate Conversion Efficiency (SCE)
+SCE (%) = Larval fresh weight gained / Substrate DM offered × 100 | SCE (%) = Larval fresh weight gained / Substrate DM offered × 100
+Variables
+BSF: SCE 10–25% on organic waste substrates
+Higher SCE on high-quality substrates (restaurant waste, brewery grains)
+Different from FCR — substrate is often waste, not purpose-grown feed | Purpose
+Efficiency of converting organic substrate into insect biomass; key economic and environmental metric.
+Example
+BSF larvae: 8 kg fresh weight from 50 kg substrate DM → SCE = 16%.
+⚠ Pitfall: SCE varies hugely with substrate quality — always report substrate composition.
+
+--- Table 245 ---
+56.2  Insect Feed Conversion Ratio (iFCR) | 56.2  Insect Feed Conversion Ratio (iFCR)
+iFCR = Feed DM consumed / Insect DM gained  [kg/kg] | iFCR = Feed DM consumed / Insect DM gained  [kg/kg]
+Variables
+BSF on optimized diet: iFCR 1.4–2.0
+Mealworm: iFCR 2.2–3.5
+Cricket: iFCR 1.7–2.5
+Compare on DM basis to avoid moisture content errors | Purpose
+Dry matter efficiency of feed conversion; allows cross-species comparison.
+Example
+Mealworm: 100 kg feed DM, 35 kg insect DM gained → iFCR = 2.86.
+
+--- Table 246 ---
+56.3  Larval Yield Percentage (LY%) | 56.3  Larval Yield Percentage (LY%)
+LY% = Harvest fresh weight / Total rearing unit biomass at peak × 100 | LY% = Harvest fresh weight / Total rearing unit biomass at peak × 100
+Variables
+Accounts for mortality during rearing
+BSF target: >75% survival from egg to harvest | Purpose
+Overall biological efficiency of the rearing cycle from egg/neonate to harvest.
+Example
+500g eggs → expected maximum 20 kg larvae; achieved 16 kg → LY% = 80%.
+
+--- Table 247 ---
+56.4  Frass Fertilizer Value | 56.4  Frass Fertilizer Value
+N equivalent (kg/t frass) = Total N% × 10,000 / 100 | N equivalent (kg/t frass) = Total N% × 10,000 / 100
+Variables
+BSF frass: ~2.5–4% N, 1.5–2.5% P₂O₅, 1.8–2.5% K₂O
+Organic N — slower release than synthetic
+Value as fertilizer partially offsets production cost | Purpose
+Economic and agronomic value of insect excrement and substrate residue as fertilizer.
+Example
+BSF frass with 3% N → 300 kg N equivalent per tonne frass.
+
+--- Table 248 ---
+Species | iFCR (DM) | Protein %DM | Fat %DM | Cycle Length
+Black soldier fly (BSF) | 1.4–2.0 | 42–44 | 31–35 | 14–18 days (larvae)
+Mealworm | 2.2–3.5 | 52–58 | 28–33 | 60–90 days
+House cricket | 1.7–2.5 | 65–70 | 13–18 | 45–60 days
+Yellow mealworm | 2.5–4.0 | 48–55 | 25–32 | 70–100 days
+Silkworm pupae | N/A (byproduct) | 52–58 | 28–32 | Byproduct of silk
+
+--- Table 249 ---
+♻  Sustainability Note: Insect protein production emits 50–100× less GHG per kg protein than beef, uses 10–100× less land, and can valorize organic wastes — circular economy potential is exceptional.
+
+--- Table 250 ---
+57.1  Heart Rate Recovery Index (HRRI) | 57.1  Heart Rate Recovery Index (HRRI)
+HRRI = Resting HR / HR at 10 minutes post-exercise × 100 | HRRI = Resting HR / HR at 10 minutes post-exercise × 100
+Variables
+Fit horse recovers to <60 bpm within 10 min
+HRRI > 80 = excellent fitness; < 60 = poor recovery
+Used in endurance events as fitness qualification criterion | Purpose
+Speed of cardiovascular recovery after exercise; standard fitness assessment metric.
+Example
+Resting HR=40 bpm, HR at 10 min=52 bpm → HRRI = 77 (good fitness).
+⚠ Pitfall: Dehydration and electrolyte imbalance impair recovery — assess alongside gut sounds.
+
+--- Table 251 ---
+57.2  Stride Length & Frequency | 57.2  Stride Length & Frequency
+Speed (m/s) = Stride length (m) × Stride frequency (strides/s) | Speed (m/s) = Stride length (m) × Stride frequency (strides/s)
+Variables
+Elite thoroughbred: stride length 6.5–7.0 m, frequency 2.2–2.4 Hz at gallop
+Stride length more trainable than frequency
+Used in biomechanical gait analysis for lameness and optimization | Purpose
+Decomposes speed into its two biomechanical components for training and soundness assessment.
+Example
+Horse at 16 m/s: stride length=6.8m → frequency = 16/6.8 = 2.35 strides/s.
+
+--- Table 252 ---
+57.3  Body Condition Score (BCS) — Equine | 57.3  Body Condition Score (BCS) — Equine
+Henneke scale: 1 (poor) to 9 (extremely fat); target 4–6 for performance; 5–7 for breeding mares | Henneke scale: 1 (poor) to 9 (extremely fat); target 4–6 for performance; 5–7 for breeding mares
+Variables
+Assess at 6 sites: neck, withers, shoulder, ribs, loin, tailhead
+BCS at covering predicts conception rate (target ≥5)
+Score < 3 = welfare concern | Purpose
+Visual and palpation assessment of fat cover at standardized body sites.
+Example
+Performance horse: maintain BCS 4–5; broodmare: BCS 5–6 at breeding.
+
+--- Table 253 ---
+Metric | Formula/Scale | Target | Application
+Resting HR (bpm) | Auscultation | 28–44 | Fitness baseline
+HRRI | RestHR/10-minHR×100 | >75 fit; <60 concern | Endurance fitness
+Stride length (m) | Speed/Frequency | >6.5m elite gallop | Performance optimization
+BCS (Henneke) | 1–9 scale | 4–6 performance | Nutrition management
+Hoof angle (°) | Protractor | 50–55° front; 55–60° hind | Farriery/lameness
+Packed cell volume | % | 32–52% | Fitness & hydration
+
+--- Table 254 ---
+♻  Sustainability Note: Proper BCS management in broodmares can increase conception rates by 15–25% — one of the most cost-effective interventions in equine reproductive management.
+
+--- Table 255 ---
+58.1  Red Edge Position (REP) | 58.1  Red Edge Position (REP)
+REP (nm) = 700 + 40 × [(R700+R740)/2 − R700] / (R740 − R700) | REP (nm) = 700 + 40 × [(R700+R740)/2 − R700] / (R740 − R700)
+Variables
+R700, R740 = reflectance at 700nm and 740nm
+REP shifts 700→720nm as N status declines
+Correlates strongly with leaf chlorophyll and N content | Purpose
+Position of maximum slope in the red-edge region; most sensitive indicator of plant nitrogen status from remote sensing.
+Example
+REP = 717 nm (adequate N); REP = 708 nm (N stress — consider top-dressing).
+⚠ Pitfall: Requires hyperspectral sensor with <5nm band width — not available from Sentinel-2.
+
+--- Table 256 ---
+58.2  Anthocyanin Reflectance Index (ARI) | 58.2  Anthocyanin Reflectance Index (ARI)
+ARI = (1/R550) − (1/R700) | ARI = (1/R550) − (1/R700)
+Variables
+R550, R700 = reflectance at 550nm and 700nm
+Higher ARI = more anthocyanin (stress, senescence, or variety trait)
+Useful for detecting cold stress, P deficiency, and variety identification | Purpose
+Estimates leaf anthocyanin content; indicator of plant stress responses.
+Example
+ARI > 0.2 on non-red-leaf varieties → investigate P deficiency or cold stress.
+
+--- Table 257 ---
+58.3  Carotenoid:Chlorophyll Index (CCI) | 58.3  Carotenoid:Chlorophyll Index (CCI)
+CCI = R700/R670  (simplified approximation) | CCI = R700/R670  (simplified approximation)
+Variables
+Rising CCI indicates senescence or stress (carotenoids persist as chlorophyll degrades)
+Useful for harvest timing and canopy senescence mapping | Purpose
+Ratio indicating dominance of carotenoids over chlorophyll; rises during senescence.
+Example
+Green crop: CCI ≈ 1.2; senescing crop: CCI ≈ 2.5+.
+
+--- Table 258 ---
+Index | Bands Required | Detects | Sensor Needed
+REP | 670–740nm narrow bands | N status, chlorophyll | Hyperspectral (≤5nm)
+ARI | 550, 700nm | Anthocyanin, stress | Hyperspectral/multispectral
+CCI | 700, 670nm | Senescence stage | Multispectral
+PSRI | 678,500,750nm | Plant senescence | Hyperspectral
+WBI (water band) | 900, 970nm | Leaf water content | Hyperspectral NIR
+Chlorophyll index | NIR/Green−1 | Chlorophyll content | Multispectral (4-band)
+
+--- Table 259 ---
+♻  Sustainability Note: Hyperspectral-guided variable-rate N application has demonstrated 20–35% fertilizer savings with no yield penalty in winter wheat and maize — the technology is approaching commercial viability.
+
+--- Table 260 ---
+59.1  Cost of Production per Hectare (COP/ha) | 59.1  Cost of Production per Hectare (COP/ha)
+COP/ha = (Fixed costs + Variable costs) / Hectares farmed | COP/ha = (Fixed costs + Variable costs) / Hectares farmed
+Variables
+Fixed: depreciation, land rent, labour overhead
+Variable: seed, fertilizer, chemicals, fuel, casual labour
+Compare to gross revenue: profit = Revenue − COP | Purpose
+Foundation metric of farm enterprise economics; identifies break-even yield.
+Example
+Fixed $400/ha + Variable $650/ha → COP = $1,050/ha. At $200/t price, break-even = 5.25 t/ha.
+⚠ Pitfall: Allocate shared costs (machinery, management) consistently across enterprises.
+
+--- Table 261 ---
+59.2  Input Use Efficiency Score (IUES) | 59.2  Input Use Efficiency Score (IUES)
+IUES = Yield achieved / Yield expected given inputs applied | IUES = Yield achieved / Yield expected given inputs applied
+Variables
+Compares actual yield to model-predicted yield for the inputs used
+IUES < 0.8 = inefficient input use — investigate agronomic losses
+Built into some FMS platforms as "performance index" | Purpose
+Reveals whether inputs are converting efficiently into yield.
+Example
+Expected yield 7 t/ha given inputs; achieved 5.5 t/ha → IUES = 0.79 (investigate).
+
+--- Table 262 ---
+59.3  Return on Data Investment (RODI) | 59.3  Return on Data Investment (RODI)
+RODI = Value of decisions improved by data / Cost of data collection system | RODI = Value of decisions improved by data / Cost of data collection system
+Variables
+Quantify: input savings, yield improvement, reduced waste, insurance savings
+Typical precision ag ROI: $25–75/ha/year above system cost
+Most value from VRA fertilizer and targeted scouting | Purpose
+Economic justification for digital tools and precision agriculture investment.
+Example
+Precision N saves $80/ha, system costs $30/ha → RODI = 2.67 ($2.67 return per $1 invested).
+
+--- Table 263 ---
+KPI | Formula | Alert Trigger | Action
+COP/ha | (Fixed+Variable)/ha | >Revenue/ha | Review cost structure
+Gross margin/ha | Revenue−Variable costs | <$300/ha | Assess crop/enterprise
+IUES | Actual/Expected yield | <0.80 | Scout for stress causes
+VRA savings % | (Standard−VRA cost)/Standard | <10% | Re-assess VRA zones
+Field efficiency | Productive ha-hrs/Total ha-hrs | <75% | Machinery or logistics issue
+RODI | Data value/Data cost | <1.0 | Review system or application
+
+--- Table 264 ---
+60.1  Traceability Completeness Index (TCI) | 60.1  Traceability Completeness Index (TCI)
+TCI (%) = Attributes traced / Required attributes × 100 | TCI (%) = Attributes traced / Required attributes × 100
+Variables
+Required attributes: origin, inputs, handling, testing, certification
+TCI = 100% = fully traceable batch
+Minimum for major retailers: >85% | Purpose
+Measures what proportion of required traceability data is actually recorded for a batch.
+Example
+14 of 16 required attributes recorded for a mango shipment → TCI = 87.5%.
+⚠ Pitfall: Identify highest-value missing attributes — origin and chemical residues typically most critical.
+
+--- Table 265 ---
+60.2  Time-to-Trace (TTT) | 60.2  Time-to-Trace (TTT)
+TTT = Time from recall trigger to complete batch identification  [hours] | TTT = Time from recall trigger to complete batch identification  [hours]
+Variables
+Industry target: <2 hours for fresh produce
+FDA FSMA: < 24 hours for full trace-back
+Blockchain systems achieve TTT < 2 seconds vs paper-based 6–7 days | Purpose
+Speed of tracing a contaminated batch through the supply chain; key food safety metric.
+Example
+Walmart leafy greens blockchain: TTT reduced from 7 days to 2.2 seconds.
+
+--- Table 266 ---
+60.3  Consumer Trust Premium (CTP) | 60.3  Consumer Trust Premium (CTP)
+CTP = Price premium from certified traceable product / Certification cost | CTP = Price premium from certified traceable product / Certification cost
+Variables
+Organic: 20–100% premium; Rainforest Alliance: 5–15%; Fair Trade: 10–30%
+Blockchain-verified: emerging premiums of 5–20%
+Premiums highest in export and specialty markets | Purpose
+Economic return on traceability investment from market price premiums.
+Example
+Cacao: $200/t premium for certification, $30/t certification cost → CTP = 6.7.
+
+--- Table 267 ---
+Metric | Target | Measurement | Standard
+TCI (%) | >85% | Attribute audit | Retailer/buyer specs
+TTT (hours) | <2 hours | Mock recall drill | FSMA, GFSI
+Data integrity score | >95% | Hash verification (blockchain) | ISO 22005
+CTP ratio | >2.0 | Price premium/cert cost | Business case
+Audit pass rate | >90% | Third-party audit results | GlobalGAP, SQF
+
+--- Table 268 ---
+61.1  Field Efficiency Index (FEI) | 61.1  Field Efficiency Index (FEI)
+FEI (%) = Effective field capacity / Theoretical field capacity × 100 | FEI (%) = Effective field capacity / Theoretical field capacity × 100
+Variables
+Theoretical = speed × working width × 10⁻¹
+Effective = actual ha/hr after turns, overlaps, downtime
+Target: >75% for autonomous; conventional: 65–80% | Purpose
+Actual productivity relative to theoretical maximum; measures operational losses.
+Example
+Autonomous tractor: theoretical 8 ha/hr, actual 6.4 ha/hr → FEI = 80%.
+⚠ Pitfall: Autonomous systems can improve FEI by reducing operator fatigue-related downtime.
+
+--- Table 269 ---
+61.2  Robotic Harvest Miss Rate & Damage Rate | 61.2  Robotic Harvest Miss Rate & Damage Rate
+Miss rate (%) = Unharvested fruit / Total fruit × 100
+Damage rate (%) = Damaged fruit / Total harvested × 100 | Miss rate (%) = Unharvested fruit / Total fruit × 100
+Damage rate (%) = Damaged fruit / Total harvested × 100
+Variables
+Commercial viability: miss rate <5%, damage rate <2%
+Current sweet pepper robots: miss rate 10–25%, damage 3–8%
+Technology rapidly improving — benchmark annually | Purpose
+Key quality and efficiency metrics for selective harvesting robots.
+Example
+Apple robot: 50 fruit/tree, 3 missed, 2 damaged → miss=6%, damage=4% (near commercial).
+
+--- Table 270 ---
+61.3  Automation ROI | 61.3  Automation ROI
+ROI (%) = (Labour savings + Yield improvement − System cost) / System cost × 100 | ROI (%) = (Labour savings + Yield improvement − System cost) / System cost × 100
+Variables
+Include: purchase, maintenance, training, connectivity costs
+Typical autonomous tractor ROI: 15–35% over 5 years
+Harvesting robots: ROI depends heavily on labour cost and availability | Purpose
+Financial return on automation investment; compares to alternative use of capital.
+Example
+System cost $120k, annual labour saving $35k, 5-yr total saving $175k → ROI = 46%.
+
+--- Table 271 ---
+System | FEI Target | Key Performance Metric | Current Maturity
+Autonomous tractor | >80% | Geofencing accuracy <2cm | Commercial (GPS-RTK)
+Drone seeder/sprayer | >75% | Application accuracy ±10% | Commercial
+Fruit picking robot | >70% | Miss rate <10% | Early commercial
+Weeding robot | >65% | Weed detection accuracy >90% | Early commercial
+Livestock monitoring AI | N/A | Heat detection accuracy >90% | Commercial
+Indoor vertical farm robot | >85% | Seeding/harvest precision | Commercial
+
+--- Table 272 ---
+♻  Sustainability Note: Autonomous precision application robots can reduce herbicide use by 90%+ through spot-spraying only weeds — transforming the economics and environmental profile of weed management.
+
+--- Table 273 ---
+62.1  Carbon Footprint (CF) — Farm Gate | 62.1  Carbon Footprint (CF) — Farm Gate
+CF (kg CO₂-eq/kg product) = Σ(Activity × Emission factor) / Functional unit | CF (kg CO₂-eq/kg product) = Σ(Activity × Emission factor) / Functional unit
+Variables
+Include: N₂O from fertilizer, CH₄ from livestock, CO₂ from energy, land use change
+Functional unit: 1 kg milk, 1 kg grain, 1 kg live weight
+Global warming potential (GWP100): N₂O=298, CH₄=25 (AR4) | Purpose
+Total greenhouse gas burden per unit of agricultural product; primary sustainability KPI.
+Example
+Dairy: enteric CH₄ + manure N₂O + feed production CO₂ → typical 1.0–2.5 kg CO₂-eq/kg FPCM.
+⚠ Pitfall: Scope: include purchased feed and energy (Scope 3) for full picture.
+
+--- Table 274 ---
+62.2  Water Footprint (WF) | 62.2  Water Footprint (WF)
+WF = Blue WF + Green WF + Grey WF  [m³/tonne] | WF = Blue WF + Green WF + Grey WF  [m³/tonne]
+Variables
+Blue = surface + groundwater consumed
+Green = rainwater consumed (evapotranspiration)
+Grey = water to dilute pollutant load to safe level
+Beef: WF ≈ 15,400 m³/t; wheat: ≈ 1,830 m³/t | Purpose
+Total freshwater consumption and pollution footprint per unit of product.
+Example
+Irrigated cotton: Blue WF=7,000m³/t, Green=5,000m³/t, Grey=200m³/t → WF=12,200m³/t.
+
+--- Table 275 ---
+62.3  Land Use Efficiency (LUE — LCA Context) | 62.3  Land Use Efficiency (LUE — LCA Context)
+LUE = 1 / (Land occupied m² × days / kg product) | LUE = 1 / (Land occupied m² × days / kg product)
+Variables
+Compares land productivity across systems and locations
+Allows comparison of different production systems on a common basis | Purpose
+Land occupation efficiency; allows comparison of intensive vs extensive systems on product basis.
+Example
+Tomato greenhouse: 0.5 m²·days/kg; field tomato: 2.3 m²·days/kg → 4.6× land efficiency.
+
+--- Table 276 ---
+Product | CF (kg CO₂-eq/kg) | Water (m³/t) | Land (m²/kg)
+Beef (grazing) | 20–30 | 10,000–20,000 | 170–400
+Beef (feedlot) | 10–18 | 6,000–12,000 | 30–50
+Dairy milk | 1.0–2.5 | 800–1,200 | 8–15
+Chicken | 2.5–5.0 | 3,900–4,500 | 7–12
+Pork | 3.5–7.0 | 5,500–6,500 | 10–15
+Wheat | 0.4–0.8 | 1,300–2,500 | 2–4
+Vegetables | 0.1–0.5 | 200–500 | 0.2–1.0
+
+--- Table 277 ---
+♻  Sustainability Note: Agricultural LCA is evolving toward biodiversity impact, soil health, and animal welfare dimensions beyond carbon and water — expect more comprehensive reporting requirements by 2030.
+
+--- Table 278 ---
+63.1  Partial Budget Analysis (PBA) | 63.1  Partial Budget Analysis (PBA)
+Net change = (Added returns + Reduced costs) − (Added costs + Reduced returns) | Net change = (Added returns + Reduced costs) − (Added costs + Reduced returns)
+Variables
+Used to evaluate a single management change without full farm budget
+Positive net change = beneficial change; negative = avoid
+Only account for items that change — ignore fixed costs | Purpose
+Rapid economic screening for single technology or practice changes.
+Example
+New variety: +$200 yield revenue, −$30 seed cost, −$20 extra labour → Net change = +$150/ha.
+⚠ Pitfall: Most powerful when combined with yield data from local on-farm trials.
+
+--- Table 279 ---
+63.2  Return to Family Labour (RFL) | 63.2  Return to Family Labour (RFL)
+RFL ($/day) = Net farm income / Family labour days | RFL ($/day) = Net farm income / Family labour days
+Variables
+Compare to local casual labour wage
+RFL < wage rate = farm labour not competitive — investigate
+Include all unpaid household labour (commonly undervalued by 40–60%) | Purpose
+Value of family labour contribution; critical where cash income and food production overlap.
+Example
+Net income $1,200, 120 family labour days → RFL = $10/day (compare to $8/day local wage = viable).
+
+--- Table 280 ---
+63.3  Break-even Yield (BEY) | 63.3  Break-even Yield (BEY)
+BEY = Total variable costs / Crop price  [t/ha or units/ha] | BEY = Total variable costs / Crop price  [t/ha or units/ha]
+Variables
+Compare BEY to expected yield and historical yields
+If expected yield < BEY → do not invest in that input package
+Risk buffer: add 20% to BEY for risk management | Purpose
+Minimum yield required to cover variable costs; critical input decision threshold for smallholders.
+Example
+Variable costs $400/ha, price $160/t → BEY = 2.5 t/ha. Expected yield 3.5 t/ha → profitable.
+
+--- Table 281 ---
+63.4  Subsistence Value of Home Consumption | 63.4  Subsistence Value of Home Consumption
+Subsistence value = Quantity consumed × Local market retail price | Subsistence value = Quantity consumed × Local market retail price
+Variables
+Often 30–70% of smallholder farm output
+Must include in total farm revenue calculations
+Critical for food security and welfare analysis | Purpose
+Monetary value of food produced and consumed at home; frequently excluded from farm income calculations.
+Example
+Family consumes 500 kg grain at $0.35/kg market price → Subsistence value = $175/yr.
+
+--- Table 282 ---
+Tool | Data Needed | Time to Apply | Best Use
+Partial budget | Yield change + cost change | 30 minutes | Technology adoption decision
+Break-even yield | Input costs + crop price | 10 minutes | Input purchase decision
+Return to labour | Net income + labour days | 1 hour | Labour allocation
+Gross margin | Revenue + variable costs | 1 hour | Enterprise comparison
+Subsistence value | Quantity + local price | 20 minutes | True income assessment
+
+--- Table 283 ---
+♻  Sustainability Note: Including subsistence food value in income calculations typically increases measured smallholder welfare by 30–50% — critical for non-distorted policy design.
+
+--- Table 284 ---
+64.1  Land Rent Capitalization Rate | 64.1  Land Rent Capitalization Rate
+Land value = Annual net rent / Capitalization rate | Land value = Annual net rent / Capitalization rate
+Variables
+Capitalization rate = risk-free rate + land risk premium (typically 3–6%)
+Net rent = gross rent − property taxes, maintenance
+Annual rent = Land value × Cap rate | Purpose
+Links annual land rental value to capital value; used for land purchase decisions.
+Example
+Annual net rent $400/ha, cap rate 4% → Land value = $10,000/ha.
+⚠ Pitfall: Cap rates vary by region, crop potential, and irrigation access — use local comparables.
+
+--- Table 285 ---
+64.2  Sharecropping Efficiency Index (SEI) | 64.2  Sharecropping Efficiency Index (SEI)
+SEI = (Actual output under share tenancy / Potential output under owner-operation) | SEI = (Actual output under share tenancy / Potential output under owner-operation)
+Variables
+SEI < 1 due to Marshallian disincentive effect (tenant gets only share of marginal gain)
+Theory predicts SEI = share ratio (e.g., 0.5 for 50:50 crop sharing)
+Monitoring SEI guides contract restructuring | Purpose
+Efficiency loss attributable to sharecropping tenure relative to owner-operated baseline.
+Example
+Owner-operated plots yield 5 t/ha; tenant-operated (50% share) yield 4.1 t/ha → SEI = 0.82.
+
+--- Table 286 ---
+64.3  Leasehold vs Ownership NPV Comparison | 64.3  Leasehold vs Ownership NPV Comparison
+NPV_lease = Σ[Farm profit − Rent] / (1+r)^t
+NPV_own = Σ[Farm profit] / (1+r)^t − Land price | NPV_lease = Σ[Farm profit − Rent] / (1+r)^t
+NPV_own = Σ[Farm profit] / (1+r)^t − Land price
+Variables
+Compare NPVs over 10–20 year horizon
+If NPV_own > NPV_lease → buying is preferable (at that land price)
+Sensitivity to land price appreciation significantly affects result | Purpose
+Guides the buy-vs-lease decision for land expansion using discounted cash flow analysis.
+Example
+At 4% discount rate and 2% land appreciation: ownership becomes superior beyond ~15 years.
+
+--- Table 287 ---
+Metric | Formula | Application
+Annual rent value | Land value × cap rate | Fair rent assessment
+Rent-to-revenue ratio | Annual rent / Gross revenue | <25% = manageable
+Tenure security index | Composite of title, lease length, dispute rate | Investment risk
+SEI | Tenant yield / Owner yield | Contract design
+Land productivity | Output value / Land value | Benchmarking efficiency
+
+--- Table 288 ---
+65.1  Nutrient Recycling Efficiency (NRE) | 65.1  Nutrient Recycling Efficiency (NRE)
+NRE (%) = Nutrients returned to soil / Nutrients harvested in products × 100 | NRE (%) = Nutrients returned to soil / Nutrients harvested in products × 100
+Variables
+Include manure, crop residues, compost, recycled irrigation water
+NRE = 100% = all harvested nutrients returned (closed loop)
+Typical conventional farms: NRE 20–40%; integrated crop-livestock: 50–80% | Purpose
+Proportion of extracted nutrients that are recycled within the farm system.
+Example
+Harvested N: 150 kg/ha; returned via manure and residues: 90 kg/ha → NRE = 60%.
+⚠ Pitfall: High NRE reduces fertilizer purchase and environmental nutrient losses simultaneously.
+
+--- Table 289 ---
+65.2  Manure Nitrogen Recovery (MNR) | 65.2  Manure Nitrogen Recovery (MNR)
+MNR (%) = Crop N uptake from manure / Total N in manure applied × 100 | MNR (%) = Crop N uptake from manure / Total N in manure applied × 100
+Variables
+First year recovery: 30–60% for solid manure; 60–80% for slurry
+Remaining N mineralizes in subsequent years
+Injection > surface application for ammonia conservation | Purpose
+Efficiency of converting manure N into crop N uptake; guides manure management.
+Example
+15 t/ha cattle slurry at 2.5% N = 375 kg N; crop takes up 195 kg N → MNR = 52%.
+
+--- Table 290 ---
+65.3  Energy Self-Sufficiency Ratio (ESR) | 65.3  Energy Self-Sufficiency Ratio (ESR)
+ESR = On-farm energy production / Total farm energy consumption | ESR = On-farm energy production / Total farm energy consumption
+Variables
+ESR > 1 = net energy exporter
+Biogas, solar PV, biomass boilers contribute to ESR
+Typical integrated biogas farm: ESR 0.6–1.2 | Purpose
+Proportion of energy needs met by on-farm renewable production.
+Example
+Farm uses 150 MWh/yr, biogas system produces 110 MWh → ESR = 0.73 (73% energy self-sufficient).
+
+--- Table 291 ---
+65.4  Crop Residue Utilization Rate (CRUR) | 65.4  Crop Residue Utilization Rate (CRUR)
+CRUR (%) = Residue used productively / Total residue produced × 100 | CRUR (%) = Residue used productively / Total residue produced × 100
+Variables
+Productive uses: livestock feed, biogas, compost, mulch, bioenergy
+Burning = 0% CRUR (waste + pollution)
+Target: CRUR > 70% in integrated systems | Purpose
+Proportion of crop residues converted to productive uses rather than burned or wasted.
+Example
+8 t/ha maize stover: 5 t fed to cattle, 2 t composted, 1 t left on field → CRUR = 87.5%.
+
+--- Table 292 ---
+Metric | Formula | Target | Notes
+NRE | Returned N / Harvested N × 100 | >60% | Track N, P, K separately
+MNR | Crop N from manure / Manure N × 100 | >50% | Depends on manure type and application
+CRUR | Residue used / Total produced × 100 | >70% | Never burn if above 0
+ESR | On-farm energy / Total energy | >0.5 | Biogas + solar combination
+Water recycling ratio | Recycled water / Total water used | >30% | Drainage reuse, drip recycling
+Circularity index | Composite of above metrics | >0.6 | Holistic farm benchmark
+
+--- Table 293 ---
+♻  Sustainability Note: Farms with high circularity indices (>0.7) typically reduce input costs by 20–35% while achieving equal or better yields — the circular model is both profitable and resilient.
+
+--- Table 294 ---
+If you observe... | Check metric | If below threshold | If above threshold
+Pale yellow lower leaves | Soil nitrate or plant N% | Apply N top-dressing within 7 days | Check other causes (waterlogging, disease)
+Purple leaf margins | Soil Olsen P or leaf P% | Apply phosphorus, check soil pH | Investigate root damage or compaction
+Leaf tip scorch in rows | Soil potassium or EC | Apply K fertilizer | Check irrigation water EC and LR
+Interveinal chlorosis | Soil pH + Fe/Mn/Zn availability | Apply chelated micronutrient | If pH OK, check waterlogging
+Stunted uniform crop | Soil EC + SAR + ESP | Check salinity or sodicity | If not salt, check seed quality + pest
+
+--- Table 295 ---
+Trigger | Metric | Action if threshold reached | Notes
+Soil water deficit | θv < 50% of AWC | Irrigate to field capacity | Monitor 2× weekly in peak season
+Pan evaporation | IW/CPE ratio = 0.6–0.8 | Apply calculated GIR depth | Adjust for crop stage (Kc)
+Plant canopy temp | CWSI > 0.4 | Irrigate immediately (stress) | Infrared thermometer or drone CWSI
+Leaf water potential | < −1.5 MPa (stress) | Increase irrigation frequency | Measure pre-dawn with pressure chamber
+EC of return flow | ECdw approaching limit | Increase leaching fraction | Salt balance audit required
+
+--- Table 296 ---
+Observation | Metric to calculate | Threshold | Action
+Declining milk yield | DER (milk/DMI) | <1.2 kg/kg | Audit ration energy density and DMI
+Reduced conception rate | CR (%) | <55% | Review BCS, heat detection, semen quality
+Rising FCR in feedlot | FCR trend | >10% increase | Health check, ration audit, weigh-in
+Flock coughing/labored breathing | Respiration rate | >40/min cattle | Veterinary assessment + THI check
+Low egg production | HDEP (%) | <85% | Light hours, feed, age, disease assessment
+High pre-weaning mortality | Mortality rate | >5% | Colostrum quality, hygiene, ventilation
+
+--- Table 297 ---
+Indicator | Test | Concern Level | Recommended Action
+Compaction | Bulk density | >1.55 g/cm³ | Deep rip + cover crop with tap root
+Low organic matter | SOC % | <1.5% | Add compost, reduce tillage, cover crops
+Sodicity | ESP % | >15% | Apply gypsum + leach + plant tolerant crop
+Low biology | MBC (mg/kg) | <150 | Reduce inputs, add compost, diverse rotation
+Acidity | pH (water) | <5.5 | Apply lime to target pH 6.0–6.5
+Phosphorus fixation | Olsen P (mg/kg) | <15 + high Al/Fe | Liming + banded P + mycorrhizal inoculant
+
+--- Table 298 ---
+♻  Sustainability Note: Decision trees that link index values to specific actions are consistently rated by farmers and extension agents as the most practically useful content in any agricultural guide.
+
+--- Table 299 ---
+English term | Arabic (عربي) | French | Spanish
+Yield | غلة / محصول | Rendement | Rendimiento
+Evapotranspiration | التبخر-النتح | Évapotranspiration | Evapotranspiración
+Bulk density | الكثافة الظاهرية | Densité apparente | Densidad aparente
+Field capacity | السعة الحقلية | Capacité au champ | Capacidad de campo
+Germination | الإنبات | Germination | Germinación
+Carrying capacity | الطاقة الاستيعابية | Capacité de charge | Capacidad de carga
+Feed conversion ratio | معدل تحويل الغذاء | Indice de consommation | Índice de conversión alimenticia
+Net present value | صافي القيمة الحالية | Valeur actuelle nette | Valor actual neto
+Land equivalent ratio | نسبة التكافؤ الأرضي | Ratio équivalent-terre | Relación de equivalencia de tierra
+Water use efficiency | كفاءة استخدام المياه | Efficience d'utilisation de l'eau | Eficiencia en el uso del agua
+Soil organic carbon | الكربون العضوي للتربة | Carbone organique du sol | Carbono orgánico del suelo
+Nitrogen fixation | التثبيت البيولوجي للآزوت | Fixation de l'azote | Fijación de nitrógeno
+Carbon footprint | البصمة الكربونية | Empreinte carbone | Huella de carbono
+Intercropping | الزراعة المتداخلة | Culture intercalaire | Cultivo intercalado
+Somatic cell count | عدد الخلايا الجسدية | Numération cellulaire somatique | Recuento de células somáticas
+
+--- Table 300 ---
+Standard unit | Arabic region | West Africa (French) | South Asia | Latin America
+Hectare (ha) | فدان (feddan) = 0.42ha (Egypt) | Hectare (same) | Bigha (varies 0.16–0.67ha) | Hectárea (same)
+Tonne (t) | طن (same) | Tonne (same) | Quintal = 100 kg | Tonelada (same)
+Cubic meter (m³) | متر مكعب | Mètre cube | Cubic foot common | Metro cúbico
+dS/m (EC) | ملي موه/سم | dS/m (same) | mmhos/cm (=dS/m) | dS/m (same)
+
+--- Table 301 ---
+68.1  Cassava Harvest Index & Starch Index | 68.1  Cassava Harvest Index & Starch Index
+HI = Fresh root weight / Total fresh plant weight × 100
+Starch index (SI) = Root dry matter% × HI / 100 | HI = Fresh root weight / Total fresh plant weight × 100
+Starch index (SI) = Root dry matter% × HI / 100
+Variables
+Cassava HI target: 55–70% fresh weight basis
+Root DM% of 30–40% indicates high starch
+SI > 20 = high-value processing cassava | Purpose
+Cassava-specific adaptation of harvest index and starch quality metric for industrial processors.
+Example
+Fresh roots 15 kg, total plant 22 kg → HI = 68%. Root DM 35% → SI = 0.35×68 = 23.8.
+
+--- Table 302 ---
+68.2  Cacao Pod Value Index (PVI) | 68.2  Cacao Pod Value Index (PVI)
+PVI = Bean weight per pod / Pod fresh weight × 100  (target: >10%) | PVI = Bean weight per pod / Pod fresh weight × 100  (target: >10%)
+Variables
+Pod index = number of pods to produce 1 kg dry beans (target: <18)
+Fermentation quality: 3–7 days determines final cup quality
+Dry bean recovery: fresh fermented beans / dry beans ≈ 2.2:1 | Purpose
+Productivity and quality metrics for cacao — the difference between fine and bulk chocolate.
+Example
+18 pods, each 350g, each 40g dry beans → Pod index = 18 pods/0.72kg = 25 (poor — investigate variety).
+
+--- Table 303 ---
+68.3  Banana Bunch Weight Index (BWI) | 68.3  Banana Bunch Weight Index (BWI)
+BWI = Bunch weight (kg) / Number of hands × Number of fingers | BWI = Bunch weight (kg) / Number of hands × Number of fingers
+Variables
+Target: finger weight >200g for export grade (Cavendish)
+Bunch weight 25–45 kg is commercial target
+Days from flowering to harvest: 90–120 days depending on altitude | Purpose
+Measures bunch filling efficiency; guides fertilization and crop load management.
+Example
+30 kg bunch, 9 hands, 18 fingers per hand → BWI = 30/(9×18) = 185g/finger (borderline export).
+
+--- Table 304 ---
+68.4  Coffee Cup Score & Screen Size | 68.4  Coffee Cup Score & Screen Size
+SCA cup score: 80–100 (specialty); <80 (commercial)
+Screen size: % retained on designated screen (e.g., Screen 18 = 7.14mm) | SCA cup score: 80–100 (specialty); <80 (commercial)
+Screen size: % retained on designated screen (e.g., Screen 18 = 7.14mm)
+Variables
+Screen 18+ = premium grade; Screen 15 = commercial grade
+Q Grader certified cupping uses SCA 100-point protocol
+Cup score: aroma, flavor, aftertaste, acidity, body, uniformity, balance, sweetness | Purpose
+International quality grading system for green coffee; determines market price category.
+Example
+Screen 18: 85%, Screen 17: 10%, below: 5% → Premium grade (>80% screen 18 required for specialty).
+
+--- Table 305 ---
+Tropical Crop | Key Yield Metric | Quality Metric | Target
+Cassava | Fresh root t/ha | Root DM%, starch index | >40 t/ha; DM>30%
+Cacao | Dry bean kg/ha | Pod index, fermentation days | 500–1500 kg/ha; pod index<18
+Coffee | Clean bean kg/ha | SCA cup score, screen size | >80 SCA; screen 18+
+Banana | Bunch weight (kg) | Finger weight (g) | 30–45 kg bunch; >200g finger
+Mango | Fruit set % + yield t/ha | Fruit weight, Brix | >12 t/ha; >14° Brix
+Oil palm | FFB t/ha, OER % | Oil extraction rate | >25 FFB t/ha; OER>22%
+
+--- Table 306 ---
+♻  Sustainability Note: Tropical crops support the livelihoods of over 500 million smallholder farmers — standardized metrics for these crops are urgently needed for market access and productivity improvement programs.
+
+--- Table 307 ---
+69.1  Rainfall Use Efficiency (RUE) | 69.1  Rainfall Use Efficiency (RUE)
+RUE = Yield (kg/ha) / Growing season rainfall (mm) | RUE = Yield (kg/ha) / Growing season rainfall (mm)
+Variables
+Benchmark: rainfed maize in sub-Saharan Africa: 5–10 kg/ha/mm
+Improved varieties + minimal inputs: 12–20 kg/ha/mm
+Compare within site and season — varies with rainfall distribution | Purpose
+Primary productivity metric for rainfed systems; tracks efficiency of converting rain to yield.
+Example
+Sorghum: 2,800 kg/ha with 380 mm rain → RUE = 7.4 kg/ha/mm.
+⚠ Pitfall: RUE is sensitive to distribution, not just total rainfall — a drought at flowering depresses RUE severely.
+
+--- Table 308 ---
+69.2  Water Harvest Index (WHI) | 69.2  Water Harvest Index (WHI)
+WHI = Grain yield (kg/ha) / Total water use (rainfall + stored soil water, mm) | WHI = Grain yield (kg/ha) / Total water use (rainfall + stored soil water, mm)
+Variables
+More comprehensive than RUE — includes stored water drawdown
+Benchmark: dryland wheat 8–15 kg/ha/mm
+Improves with early sowing, mulching, and tied ridges | Purpose
+Efficiency of converting all available water (rain + soil store) into grain.
+Example
+Wheat: 2,400 kg/ha, 280 mm rain + 60 mm soil water used → WHI = 2400/340 = 7.1 kg/ha/mm.
+
+--- Table 309 ---
+69.3  Drought Tolerance Index (DTI) | 69.3  Drought Tolerance Index (DTI)
+DTI = (Ys × Yd) / (Yp)²  where Ys = stressed yield, Yd = drought yield, Yp = potential yield | DTI = (Ys × Yd) / (Yp)²  where Ys = stressed yield, Yd = drought yield, Yp = potential yield
+Variables
+Fischer-Maurer index: higher DTI = better drought tolerance without yield penalty under good conditions
+Used in variety selection and breeding program screening | Purpose
+Combines yield stability under drought with absolute productivity; identifies varieties good in both environments.
+Example
+Variety A: Ys=3.5, Yd=2.1, Yp=4.0 → DTI = (3.5×2.1)/16 = 0.46. Variety B DTI=0.38 → choose A.
+
+--- Table 310 ---
+69.4  Runoff Coefficient (RC) | 69.4  Runoff Coefficient (RC)
+RC = Runoff volume / Rainfall volume  [dimensionless, 0–1] | RC = Runoff volume / Rainfall volume  [dimensionless, 0–1]
+Variables
+Bare soil, slope >5%: RC = 0.4–0.7
+Good ground cover, flat: RC = 0.1–0.2
+Reduce RC to increase infiltration and stored soil water | Purpose
+Proportion of rainfall that runs off rather than infiltrating; key for water conservation planning.
+Example
+50 mm rain, 18 mm measured runoff → RC = 0.36. Conservation target: RC < 0.15 with good cover.
+
+--- Table 311 ---
+Metric | Formula | Benchmark (dryland) | Improvement Strategy
+RUE | Yield/Rainfall (mm) | 8–15 kg/ha/mm wheat | Early sowing, mulching, tied ridges
+WHI | Yield/Total water use | >10 kg/ha/mm | Soil water conservation, drought-tolerant varieties
+DTI | (Ys×Yd)/Yp² | >0.4 = tolerant | Variety selection + stress tolerance breeding
+Runoff coefficient | Runoff/Rainfall | <0.2 target | Cover crops, tied ridges, mulch
+Soil water storage (SWS) | FC−current θ in mm | Maximize pre-season SWS | Deep tillage, organic matter
+Green water productivity | Yield/ET (kg/m³) | >0.8 kg/m³ cereals | RUE + WUE combined target
+
+--- Table 312 ---
+♻  Sustainability Note: In dryland Africa, a 20% improvement in RUE through better varieties and mulching would increase food production by an estimated 30–40 million tonnes per year.
+
+--- Table 313 ---
+70.1  Nutrient Density per Hectare (NutriDens) | 70.1  Nutrient Density per Hectare (NutriDens)
+NutriDens_nutrient = Yield (kg/ha) × Nutrient content (per kg) / Daily requirement | NutriDens_nutrient = Yield (kg/ha) × Nutrient content (per kg) / Daily requirement
+Variables
+Calculate separately for protein, energy, vitamin A, iron, zinc
+Compare across crops to identify nutritionally efficient land uses
+Legumes dominate on protein density; orange-fleshed crops on vitamin A | Purpose
+Quantifies how much of a daily nutritional requirement one hectare can supply; guides crop mix for nutrition security.
+Example
+Cowpea: 1.2 t/ha × 215g protein/kg / 50g daily requirement = 5,160 person-days protein/ha.
+
+--- Table 314 ---
+70.2  Diet Quality Score from Farm Production | 70.2  Diet Quality Score from Farm Production
+DQS = Σ(food groups produced on farm or purchased / Required food groups) × 100 | DQS = Σ(food groups produced on farm or purchased / Required food groups) × 100
+Variables
+Based on FAO/WHO recommended 10 food groups
+DQS = 100% = all food groups supplied from farm + income
+Track monthly — seasonal gaps are common stress points | Purpose
+Tracks dietary diversity achievable from the farm system and income it generates.
+Example
+Farm produces 6 of 10 food groups adequately → DQS = 60% (needs supplementation of dairy/animal foods).
+
+--- Table 315 ---
+70.3  Cost of Nutritious Diet (CoND) | 70.3  Cost of Nutritious Diet (CoND)
+CoND ($/person/day) = Minimum cost of a diet meeting all nutrient requirements from local foods | CoND ($/person/day) = Minimum cost of a diet meeting all nutrient requirements from local foods
+Variables
+Compare to household income per person per day
+CoND > 30% of income = diet affordability problem
+Used to set wage floors and food price policy targets | Purpose
+Minimum daily expenditure for a nutritionally adequate diet using locally available foods.
+Example
+CoND in Sub-Saharan Africa: $1.50–3.50/person/day vs World Bank extreme poverty line $2.15.
+
+--- Table 316 ---
+Metric | What it measures | Key use | Data source
+NutriDens | Nutrition per hectare | Crop mix for nutrition | USDA/FAO food composition
+DQS | Diet quality from farm | Farm nutrition assessment | 24hr recall + farm records
+CoND | Diet affordability | Policy + wage setting | Market price surveys
+HDDS | Household food group diversity | Food security monitoring | 24hr recall (FANTA tool)
+Minimum dietary diversity | Women's diet quality | Maternal nutrition | MDD-W survey tool
+FIES | Food insecurity experience | Hunger measurement | FAO standard module
+
+--- Table 317 ---
+♻  Sustainability Note: A diet rich in diverse farm produce from smallholder farms delivers better nutritional outcomes than monoculture commodity supply chains — measuring nutrition per hectare makes this case quantitatively.
+
+--- Table 318 ---
+Crop | World average (t/ha) | Good farm (t/ha) | Research potential (t/ha) | Water-limited (t/ha)
+Wheat | 3.5 | 6–8 | 10–13 | 5–7
+Maize | 5.5 | 8–12 | 16–20 | 6–10
+Rice (irrigated) | 4.5 | 6–8 | 10–12 | N/A
+Soybean | 2.8 | 3.5–5 | 6–7 | 2–3.5
+Cassava | 12 | 25–40 | 60–80 | 15–25
+Potato | 20 | 35–55 | 70–90 | 25–40
+Cotton (lint) | 0.7 | 1.2–2.0 | 2.5–3.5 | 0.8–1.5
+Sugarcane | 70 | 100–130 | 150–200 | 70–100
+
+--- Table 319 ---
+Species/System | Metric | Low | Average | High (commercial best)
+Dairy (Holstein) | Milk yield (kg/lactation) | 5,000 | 8,000 | 12,000+
+Dairy (Holstein) | FCR (kg feed/kg milk) | 1.2 | 0.9 | 0.7
+Beef feedlot | ADG (kg/day) | 0.8 | 1.2 | 1.8
+Beef feedlot | FCR (kg/kg) | 7 | 6 | 4.5
+Broiler (42 days) | Body weight (kg) | 1.8 | 2.5 | 3.2
+Broiler (42 days) | FCR (kg/kg) | 2.2 | 1.7 | 1.45
+Layer (HH year) | Eggs/hen/year | 250 | 300 | 360+
+Pig (grow-finish) | ADG (kg/day) | 0.5 | 0.8 | 1.1
+Salmon (marine) | FCR (kg/kg) | 1.4 | 1.15 | 1.0
+
+--- Table 320 ---
+Parameter | Poor | Moderate | Good | Excellent
+SOC (%) | <0.8 | 0.8–1.5 | 1.5–3.0 | >3.0
+MBC (mg/kg) | <100 | 100–250 | 250–600 | >600
+Earthworms (per m²) | <5 | 5–15 | 15–40 | >40
+Soil respiration (mg CO₂/g/day) | <0.2 | 0.2–0.5 | 0.5–1.5 | >1.5
+Aggregate stability (%) | <30 | 30–50 | 50–75 | >75
+Available P (Olsen, mg/kg) | <10 | 10–20 | 20–40 | >40 (excess risk)
+pH (water) | <5.0 | 5.0–6.0 | 6.0–7.0 | 7.0–7.5 (slightly alkaline)
+
+--- Table 321 ---
+Metric | Poor practice | Average | Best practice
+Irrigation WUE (kg grain/m³) | <0.5 | 0.7–1.2 | >1.5
+Application efficiency Ea (%) | <50 | 60–75 | >85
+Uniformity CU (%) | <70 | 75–85 | >90
+Drip system efficiency | <80% | 85–90% | >92%
+Sprinkler efficiency | <70% | 75–82% | >85%
+Furrow irrigation efficiency | <40% | 50–65% | >70%
+
+--- Table 322 ---
+BBCH Stage | Timing | Metrics to Monitor | Decision Triggered
+00–09 Germination | Week 1–2 | Germination %, SVI, soil T° | Resow if emergence < 70%
+21–25 Tillering | Week 4–7 | Plant density, N status (SPAD), GDD | N top-dress if SPAD < 38
+30–32 Stem elongation | Week 8–10 | LAI, disease scouting, GDD | Fungicide decision at BBCH 32
+39–49 Flag leaf | Week 10–12 | NDVI, flag leaf disease, WUE | Final N + trace elements
+55–65 Heading/Flowering | Week 12–14 | Flower disease, soil moisture, GDD | Irrigation + fusarium watch
+71–85 Grain fill | Week 14–18 | Grain moisture, NDVI trend, HI estimate | Harvest timing decision
+90–99 Harvest | Week 18–22 | Grain MC%, HI, yield monitor data | Combine calibration + storage
+
+--- Table 323 ---
+Month/Stage | Key Events | Metrics to Monitor | Action if Threshold Missed
+Dry period (8 wk pre-calving) | Dry-off, transition | BCS (target 3.0–3.5), colostrum quality | Supplement if BCS < 2.8
+Calving & transition (0–21 DIM) | Calving, peak milk onset | BCS change, DMI, milk fever incidence | Transition diet review if >8% milk fever
+Early lactation (21–100 DIM) | Peak yield, negative energy balance | ECM, BCS loss rate, conception rate | Energy supplementation if BCS loss > 0.5/month
+Mid lactation (100–200 DIM) | Plateau, breeding | Persistency index, SCC, 21-day pregnancy rate | Vet review if PR < 21%
+Late lactation (200–305 DIM) | Declining yield, re-breeding | DIM at dry-off, 305-day projection | Dry off <305 DIM if BCS < 2.5
+Annual | Herd review | CI, calving rate, SCC annual mean, CIM | Breeding and culling plan
+
+--- Table 324 ---
+Season | Crop System | Livestock System | Key Metrics to Link
+Land preparation | Soil analysis, tillage depth | Manure storage and analysis | NRE: manure N available for crop
+Planting | PP, SR, seed quality | Stocking rate adjustment | Carrying capacity vs. current stock
+Crop growth | LAI, NDVI, irrigation | Pasture growth rate, THI monitoring | WUE, THI — share irrigation if needed
+Harvest | HI, yield, moisture | Transition to crop residues | CRUR: proportion of residue allocated to livestock
+Post-harvest | Cover crop establishment | Grazing of residues | Grazing pressure, FUE on residues
+Dry season | Soil health monitoring | Supplementary feeding | BCS, ADG, carrying capacity on dry pasture
+
+--- Table 325 ---
+♻  Sustainability Note: Integrated crop-livestock systems managed with aligned seasonal monitoring calendars consistently outperform separate systems in land productivity, resilience, and soil health over 5–10 year horizons.
