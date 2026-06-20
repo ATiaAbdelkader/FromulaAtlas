@@ -2,10 +2,10 @@
 
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { AlertTriangle, Beaker, BookOpen, Calculator } from 'lucide-react';
 import type { Formula } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { calculators } from './calculators';
 
 interface FormulaCardProps {
   formula: Formula;
@@ -14,26 +14,7 @@ interface FormulaCardProps {
 
 // Determine if a calculator is available for this formula
 export function hasCalculator(code: string): boolean {
-  const codesWithCalculators = [
-    '2.1', // Plant Population
-    '2.2', // Seed Rate
-    '2.3', // Real Value of Seed
-    '4.1', // Fertilizer Requirement
-    '6.1', // NIR
-    '6.2', // GIR
-    '6.4', // WUE
-    '7.1', // Bulk Density
-    '7.3', // Porosity
-    '8.9', // Harvest Index
-    '8.12', // GDD
-    '10.1', // DMI (placeholder)
-    '11.1', // ADG
-    '13.1', // ECM
-    '14.1', // Dressing %
-    '15.1', // FCR
-    '17.1', // Gross margin
-  ];
-  return codesWithCalculators.includes(code);
+  return code in calculators;
 }
 
 const partColors: Record<string, { bg: string; text: string; border: string }> = {
