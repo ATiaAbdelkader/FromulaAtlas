@@ -51,7 +51,7 @@ export function FormulaDetailDialog({ formula, open, onOpenChange }: FormulaDeta
               Part {formula.part_roman} · {formula.part}
             </Badge>
             <Badge variant="outline" className="text-xs font-normal bg-white/60">
-              Ch. {formula.chapter_number} · {formula.chapter}
+              Sec. {formula.chapter_number} · {formula.chapter}
             </Badge>
           </div>
           <DialogTitle className="text-2xl font-bold tracking-tight">

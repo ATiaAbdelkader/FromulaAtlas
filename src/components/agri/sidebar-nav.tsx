@@ -148,7 +148,7 @@ export function SidebarNav({
   const maxPartFormulas = Math.max(...groupedParts.map(p => p.formulaCount));
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-stone-950">
+    <div className="flex flex-col h-full min-h-0 overflow-hidden bg-white dark:bg-stone-950">
       {/* Brand / Header strip */}
       <div className="px-4 py-3 border-b border-stone-200 dark:border-stone-800 bg-gradient-to-r from-emerald-50 to-stone-50 dark:from-emerald-950/30 dark:to-stone-900/30">
         <div className="flex items-center gap-2 mb-2">
@@ -158,7 +158,7 @@ export function SidebarNav({
           <div className="flex-1 min-w-0">
             <div className="text-sm font-semibold tracking-tight leading-tight">Library</div>
             <div className="text-[10px] text-muted-foreground uppercase tracking-wider">
-              {handbook.meta.total_parts} parts · {handbook.meta.total_chapters} chapters
+              {handbook.meta.total_parts} parts · {handbook.meta.total_chapters} sections
             </div>
           </div>
         </div>
@@ -184,7 +184,7 @@ export function SidebarNav({
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
           <Input
             type="search"
-            placeholder="Filter parts & chapters..."
+            placeholder="Filter parts & sections..."
             value={localSearch}
             onChange={e => setLocalSearch(e.target.value)}
             className="pl-8 pr-7 h-8 text-xs"
@@ -259,7 +259,7 @@ export function SidebarNav({
         </label>
       </div>
 
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 min-h-0">
         <div className="p-2">
           {/* All Formulas button */}
           <button
@@ -458,7 +458,7 @@ export function SidebarNav({
                               })}
                               {chapterCounts.length === 0 && (
                                 <div className="px-2 py-1 text-[10px] text-muted-foreground italic">
-                                  No chapters match
+                                  No sections match
                                 </div>
                               )}
                             </div>
@@ -486,7 +486,7 @@ export function SidebarNav({
           <span className="flex items-center gap-1">
             <Hash className="h-2.5 w-2.5" />
             {selectedPart
-              ? `Filtered to ${selectedChapter !== null ? '1 chapter' : `${handbook.parts.find(p => p.title === selectedPart)?.chapters.length || 0} chapters`}`
+              ? `Filtered to ${selectedChapter !== null ? '1 section' : `${handbook.parts.find(p => p.title === selectedPart)?.chapters.length || 0} sections`}`
               : 'Showing all parts'}
           </span>
           <span className="font-mono">{filteredParts.length}/{handbook.parts.length}</span>

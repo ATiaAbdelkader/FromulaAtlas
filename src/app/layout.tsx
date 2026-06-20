@@ -14,10 +14,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Agri-Formulas & Metrics Handbook",
-  description: "A practical handbook for crop & animal production. Browse 179+ agricultural formulas, indices, and decision rules with worked examples.",
+  title: "Atlas of Agri-Formulas & Metrics",
+  description: "A practical reference for crop & animal production. Browse 179+ agricultural formulas, indices, and decision rules with worked examples.",
   keywords: ["agriculture", "agronomy", "formulas", "metrics", "crop", "livestock", "sustainability", "farm economics"],
-  authors: [{ name: "Agri-Formulas Handbook" }],
+  authors: [{ name: "Atlas of Agri-Formulas & Metrics" }],
 };
 
 export default function RootLayout({

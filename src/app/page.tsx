@@ -101,7 +101,7 @@ export default function Home() {
               </div>
               <div className="min-w-0">
                 <h1 className="text-base sm:text-lg font-bold tracking-tight leading-tight truncate">
-                  Agri-Formulas & Metrics Handbook
+                  Atlas of Agri-Formulas & Metrics
                 </h1>
                 <p className="text-xs text-muted-foreground truncate">
                   {handbook.meta.subtitle} · {handbook.meta.version}
@@ -118,7 +118,7 @@ export default function Home() {
                     Browse
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="left" className="p-0 w-[340px] sm:w-[380px]">
+                <SheetContent side="left" className="p-0 gap-0 w-[340px] sm:w-[380px] overflow-hidden">
                   {sidebarContent}
                 </SheetContent>
               </Sheet>
@@ -174,7 +174,7 @@ export default function Home() {
               <div className="bg-white/10 backdrop-blur rounded-lg px-4 py-3 border border-white/20">
                 <div className="flex items-center gap-2 text-emerald-100 text-xs uppercase tracking-wide font-medium">
                   <BookOpen className="h-3.5 w-3.5" />
-                  Chapters
+                  Sections
                 </div>
                 <div className="text-2xl font-bold mt-0.5">{handbook.meta.total_chapters}</div>
               </div>
@@ -213,7 +213,7 @@ export default function Home() {
             <div className="flex items-center gap-2 flex-wrap min-w-0">
               <h2 className="text-lg font-semibold">
                 {selectedChapter !== null && currentChapterInfo
-                  ? `Chapter ${currentChapterInfo.number}: ${currentChapterInfo.title}`
+                  ? `Section ${currentChapterInfo.number}: ${currentChapterInfo.title}`
                   : selectedPart
                   ? selectedPart
                   : 'All Formulas'}
@@ -244,7 +244,7 @@ export default function Home() {
               )}
               {selectedChapter !== null && (
                 <Badge variant="outline" className="gap-1.5 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900">
-                  Chapter: {selectedChapter}
+                  Section: {selectedChapter}
                   <button onClick={() => setSelectedChapter(null)}>
                     <X className="h-3 w-3" />
                   </button>
@@ -269,7 +269,7 @@ export default function Home() {
             </div>
           )}
 
-          {/* Chapter intro (when a chapter is selected) */}
+          {/* Section intro (when a section is selected) */}
           {currentChapterInfo?.intro && (
             <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-lg p-4 mb-5">
               <p className="text-sm text-muted-foreground leading-relaxed">
@@ -311,10 +311,10 @@ export default function Home() {
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Sprout className="h-4 w-4 text-emerald-600" />
-            <span>Agri-Formulas &amp; Metrics Handbook · {handbook.meta.version}</span>
+            <span>Atlas of Agri-Formulas &amp; Metrics · {handbook.meta.version}</span>
           </div>
           <div className="text-xs text-muted-foreground">
-            {handbook.meta.total_formulas} formulas across {handbook.meta.total_parts} parts and {handbook.meta.total_chapters} chapters
+            {handbook.meta.total_formulas} formulas across {handbook.meta.total_parts} parts and {handbook.meta.total_chapters} sections
           </div>
         </div>
       </footer>

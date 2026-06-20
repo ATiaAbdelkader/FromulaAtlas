@@ -64,7 +64,7 @@ export function FormulaCard({ formula, onSelect }: FormulaCardProps) {
             )}
           </div>
           <span className="text-xs text-muted-foreground font-medium whitespace-nowrap">
-            Ch. {formula.chapter_number}
+            Sec. {formula.chapter_number}
           </span>
         </div>
         <h3 className="text-base font-semibold leading-tight tracking-tight">

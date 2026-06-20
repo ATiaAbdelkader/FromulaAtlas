@@ -1,4 +1,4 @@
-// Type definitions for the Agri-Formulas Handbook
+// Type definitions for the Atlas of Agri-Formulas & Metrics
 
 export interface Formula {
   code: string;
