@@ -21,6 +21,7 @@ export default function Home() {
   const [selectedFormula, setSelectedFormula] = useState<Formula | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [recentFormulas, setRecentFormulas] = useState<Formula[]>([]);
 
   const filteredFormulas = useMemo(() => {
     let result = allFormulas;
@@ -47,6 +48,11 @@ export default function Home() {
   const handleSelectFormula = (formula: Formula) => {
     setSelectedFormula(formula);
     setDialogOpen(true);
+    // Push to recent (dedupe by code, keep latest 8)
+    setRecentFormulas(prev => {
+      const filtered = prev.filter(f => f.code !== formula.code || f.part !== formula.part);
+      return [formula, ...filtered].slice(0, 8);
+    });
   };
 
   const handleClearFilters = () => {
@@ -76,7 +82,9 @@ export default function Home() {
       onSelectPart={setSelectedPart}
       onSelectChapter={setSelectedChapter}
       onToggleCalculatorFilter={() => setOnlyWithCalculators(!onlyWithCalculators)}
-      formulaCounts={new Map()}
+      recentFormulas={recentFormulas}
+      onSelectRecentFormula={handleSelectFormula}
+      activeFormulaCode={selectedFormula?.code ?? null}
       searchQuery={searchQuery}
     />
   );
@@ -110,7 +118,7 @@ export default function Home() {
                     Browse
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="left" className="p-0 w-[300px]">
+                <SheetContent side="left" className="p-0 w-[340px] sm:w-[380px]">
                   {sidebarContent}
                 </SheetContent>
               </Sheet>
@@ -194,7 +202,7 @@ export default function Home() {
       {/* Main layout */}
       <div className="flex-1 max-w-[1600px] mx-auto w-full flex">
         {/* Sidebar (desktop) */}
-        <aside className="hidden lg:block w-[300px] flex-shrink-0 border-r border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 sticky top-[140px] h-[calc(100vh-140px)]">
+        <aside className="hidden lg:block w-[340px] flex-shrink-0 border-r border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-950 sticky top-[140px] h-[calc(100vh-140px)] overflow-hidden">
           {sidebarContent}
         </aside>
 
