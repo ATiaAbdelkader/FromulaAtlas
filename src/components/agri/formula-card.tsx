@@ -6,6 +6,7 @@ import { AlertTriangle, Beaker, BookOpen, Calculator } from 'lucide-react';
 import type { Formula } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { calculators } from './calculators';
+import { useLanguageStore } from '@/lib/language-store';
 
 interface FormulaCardProps {
   formula: Formula;
@@ -32,6 +33,7 @@ const partColors: Record<string, { bg: string; text: string; border: string }> =
   'Technology, Traceability & Automation': { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
   'Advanced Farm Economics & Policy': { bg: 'bg-violet-50', text: 'text-violet-700', border: 'border-violet-200' },
   'Visual Guides, Decision Tools & Global Content': { bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200' },
+  'Irrigation Engineering': { bg: 'bg-sky-50', text: 'text-sky-700', border: 'border-sky-200' },
 };
 
 export function getPartColor(part: string) {
@@ -41,6 +43,9 @@ export function getPartColor(part: string) {
 export function FormulaCard({ formula, onSelect }: FormulaCardProps) {
   const color = getPartColor(formula.part);
   const calcAvailable = hasCalculator(formula.code);
+  const language = useLanguageStore(s => s.language);
+  const displayName = (language === 'ar' && formula.name_ar) ? formula.name_ar : formula.name;
+  const displayPurpose = (language === 'ar' && formula.purpose_ar) ? formula.purpose_ar : formula.purpose;
 
   return (
     <Card
@@ -68,7 +73,7 @@ export function FormulaCard({ formula, onSelect }: FormulaCardProps) {
           </span>
         </div>
         <h3 className="text-base font-semibold leading-tight tracking-tight">
-          {formula.name}
+          {displayName}
         </h3>
       </CardHeader>
 
@@ -80,9 +85,9 @@ export function FormulaCard({ formula, onSelect }: FormulaCardProps) {
           )}
         </div>
 
-        {formula.purpose && (
+        {displayPurpose && (
           <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
-            {formula.purpose}
+            {displayPurpose}
           </p>
         )}
 

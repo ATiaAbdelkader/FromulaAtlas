@@ -10,6 +10,7 @@ import { AlertTriangle, Calculator, Beaker, BookOpen, Target, Variable, Lightbul
 import type { Formula } from '@/lib/types';
 import { getPartColor, hasCalculator } from './formula-card';
 import { InteractiveCalculator } from './interactive-calculator';
+import { useLanguageStore } from '@/lib/language-store';
 import { cn } from '@/lib/utils';
 
 interface FormulaDetailDialogProps {
@@ -34,10 +35,14 @@ function FormulaField({ icon: Icon, label, children }: { icon: any; label: strin
 }
 
 export function FormulaDetailDialog({ formula, open, onOpenChange }: FormulaDetailDialogProps) {
+  const language = useLanguageStore(s => s.language);
   if (!formula) return null;
 
   const color = getPartColor(formula.part);
   const calcAvailable = hasCalculator(formula.code);
+  const displayName = (language === 'ar' && formula.name_ar) ? formula.name_ar : formula.name;
+  const displayPurpose = (language === 'ar' && formula.purpose_ar) ? formula.purpose_ar : formula.purpose;
+  const displayVariables = (language === 'ar' && formula.variables_ar) ? formula.variables_ar : formula.variables;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -55,10 +60,10 @@ export function FormulaDetailDialog({ formula, open, onOpenChange }: FormulaDeta
             </Badge>
           </div>
           <DialogTitle className="text-2xl font-bold tracking-tight">
-            {formula.name}
+            {displayName}
           </DialogTitle>
           <DialogDescription className="text-sm mt-1">
-            {formula.purpose}
+            {displayPurpose}
           </DialogDescription>
         </DialogHeader>
 
@@ -84,11 +89,11 @@ export function FormulaDetailDialog({ formula, open, onOpenChange }: FormulaDeta
 
             <div className="grid md:grid-cols-2 gap-5">
               <FormulaField icon={Variable} label="Variables & Units">
-                {formula.variables}
+                {displayVariables}
               </FormulaField>
 
               <FormulaField icon={Target} label="Purpose">
-                {formula.purpose}
+                {displayPurpose}
               </FormulaField>
             </div>
 
