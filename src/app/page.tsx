@@ -13,6 +13,8 @@ import { UseCasesSection } from '@/components/agri/use-cases-section';
 import { FreeToolsSection } from '@/components/agri/nutri-tools/FreeToolsSection';
 import { AgronomistAssistant } from '@/components/agri/nutri-tools/AgronomistAssistant';
 import { FieldDataCapture } from '@/components/agri/nutri-tools/FieldDataCapture';
+import { OnboardingFlow } from '@/components/onboarding/OnboardingFlow';
+import { TakeTourButton } from '@/components/onboarding/TakeTourButton';
 import { WorkflowRunner } from '@/components/agri/workflow-runner';
 import { SeasonScheduler } from '@/components/agri/season-scheduler';
 import { LanguageToggle } from '@/components/language-toggle';
@@ -103,6 +105,7 @@ export default function Page() {
               </div>
             </div>
             <div className="flex items-center gap-1">
+              <TakeTourButton />
               <LanguageToggle />
               {activeTab === 'formulas' && (
                 <div className="lg:hidden">
@@ -231,6 +234,9 @@ export default function Page() {
 
       {/* Field Data Capture — floating scan button, available on all tabs */}
       <FieldDataCapture />
+
+      {/* Onboarding flow — auto-shows on first visit, replayable via header Tour button */}
+      <OnboardingFlow />
     </div>
   );
 }
