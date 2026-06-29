@@ -15,6 +15,7 @@ import { AgronomistAssistant } from '@/components/agri/nutri-tools/AgronomistAss
 import { FieldDataCapture } from '@/components/agri/nutri-tools/FieldDataCapture';
 import { OnboardingFlow } from '@/components/onboarding/OnboardingFlow';
 import { TakeTourButton } from '@/components/onboarding/TakeTourButton';
+import { TelegramConnectButton } from '@/components/agri/nutri-tools/TelegramConnectButton';
 import { WorkflowRunner } from '@/components/agri/workflow-runner';
 import { SeasonScheduler } from '@/components/agri/season-scheduler';
 import { LanguageToggle } from '@/components/language-toggle';
@@ -106,6 +107,7 @@ export default function Page() {
             </div>
             <div className="flex items-center gap-1">
               <TakeTourButton />
+              <TelegramConnectButton />
               <LanguageToggle />
               {activeTab === 'formulas' && (
                 <div className="lg:hidden">
