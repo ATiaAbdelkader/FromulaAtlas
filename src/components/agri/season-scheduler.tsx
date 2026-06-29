@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Calendar, Droplets, Sprout, CloudRain, Sun, Snowflake, Cloud, ArrowRight, MapPin } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -117,14 +117,23 @@ function getSeason(month: number, hemisphere: Hemisphere): SeasonInfo {
 
 export function SeasonScheduler({ onLaunchWorkflow }: SeasonSchedulerProps) {
   const [hemisphere, setHemisphere] = useState<Hemisphere>('northern');
-  const now = new Date();
-  const month = now.getMonth();
+  // Defer date computation to after mount to avoid SSR hydration mismatch
+  // (server renders in UTC, client in user's timezone — they can differ by a day)
+  const [now, setNow] = useState<Date | null>(null);
+
+  useEffect(() => {
+    setNow(new Date());
+  }, []);
+
+  // Use a stable placeholder date for SSR + initial client render
+  const effectiveNow = now ?? new Date(2026, 0, 1); // Jan 1 2026 as placeholder
+  const month = effectiveNow.getMonth();
 
   const season = getSeason(month, hemisphere);
   const SeasonIcon = season.icon;
 
-  const monthName = now.toLocaleString('en-US', { month: 'long' });
-  const dayOfMonth = now.getDate();
+  const monthName = effectiveNow.toLocaleString('en-US', { month: 'long' });
+  const dayOfMonth = effectiveNow.getDate();
 
   return (
     <section className="mb-8">
