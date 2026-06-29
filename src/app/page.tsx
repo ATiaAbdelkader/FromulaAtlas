@@ -10,6 +10,9 @@ import { FormulaCard, hasCalculator } from '@/components/agri/formula-card';
 import { FormulaDetailDialog } from '@/components/agri/formula-detail-dialog';
 import { SidebarNav } from '@/components/agri/sidebar-nav';
 import { UseCasesSection } from '@/components/agri/use-cases-section';
+import { FreeToolsSection } from '@/components/agri/nutri-tools/FreeToolsSection';
+import { AgronomistAssistant } from '@/components/agri/nutri-tools/AgronomistAssistant';
+import { FieldDataCapture } from '@/components/agri/nutri-tools/FieldDataCapture';
 import { WorkflowRunner } from '@/components/agri/workflow-runner';
 import { SeasonScheduler } from '@/components/agri/season-scheduler';
 import { LanguageToggle } from '@/components/language-toggle';
@@ -196,8 +199,9 @@ export default function Page() {
 
       {/* TOOLS TAB */}
       {activeTab === 'tools' && (
-        <main className="flex-1 max-w-[1200px] mx-auto w-full p-4 sm:p-6">
-          <div className="rounded-xl border-2 border-dashed border-border bg-card/50 p-8 text-center mb-6">
+        <main className="flex-1 max-w-[1400px] mx-auto w-full p-4 sm:p-6 space-y-6">
+          <FreeToolsSection />
+          <div className="rounded-xl border-2 border-dashed border-border bg-card/50 p-8 text-center">
             <div className="flex items-center justify-center h-12 w-12 rounded-full bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 mx-auto mb-3">
               <Wrench className="h-6 w-6" />
             </div>
@@ -221,6 +225,12 @@ export default function Page() {
       {/* Dialogs */}
       <FormulaDetailDialog formula={selectedFormula} open={dialogOpen} onOpenChange={setDialogOpen} />
       <WorkflowRunner workflow={activeWorkflow} open={workflowOpen} onOpenChange={setWorkflowOpen} />
+
+      {/* AI Agronomist Assistant — floating chat, available on all tabs */}
+      <AgronomistAssistant />
+
+      {/* Field Data Capture — floating scan button, available on all tabs */}
+      <FieldDataCapture />
     </div>
   );
 }
