@@ -494,7 +494,7 @@ export const calculators: Record<string, CalcConfig> = {
     compute: (v) => {
       const mw = Math.pow(v.bw, 0.75);
       const kr = v.adg / mw;
-      return { value: fmt4(kr), label: 'kg/day/kg^0.75', interpretation: `Metabolic weight = ${fmt1(mw)} kg^0.75. Higher KR = better growth efficiency for size.` };
+      return { value: fmt(kr, 4), label: 'kg/day/kg^0.75', interpretation: `Metabolic weight = ${fmt1(mw)} kg^0.75. Higher KR = better growth efficiency for size.` };
     },
   },
 
@@ -785,7 +785,7 @@ export const calculators: Record<string, CalcConfig> = {
     ],
     compute: (v) => {
       const lar = v.leaves / v.thermalTime;
-      return { value: fmt4(lar), label: 'leaves/°Cd', interpretation: `Predicts leaf development rate at given thermal time.` };
+      return { value: fmt(lar, 4), label: 'leaves/°Cd', interpretation: `Predicts leaf development rate at given thermal time.` };
     },
   },
 
@@ -1669,8 +1669,8 @@ export const calculators: Record<string, CalcConfig> = {
     },
   },
 
-  // 56.1 Substrate Conversion Efficiency (insects)
-  '56.1': {
+  // INS.56.1 Substrate Conversion Efficiency (insects) — renamed from 56.1 to avoid code collision with FAO-56 Penman-Monteith (Part XIX)
+  'INS.56.1': {
     fields: [
       { key: 'gain', label: 'Larval fresh weight gained', unit: 'kg', defaultValue: 5, step: 0.5 },
       { key: 'substrate', label: 'Substrate DM offered', unit: 'kg', defaultValue: 15, step: 0.5 },
@@ -1687,8 +1687,8 @@ export const calculators: Record<string, CalcConfig> = {
     },
   },
 
-  // 56.2 Insect FCR
-  '56.2': {
+  // INS.56.2 Insect FCR — renamed from 56.2 to avoid code collision with FAO-56 Dual Kc (Part XIX)
+  'INS.56.2': {
     fields: [
       { key: 'feed', label: 'Feed DM consumed', unit: 'kg', defaultValue: 15, step: 0.5 },
       { key: 'gain', label: 'Insect DM gained', unit: 'kg', defaultValue: 3, step: 0.1 },
@@ -2068,4 +2068,814 @@ export const calculators: Record<string, CalcConfig> = {
   'IRR-14.2': { fields: [{ key: 'radius', label: 'Radius (r)', unit: 'm', defaultValue: 1, step: 0.1 }, { key: 'height', label: 'Height (h)', unit: 'm', defaultValue: 2, step: 0.1 }], compute: (v) => { const vol = Math.PI * v.radius * v.radius * v.height; return { value: fmt0(vol), label: 'm³', interpretation: `Capacity = ${fmt0(vol)} m³ = ${fmt0(vol * 1000)} L` }; } },
   'IRR-14.3': { fields: [{ key: 'volume', label: 'Tank volume (V)', unit: 'm³', defaultValue: 100, step: 10 }, { key: 'flow', label: 'Flow rate (Q)', unit: 'm³/h', defaultValue: 5, step: 0.5 }], compute: (v) => { const td = v.volume / v.flow; return { value: fmt1(td), label: 'hours', interpretation: `Detention time = ${fmt1(td)} hours` }; } },
   'IRR-15.6': { fields: [{ key: 'flow', label: 'Flow rate (Q)', unit: 'm³/s', defaultValue: 0.02, step: 0.005 }, { key: 'velocity', label: 'Target velocity (v)', unit: 'm/s', defaultValue: 1.5, step: 0.1 }], compute: (v) => { const d = Math.sqrt((4 * v.flow) / (Math.PI * v.velocity)); return { value: fmt3(d), label: 'm', interpretation: `Diameter = ${fmt3(d)} m = ${fmt0(d * 1000)} mm` }; } },
+
+  // ============= PART XIX: TRUSTED-REFERENCE FORMULAS (FAO-56, USDA-NRCS, ASABE, IPCC, NRC) =============
+
+  // --- FAO-56 Penman-Monteith Family ---
+
+  // 56.1 Penman-Monteith ETo (FAO-56 Eq. 6)
+  '56.1': {
+    fields: [
+      { key: 'T', label: 'Mean air temp (T)', unit: '°C', defaultValue: 25, step: 0.1 },
+      { key: 'Rn', label: 'Net radiation (Rn)', unit: 'MJ/m²/day', defaultValue: 15, step: 0.1 },
+      { key: 'G', label: 'Soil heat flux (G)', unit: 'MJ/m²/day', defaultValue: 0, step: 0.1 },
+      { key: 'u2', label: 'Wind speed at 2m (u₂)', unit: 'm/s', defaultValue: 2, step: 0.1 },
+      { key: 'es', label: 'Saturation VP (es)', unit: 'kPa', defaultValue: 3.17, step: 0.01 },
+      { key: 'ea', label: 'Actual VP (ea)', unit: 'kPa', defaultValue: 2.0, step: 0.01 },
+      { key: 'delta', label: 'Slope VP curve (Δ)', unit: 'kPa/°C', defaultValue: 0.189, step: 0.001 },
+      { key: 'gamma', label: 'Psychrometric const (γ)', unit: 'kPa/°C', defaultValue: 0.066, step: 0.001 },
+    ],
+    compute: (v) => {
+      const num = 0.408 * v.delta * (v.Rn - v.G) + v.gamma * (900 / (v.T + 273)) * v.u2 * (v.es - v.ea);
+      const den = v.delta + v.gamma * (1 + 0.34 * v.u2);
+      const eto = den === 0 ? 0 : num / den;
+      const safeEto = Math.max(0, eto);
+      const interp = rangeInterp(safeEto, [
+        [0, 2, 'Low ETo — cool/humid or winter day; minimal irrigation needed.'],
+        [2, 4, 'Moderate ETo — typical spring/autumn day.'],
+        [4, 6, 'Moderate-high ETo — typical summer day; irrigate ' + fmt0(safeEto * 10) + ' m³/ha to match ETc at Kc=1.'],
+        [6, 8, 'High ETo — hot/dry conditions; schedule frequent irrigation.'],
+        [8, Infinity, 'Very high ETo — arid conditions; consider shade nets or mulch to reduce demand.'],
+      ]);
+      return { value: fmt2(safeEto), label: 'mm/day', interpretation: interp };
+    },
+  },
+
+  // 56.2 Dual Crop Coefficient (FAO-56 Eq. 71)
+  '56.2': {
+    fields: [
+      { key: 'Kcb', label: 'Basal crop coef. (Kcb)', unit: '', defaultValue: 1.1, step: 0.05 },
+      { key: 'Ks', label: 'Water stress coef. (Ks)', unit: '0-1', defaultValue: 0.85, step: 0.05 },
+      { key: 'Ke', label: 'Soil evaporation coef. (Ke)', unit: '', defaultValue: 0.15, step: 0.05 },
+    ],
+    compute: (v) => {
+      const kc = v.Kcb * Math.max(0, Math.min(1, v.Ks)) + Math.max(0, v.Ke);
+      const interp = rangeInterp(kc, [
+        [0, 0.3, 'Initial growth stage — low water use.'],
+        [0.3, 0.7, 'Crop development stage.'],
+        [0.7, 1.0, 'Mid-season — peak water use.'],
+        [1.0, 1.3, 'Full canopy with wet soil evaporation.'],
+        [1.3, Infinity, 'High Kc — verify Ke is not over-estimated after rain.'],
+      ]);
+      return { value: fmt3(kc), label: 'Kc', interpretation: `Dual Kc = ${fmt3(kc)}. ${interp}` };
+    },
+  },
+
+  // 56.3 Water Stress Coefficient (FAO-56 Eq. 84)
+  '56.3': {
+    fields: [
+      { key: 'TAW', label: 'Total available water (TAW)', unit: 'mm', defaultValue: 100, step: 5 },
+      { key: 'Dr', label: 'Root zone depletion (Dr)', unit: 'mm', defaultValue: 50, step: 5 },
+      { key: 'p', label: 'Depletion fraction (p)', unit: '0-1', defaultValue: 0.5, step: 0.05 },
+    ],
+    compute: (v) => {
+      const raw = v.TAW > 0 && v.p < 1 ? (v.TAW - v.Dr) / ((1 - v.p) * v.TAW) : 1;
+      const ks = Math.max(0, Math.min(1, raw));
+      const interp = ks >= 1
+        ? 'No water stress (Ks = 1.0) — root zone depletion within readily available water.'
+        : ks >= 0.85
+          ? 'Mild stress — acceptable for deficit irrigation of tolerant crops.'
+          : ks >= 0.7
+            ? 'Moderate stress — irrigate soon to avoid yield loss.'
+            : 'Severe stress — irrigate immediately; yield loss likely.';
+      return { value: fmt2(ks), label: 'Ks', interpretation: interp };
+    },
+  },
+
+  // 56.4 Salinity-Adjusted ET (FAO-56 Eq. 98)
+  '56.4': {
+    fields: [
+      { key: 'Kc', label: 'Crop coefficient (Kc)', unit: '', defaultValue: 1.15, step: 0.05 },
+      { key: 'ETo', label: 'Reference ET (ETo)', unit: 'mm/day', defaultValue: 5, step: 0.1 },
+      { key: 'ECe', label: 'EC saturation extract (ECe)', unit: 'dS/m', defaultValue: 4, step: 0.1 },
+      { key: 'b', label: 'Crop slope (b)', unit: '%/dS/m', defaultValue: 10, step: 0.5 },
+    ],
+    compute: (v) => {
+      const reduction = 1 - (v.ECe * v.b) / 100;
+      const factor = Math.max(0, reduction);
+      const etcAdj = v.Kc * v.ETo * factor;
+      const etcBase = v.Kc * v.ETo;
+      const pct = etcBase > 0 ? (etcAdj / etcBase) * 100 : 0;
+      const interp = pct >= 90
+        ? 'Minimal salinity effect on ET.'
+        : pct >= 80
+          ? 'Mild salinity effect — monitor soil EC.'
+          : pct >= 60
+            ? 'Moderate salinity — leach salts before planting.'
+            : 'Severe salinity — select salt-tolerant variety or improve drainage.';
+      return { value: fmt2(etcAdj), label: 'mm/day', interpretation: `ETc_adj = ${fmt2(etcAdj)} mm/day (${fmt0(pct)}% of unstressed ETc ${fmt2(etcBase)}). ${interp}` };
+    },
+  },
+
+  // 56.5 Net Radiation (FAO-56 Eq. 38-40)
+  '56.5': {
+    fields: [
+      { key: 'Rs', label: 'Solar radiation (Rs)', unit: 'MJ/m²/day', defaultValue: 20, step: 0.5 },
+      { key: 'alpha', label: 'Albedo (α)', unit: '0-1', defaultValue: 0.23, step: 0.01 },
+      { key: 'Rnl', label: 'Net longwave radiation (Rnl)', unit: 'MJ/m²/day', defaultValue: 3.0, step: 0.1 },
+    ],
+    compute: (v) => {
+      const rns = (1 - v.alpha) * v.Rs;
+      const rn = rns - v.Rnl;
+      const safeRn = Math.max(0, rn);
+      const interp = rangeInterp(safeRn, [
+        [0, 5, 'Low Rn — overcast or winter day.'],
+        [5, 10, 'Moderate Rn — partly cloudy.'],
+        [10, 15, 'Good Rn — typical clear day.'],
+        [15, 20, 'High Rn — clear summer day.'],
+        [20, Infinity, 'Very high Rn — tropical/arid summer.'],
+      ]);
+      return { value: fmt2(safeRn), label: 'MJ/m²/day', interpretation: `Rns = ${fmt2(rns)}, Rn = ${fmt2(safeRn)} MJ/m²/day. ${interp}` };
+    },
+  },
+
+  // 56.6 Psychrometric Constant (FAO-56 Eq. 8)
+  '56.6': {
+    fields: [
+      { key: 'z', label: 'Altitude (z)', unit: 'm', defaultValue: 0, step: 50 },
+    ],
+    compute: (v) => {
+      const P = 101.3 * Math.pow((293 - 0.0065 * v.z) / 293, 5.26);
+      const gamma = 0.665e-3 * P;
+      const interp = v.z < 500
+        ? 'Sea-level to lowland — γ ≈ 0.067 kPa/°C (reference value).'
+        : v.z < 1500
+          ? 'Mid-altitude — γ reduced, slightly affects ETo.'
+          : v.z < 3000
+            ? 'High altitude — γ meaningfully lower; re-compute ETo locally.'
+            : 'Very high altitude — use local P; sea-level γ would introduce >15% ETo error.';
+      return { value: fmt3(gamma), label: 'kPa/°C', interpretation: `At z=${fmt0(v.z)} m: P=${fmt1(P)} kPa → γ=${fmt3(gamma)} kPa/°C. ${interp}` };
+    },
+  },
+
+  // 56.7 Saturation Vapor Pressure (FAO-56 Eq. 11, Tetens 1930)
+  '56.7': {
+    fields: [
+      { key: 'T', label: 'Air temperature (T)', unit: '°C', defaultValue: 25, step: 0.5 },
+    ],
+    compute: (v) => {
+      const es = 0.6108 * Math.exp((17.27 * v.T) / (v.T + 237.3));
+      const interp = rangeInterp(v.T, [
+        [-50, 0, 'Below freezing — es very low; vapor pressure near zero.'],
+        [0, 15, 'Cool temperatures — es rises steeply with T.'],
+        [15, 25, 'Mild temperatures — typical growing-season range.'],
+        [25, 35, 'Warm temperatures — high evapotranspiration demand.'],
+        [35, Infinity, 'Hot — es very high; large VPD risk.'],
+      ]);
+      return { value: fmt2(es), label: 'kPa', interpretation: `es(${fmt1(v.T)}°C) = ${fmt2(es)} kPa. ${interp}` };
+    },
+  },
+
+  // --- USDA-NRCS Irrigation Engineering (NEH Part 652) ---
+
+  // 652.1 Christiansen Uniformity Coefficient
+  '652.1': {
+    fields: [
+      { key: 'mean', label: 'Mean catch (x̄)', unit: 'mm', defaultValue: 10, step: 0.5 },
+      { key: 'sumDev', label: 'Σ |xᵢ − x̄|', unit: 'mm', defaultValue: 12, step: 0.5 },
+      { key: 'n', label: 'Number of cans (n)', unit: '', defaultValue: 16, step: 1, min: 1 },
+    ],
+    compute: (v) => {
+      const cu = v.mean > 0 && v.n > 0 ? 100 * (1 - v.sumDev / (v.n * v.mean)) : 0;
+      const safeCu = Math.max(0, Math.min(100, cu));
+      const interp = rangeInterp(safeCu, [
+        [0, 75, 'Poor uniformity — redesign sprinkler spacing or pressure.'],
+        [75, 84, 'Acceptable but marginal — check nozzle wear.'],
+        [84, 90, 'Good uniformity.'],
+        [90, Infinity, 'Excellent uniformity.'],
+      ]);
+      return { value: fmt1(safeCu), label: '%', interpretation: `CU = ${fmt1(safeCu)}%. ${interp}` };
+    },
+  },
+
+  // 652.2 Manning's Flow in Irrigation Channels
+  '652.2': {
+    fields: [
+      { key: 'n', label: "Manning's n", unit: '', defaultValue: 0.025, step: 0.001 },
+      { key: 'A', label: 'Cross-section area (A)', unit: 'm²', defaultValue: 0.5, step: 0.05 },
+      { key: 'P', label: 'Wetted perimeter (P)', unit: 'm', defaultValue: 2.2, step: 0.1 },
+      { key: 'S', label: 'Channel slope (S)', unit: 'm/m', defaultValue: 0.001, step: 0.0001 },
+    ],
+    compute: (v) => {
+      const R = v.P > 0 ? v.A / v.P : 0;
+      const Q = v.n > 0 && R > 0 && v.S > 0 ? (1 / v.n) * v.A * Math.pow(R, 2 / 3) * Math.sqrt(v.S) : 0;
+      const vel = v.A > 0 ? Q / v.A : 0;
+      const interp = vel > 0.6
+        ? `Velocity ${fmt2(vel)} m/s — exceeds 0.6 m/s earth-channel erosion threshold.`
+        : vel > 0
+          ? `Velocity ${fmt2(vel)} m/s — safe for earth channels.`
+          : 'Inputs produce zero or negative flow — check slope and geometry.';
+      return { value: fmt3(Q), label: 'm³/s', interpretation: `R = ${fmt3(R)} m, Q = ${fmt3(Q)} m³/s (${fmt1(Q * 1000)} L/s). ${interp}` };
+    },
+  },
+
+  // 652.3 Furrow Inflow Design (USDA-NRCS)
+  '652.3': {
+    fields: [
+      { key: 'L', label: 'Furrow length (L)', unit: 'm', defaultValue: 200, step: 10 },
+      { key: 'q_req', label: 'Required infiltration depth (q_req)', unit: 'mm', defaultValue: 50, step: 5 },
+      { key: 'F', label: 'Furrow spacing (F)', unit: 'm', defaultValue: 1, step: 0.1 },
+      { key: 'T', label: 'Application time (T)', unit: 'hours', defaultValue: 4, step: 0.5 },
+    ],
+    compute: (v) => {
+      const Q = v.T > 0 ? (v.L * v.q_req * v.F) / (3.6 * v.T) : 0;
+      const interp = Q > 3
+        ? `Q_in ${fmt1(Q)} L/s > 3 L/s — split furrow into sets or shorten length.`
+        : Q > 0
+          ? `Q_in ${fmt1(Q)} L/s — within recommended range.`
+          : 'Application time must be greater than zero.';
+      return { value: fmt1(Q), label: 'L/s', interpretation: interp };
+    },
+  },
+
+  // 652.4 Available Water Capacity (USDA Soil Survey Manual)
+  '652.4': {
+    fields: [
+      { key: 'FC', label: 'Field capacity (FC)', unit: '% by wt', defaultValue: 22, step: 1 },
+      { key: 'PWP', label: 'Permanent wilting point (PWP)', unit: '% by wt', defaultValue: 10, step: 1 },
+      { key: 'BD', label: 'Bulk density (BD)', unit: 'g/cm³', defaultValue: 1.3, step: 0.05 },
+      { key: 'D', label: 'Root depth (D)', unit: 'cm', defaultValue: 30, step: 5 },
+    ],
+    compute: (v) => {
+      const awc = ((v.FC - v.PWP) / 100) * v.BD * v.D * 10;
+      const safeAwc = Math.max(0, awc);
+      const interp = rangeInterp(safeAwc, [
+        [0, 30, 'Low AWC — drought-prone; irrigate frequently with small doses.'],
+        [30, 60, 'Moderate AWC — typical sandy loam.'],
+        [60, 100, 'Good AWC — loam/silt loam.'],
+        [100, Infinity, 'High AWC — clay loam; long intervals between irrigations.'],
+      ]);
+      return { value: fmt1(safeAwc), label: 'mm', interpretation: `AWC = ${fmt1(safeAwc)} mm over ${fmt0(v.D)} cm root depth. ${interp}` };
+    },
+  },
+
+  // 652.5 Horton Infiltration Model
+  '652.5': {
+    fields: [
+      { key: 'f0', label: 'Initial infiltration (f₀)', unit: 'mm/h', defaultValue: 80, step: 5 },
+      { key: 'fc', label: 'Final infiltration (fc)', unit: 'mm/h', defaultValue: 15, step: 1 },
+      { key: 'k', label: 'Decay constant (k)', unit: '1/h', defaultValue: 1.5, step: 0.1 },
+      { key: 't', label: 'Time since start (t)', unit: 'h', defaultValue: 1, step: 0.1 },
+    ],
+    compute: (v) => {
+      const ft = v.fc + (v.f0 - v.fc) * Math.exp(-v.k * v.t);
+      const safeFt = Math.max(0, ft);
+      const interp = `Infiltration has decayed from ${fmt1(v.f0)} to ${fmt1(safeFt)} mm/h after ${fmt1(v.t)} h. `;
+      const extra = safeFt < 5
+        ? 'Near asymptote — soil at fc, runoff risk if application exceeds this rate.'
+        : safeFt < 20
+          ? 'Moderate rate — match sprinkler output to avoid runoff.'
+          : 'High rate — soil still absorbing rapidly.';
+      return { value: fmt1(safeFt), label: 'mm/h', interpretation: interp + extra };
+    },
+  },
+
+  // 652.6 Sprinkler Application Rate (USDA-NRCS NEH 652 Ch. 11)
+  '652.6': {
+    fields: [
+      { key: 'Q', label: 'Sprinkler discharge (Q)', unit: 'L/min', defaultValue: 12, step: 0.5 },
+      { key: 'S1', label: 'Spacing along lateral (S₁)', unit: 'm', defaultValue: 9, step: 0.5 },
+      { key: 'S2', label: 'Spacing between laterals (S₂)', unit: 'm', defaultValue: 12, step: 0.5 },
+    ],
+    compute: (v) => {
+      const I = v.S1 > 0 && v.S2 > 0 ? (60 * v.Q) / (v.S1 * v.S2) : 0;
+      const interp = rangeInterp(I, [
+        [0, 3, 'Low rate — suitable for clay soils, steep slopes.'],
+        [3, 8, 'Moderate rate — general-purpose.'],
+        [8, 13, 'Higher rate — suited to loam/sandy loam.'],
+        [13, Infinity, 'High rate — runoff risk on heavy or sloping soils.'],
+      ]);
+      return { value: fmt1(I), label: 'mm/h', interpretation: `Application rate = ${fmt1(I)} mm/h. ${interp}` };
+    },
+  },
+
+  // --- ASABE Drip & Sprinkler Standards ---
+
+  // EP405.1 Drip Emitter Flow Variation
+  'EP405.1': {
+    fields: [
+      { key: 'qmax', label: 'Max emitter flow (qmax)', unit: 'L/h', defaultValue: 4.2, step: 0.1 },
+      { key: 'qmin', label: 'Min emitter flow (qmin)', unit: 'L/h', defaultValue: 3.6, step: 0.1 },
+      { key: 'qavg', label: 'Average flow (qavg)', unit: 'L/h', defaultValue: 3.9, step: 0.1 },
+    ],
+    compute: (v) => {
+      const qv = v.qavg > 0 ? (100 * (v.qmax - v.qmin)) / v.qavg : 0;
+      const safeQv = Math.max(0, qv);
+      const interp = rangeInterp(safeQv, [
+        [0, 10, 'Excellent — qv < 10%.'],
+        [10, 20, 'Acceptable — qv 10–20%.'],
+        [20, Infinity, 'Redesign needed — qv > 20% indicates excessive pressure variation.'],
+      ]);
+      return { value: fmt1(safeQv), label: '%', interpretation: `qv = ${fmt1(safeQv)}%. ${interp}` };
+    },
+  },
+
+  // EP405.2 Emission Uniformity (ASABE EP405.1)
+  'EP405.2': {
+    fields: [
+      { key: 'CV', label: 'Coefficient of variation (CV)', unit: '', defaultValue: 0.05, step: 0.01 },
+      { key: 'qmin', label: 'Min emitter flow (qmin)', unit: 'L/h', defaultValue: 3.6, step: 0.1 },
+      { key: 'qavg', label: 'Average flow (qavg)', unit: 'L/h', defaultValue: 3.9, step: 0.1 },
+    ],
+    compute: (v) => {
+      const eu = v.qavg > 0 ? 100 * (1 - 1.27 * v.CV) * (v.qmin / v.qavg) : 0;
+      const safeEu = Math.max(0, Math.min(100, eu));
+      const interp = rangeInterp(safeEu, [
+        [0, 70, 'Poor — replace emitters or redesign.'],
+        [70, 80, 'Marginal — investigate pressure losses.'],
+        [80, 90, 'Acceptable.'],
+        [90, Infinity, 'Excellent — EU > 90%.'],
+      ]);
+      return { value: fmt1(safeEu), label: '%', interpretation: `EU = ${fmt1(safeEu)}%. ${interp}` };
+    },
+  },
+
+  // EP458.1 Pressure-Compensating Emitter Range (q = k·P^x)
+  'EP458.1': {
+    fields: [
+      { key: 'k', label: 'Emitter constant (k)', unit: '', defaultValue: 0.5, step: 0.05 },
+      { key: 'P', label: 'Pressure (P)', unit: 'kPa', defaultValue: 150, step: 5 },
+      { key: 'x', label: 'Exponent (x)', unit: '', defaultValue: 0.5, step: 0.05 },
+    ],
+    compute: (v) => {
+      const q = v.P > 0 ? v.k * Math.pow(v.P, v.x) : 0;
+      const safeQ = Math.max(0, q);
+      const interp = v.x < 0.2
+        ? 'Pressure-compensating emitter (x ≈ 0) — flow stable across pressure range.'
+        : v.x < 0.7
+          ? 'Turbulent-flow emitter (x ≈ 0.5) — flow varies moderately with pressure.'
+          : 'Laminar-flow emitter (x ≈ 1) — flow highly pressure-sensitive; avoid on slopes.';
+      return { value: fmt2(safeQ), label: 'L/h', interpretation: `q = ${fmt2(safeQ)} L/h. ${interp}` };
+    },
+  },
+
+  // EP458.2 Lateral Head Loss (Hazen-Williams, F-factor applied)
+  'EP458.2': {
+    fields: [
+      { key: 'Q', label: 'Flow (Q)', unit: 'L/s', defaultValue: 0.5, step: 0.05 },
+      { key: 'C', label: 'Hazen-Williams C', unit: '', defaultValue: 150, step: 5 },
+      { key: 'L', label: 'Lateral length (L)', unit: 'm', defaultValue: 100, step: 10 },
+      { key: 'D', label: 'Inside diameter (D)', unit: 'mm', defaultValue: 16, step: 1 },
+    ],
+    compute: (v) => {
+      const F = 0.36; // Multi-outlet factor (ASABE EP458)
+      const denom = Math.pow(v.D, 4.87);
+      const hfRaw = denom > 0 && v.C > 0 ? 1.21e10 * Math.pow(v.Q / v.C, 1.852) * v.L / denom : 0;
+      const hf = hfRaw * F;
+      const safeHf = Math.max(0, hf);
+      const interp = safeHf > 20
+        ? `Head loss ${fmt2(safeHf)} m > 20 m threshold — upsize diameter or split lateral.`
+        : safeHf > 0
+          ? `Head loss ${fmt2(safeHf)} m (F=0.36 applied) — within acceptable range.`
+          : 'Inputs invalid — check D and C are positive.';
+      return { value: fmt2(safeHf), label: 'm', interpretation: interp };
+    },
+  },
+
+  // EP458.3 Drip System Application Rate (ASABE EP405.1)
+  'EP458.3': {
+    fields: [
+      { key: 'q', label: 'Emitter flow (q)', unit: 'L/h', defaultValue: 4, step: 0.25 },
+      { key: 'S1', label: 'Emitter spacing on lateral (S₁)', unit: 'm', defaultValue: 0.3, step: 0.05 },
+      { key: 'S2', label: 'Lateral spacing (S₂)', unit: 'm', defaultValue: 1.5, step: 0.1 },
+    ],
+    compute: (v) => {
+      const I = v.S1 > 0 && v.S2 > 0 ? (60 * v.q * 1.0) / (v.S1 * v.S2) : 0;
+      const safeI = Math.max(0, I);
+      const t30 = safeI > 0 ? 30 / safeI : 0; // hours to apply 30 mm
+      const interp = safeI > 0
+        ? `Concentrated drip rate ${fmt1(safeI)} mm/h at the emitter. To apply 30 mm: run ${fmt1(t30)} h.`
+        : 'Spacing must be greater than zero.';
+      return { value: fmt1(safeI), label: 'mm/h', interpretation: interp };
+    },
+  },
+
+  // --- IPCC 2019 Emission Models ---
+
+  // IPCC.1 N₂O Direct Emission (Tier 1)
+  'IPCC.1': {
+    fields: [
+      { key: 'F', label: 'N input (F)', unit: 'kg N/ha', defaultValue: 200, step: 10 },
+      { key: 'EF', label: 'Emission factor (EF)', unit: 'kg N₂O-N/kg N', defaultValue: 0.01, step: 0.001 },
+    ],
+    compute: (v) => {
+      const n2o = v.F * v.EF * (44 / 28);
+      const co2e = n2o * 298;
+      const safeN2o = Math.max(0, n2o);
+      const interp = `Direct N₂O = ${fmt2(safeN2o)} kg N₂O/ha = ${fmt0(co2e)} kg CO₂e/ha (GWP 298). Use enhanced-efficiency fertilizer to cut EF ~35%.`;
+      return { value: fmt2(safeN2o), label: 'kg N₂O/ha', interpretation: interp };
+    },
+  },
+
+  // IPCC.2 CH₄ from Rice Paddies
+  'IPCC.2': {
+    fields: [
+      { key: 'SF', label: 'Seasonal flux (SF)', unit: 'kg CH₄/ha/day', defaultValue: 1.3, step: 0.1 },
+      { key: 'CF', label: 'Water regime conversion (CF)', unit: '', defaultValue: 0.78, step: 0.05 },
+      { key: 't', label: 'Cultivation period (t)', unit: 'days', defaultValue: 110, step: 5 },
+    ],
+    compute: (v) => {
+      const ch4 = v.SF * v.CF * v.t * 28; // 28 = GWP of CH₄ (AR5)
+      const safeCh4 = Math.max(0, ch4);
+      const interp = `Rice CH₄ = ${fmt0(safeCh4)} kg CO₂e/ha. Drain mid-season to cut CH₄ by 40–70%.`;
+      return { value: fmt0(safeCh4), label: 'kg CO₂e/ha', interpretation: interp };
+    },
+  },
+
+  // IPCC.3 Enteric Fermentation CH₄ (Tier 2, GE × Ym)
+  'IPCC.3': {
+    fields: [
+      { key: 'GE', label: 'Gross energy intake (GE)', unit: 'MJ/day', defaultValue: 200, step: 5 },
+      { key: 'Ym', label: 'Methane conversion factor (Ym)', unit: 'fraction', defaultValue: 0.065, step: 0.005 },
+    ],
+    compute: (v) => {
+      const ch4_day = v.GE * v.Ym * 0.0672;
+      const ch4_yr = ch4_day * 365;
+      const safeDay = Math.max(0, ch4_day);
+      const safeYr = Math.max(0, ch4_yr);
+      const interp = `Enteric CH₄ = ${fmt3(safeDay)} kg/day = ${fmt0(safeYr)} kg/yr. Add lipids (3–5% DM) to reduce Ym by 10–15%.`;
+      return { value: fmt3(safeDay), label: 'kg CH₄/day', interpretation: interp };
+    },
+  },
+
+  // IPCC.4 N₂O Indirect (Volatilization + Leaching)
+  'IPCC.4': {
+    fields: [
+      { key: 'F', label: 'N input (F)', unit: 'kg N/ha', defaultValue: 200, step: 10 },
+      { key: 'Frac_gas', label: 'Volatilization fraction (Frac_gas)', unit: '', defaultValue: 0.10, step: 0.01 },
+      { key: 'Frac_leach', label: 'Leaching fraction (Frac_leach)', unit: '', defaultValue: 0.24, step: 0.02 },
+    ],
+    compute: (v) => {
+      const EF_gas = 0.010;
+      const EF_leach = 0.011;
+      const n2o = (v.F * v.Frac_gas * EF_gas + v.F * v.Frac_leach * EF_leach) * (44 / 28);
+      const co2e = n2o * 298;
+      const safeN2o = Math.max(0, n2o);
+      const interp = `Indirect N₂O = ${fmt2(safeN2o)} kg N₂O/ha = ${fmt0(co2e)} kg CO₂e/ha. Split-apply N to cut Frac_leach; use inhibitors to cut Frac_gas.`;
+      return { value: fmt2(safeN2o), label: 'kg N₂O/ha', interpretation: interp };
+    },
+  },
+
+  // IPCC.5 Soil Carbon Stock Change (Tier 1)
+  'IPCC.5': {
+    fields: [
+      { key: 'SOC_ref', label: 'Reference SOC stock', unit: 't C/ha', defaultValue: 50, step: 1 },
+      { key: 'SOC_current', label: 'Current SOC stock', unit: 't C/ha', defaultValue: 40, step: 1 },
+      { key: 'Area', label: 'Area', unit: 'ha', defaultValue: 100, step: 5 },
+    ],
+    compute: (v) => {
+      const dSOC = (v.SOC_ref - v.SOC_current) * v.Area / 20;
+      const co2e = dSOC * 3.667; // 44/12
+      const safeDsoc = dSOC; // can be negative (loss)
+      const direction = safeDsoc > 0 ? 'gain' : safeDsoc < 0 ? 'loss' : 'no change';
+      const interp = `ΔSOC = ${fmt1(safeDsoc)} t C/yr (${direction}) = ${fmt1(co2e)} t CO₂e/yr over ${fmt0(v.Area)} ha. Use stock change factors (FLU, FMG, FI) for Tier 1 refinement.`;
+      return { value: fmt1(safeDsoc), label: 't C/yr', interpretation: interp };
+    },
+  },
+
+  // --- NRC Dairy Nutrition (2021) ---
+
+  // NRC.1 Net Energy for Lactation (NEL)
+  'NRC.1': {
+    fields: [
+      { key: 'TDN', label: 'Total digestible nutrients (TDN)', unit: '% DM', defaultValue: 70, step: 1 },
+    ],
+    compute: (v) => {
+      const tdnFrac = v.TDN / 100;
+      const nelMcal = 0.703 * tdnFrac - 0.19; // Mcal/kg DM (NRC 2021 Eq. 3-10 form)
+      const nelMj = nelMcal * 4.184;
+      const safeMcal = Math.max(0, nelMcal);
+      const safeMj = Math.max(0, nelMj);
+      const interp = `NEL = ${fmt3(safeMcal)} Mcal/kg = ${fmt3(safeMj)} MJ/kg DM. Balance ration at NEL ± 0.05 of cow requirement.`;
+      return { value: `${fmt3(safeMcal)} / ${fmt3(safeMj)}`, label: 'Mcal/kg / MJ/kg', interpretation: interp };
+    },
+  },
+
+  // NRC.2 NDF Digestibility (Mertens 1993 kinetics)
+  'NRC.2': {
+    fields: [
+      { key: 'a', label: 'Soluble fraction (a)', unit: '%', defaultValue: 30, step: 1 },
+      { key: 'b', label: 'Insoluble digestible (b)', unit: '%', defaultValue: 50, step: 1 },
+      { key: 'c', label: 'Digestion rate (c)', unit: '1/h', defaultValue: 0.05, step: 0.005 },
+      { key: 't', label: 'Incubation time (t)', unit: 'h', defaultValue: 30, step: 1 },
+    ],
+    compute: (v) => {
+      const ndfd = v.a + v.b * (1 - Math.exp(-v.c * v.t));
+      const safeNdfd = Math.max(0, Math.min(100, ndfd));
+      const interp = safeNdfd >= 60
+        ? 'NDFD ≥ 60% — excellent for high-producing cows.'
+        : safeNdfd >= 45
+          ? 'NDFD 45–60% — average; select higher-digestibility hybrids for top herd.'
+          : 'NDFD < 45% — low digestibility limits DMI; consider replacement.';
+      return { value: fmt1(safeNdfd), label: '%', interpretation: `NDFD = ${fmt1(safeNdfd)}% at ${fmt0(v.t)} h. ${interp}` };
+    },
+  },
+
+  // NRC.3 Methane Prediction (IPCC Tier 2 dairy)
+  'NRC.3': {
+    fields: [
+      { key: 'GE', label: 'Gross energy intake (GE)', unit: 'MJ/day', defaultValue: 200, step: 5 },
+      { key: 'Ym', label: 'Methane conversion factor (Ym)', unit: 'fraction', defaultValue: 0.065, step: 0.005 },
+    ],
+    compute: (v) => {
+      const ch4_day = v.GE * v.Ym * 0.0672;
+      const ch4_yr = ch4_day * 365;
+      const safeDay = Math.max(0, ch4_day);
+      const safeYr = Math.max(0, ch4_yr);
+      const interp = `CH₄ = ${fmt3(safeDay)} kg/day = ${fmt0(safeYr)} kg/yr. Add lipids (3–5% DM) to reduce Ym 10–15%.`;
+      return { value: fmt3(safeDay), label: 'kg CH₄/day', interpretation: interp };
+    },
+  },
+
+  // NRC.4 Amino Acid Balance (Lys:Met)
+  'NRC.4': {
+    fields: [
+      { key: 'Lys', label: 'Metabolizable lysine (Lys)', unit: 'g/day', defaultValue: 180, step: 5 },
+      { key: 'Met', label: 'Metabolizable methionine (Met)', unit: 'g/day', defaultValue: 60, step: 2 },
+    ],
+    compute: (v) => {
+      const ratio = v.Met > 0 ? v.Lys / v.Met : 0;
+      const safeRatio = Math.max(0, ratio);
+      const interp = safeRatio >= 2.8 && safeRatio <= 3.0
+        ? 'Optimal Lys:Met (NRC 2021 ideal = 2.8–3.0:1).'
+        : safeRatio > 3.0
+          ? 'Lys in excess — add rumen-protected Met to bring ratio down to 3.0.'
+          : safeRatio > 0
+            ? 'Lys deficient — add rumen-protected Lys to raise ratio to ~3.0.'
+            : 'Met supply must be greater than zero.';
+      return { value: fmt2(safeRatio) + ':1', label: 'Lys:Met', interpretation: interp };
+    },
+  },
+
+  // --- Fertilizers Europe NUE Toolkit ---
+
+  // FE.1 Nitrogen Use Efficiency (NUE)
+  'FE.1': {
+    fields: [
+      { key: 'N_output', label: 'N in harvested product (N_output)', unit: 'kg N/ha', defaultValue: 150, step: 5 },
+      { key: 'N_input', label: 'Total N input (N_input)', unit: 'kg N/ha', defaultValue: 180, step: 5 },
+    ],
+    compute: (v) => {
+      const nue = v.N_input > 0 ? (v.N_output / v.N_input) * 100 : 0;
+      const safeNue = Math.max(0, nue);
+      const interp = rangeInterp(safeNue, [
+        [0, 50, 'NUE < 50% — high surplus, leaching risk.'],
+        [50, 70, 'NUE 50–70% — moderate efficiency.'],
+        [70, 90, 'NUE 70–90% — efficient use.'],
+        [90, Infinity, 'NUE > 90% — risk of mining soil N; verify SOC trends.'],
+      ]);
+      return { value: fmt1(safeNue), label: '%', interpretation: `NUE = ${fmt1(safeNue)}%. ${interp}` };
+    },
+  },
+
+  // FE.2 N Surplus
+  'FE.2': {
+    fields: [
+      { key: 'N_input', label: 'Total N input (N_input)', unit: 'kg N/ha', defaultValue: 180, step: 5 },
+      { key: 'N_output', label: 'N in harvested + residue (N_output)', unit: 'kg N/ha', defaultValue: 150, step: 5 },
+    ],
+    compute: (v) => {
+      const surplus = v.N_input - v.N_output;
+      const interp = rangeInterp(Math.max(0, surplus), [
+        [0, 50, 'Sustainable surplus — low leaching risk.'],
+        [50, 80, 'Caution zone — monitor soil N and groundwater.'],
+        [80, Infinity, 'Action required — high leaching risk; reduce N or improve uptake.'],
+      ]);
+      const extra = surplus < 0 ? ' Negative surplus = mining soil N.' : '';
+      return { value: fmt1(surplus), label: 'kg N/ha', interpretation: `N surplus = ${fmt1(surplus)} kg N/ha. ${interp}${extra}` };
+    },
+  },
+
+  // FE.3 Hidden N in Crop Residues
+  'FE.3': {
+    fields: [
+      { key: 'Yield', label: 'Grain yield (Yield)', unit: 'kg/ha', defaultValue: 6000, step: 100 },
+      { key: 'HI', label: 'Harvest index (HI)', unit: '0-1', defaultValue: 0.45, step: 0.01 },
+      { key: 'N_conc_residue', label: 'N conc. in residue', unit: 'fraction', defaultValue: 0.006, step: 0.0005 },
+    ],
+    compute: (v) => {
+      const nResidue = v.Yield * (1 - v.HI) * v.N_conc_residue;
+      const safeN = Math.max(0, nResidue);
+      const credit = safeN * 0.15; // 15% mineralization credit
+      const interp = `Residue N = ${fmt1(safeN)} kg N/ha. Credit ~${fmt1(credit)} kg N/ha (15% mineralization) to next crop.`;
+      return { value: fmt1(safeN), label: 'kg N/ha', interpretation: interp };
+    },
+  },
+
+  // --- DRIS & Plant Nutrition (Jones 2012) ---
+
+  // DRIS.1 DRIS Index
+  'DRIS.1': {
+    fields: [
+      { key: 'N/P_sample', label: 'Sample N/P ratio', unit: '', defaultValue: 8, step: 0.5 },
+      { key: 'n/p_norm', label: 'Reference norm n/p', unit: '', defaultValue: 10, step: 0.5 },
+      { key: 'CV_np', label: 'CV for N/P', unit: '', defaultValue: 0.15, step: 0.01 },
+      { key: 'N/K_sample', label: 'Sample N/K ratio', unit: '', defaultValue: 1.5, step: 0.1 },
+      { key: 'n/k_norm', label: 'Reference norm n/k', unit: '', defaultValue: 1.5, step: 0.1 },
+      { key: 'CV_nk', label: 'CV for N/K', unit: '', defaultValue: 0.2, step: 0.01 },
+    ],
+    compute: (v) => {
+      const npNorm = v['n/p_norm'];
+      const nkNorm = v['n/k_norm'];
+      const sdNp = v.CV_np * npNorm;
+      const sdNk = v.CV_nk * nkNorm;
+      const zNp = sdNp > 0 ? (v['N/P_sample'] - npNorm) / sdNp : 0;
+      const zNk = sdNk > 0 ? (v['N/K_sample'] - nkNorm) / sdNk : 0;
+      const index = (zNp + zNk) / 2;
+      const interp = index < -1
+        ? 'Strong P or K relative deficiency — most-negative index = most limiting nutrient; address first.'
+        : index < 0
+          ? 'Mild deficiency indicated — monitor nutrient in question.'
+          : index < 1
+            ? 'Balanced — nutrient ratios near norm.'
+            : 'Luxury or excess — nutrient may be over-supplied.';
+      return { value: fmt2(index), label: 'DRIS index', interpretation: `Index = ${fmt2(index)} (z_N/P=${fmt2(zNp)}, z_N/K=${fmt2(zNk)}). ${interp}` };
+    },
+  },
+
+  // DRIS.2 Critical Value Range (95% sufficient range)
+  'DRIS.2': {
+    fields: [
+      { key: 'mean', label: 'Mean of high-yielding pop.', unit: '% or ppm', defaultValue: 3.0, step: 0.1 },
+      { key: 'SD', label: 'Standard deviation', unit: '', defaultValue: 0.2, step: 0.05 },
+    ],
+    compute: (v) => {
+      const lower = v.mean - 1.96 * v.SD;
+      const upper = v.mean + 1.96 * v.SD;
+      const interp = `95% sufficient range: [${fmt2(lower)}, ${fmt2(upper)}]. Below ${fmt2(lower)} = deficient; above ${fmt2(upper)} = no response expected.`;
+      return { value: `[${fmt2(lower)}, ${fmt2(upper)}]`, label: 'CVR', interpretation: interp };
+    },
+  },
+
+  // DRIS.3 Sufficiency Range
+  'DRIS.3': {
+    fields: [
+      { key: 'mean_low', label: 'Deficiency threshold (mean_low)', unit: '% or ppm', defaultValue: 0.25, step: 0.01 },
+      { key: 'mean_high', label: 'Luxury threshold (mean_high)', unit: '% or ppm', defaultValue: 0.5, step: 0.05 },
+    ],
+    compute: (v) => {
+      const k = 0.25;
+      const lower = v.mean_low + k * (v.mean_high - v.mean_low);
+      const upper = v.mean_high;
+      const interp = `Sufficiency range: [${fmt3(lower)}, ${fmt3(upper)}]. Below ${fmt3(lower)} = fertilize; above ${fmt3(upper)} = reduce.`;
+      return { value: `[${fmt3(lower)}, ${fmt3(upper)}]`, label: 'Sufficiency', interpretation: interp };
+    },
+  },
+
+  // --- Soil Health Indicators ---
+
+  // SH.1 Soil Organic Carbon Stock
+  'SH.1': {
+    fields: [
+      { key: 'SOC', label: 'Soil organic carbon (SOC)', unit: '%', defaultValue: 1.5, step: 0.1 },
+      { key: 'BD', label: 'Bulk density (BD)', unit: 'g/cm³', defaultValue: 1.3, step: 0.05 },
+      { key: 'D', label: 'Depth (D)', unit: 'cm', defaultValue: 30, step: 5 },
+    ],
+    compute: (v) => {
+      const stock = v.SOC * v.BD * v.D; // t C/ha
+      const safeStock = Math.max(0, stock);
+      const co2e = safeStock * 3.667;
+      const interp = rangeInterp(safeStock, [
+        [0, 20, 'Low SOC stock — degraded soil; build with cover crops + no-till.'],
+        [20, 40, 'Below average — improvement opportunity.'],
+        [40, 60, 'Moderate — typical temperate cropland.'],
+        [60, 80, 'Good — productive, well-managed soil.'],
+        [80, Infinity, 'High — grassland, forest, or long-term no-till.'],
+      ]);
+      return { value: fmt1(safeStock), label: 't C/ha', interpretation: `SOC stock = ${fmt1(safeStock)} t C/ha (${fmt1(co2e)} t CO₂e/ha). ${interp}` };
+    },
+  },
+
+  // SH.2 Effective Cation Exchange Capacity
+  'SH.2': {
+    fields: [
+      { key: 'Ca', label: 'Calcium (Ca²⁺)', unit: 'meq/100g', defaultValue: 8, step: 0.5 },
+      { key: 'Mg', label: 'Magnesium (Mg²⁺)', unit: 'meq/100g', defaultValue: 1.5, step: 0.1 },
+      { key: 'K', label: 'Potassium (K⁺)', unit: 'meq/100g', defaultValue: 0.4, step: 0.05 },
+      { key: 'Na', label: 'Sodium (Na⁺)', unit: 'meq/100g', defaultValue: 0.2, step: 0.05 },
+      { key: 'H', label: 'Hydrogen (H⁺)', unit: 'meq/100g', defaultValue: 0.5, step: 0.1 },
+      { key: 'Al', label: 'Aluminum (Al³⁺)', unit: 'meq/100g', defaultValue: 0.1, step: 0.05 },
+    ],
+    compute: (v) => {
+      const cec = v.Ca + v.Mg + v.K + v.Na + v.H + v.Al;
+      const safeCec = Math.max(0, cec);
+      const texture = safeCec < 5 ? 'sandy (split-fertilize, low CEC retention)'
+        : safeCec < 10 ? 'sandy loam / loamy sand'
+        : safeCec < 20 ? 'loam (typical productive agricultural soil)'
+        : safeCec < 30 ? 'clay loam / silty clay loam'
+        : 'clay (high retention; may fix K and ammonium)';
+      return { value: fmt2(safeCec), label: 'meq/100g', interpretation: `CEC_eff = ${fmt2(safeCec)} meq/100g → ${texture}.` };
+    },
+  },
+
+  // SH.3 Base Saturation Ratio
+  'SH.3': {
+    fields: [
+      { key: 'Ca', label: 'Calcium (Ca²⁺)', unit: 'meq/100g', defaultValue: 8, step: 0.5 },
+      { key: 'Mg', label: 'Magnesium (Mg²⁺)', unit: 'meq/100g', defaultValue: 1.5, step: 0.1 },
+      { key: 'K', label: 'Potassium (K⁺)', unit: 'meq/100g', defaultValue: 0.4, step: 0.05 },
+      { key: 'Na', label: 'Sodium (Na⁺)', unit: 'meq/100g', defaultValue: 0.2, step: 0.05 },
+      { key: 'CEC', label: 'Cation exchange capacity (CEC)', unit: 'meq/100g', defaultValue: 10.7, step: 0.5 },
+    ],
+    compute: (v) => {
+      const bs = v.CEC > 0 ? ((v.Ca + v.Mg + v.K + v.Na) / v.CEC) * 100 : 0;
+      const caPct = v.CEC > 0 ? (v.Ca / v.CEC) * 100 : 0;
+      const mgPct = v.CEC > 0 ? (v.Mg / v.CEC) * 100 : 0;
+      const kPct = v.CEC > 0 ? (v.K / v.CEC) * 100 : 0;
+      const naPct = v.CEC > 0 ? (v.Na / v.CEC) * 100 : 0;
+      const safeBs = Math.max(0, Math.min(100, bs));
+      const issues: string[] = [];
+      if (caPct < 60) issues.push('Ca low — apply lime or gypsum');
+      if (mgPct < 10) issues.push('Mg low — apply dolomite');
+      if (kPct < 3) issues.push('K low — apply K fertilizer');
+      if (naPct > 5) issues.push('Na high — sodicity risk; add gypsum and leach');
+      const note = issues.length > 0 ? issues.join('; ') + '.' : 'All cation ratios in target range.';
+      return { value: fmt1(safeBs), label: '% BS', interpretation: `BS = ${fmt1(safeBs)}% (Ca ${fmt1(caPct)}%, Mg ${fmt1(mgPct)}%, K ${fmt1(kPct)}%, Na ${fmt1(naPct)}%). ${note}` };
+    },
+  },
+
+  // SH.4 Lime Requirement (SMP-style)
+  'SH.4': {
+    fields: [
+      { key: 'pH_target', label: 'Target pH', unit: '', defaultValue: 6.5, step: 0.1 },
+      { key: 'pH_current', label: 'Current pH', unit: '', defaultValue: 5.5, step: 0.1 },
+      { key: 'CEC', label: 'CEC', unit: 'meq/100g', defaultValue: 15, step: 1 },
+      { key: 'BD', label: 'Bulk density (BD)', unit: 'g/cm³', defaultValue: 1.3, step: 0.05 },
+      { key: 'D', label: 'Depth (D)', unit: 'cm', defaultValue: 15, step: 1 },
+    ],
+    compute: (v) => {
+      // Empirical formula from DB. Note: result may exceed typical agronomic rates (2-5 t/ha).
+      // User should calibrate with local SMP buffer recommendations.
+      const rawLime = (v.pH_target - v.pH_current) * v.CEC * v.BD * v.D * 0.5;
+      const lime = Math.max(0, rawLime);
+      const interp = lime > 0
+        ? `Lime requirement = ${fmt1(lime)} t/ha (formula output). Typical agronomic rates are 2–5 t/ha — verify with local SMP buffer test and split into 2 doses 6 months apart.`
+        : 'Target pH already reached or exceeded — no lime needed.';
+      return { value: fmt1(lime), label: 't/ha', interpretation: interp };
+    },
+  },
+
+  // --- Water Productivity (FAO) ---
+
+  // WP.1 Water Productivity (Crop)
+  'WP.1': {
+    fields: [
+      { key: 'Y', label: 'Crop yield (Y)', unit: 'kg/ha', defaultValue: 6000, step: 100 },
+      { key: 'ETc', label: 'Actual evapotranspiration (ETc)', unit: 'm³/ha', defaultValue: 5000, step: 100 },
+    ],
+    compute: (v) => {
+      const wp = v.ETc > 0 ? v.Y / v.ETc : 0;
+      const safeWp = Math.max(0, wp);
+      const interp = rangeInterp(safeWp, [
+        [0, 0.5, 'Very low WP — improve variety, irrigation timing, mulching.'],
+        [0.5, 0.8, 'Low WP — below global benchmark.'],
+        [0.8, 1.0, 'Moderate WP.'],
+        [1.0, 1.5, 'Good WP — within global benchmark (1.0–1.5 kg/m³).'],
+        [1.5, Infinity, 'Excellent WP — likely deficit-irrigated or high-yielding variety.'],
+      ]);
+      return { value: fmt2(safeWp), label: 'kg/m³', interpretation: `WP = ${fmt2(safeWp)} kg/m³. ${interp}` };
+    },
+  },
+
+  // WP.2 Irrigation Water Use Efficiency
+  'WP.2': {
+    fields: [
+      { key: 'Y_irrig', label: 'Yield with irrigation (Y_irrig)', unit: 'kg/ha', defaultValue: 8000, step: 100 },
+      { key: 'Y_rainfed', label: 'Yield without irrigation (Y_rainfed)', unit: 'kg/ha', defaultValue: 5000, step: 100 },
+      { key: 'I', label: 'Irrigation applied (I)', unit: 'm³/ha', defaultValue: 3000, step: 100 },
+    ],
+    compute: (v) => {
+      const iwue = v.I > 0 ? (v.Y_irrig - v.Y_rainfed) / v.I : 0;
+      const safeIwue = Math.max(0, iwue);
+      const interp = rangeInterp(safeIwue, [
+        [0, 0.5, 'IWUE < 0.5 — reconsider irrigation investment.'],
+        [0.5, 1.0, 'Moderate IWUE.'],
+        [1.0, 1.5, 'Good IWUE.'],
+        [1.5, Infinity, 'Excellent IWUE — irrigation highly profitable.'],
+      ]);
+      return { value: fmt2(safeIwue), label: 'kg/m³', interpretation: `IWUE = ${fmt2(safeIwue)} kg/m³ (additional yield per m³ irrigation). ${interp}` };
+    },
+  },
+
+  // WP.3 Leaching Requirement (FAO-56 / Maas-Hoffman)
+  'WP.3': {
+    fields: [
+      { key: 'EC_iw', label: 'Irrigation water salinity (EC_iw)', unit: 'dS/m', defaultValue: 3.0, step: 0.1 },
+      { key: 'EC_threshold', label: 'Crop salt tolerance threshold', unit: 'dS/m', defaultValue: 2.5, step: 0.1 },
+    ],
+    compute: (v) => {
+      const denom = 5 * v.EC_threshold - v.EC_iw;
+      const lr = denom > 0 ? v.EC_iw / denom : 0;
+      const safeLr = Math.max(0, Math.min(1, lr));
+      const pct = safeLr * 100;
+      const interp = safeLr > 0.5
+        ? 'LR > 50% — switch to salt-tolerant variety or blend water.'
+        : safeLr > 0.2
+          ? 'Moderate leaching required — apply extra water each irrigation.'
+          : safeLr > 0
+            ? 'Low leaching requirement — small extra water suffices.'
+            : 'No leaching required (irrigation water within crop tolerance) OR threshold exceeded.';
+      return { value: fmt1(pct), label: '% LR', interpretation: `Leaching requirement = ${fmt1(pct)}% extra water. ${interp}` };
+    },
+  },
 };
