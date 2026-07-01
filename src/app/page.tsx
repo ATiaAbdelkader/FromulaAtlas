@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Search, Sprout, Layers, BookOpen, Calculator, X, Leaf, Filter, Home, Wrench } from 'lucide-react';
+import { Search, Sprout, Layers, BookOpen, Calculator, X, Leaf, Filter, Home, Wrench, Brain } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +13,9 @@ import { UseCasesSection } from '@/components/agri/use-cases-section';
 import { FreeToolsSection } from '@/components/agri/nutri-tools/FreeToolsSection';
 import { AgronomistAssistant } from '@/components/agri/nutri-tools/AgronomistAssistant';
 import { FieldDataCapture } from '@/components/agri/nutri-tools/FieldDataCapture';
+import { MultiFieldDashboard } from '@/components/agri/nutri-tools/MultiFieldDashboard';
+import { YieldGapAnalysis } from '@/components/agri/nutri-tools/YieldGapAnalysis';
+import { SustainabilityScorecard } from '@/components/agri/nutri-tools/SustainabilityScorecard';
 import { OnboardingFlow } from '@/components/onboarding/OnboardingFlow';
 import { TakeTourButton } from '@/components/onboarding/TakeTourButton';
 import { TelegramConnectButton } from '@/components/agri/nutri-tools/TelegramConnectButton';
@@ -158,6 +161,25 @@ export default function Page() {
               <StatBadge icon={Sprout} label="Calculators" value={allFormulas.filter(f => hasCalculator(f.code)).length} />
             </div>
           </section>
+
+          {/* Farm Intelligence Suite — 3 elevation features */}
+          <section className="mb-6">
+            <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-700 text-white rounded-xl p-4 mb-4 flex items-center gap-3">
+              <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-white/15 backdrop-blur flex-shrink-0">
+                <Brain className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold leading-tight">Farm Intelligence Suite</h3>
+                <p className="text-xs text-emerald-50/90">Multi-field tracking · Yield-gap benchmarking · Sustainability scorecard</p>
+              </div>
+            </div>
+            <div className="space-y-4">
+              <MultiFieldDashboard />
+              <YieldGapAnalysis />
+              <SustainabilityScorecard />
+            </div>
+          </section>
+
           <SeasonScheduler />
           <UseCasesSection onLaunch={(wf) => { setActiveWorkflow(wf); setWorkflowOpen(true); }} />
         </main>
