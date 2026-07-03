@@ -1,0 +1,673 @@
+     1→     1→'use client';
+     2→     2→
+     3→     3→import { useEffect, useMemo, useRef, useState } from 'react';
+     4→     4→import {
+     5→     5→  Search,
+     6→     6→  Sprout,
+     7→     7→  Layers,
+     8→     8→  BookOpen,
+     9→     9→  Calculator,
+    10→    10→  X,
+    11→    11→  Leaf,
+    12→    12→  Filter,
+    13→    13→  Home,
+    14→    14→  Wrench,
+    15→    15→  History,
+    16→    16→  Ruler,
+    17→    17→  Database,
+    18→    18→  Tractor,
+    19→    19→  ChevronDown,
+    20→    20→} from 'lucide-react';
+    21→    21→import { Input } from '@/components/ui/input';
+    22→    22→import { Button } from '@/components/ui/button';
+    23→    23→import { Badge } from '@/components/ui/badge';
+    24→    24→import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+    25→    25→import { FormulaCard, hasCalculator } from '@/components/agri/formula-card';
+    26→    26→import { FormulaDetailDialog } from '@/components/agri/formula-detail-dialog';
+    27→    27→import { SidebarNav } from '@/components/agri/sidebar-nav';
+    28→    28→import { UseCasesSection } from '@/components/agri/use-cases-section';
+    29→    29→import { WorkflowRunner } from '@/components/agri/workflow-runner';
+    30→    30→import { SeasonScheduler } from '@/components/agri/season-scheduler';
+    31→    31→import { LanguageToggle } from '@/components/language-toggle';
+    32→    32→import { ThemeToggle } from '@/components/theme-toggle';
+    33→    33→import { WeatherWidget } from '@/components/agri/weather-widget';
+    34→    34→import { FarmDashboard } from '@/components/agri/farm-dashboard';
+    35→    35→import { LearningSection } from '@/components/agri/learning-section';
+    36→    36→import { CropPackagesSection } from '@/components/agri/crop-packages-section';
+    37→    37→import { DecisionTreesSection } from '@/components/agri/decision-trees-section';
+    38→    38→import { DecisionTreeRunner } from '@/components/agri/decision-tree-runner';
+    39→    39→import { HistoryPanel } from '@/components/agri/history-panel';
+    40→    40→import { UnitConverterDialog } from '@/components/agri/unit-converter-dialog';
+    41→    41→import { DataExportDialog } from '@/components/agri/data-export-dialog';
+    42→    42→import { FarmManagementDialog } from '@/components/agri/farm-management-dialog';
+    43→    43→import { FormulaGraph } from '@/components/agri/formula-graph';
+    44→    44→import { LibraryTreemap } from '@/components/agri/library-treemap';
+    45→    45→import { FieldModeButton } from '@/components/agri/field-mode';
+    46→    46→import { SmartAlerts } from '@/components/agri/smart-alerts';
+    47→    47→import { handbook, allFormulas } from '@/lib/formulas-data';
+    48→    48→import type { Formula } from '@/lib/types';
+    49→    49→import type { Workflow } from '@/lib/workflows';
+    50→    50→import type { DecisionTree } from '@/lib/decision-trees';
+    51→    51→import type { CropPackage, CropCalculatorKey } from '@/lib/crop-packages';
+    52→    52→import { calculatorFormulaCode } from '@/lib/crop-packages';
+    53→    53→import { useTranslation } from '@/lib/language-store';
+    54→    54→import { useUserStore } from '@/lib/user-store';
+    55→    55→import { useFarmStore } from '@/lib/farm-store';
+    56→    56→import { useKeyboardShortcuts } from '@/lib/use-keyboard-shortcuts';
+    57→    57→import { useHydrated } from '@/lib/use-hydrated';
+    58→    58→import { useToast } from '@/hooks/use-toast';
+    59→    59→import { parseShareLink } from '@/lib/share-utils';
+    60→    60→import { cn } from '@/lib/utils';
+    61→    61→
+    62→    62→type TabId = 'home' | 'formulas' | 'tools';
+    63→    63→
+    64→    64→/** How many formula cards to show initially, and per "Load more" click. */
+    65→    65→const FORMULA_PAGE_SIZE = 12;
+    66→    66→
+    67→    67→export default function Page() {
+    68→    68→  const [activeTab, setActiveTab] = useState<TabId>('home');
+    69→    69→  const [searchQuery, setSearchQuery] = useState('');
+    70→    70→  const [selectedPart, setSelectedPart] = useState<string | null>(null);
+    71→    71→  const [selectedChapter, setSelectedChapter] = useState<number | null>(null);
+    72→    72→  const [onlyWithCalculators, setOnlyWithCalculators] = useState(false);
+    73→    73→  const [selectedFormula, setSelectedFormula] = useState<Formula | null>(null);
+    74→    74→  const [dialogOpen, setDialogOpen] = useState(false);
+    75→    75→  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+    76→    76→  const [activeWorkflow, setActiveWorkflow] = useState<Workflow | null>(null);
+    77→    77→  const [workflowOpen, setWorkflowOpen] = useState(false);
+    78→    78→  const { t, isRTL } = useTranslation();
+    79→    79→
+    80→    80→  // --- New state for restored features ---
+    81→    81→  // Tool / overlay dialogs
+    82→    82→  const [historyOpen, setHistoryOpen] = useState(false);
+    83→    83→  const [converterOpen, setConverterOpen] = useState(false);
+    84→    84→  const [dataExportOpen, setDataExportOpen] = useState(false);
+    85→    85→  const [farmDialogOpen, setFarmDialogOpen] = useState(false);
+    86→    86→  // Decision tree runner (controlled by page so cards can launch it from
+    87→    87→  // multiple sections — Home tab, Tools tab, etc.)
+    88→    88→  const [activeDecisionTree, setActiveDecisionTree] = useState<DecisionTree | null>(null);
+    89→    89→  const [decisionTreeOpen, setDecisionTreeOpen] = useState(false);
+    90→    90→  // Crop calculator launching — page owns the formula dialog + prefill so
+    91→    91→  // crop packages can pre-fill the calculator.
+    92→    92→  const [selectedCrop, setSelectedCrop] = useState<CropPackage | null>(null);
+    93→    93→  const [prefillValues, setPrefillValues] = useState<Record<string, number> | null>(null);
+    94→    94→  // "Load more" pagination for the formulas grid
+    95→    95→  const [visibleCount, setVisibleCount] = useState(FORMULA_PAGE_SIZE);
+    96→    96→  const searchInputRef = useRef<HTMLInputElement>(null);
+    97→    97→  const hydrated = useHydrated();
+    98→    98→  const { toast } = useToast();
+    99→    99→
+   100→   100→  // --- Stores ---
+   101→   101→  const addRecent = useUserStore((s) => s.addRecent);
+   102→   102→  const toggleFavorite = useUserStore((s) => s.toggleFavorite);
+   103→   103→  const isFavorite = useUserStore((s) => s.isFavorite);
+   104→   104→  const activeFarm = useFarmStore((s) =>
+   105→   105→    s.farms.find((f) => f.id === s.activeFarmId) ?? null,
+   106→   106→  );
+   107→   107→
+   108→   108→  const filteredFormulas = useMemo(() => {
+   109→   109→    let result = allFormulas;
+   110→   110→    if (selectedPart) result = result.filter(f => f.part === selectedPart);
+   111→   111→    if (selectedChapter !== null) result = result.filter(f => f.chapter_number === selectedChapter && f.part === selectedPart);
+   112→   112→    if (onlyWithCalculators) result = result.filter(f => hasCalculator(f.code));
+   113→   113→    if (searchQuery.trim()) {
+   114→   114→      const q = searchQuery.toLowerCase().trim();
+   115→   115→      const terms = q.split(/\s+/).filter(Boolean);
+   116→   116→      result = result.filter(f => {
+   117→   117→        const haystack = `${f.code} ${f.name} ${f.name_ar || ''} ${f.formula} ${f.variables} ${f.purpose} ${f.example} ${f.pitfall} ${f.chapter} ${f.part}`.toLowerCase();
+   118→   118→        return terms.every(t => haystack.includes(t));
+   119→   119→      });
+   120→   120→    }
+   121→   121→    return result;
+   122→   122→  }, [searchQuery, selectedPart, selectedChapter, onlyWithCalculators]);
+   123→   123→
+   124→   124→  // Reset "Load more" pagination whenever the filter result set changes.
+   125→   125→  // Uses React's "adjust state during render" pattern rather than an effect,
+   126→   126→  // so we don't trigger cascading renders.
+   127→   127→  const filterKey = `${searchQuery}|${selectedPart}|${selectedChapter}|${onlyWithCalculators}`;
+   128→   128→  const [prevFilterKey, setPrevFilterKey] = useState(filterKey);
+   129→   129→  if (prevFilterKey !== filterKey) {
+   130→   130→    setPrevFilterKey(filterKey);
+   131→   131→    setVisibleCount(FORMULA_PAGE_SIZE);
+   132→   132→  }
+   133→   133→
+   134→   134→  const visibleFormulas = useMemo(
+   135→   135→    () => filteredFormulas.slice(0, visibleCount),
+   136→   136→    [filteredFormulas, visibleCount],
+   137→   137→  );
+   138→   138→  const hasMoreFormulas = visibleCount < filteredFormulas.length;
+   139→   139→
+   140→   140→  // --- Handlers ---
+   141→   141→  const handleSelectFormula = (formula: Formula) => {
+   142→   142→    setSelectedFormula(formula);
+   143→   143→    setPrefillValues(null);
+   144→   144→    setSelectedCrop(null);
+   145→   145→    setDialogOpen(true);
+   146→   146→    addRecent(formula.code);
+   147→   147→  };
+   148→   148→
+   149→   149→  /**
+   150→   150→   * Open a formula by code — used by the History panel (re-open a past
+   151→   151→   * calculation) and by the Decision Tree runner (consult a related formula).
+   152→   152→   * No prefill is applied; the dialog opens at the formula's defaults.
+   153→   153→   */
+   154→   154→  const handleSelectFormulaByCode = (code: string) => {
+   155→   155→    const formula = allFormulas.find((f) => f.code === code);
+   156→   156→    if (!formula) {
+   157→   157→      toast({
+   158→   158→        title: 'Formula not found',
+   159→   159→        description: `No formula with code "${code}" exists in the atlas.`,
+   160→   160→        variant: 'destructive',
+   161→   161→      });
+   162→   162→      return;
+   163→   163→    }
+   164→   164→    setSelectedFormula(formula);
+   165→   165→    setPrefillValues(null);
+   166→   166→    setSelectedCrop(null);
+   167→   167→    setDialogOpen(true);
+   168→   168→    addRecent(code);
+   169→   169→  };
+   170→   170→
+   171→   171→  const handleLaunchWorkflow = (wf: Workflow) => {
+   172→   172→    setActiveWorkflow(wf);
+   173→   173→    setWorkflowOpen(true);
+   174→   174→  };
+   175→   175→
+   176→   176→  const handleLaunchDecisionTree = (tree: DecisionTree) => {
+   177→   177→    setActiveDecisionTree(tree);
+   178→   178→    setDecisionTreeOpen(true);
+   179→   179→  };
+   180→   180→
+   181→   181→  /**
+   182→   182→   * Launch a pre-filled calculator from a crop package. Maps the crop's
+   183→   183→   * default inputs for the chosen calculator key onto the corresponding
+   184→   184→   * formula code, then opens the formula detail dialog with prefillValues.
+   185→   185→   */
+   186→   186→  const handleLaunchCropCalculator = (crop: CropPackage, calcKey: CropCalculatorKey) => {
+   187→   187→    const code = calculatorFormulaCode[calcKey];
+   188→   188→    const formula = allFormulas.find((f) => f.code === code) ?? null;
+   189→   189→    const defaults = crop.defaults[calcKey] ?? null;
+   190→   190→    if (!formula) {
+   191→   191→      toast({
+   192→   192→        title: 'Calculator unavailable',
+   193→   193→        description: `No calculator wired up for ${code}.`,
+   194→   194→        variant: 'destructive',
+   195→   195→      });
+   196→   196→      return;
+   197→   197→    }
+   198→   198→    setSelectedCrop(crop);
+   199→   199→    setSelectedFormula(formula);
+   200→   200→    setPrefillValues(defaults);
+   201→   201→    setDialogOpen(true);
+   202→   202→    addRecent(code);
+   203→   203→  };
+   204→   204→
+   205→   205→  const handleClearFilters = () => {
+   206→   206→    setSelectedPart(null);
+   207→   207→    setSelectedChapter(null);
+   208→   208→    setOnlyWithCalculators(false);
+   209→   209→    setSearchQuery('');
+   210→   210→  };
+   211→   211→
+   212→   212→  const hasActiveFilters = selectedPart || selectedChapter !== null || onlyWithCalculators || searchQuery;
+   213→   213→
+   214→   214→  // Toggle favorite on the currently-open formula (keyboard shortcut 'f').
+   215→   215→  const handleToggleFavorite = () => {
+   216→   216→    if (!selectedFormula) {
+   217→   217→      toast({
+   218→   218→        title: 'No formula selected',
+   219→   219→        description: 'Open a formula first, then press F to favorite it.',
+   220→   220→      });
+   221→   221→      return;
+   222→   222→    }
+   223→   223→    const wasFav = isFavorite(selectedFormula.code);
+   224→   224→    toggleFavorite(selectedFormula.code);
+   225→   225→    toast({
+   226→   226→      title: wasFav ? 'Removed from favorites' : 'Added to favorites',
+   227→   227→      description: `${selectedFormula.code} · ${selectedFormula.name}`,
+   228→   228→    });
+   229→   229→  };
+   230→   230→
+   231→   231→  // Keyboard shortcuts. `ShortcutHelp` is a ready-to-render help dialog.
+   232→   232→  const { ShortcutHelp } = useKeyboardShortcuts({
+   233→   233→    onFocusSearch: () => {
+   234→   234→      setActiveTab('formulas');
+   235→   235→      // Defer focus until the formulas tab (and its search input) render.
+   236→   236→      requestAnimationFrame(() => searchInputRef.current?.focus());
+   237→   237→    },
+   238→   238→    onToggleFavorite: handleToggleFavorite,
+   239→   239→    onOpenCalculators: () => setActiveTab('tools'),
+   240→   240→    onOpenHome: () => setActiveTab('home'),
+   241→   241→    onClearFilters: () => {
+   242→   242→      if (hasActiveFilters) handleClearFilters();
+   243→   243→    },
+   244→   244→    onClose: () => {
+   245→   245→      if (dialogOpen) setDialogOpen(false);
+   246→   246→      else if (workflowOpen) setWorkflowOpen(false);
+   247→   247→      else if (decisionTreeOpen) setDecisionTreeOpen(false);
+   248→   248→      else if (farmDialogOpen) setFarmDialogOpen(false);
+   249→   249→      else if (historyOpen) setHistoryOpen(false);
+   250→   250→      else if (converterOpen) setConverterOpen(false);
+   251→   251→      else if (dataExportOpen) setDataExportOpen(false);
+   252→   252→    },
+   253→   253→  });
+   254→   254→
+   255→   255→  // Parse a ?calc=<payload> share link on first mount and pre-open the
+   256→   256→  // referenced formula with the shared inputs. State updates are deferred
+   257→   257→  // to a microtask so we don't trigger the set-state-in-effect lint rule
+   258→   258→  // (and so React batches them after the initial mount commit).
+   259→   259→  useEffect(() => {
+   260→   260→    if (typeof window === 'undefined') return;
+   261→   261→    const data = parseShareLink(window.location.href);
+   262→   262→    if (!data) return;
+   263→   263→    const formula = allFormulas.find((f) => f.code === data.formulaCode);
+   264→   264→    if (!formula) return;
+   265→   265→    // Defer state updates out of the effect body.
+   266→   266→    queueMicrotask(() => {
+   267→   267→      setSelectedFormula(formula);
+   268→   268→      setPrefillValues(data.inputs);
+   269→   269→      setSelectedCrop(null);
+   270→   270→      setDialogOpen(true);
+   271→   271→      addRecent(formula.code);
+   272→   272→    });
+   273→   273→    // Strip the param from the URL so a refresh doesn't re-open the dialog.
+   274→   274→    try {
+   275→   275→      const url = new URL(window.location.href);
+   276→   276→      url.searchParams.delete('calc');
+   277→   277→      window.history.replaceState({}, '', url.toString());
+   278→   278→    } catch {
+   279→   279→      /* noop */
+   280→   280→    }
+   281→   281→  }, []);
+   282→   282→
+   283→   283→  const currentChapterInfo = useMemo(() => {
+   284→   284→    if (selectedChapter !== null && selectedPart) {
+   285→   285→      const part = handbook.parts.find(p => p.title === selectedPart);
+   286→   286→      return part?.chapters.find(c => c.number === selectedChapter);
+   287→   287→    }
+   288→   288→    return null;
+   289→   289→  }, [selectedPart, selectedChapter]);
+   290→   290→
+   291→   291→  const sidebarContent = (
+   292→   292→    <SidebarNav
+   293→   293→      selectedPart={selectedPart}
+   294→   294→      selectedChapter={selectedChapter}
+   295→   295→      onlyWithCalculators={onlyWithCalculators}
+   296→   296→      onSelectPart={setSelectedPart}
+   297→   297→      onSelectChapter={setSelectedChapter}
+   298→   298→      onToggleCalculatorFilter={() => setOnlyWithCalculators(!onlyWithCalculators)}
+   299→   299→      searchQuery={searchQuery}
+   300→   300→    />
+   301→   301→  );
+   302→   302→
+   303→   303→  return (
+   304→   304→    <div className="min-h-screen flex flex-col bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
+   305→   305→      {/* Header */}
+   306→   306→      <header className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b border-border">
+   307→   307→        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-3">
+   308→   308→          <div className="flex items-center justify-between gap-3 mb-2">
+   309→   309→            <div className="flex items-center gap-3 min-w-0">
+   310→   310→              <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-gradient-to-br from-emerald-500 to-green-700 text-white flex-shrink-0 shadow-sm">
+   311→   311→                <Sprout className="h-6 w-6" />
+   312→   312→              </div>
+   313→   313→              <div className="min-w-0">
+   314→   314→                <h1 className="text-base sm:text-lg font-bold tracking-tight leading-tight truncate">{t.appName}</h1>
+   315→   315→                <p className="text-xs text-muted-foreground truncate">{t.appSubtitle} · {handbook.meta.version}</p>
+   316→   316→              </div>
+   317→   317→            </div>
+   318→   318→            <div className="flex items-center gap-1">
+   319→   319→              {/* Farm management */}
+   320→   320→              <Button
+   321→   321→                variant="outline"
+   322→   322→                size="sm"
+   323→   323→                className="gap-1.5 h-9 hidden sm:inline-flex"
+   324→   324→                onClick={() => setFarmDialogOpen(true)}
+   325→   325→                title="Manage farms"
+   326→   326→              >
+   327→   327→                <Tractor className="h-4 w-4 text-emerald-600" />
+   328→   328→                <span className="max-w-[120px] truncate">
+   329→   329→                  {hydrated && activeFarm ? activeFarm.name : 'Farm'}
+   330→   330→                </span>
+   331→   331→              </Button>
+   332→   332→              {/* History */}
+   333→   333→              <Button
+   334→   334→                variant="ghost"
+   335→   335→                size="icon"
+   336→   336→                className="h-9 w-9"
+   337→   337→                onClick={() => setHistoryOpen(true)}
+   338→   338→                title="Calculation history"
+   339→   339→                aria-label="Calculation history"
+   340→   340→              >
+   341→   341→                <History className="h-4 w-4" />
+   342→   342→              </Button>
+   343→   343→              {/* Unit converter */}
+   344→   344→              <Button
+   345→   345→                variant="ghost"
+   346→   346→                size="icon"
+   347→   347→                className="h-9 w-9"
+   348→   348→                onClick={() => setConverterOpen(true)}
+   349→   349→                title="Unit converter"
+   350→   350→                aria-label="Unit converter"
+   351→   351→              >
+   352→   352→                <Ruler className="h-4 w-4" />
+   353→   353→              </Button>
+   354→   354→              {/* Data export / backup */}
+   355→   355→              <Button
+   356→   356→                variant="ghost"
+   357→   357→                size="icon"
+   358→   358→                className="h-9 w-9"
+   359→   359→                onClick={() => setDataExportOpen(true)}
+   360→   360→                title="Backup & restore"
+   361→   361→                aria-label="Backup & restore"
+   362→   362→              >
+   363→   363→                <Database className="h-4 w-4" />
+   364→   364→              </Button>
+   365→   365→              {/* Field Mode — touch-optimized calculator overlay */}
+   366→   366→              <FieldModeButton />
+   367→   367→              <ThemeToggle />
+   368→   368→              <LanguageToggle />
+   369→   369→              {activeTab === 'formulas' && (
+   370→   370→                <div className="lg:hidden">
+   371→   371→                  <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+   372→   372→                    <SheetTrigger asChild>
+   373→   373→                      <Button variant="outline" size="sm" className="gap-2"><Layers className="h-4 w-4" />Browse</Button>
+   374→   374→                    </SheetTrigger>
+   375→   375→                    <SheetContent side="left" className="p-0 gap-0 w-[340px] sm:w-[380px] overflow-hidden">{sidebarContent}</SheetContent>
+   376→   376→                  </Sheet>
+   377→   377→                </div>
+   378→   378→              )}
+   379→   379→            </div>
+   380→   380→          </div>
+   381→   381→
+   382→   382→          {/* Search bar — only on formulas tab */}
+   383→   383→          {activeTab === 'formulas' && (
+   384→   384→            <div className="relative">
+   385→   385→              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+   386→   386→              <Input
+   387→   387→                ref={searchInputRef}
+   388→   388→                type="search"
+   389→   389→                placeholder={t.searchPlaceholder}
+   390→   390→                value={searchQuery}
+   391→   391→                onChange={(e) => setSearchQuery(e.target.value)}
+   392→   392→                className="pl-9 pr-10 h-10 text-sm"
+   393→   393→              />
+   394→   394→              {searchQuery && (
+   395→   395→                <button
+   396→   396→                  onClick={() => setSearchQuery('')}
+   397→   397→                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+   398→   398→                  aria-label="Clear search"
+   399→   399→                >
+   400→   400→                  <X className="h-4 w-4" />
+   401→   401→                </button>
+   402→   402→              )}
+   403→   403→            </div>
+   404→   404→          )}
+   405→   405→        </div>
+   406→   406→
+   407→   407→        {/* Tab bar */}
+   408→   408→        <div className="border-t border-border bg-muted/30">
+   409→   409→          <div className="max-w-[1600px] mx-auto px-4 sm:px-6">
+   410→   410→            <div className="flex items-center gap-1">
+   411→   411→              <TabButton active={activeTab === 'home'} onClick={() => setActiveTab('home')} icon={Home} label="Home" />
+   412→   412→              <TabButton active={activeTab === 'formulas'} onClick={() => setActiveTab('formulas')} icon={BookOpen} label="Formulas" badge={allFormulas.length} />
+   413→   413→              <TabButton active={activeTab === 'tools'} onClick={() => setActiveTab('tools')} icon={Wrench} label="Tools" />
+   414→   414→            </div>
+   415→   415→          </div>
+   416→   416→        </div>
+   417→   417→      </header>
+   418→   418→
+   419→   419→      {/* HOME TAB */}
+   420→   420→      {activeTab === 'home' && (
+   421→   421→        <main className="flex-1 max-w-[1200px] mx-auto w-full p-4 sm:p-6 space-y-6">
+   422→   422→          {/* Smart weather alerts — dismissible banners for irrigation /
+   423→   423→              heat-stress / heavy-rainfall conditions. Renders nothing when
+   424→   424→              no alerts are active. */}
+   425→   425→          <SmartAlerts />
+   426→   426→
+   427→   427→          <section className="bg-gradient-to-br from-emerald-700 via-green-700 to-teal-800 text-white rounded-xl p-6">
+   428→   428→            <div className="flex items-center gap-2 mb-2 text-emerald-100 text-sm font-medium uppercase tracking-wide"><Leaf className="h-4 w-4" />Calculations · Indices · Decision Rules</div>
+   429→   429→            <h2 className="text-xl sm:text-2xl font-bold leading-tight mb-2">The complete reference for crop &amp; animal production</h2>
+   430→   430→            <div className="flex flex-wrap gap-3 mt-4">
+   431→   431→              <StatBadge icon={Layers} label="Parts" value={handbook.meta.total_parts} />
+   432→   432→              <StatBadge icon={BookOpen} label={t.sections} value={handbook.meta.total_chapters} />
+   433→   433→              <StatBadge icon={Calculator} label={t.formulas} value={handbook.meta.total_formulas} />
+   434→   434→              <StatBadge icon={Sprout} label="Calculators" value={allFormulas.filter(f => hasCalculator(f.code)).length} />
+   435→   435→            </div>
+   436→   436→          </section>
+   437→   437→
+   438→   438→          {/* Weather widget — top of home for at-a-glance irrigation guidance */}
+   439→   439→          <WeatherWidget />
+   440→   440→
+   441→   441→          {/* Farm dashboard — only when the user has at least one farm */}
+   442→   442→          {hydrated && activeFarm && <FarmDashboard />}
+   443→   443→
+   444→   444→          <LearningSection onOpenFormula={handleSelectFormulaByCode} />
+   445→   445→
+   446→   446→          <CropPackagesSection onLaunchCalculator={handleLaunchCropCalculator} />
+   447→   447→
+   448→   448→          <DecisionTreesSection
+   449→   449→            onLaunch={handleLaunchDecisionTree}
+   450→   450→            onSelectFormula={handleSelectFormulaByCode}
+   451→   451→          />
+   452→   452→
+   453→   453→          <SeasonScheduler />
+   454→   454→
+   455→   455→          <UseCasesSection onLaunch={handleLaunchWorkflow} />
+   456→   456→        </main>
+   457→   457→      )}
+   458→   458→
+   459→   459→      {/* FORMULAS TAB */}
+   460→   460→      {activeTab === 'formulas' && (
+   461→   461→        <div className="flex-1 max-w-[1600px] mx-auto w-full flex">
+   462→   462→          <aside className="hidden lg:block w-[300px] flex-shrink-0 border-r border-border bg-background sticky top-[160px] h-[calc(100vh-160px)] overflow-hidden">{sidebarContent}</aside>
+   463→   463→          <main className="flex-1 min-w-0 p-4 sm:p-6">
+   464→   464→            {/* When no filters active — show browse welcome screen */}
+   465→   465→            {!hasActiveFilters ? (
+   466→   466→              <div className="max-w-3xl mx-auto py-8">
+   467→   467→                <div className="text-center mb-8">
+   468→   468→                  <div className="flex items-center justify-center h-14 w-14 rounded-xl bg-gradient-to-br from-emerald-500 to-green-700 text-white mx-auto mb-4 shadow-sm">
+   469→   469→                    <BookOpen className="h-7 w-7" />
+   470→   470→                  </div>
+   471→   471→                  <h2 className="text-2xl font-bold tracking-tight mb-2">Browse {allFormulas.length} Formulas</h2>
+   472→   472→                  <p className="text-sm text-muted-foreground max-w-md mx-auto">
+   473→   473→                    Pick a category from the sidebar, or use the search bar above to find formulas by name, code, or keyword.
+   474→   474→                  </p>
+   475→   475→                </div>
+   476→   476→
+   477→   477→                {/* Quick-pick category cards */}
+   478→   478→                <div className="text-xs uppercase tracking-wide font-semibold text-muted-foreground mb-3">Quick Pick by Category</div>
+   479→   479→                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+   480→   480→                  {handbook.parts.filter(p => {
+   481→   481→                    const count = p.chapters.reduce((s, ch) => s + ch.formulas.length + ch.sub_sections.reduce((ss, sub) => ss + sub.formulas.length, 0), 0);
+   482→   482→                    return count > 0;
+   483→   483→                  }).map(part => {
+   484→   484→                    const count = part.chapters.reduce((s, ch) => s + ch.formulas.length + ch.sub_sections.reduce((ss, sub) => ss + sub.formulas.length, 0), 0);
+   485→   485→                    const calcCount = part.chapters.reduce((s, ch) => s + ch.formulas.filter(f => hasCalculator(f.code)).length, 0);
+   486→   486→                    return (
+   487→   487→                      <button
+   488→   488→                        key={part.roman}
+   489→   489→                        onClick={() => { setSelectedPart(part.title); setSelectedChapter(null); }}
+   490→   490→                        className="group flex items-center gap-3 p-4 rounded-xl border-2 border-border bg-card hover:border-emerald-300 dark:hover:border-emerald-800 hover:shadow-md hover:-translate-y-0.5 transition-all text-left"
+   491→   491→                      >
+   492→   492→                        <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-gradient-to-br from-emerald-500 to-green-700 text-white text-xs font-bold flex-shrink-0 shadow-sm">
+   493→   493→                          {part.roman}
+   494→   494→                        </div>
+   495→   495→                        <div className="flex-1 min-w-0">
+   496→   496→                          <div className="text-sm font-semibold leading-tight truncate">{part.title}</div>
+   497→   497→                          <div className="text-xs text-muted-foreground mt-0.5">
+   498→   498→                            {count} formulas{calcCount > 0 && ` · ${calcCount} calculators`}
+   499→   499→                          </div>
+   500→   500→                        </div>
+   501→   501→                        <BookOpen className="h-4 w-4 text-muted-foreground group-hover:text-emerald-600 transition-colors flex-shrink-0" />
+   502→   502→                      </button>
+   503→   503→                    );
+   504→   504→                  })}
+   505→   505→                </div>
+   506→   506→
+   507→   507→                {/* Search hint */}
+   508→   508→                <div className="rounded-lg border border-border bg-muted/30 p-4 text-center">
+   509→   509→                  <p className="text-sm text-muted-foreground">
+   510→   510→                    💡 Or use the <span className="font-semibold">search bar</span> above to search by formula name, code, or keyword (e.g. &quot;NIR&quot;, &quot;harvest index&quot;, &quot;2.1&quot;)
+   511→   511→                  </p>
+   512→   512→                </div>
+   513→   513→              </div>
+   514→   514→            ) : (
+   515→   515→              <>
+   516→   516→                {/* Active filters — show formula grid */}
+   517→   517→                <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+   518→   518→                  <div className="flex items-center gap-2 flex-wrap min-w-0">
+   519→   519→                    <h2 className="text-lg font-semibold">{selectedChapter !== null && currentChapterInfo ? `Section ${currentChapterInfo.number}: ${currentChapterInfo.title}` : selectedPart ? selectedPart : t.allFormulas}</h2>
+   520→   520→                    <Badge variant="secondary" className="font-mono">{filteredFormulas.length} of {allFormulas.length}</Badge>
+   521→   521→                  </div>
+   522→   522→                  <Button variant="outline" size="sm" onClick={handleClearFilters} className="gap-1.5 text-xs"><X className="h-3.5 w-3.5" />Clear</Button>
+   523→   523→                </div>
+   524→   524→
+   525→   525→                {hasActiveFilters && (
+   526→   526→                  <div className="flex items-center gap-2 mb-4 flex-wrap">
+   527→   527→                    <Filter className="h-4 w-4 text-muted-foreground" />
+   528→   528→                    {selectedPart && <Badge variant="outline" className="gap-1.5">Part: {selectedPart}<button onClick={() => { setSelectedPart(null); setSelectedChapter(null); }}><X className="h-3 w-3" /></button></Badge>}
+   529→   529→                    {selectedChapter !== null && <Badge variant="outline" className="gap-1.5">Section: {selectedChapter}<button onClick={() => setSelectedChapter(null)}><X className="h-3 w-3" /></button></Badge>}
+   530→   530→                    {onlyWithCalculators && <Badge variant="outline" className="gap-1.5">Calculator only<button onClick={() => setOnlyWithCalculators(false)}><X className="h-3 w-3" /></button></Badge>}
+   531→   531→                    {searchQuery && <Badge variant="outline" className="gap-1.5">&quot;{searchQuery}&quot;<button onClick={() => setSearchQuery('')}><X className="h-3 w-3" /></button></Badge>}
+   532→   532→                  </div>
+   533→   533→                )}
+   534→   534→
+   535→   535→                {currentChapterInfo?.intro && <div className="bg-card border border-border rounded-lg p-4 mb-5"><p className="text-sm text-muted-foreground leading-relaxed">{currentChapterInfo.intro}</p></div>}
+   536→   536→
+   537→   537→                {filteredFormulas.length === 0 ? (
+   538→   538→                  <div className="flex flex-col items-center justify-center py-16 text-center">
+   539→   539→                    <div className="rounded-full bg-muted p-4 mb-3"><Search className="h-8 w-8 text-muted-foreground" /></div>
+   540→   540→                    <h3 className="text-lg font-semibold mb-1">No formulas match</h3>
+   541→   541→                    <Button onClick={handleClearFilters} variant="outline" size="sm" className="mt-2">Clear filters</Button>
+   542→   542→                  </div>
+   543→   543→                ) : (
+   544→   544→                  <>
+   545→   545→                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+   546→   546→                      {visibleFormulas.map(formula => <FormulaCard key={`${formula.code}-${formula.part}`} formula={formula} onSelect={handleSelectFormula} />)}
+   547→   547→                    </div>
+   548→   548→
+   549→   549→                    {/* Load more pagination — show 12 cards at a time */}
+   550→   550→                    {hasMoreFormulas && (
+   551→   551→                      <div className="flex flex-col items-center justify-center gap-2 mt-8">
+   552→   552→                        <Button
+   553→   553→                          variant="outline"
+   554→   554→                          size="sm"
+   555→   555→                          className="gap-1.5"
+   556→   556→                          onClick={() => setVisibleCount((c) => c + FORMULA_PAGE_SIZE)}
+   557→   557→                        >
+   558→   558→                          Load more
+   559→   559→                          <ChevronDown className="h-3.5 w-3.5" />
+   560→   560→                        </Button>
+   561→   561→                        <p className="text-xs text-muted-foreground">
+   562→   562→                          Showing {visibleFormulas.length} of {filteredFormulas.length} formulas
+   563→   563→                        </p>
+   564→   564→                      </div>
+   565→   565→                    )}
+   566→   566→                  </>
+   567→   567→                )}
+   568→   568→              </>
+   569→   569→            )}
+   570→   570→          </main>
+   571→   571→        </div>
+   572→   572→      )}
+   573→   573→
+   574→   574→      {/* TOOLS TAB */}
+   575→   575→      {activeTab === 'tools' && (
+   576→   576→        <main className="flex-1 max-w-[1400px] mx-auto w-full p-4 sm:p-6 space-y-6">
+   577→   577→          <div className="rounded-xl border-2 border-dashed border-border bg-card/50 p-8 text-center">
+   578→   578→            <div className="flex items-center justify-center h-12 w-12 rounded-full bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 mx-auto mb-3">
+   579→   579→              <Wrench className="h-6 w-6" />
+   580→   580→            </div>
+   581→   581→            <h3 className="text-base font-semibold mb-1">Visual &amp; Guided Tools</h3>
+   582→   582→            <p className="text-sm text-muted-foreground mb-4 max-w-md mx-auto">
+   583→   583→              Explore the formula library visually, browse decision-tree diagnostics, or run a guided workflow for a common farm task.
+   584→   584→            </p>
+   585→   585→          </div>
+   586→   586→
+   587→   587→          <FormulaGraph />
+   588→   588→          <LibraryTreemap
+   589→   589→            onSelectPart={(part) => {
+   590→   590→              setSelectedPart(part);
+   591→   591→              setSelectedChapter(null);
+   592→   592→              setActiveTab('formulas');
+   593→   593→            }}
+   594→   594→            onSelectChapter={(part, chapter) => {
+   595→   595→              setSelectedPart(part);
+   596→   596→              setSelectedChapter(chapter);
+   597→   597→              setActiveTab('formulas');
+   598→   598→            }}
+   599→   599→            selectedPart={selectedPart}
+   600→   600→            selectedChapter={selectedChapter}
+   601→   601→          />
+   602→   602→
+   603→   603→          <DecisionTreesSection
+   604→   604→            onLaunch={handleLaunchDecisionTree}
+   605→   605→            onSelectFormula={handleSelectFormulaByCode}
+   606→   606→          />
+   607→   607→
+   608→   608→          <UseCasesSection onLaunch={handleLaunchWorkflow} />
+   609→   609→        </main>
+   610→   610→      )}
+   611→   611→
+   612→   612→      {/* Footer */}
+   613→   613→      <footer className="mt-auto border-t border-border bg-card">
+   614→   614→        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+   615→   615→          <div className="flex items-center gap-2 text-sm text-muted-foreground"><Sprout className="h-4 w-4 text-emerald-600" /><span>{t.appName} · {handbook.meta.version}</span></div>
+   616→   616→          <div className="text-xs text-muted-foreground">{handbook.meta.total_formulas} formulas · {handbook.meta.total_parts} parts · {handbook.meta.total_chapters} sections</div>
+   617→   617→        </div>
+   618→   618→      </footer>
+   619→   619→
+   620→   620→      {/* Dialogs (rendered at the bottom so they overlay everything) */}
+   621→   621→      <FormulaDetailDialog
+   622→   622→        formula={selectedFormula}
+   623→   623→        open={dialogOpen}
+   624→   624→        onOpenChange={setDialogOpen}
+   625→   625→        prefillValues={prefillValues}
+   626→   626→        cropLabel={selectedCrop?.name ?? null}
+   627→   627→        onSelectFormula={handleSelectFormulaByCode}
+   628→   628→      />
+   629→   629→      <WorkflowRunner workflow={activeWorkflow} open={workflowOpen} onOpenChange={setWorkflowOpen} />
+   630→   630→      <FarmManagementDialog open={farmDialogOpen} onOpenChange={setFarmDialogOpen} />
+   631→   631→      <HistoryPanel
+   632→   632→        open={historyOpen}
+   633→   633→        onOpenChange={setHistoryOpen}
+   634→   634→        onSelectFormula={(code) => {
+   635→   635→          setHistoryOpen(false);
+   636→   636→          handleSelectFormulaByCode(code);
+   637→   637→        }}
+   638→   638→      />
+   639→   639→      <UnitConverterDialog open={converterOpen} onOpenChange={setConverterOpen} />
+   640→   640→      <DataExportDialog open={dataExportOpen} onOpenChange={setDataExportOpen} />
+   641→   641→      <DecisionTreeRunner
+   642→   642→        tree={activeDecisionTree}
+   643→   643→        open={decisionTreeOpen}
+   644→   644→        onOpenChange={setDecisionTreeOpen}
+   645→   645→        onSelectFormula={(code) => {
+   646→   646→          setDecisionTreeOpen(false);
+   647→   647→          handleSelectFormulaByCode(code);
+   648→   648→        }}
+   649→   649→      />
+   650→   650→      {ShortcutHelp}
+   651→   651→    </div>
+   652→   652→  );
+   653→   653→}
+   654→   654→
+   655→   655→function TabButton({ active, onClick, icon: Icon, label, badge }: { active: boolean; onClick: () => void; icon: typeof Home; label: string; badge?: number }) {
+   656→   656→  return (
+   657→   657→    <button onClick={onClick} className={cn('flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-all border-b-2 -mb-px', active ? 'border-emerald-600 text-emerald-700 dark:text-emerald-400' : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border')}>
+   658→   658→      <Icon className="h-4 w-4" />
+   659→   659→      {label}
+   660→   660→      {badge !== undefined && <span className={cn('text-[10px] font-mono font-bold px-1.5 py-0.5 rounded', active ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400' : 'bg-muted text-muted-foreground')}>{badge}</span>}
+   661→   661→    </button>
+   662→   662→  );
+   663→   663→}
+   664→   664→
+   665→   665→function StatBadge({ icon: Icon, label, value }: { icon: typeof Layers; label: string; value: number }) {
+   666→   666→  return (
+   667→   667→    <div className="bg-white/10 backdrop-blur rounded-lg px-3 py-2 border border-white/20">
+   668→   668→      <div className="flex items-center gap-1.5 text-emerald-100 text-[10px] uppercase tracking-wide font-medium"><Icon className="h-3 w-3" />{label}</div>
+   669→   669→      <div className="text-xl font-bold mt-0.5">{value}</div>
+   670→   670→    </div>
+   671→   671→  );
+   672→   672→}
+   673→   673→

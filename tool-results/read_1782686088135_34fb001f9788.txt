@@ -1,0 +1,941 @@
+     1→'use client';
+     2→
+     3→import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+     4→import {
+     5→  Dialog,
+     6→  DialogContent,
+     7→  DialogHeader,
+     8→  DialogTitle,
+     9→  DialogDescription,
+    10→} from '@/components/ui/dialog';
+    11→import { Input } from '@/components/ui/input';
+    12→import { Badge } from '@/components/ui/badge';
+    13→import { Button } from '@/components/ui/button';
+    14→import {
+    15→  Search, X, Sparkles, ArrowRight, Info, BookOpen, Lightbulb, HelpCircle,
+    16→  Calculator, FlaskConical, Ruler, Droplets, Waves, Thermometer,
+    17→  Tractor, Package, Atom, BarChart3, Grid3x3, Beaker, Globe2,
+    18→  Sprout, Mountain, CloudRain, TableProperties, Network,
+    19→  Star, Clock, Columns2, Check,
+    20→} from 'lucide-react';
+    21→import { toast } from '@/hooks/use-toast';
+    22→
+    23→import { ConversionCalculator } from './ConversionCalculator';
+    24→import { NutrientUnitsConverter } from './NutrientUnitsConverter';
+    25→import { MeasureUnitsConverter } from './MeasureUnitsConverter';
+    26→import { HydroSolutionDesigner } from './HydroSolutionDesigner';
+    27→import { WaterHardnessDiagnostic } from './WaterHardnessDiagnostic';
+    28→import { VpdEstimator } from './VpdEstimator';
+    29→import { AmendmentBalanceCec } from './AmendmentBalanceCec';
+    30→import { GranularMixFormulation } from './GranularMixFormulation';
+    31→import { FertilizerComposition } from './FertilizerComposition';
+    32→import { NutrientDistributionByStage } from './NutrientDistributionByStage';
+    33→import { PeriodicTableNutrients } from './PeriodicTableNutrients';
+    34→import { FertilizerCompatibility } from './FertilizerCompatibility';
+    35→import { NutrientInteractions } from './NutrientInteractions';
+    36→import { MineralizableNEstimator } from './MineralizableNEstimator';
+    37→import { SoilWaterTexture } from './SoilWaterTexture';
+    38→import { IrrigationBalance } from './IrrigationBalance';
+    39→import { SolubilitySaltIndex } from './SolubilitySaltIndex';
+    40→import { FertilizerCarbonFootprint } from './FertilizerCarbonFootprint';
+    41→import { WhyItMattersPanel } from './WhyItMattersPanel';
+    42→import { WHY_IT_MATTERS } from '@/lib/why-it-matters-data';
+    43→import { ToolExportBar, EXPORT_COPY_EVENT } from './ToolExportBar';
+    44→import { KeyboardShortcutsHelp } from './KeyboardShortcutsHelp';
+    45→import { CompareDialog } from './CompareDialog';
+    46→
+    47→type ToolCategory = 'Converters' | 'Solution & Water' | 'Fertilizers' | 'Soil & Irrigation' | 'Reference';
+    48→
+    49→export interface ToolMeta {
+    50→  id: string;
+    51→  name: string;
+    52→  description: string;
+    53→  /** Short one-line benefit the user gains from this tool. */
+    54→  benefit: string;
+    55→  /** 2-3 short steps describing how to use the tool. */
+    56→  howToUse: string[];
+    57→  category: ToolCategory;
+    58→  icon: React.ComponentType<{ className?: string }>;
+    59→  Component: React.ComponentType;
+    60→}
+    61→
+    62→const TOOLS: ToolMeta[] = [
+    63→  // Converters
+    64→  {
+    65→    id: 'oxide-conversion',
+    66→    name: 'Oxide ↔ Elemental Converter',
+    67→    description: 'Bidirectional CaO↔Ca, K₂O↔K, P₂O₅↔P, etc. (30+ pairs).',
+    68→    benefit: 'Avoids lab-vs-label confusion when comparing soil tests (oxide form) with fertilizer guarantees (elemental form).',
+    69→    howToUse: [
+    70→      'Type a value into either the oxide or elemental field.',
+    71→      'The opposite field updates instantly with the converted value.',
+    72→      'Use "Clear all" to reset every row at once.',
+    73→    ],
+    74→    category: 'Converters', icon: Calculator, Component: ConversionCalculator,
+    75→  },
+    76→  {
+    77→    id: 'nutrient-units',
+    78→    name: 'Nutrient Units Converter',
+    79→    description: 'ppm ↔ mmol ↔ meq/L for 22 nutrients and ions.',
+    80→    benefit: 'Reconciles hydroponic recipes (meq/L) with lab reports (ppm) and scientific literature (mmol/L) in one click.',
+    81→    howToUse: [
+    82→      'Pick any nutrient row.',
+    83→      'Type into ppm, mmol (or µmol for micros), or meq/L — the other two update live.',
+    84→      'Equivalent weights and valences are pre-loaded, so conversions are exact.',
+    85→    ],
+    86→    category: 'Converters', icon: FlaskConical, Component: NutrientUnitsConverter,
+    87→  },
+    88→  {
+    89→    id: 'measure-units',
+    90→    name: 'Physical Units Converter',
+    91→    description: 'Length, area, volume, mass, temperature, pressure, concentration, ionic.',
+    92→    benefit: 'A single converter for the eight physical magnitudes agronomists juggle daily — no more tab-hopping between unit sites.',
+    93→    howToUse: [
+    94→      'Choose a category (length, area, temperature, ionic, etc.).',
+    95→      'Enter the value, pick the source and target units.',
+    96→      'Result appears instantly; soil↔solution ionic mismatches are flagged.',
+    97→    ],
+    98→    category: 'Converters', icon: Ruler, Component: MeasureUnitsConverter,
+    99→  },
+   100→
+   101→  // Solution & Water
+   102→  {
+   103→    id: 'hydro-solution',
+   104→    name: 'Hydroponic Solution Designer',
+   105→    description: 'Design a nutrient solution via meq/L, ppm, CE, and an anion ternary diagram.',
+   106→    benefit: 'Visualises the ionic balance of a hydroponic formula against the Steiner equilibrium zone — spot K/Ca/Mg imbalance before mixing.',
+   107→    howToUse: [
+   108→      'Edit meq/L for the 8 ions (or use a preset like Steiner / Hoagland).',
+   109→      'CE and ppm update automatically; the ternary diagram shows your anion split.',
+   110→      'Compare your % distribution against the green equilibrium polygon.',
+   111→    ],
+   112→    category: 'Solution & Water', icon: Droplets, Component: HydroSolutionDesigner,
+   113→  },
+   114→  {
+   115→    id: 'water-hardness',
+   116→    name: 'Water Hardness Diagnostic',
+   117→    description: 'Hardness units, Ca+Mg hardness, and acid dose for HCO₃⁻/CO₃²⁻ neutralization.',
+   118→    benefit: 'Tells you exactly how much nitric/sulfuric/phosphoric acid to add per m³ to drop HCO₃⁻ to a safe residual — protecting drip emitters and pH stability.',
+   119→    howToUse: [
+   120→      'Section 1: type any hardness unit; all 5 units + classification update.',
+   121→      'Section 2: enter lab Ca and Mg to compute total hardness as CaCO₃.',
+   122→      'Section 3: enter HCO₃⁻/CO₃²⁻, residual target, water volume, and acid choice — dose appears.',
+   123→    ],
+   124→    category: 'Solution & Water', icon: Waves, Component: WaterHardnessDiagnostic,
+   125→  },
+   126→  {
+   127→    id: 'vpd',
+   128→    name: 'VPD Estimator',
+   129→    description: 'Vapor Pressure Deficit (kPa) and Humidity Deficit (g/m³) from temperature & humidity.',
+   130→    benefit: 'Quantifies the real "thirst" of the air — the number that drives transpiration, Ca transport, and stress in greenhouses.',
+   131→    howToUse: [
+   132→      'Enter air temperature and relative humidity.',
+   133→      'Pick leaf-temperature mode (you measured it) or solar-radiation mode (estimated).',
+   134→      'Read VPD (kPa) + humidity deficit (g/m³) + status (Low / Optimal / High).',
+   135→    ],
+   136→    category: 'Solution & Water', icon: Thermometer, Component: VpdEstimator,
+   137→  },
+   138→
+   139→  // Fertilizers
+   140→  {
+   141→    id: 'amendment-balance',
+   142→    name: 'Amendment Balance by CEC',
+   143→    description: 'Soil cation analysis → amendment doses (gypsum, lime, dolomite, SOP, MgSO₄).',
+   144→    benefit: 'Translates a soil-test cation profile into kg/ha of gypsum/lime/dolomite/SOP — closes the gap between lab report and field application.',
+   145→    howToUse: [
+   146→      'Enter the 6 exchangeable cations (K, Ca, Mg, H, Na, Al) in meq/100g.',
+   147→      'Set bulk density, depth, pH, and root-reach %.',
+   148→      'Read the recommended amendment strategy with doses already adjusted by root-reach factor.',
+   149→    ],
+   150→    category: 'Fertilizers', icon: Tractor, Component: AmendmentBalanceCec,
+   151→  },
+   152→  {
+   153→    id: 'granular-mix',
+   154→    name: 'Granular Mix Formulation',
+   155→    description: 'Build a granular blend from 24 fertilizers → NPK analysis and kg/ha.',
+   156→    benefit: 'Previews the NPK + secondary + micro analysis of a custom blend before you commit tonnes — and computes kg/ha of every nutrient at your application rate.',
+   157→    howToUse: [
+   158→      'Add fertilizers from the 24-product library and enter each one\'s % by tonne.',
+   159→      'Set the blend dose (kg/ha).',
+   160→      'Read the live blend analysis, NPK ratio, and per-nutrient kg/ha.',
+   161→    ],
+   162→    category: 'Fertilizers', icon: Package, Component: GranularMixFormulation,
+   163→  },
+   164→  {
+   165→    id: 'fertilizer-composition',
+   166→    name: 'Fertilizer Composition (%)',
+   167→    description: 'Parse a chemical formula → elemental %, oxide equivalents, MW, N partition.',
+   168→    benefit: 'Type any chemical formula (e.g. Ca(NO₃)₂·4H₂O) and instantly see elemental %, oxide equivalents, N-NO₃/N-NH₄ split, and molecular weight — no lookup tables.',
+   169→    howToUse: [
+   170→      'Type a formula (supports hydrates ·, double salts +, parentheses, unicode subscripts).',
+   171→      'Click Calculate (or press Enter).',
+   172→      'Read elemental %, oxide %, NPK tag, and MW; click any example chip to try one.',
+   173→    ],
+   174→    category: 'Fertilizers', icon: Atom, Component: FertilizerComposition,
+   175→  },
+   176→  {
+   177→    id: 'nutrient-distribution',
+   178→    name: 'Nutrient Distribution by Stage',
+   179→    description: 'Distribute nutrient extraction (kg/ha) across phenological stages with chart.',
+   180→    benefit: 'Matches supply to crop demand week-by-week — prevents both mid-cycle deficiency and end-of-season luxury consumption.',
+   181→    howToUse: [
+   182→      'Set total seasonal extraction (kg/ha) per nutrient.',
+   183→      'Adjust the % split across phenological stages (or use defaults).',
+   184→      'Read kg/ha per stage per nutrient on the chart and table.',
+   185→    ],
+   186→    category: 'Fertilizers', icon: BarChart3, Component: NutrientDistributionByStage,
+   187→  },
+   188→  {
+   189→    id: 'fertilizer-compatibility',
+   190→    name: 'Fertilizer Compatibility Matrix',
+   191→    description: '32×32 lower-triangular matrix of compatibility (C/R/I) for fertigation.',
+   192→    benefit: 'Prevents the #1 fertigation mistake — co-dissolving Ca²⁺ with sulfates or phosphates — by showing exactly which pairs precipitate before you mix the tank.',
+   193→    howToUse: [
+   194→      'Filter the matrix by fertilizer name if needed.',
+   195→      'Click any cell to see the chemistry explanation and recommended action.',
+   196→      'Green C = compatible · Yellow R = caution · Red I = never in the same stock tank.',
+   197→    ],
+   198→    category: 'Fertilizers', icon: Grid3x3, Component: FertilizerCompatibility,
+   199→  },
+   200→  {
+   201→    id: 'solubility-salt-index',
+   202→    name: 'Solubility & Salt Index',
+   203→    description: 'Sortable, filterable table of solubility (g/L) and salt index (NaNO₃=100).',
+   204→    benefit: 'Tells you which fertilizers will dissolve in cold stock tanks and which will burn roots — solubility for tank design, salt index for placement safety.',
+   205→    howToUse: [
+   206→      'Use the search box to filter by name or formula.',
+   207→      'Click any column header to sort (default: salt index descending).',
+   208→      'Coloured dots classify solubility as High / Medium / Low at a glance.',
+   209→    ],
+   210→    category: 'Fertilizers', icon: Beaker, Component: SolubilitySaltIndex,
+   211→  },
+   212→  {
+   213→    id: 'fertilizer-carbon',
+   214→    name: 'Fertilizer Carbon Footprint',
+   215→    description: 'Compare two fertilization programs by manufacturing + transport + N₂O emissions.',
+   216→    benefit: 'Quantifies the kg CO₂e/ha difference between Program A and Program B — turns "sustainable" from a slogan into a number you can defend.',
+   217→    howToUse: [
+   218→      'In each scenario, add up to 5 fertilizers with rate (kg/ha) and transport legs.',
+   219→      'Read per-row emissions split into manufacturing, transport, and field N₂O.',
+   220→      'Compare totals — the bar shows which program is lower and by how many kg CO₂e/ha.',
+   221→    ],
+   222→    category: 'Fertilizers', icon: Globe2, Component: FertilizerCarbonFootprint,
+   223→  },
+   224→
+   225→  // Soil & Irrigation
+   226→  {
+   227→    id: 'n-mineralizable',
+   228→    name: 'Mineralizable N Estimation',
+   229→    description: 'Annual N release (kg N/ha/yr) from soil organic matter with T_min presets.',
+   230→    benefit: 'Estimates how much "free" nitrogen your soil will release this season — so you can subtract it from the fertilizer budget and avoid over-application.',
+   231→    howToUse: [
+   232→      'Enter organic matter %, bulk density, depth, and root-reach %.',
+   233→      'Pick a mineralization rate T_min preset (1 % conservative · 2 % medium · 3 % high).',
+   234→      'Read annual mineralizable N in kg/ha/yr — orientative, validate in field.',
+   235→    ],
+   236→    category: 'Soil & Irrigation', icon: Sprout, Component: MineralizableNEstimator,
+   237→  },
+   238→  {
+   239→    id: 'soil-water-texture',
+   240→    name: 'Soil Water & Texture (USDA)',
+   241→    description: 'USDA texture triangle + available water and irrigation-to-CC calculator.',
+   242→    benefit: 'Classifies your soil texture from clay/silt/sand % and computes how much water is available between permanent wilting point and field capacity.',
+   243→    howToUse: [
+   244→      'Enter any two of clay / silt / sand % — the third auto-balances.',
+   245→      'The USDA triangle highlights your texture class.',
+   246→      'Set CC, PMP, depth, bulk density, area, and root efficiency to get available water (m³) and irrigation sheet to CC (mm).',
+   247→    ],
+   248→    category: 'Soil & Irrigation', icon: Mountain, Component: SoilWaterTexture,
+   249→  },
+   250→  {
+   251→    id: 'irrigation-balance',
+   252→    name: 'Irrigation Sheet & Water Balance',
+   253→    description: 'FAO-56 ETc = Kc × ETo, deficit/surplus, m³ conversions for 1 or 7 day periods.',
+   254→    benefit: 'Replaces guesswork with FAO-56 — knows exactly how much water your crop used (ETc) and whether your irrigation + rain covered it.',
+   255→    howToUse: [
+   256→      'Enter ETo (mm) and Kc for your crop and stage; toggle 1-day or 7-day period.',
+   257→      'Enter rain (mm) and applied irrigation (m³) on the irrigated area.',
+   258→      'Read ETc, irrigation mm, balance (deficit/surplus), and total volume needed (m³).',
+   259→    ],
+   260→    category: 'Soil & Irrigation', icon: CloudRain, Component: IrrigationBalance,
+   261→  },
+   262→
+   263→  // Reference
+   264→  {
+   265→    id: 'periodic-table',
+   266→    name: 'Periodic Table of Plant Nutrients',
+   267→    description: 'Interactive 118-element table with agronomic roles + molecular weight calc.',
+   268→    benefit: 'One screen for "which elements are essential / beneficial / structural" plus a molecular-weight calculator — useful for teaching and for quick MW lookups.',
+   269→    howToUse: [
+   270→      'Click any element to see atomic weight, valence, electronegativity, and agronomic role.',
+   271→      'Switch to the Mol-weight tab and type a formula (e.g. KNO₃) to compute MW and elemental %.',
+   272→      'Use the "Use in molecular calculator" button to push an element into the formula.',
+   273→    ],
+   274→    category: 'Reference', icon: TableProperties, Component: PeriodicTableNutrients,
+   275→  },
+   276→  {
+   277→    id: 'nutrient-interactions',
+   278→    name: 'Nutrient Interactions & Mobility',
+   279→    description: 'Mulder diagram, root-arrival mechanisms, mobility, and pH availability curves.',
+   280→    benefit: 'A 4-in-1 reference that explains why high P locks up Zn, why K⁺ competes with Mg²⁺, and how pH moves each nutrient\'s availability — supports diagnosis, not just data.',
+   281→    howToUse: [
+   282→      'Mulder tab: click any ion to highlight its antagonists (red) and synergists (blue).',
+   283→      'Root-arrival tab: click a row to see how each nutrient reaches the root.',
+   284→      'Mobility tab: click an element pill for symptom location + functions + tip.',
+   285→      'pH tab: click any nutrient to read why availability changes with pH.',
+   286→    ],
+   287→    category: 'Reference', icon: Network, Component: NutrientInteractions,
+   288→  },
+   289→];
+   290→
+   291→const CATEGORIES: ToolCategory[] = ['Converters', 'Solution & Water', 'Fertilizers', 'Soil & Irrigation', 'Reference'];
+   292→
+   293→export const CATEGORY_COLORS: Record<ToolCategory, string> = {
+   294→  'Converters':         'bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-900',
+   295→  'Solution & Water':   'bg-cyan-100 dark:bg-cyan-950/40 text-cyan-700 dark:text-cyan-300 border-cyan-300 dark:border-cyan-900',
+   296→  'Fertilizers':        'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-900',
+   297→  'Soil & Irrigation':  'bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-900',
+   298→  'Reference':          'bg-violet-100 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 border-violet-300 dark:border-violet-900',
+   299→};
+   300→
+   301→export const CATEGORY_DOT_COLORS: Record<ToolCategory, string> = {
+   302→  'Converters':         '#3b82f6',
+   303→  'Solution & Water':   '#0891b2',
+   304→  'Fertilizers':        '#16a34a',
+   305→  'Soil & Irrigation':  '#d97706',
+   306→  'Reference':          '#7c3aed',
+   307→};
+   308→
+   309→export function FreeToolsSection() {
+   310→  const [search, setSearch] = useState('');
+   311→  const [activeCategory, setActiveCategory] = useState<ToolCategory | 'All'>('All');
+   312→  const [openTool, setOpenTool] = useState<ToolMeta | null>(null);
+   313→  const [showHints, setShowHints] = useState(false);
+   314→
+   315→  // Comparison tray — holds up to 2 tool IDs for side-by-side comparison.
+   316→  // Persists across tool-dialog opens/closes but not across page reloads (v1).
+   317→  const [compareTray, setCompareTray] = useState<string[]>([]);
+   318→  const [compareOpen, setCompareOpen] = useState(false);
+   319→
+   320→  // Ref to the search input — focused by the Ctrl+K / Cmd+K shortcut.
+   321→  const searchInputRef = useRef<HTMLInputElement>(null);
+   322→
+   323→  // Favorites + Recently used (localStorage-persisted)
+   324→  const FAV_KEY = 'nutriplant_tools_favorites_v1';
+   325→  const REC_KEY = 'nutriplant_tools_recent_v1';
+   326→  const [favorites, setFavorites] = useState<string[]>([]);
+   327→  const [recent, setRecent] = useState<string[]>([]);
+   328→
+   329→  // Load persisted favorites + recent on mount; also handle #tool=<id> hash for shareable URLs
+   330→  useEffect(() => {
+   331→    try {
+   332→      const fav = JSON.parse(localStorage.getItem(FAV_KEY) || '[]');
+   333→      const rec = JSON.parse(localStorage.getItem(REC_KEY) || '[]');
+   334→      if (Array.isArray(fav)) setFavorites(fav);
+   335→      if (Array.isArray(rec)) setRecent(rec);
+   336→    } catch { /* corrupt localStorage — ignore */ }
+   337→    // Open tool from URL hash (#tool=<id>) on initial load — supports shared URLs
+   338→    if (typeof window !== 'undefined') {
+   339→      const m = window.location.hash.match(/#tool=([\w-]+)/);
+   340→      if (m) {
+   341→        const t = TOOLS.find(x => x.id === m[1]);
+   342→        if (t) {
+   343→          setOpenTool(t);
+   344→          setRecent(prev => [t.id, ...prev.filter(id => id !== t.id)].slice(0, 5));
+   345→        }
+   346→      }
+   347→    }
+   348→    // eslint-disable-next-line react-hooks/exhaustive-deps
+   349→  }, []);
+   350→
+   351→  // Persist favorites
+   352→  useEffect(() => {
+   353→    try { localStorage.setItem(FAV_KEY, JSON.stringify(favorites)); } catch { /* storage full or blocked */ }
+   354→  }, [favorites]);
+   355→
+   356→  // Persist recent
+   357→  useEffect(() => {
+   358→    try { localStorage.setItem(REC_KEY, JSON.stringify(recent)); } catch { /* storage full or blocked */ }
+   359→  }, [recent]);
+   360→
+   361→  const toggleFavorite = useCallback((id: string) => {
+   362→    setFavorites(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+   363→  }, []);
+   364→
+   365→  const addRecent = useCallback((id: string) => {
+   366→    setRecent(prev => [id, ...prev.filter(x => x !== id)].slice(0, 5));
+   367→  }, []);
+   368→
+   369→  const openToolById = useCallback((id: string) => {
+   370→    const t = TOOLS.find(x => x.id === id);
+   371→    if (!t) return;
+   372→    setOpenTool(t);
+   373→    addRecent(id);
+   374→  }, [addRecent]);
+   375→
+   376→  // Toggle a tool in/out of the comparison tray (max 2). When the tray is full
+   377→  // and the tool isn't already in it, show a toast and bail.
+   378→  const toggleCompare = useCallback((id: string) => {
+   379→    setCompareTray(prev => {
+   380→      if (prev.includes(id)) {
+   381→        return prev.filter(x => x !== id);
+   382→      }
+   383→      if (prev.length >= 2) {
+   384→        toast({
+   385→          title: 'Comparison tray is full (max 2)',
+   386→          description: 'Clear it first to add a different tool.',
+   387→        });
+   388→        return prev;
+   389→      }
+   390→      return [...prev, id];
+   391→    });
+   392→  }, []);
+   393→
+   394→  const clearCompareTray = useCallback(() => {
+   395→    setCompareTray([]);
+   396→    setCompareOpen(false);
+   397→  }, []);
+   398→
+   399→  // Resolve the two tools currently in the tray (in tray order, not TOOLS order).
+   400→  const compareTools = useMemo(
+   401→    () => compareTray.map(id => TOOLS.find(t => t.id === id)).filter(Boolean) as ToolMeta[],
+   402→    [compareTray],
+   403→  );
+   404→
+   405→  const filtered = useMemo(() => {
+   406→    const q = search.toLowerCase().trim();
+   407→    return TOOLS.filter(t => {
+   408→      if (activeCategory !== 'All' && t.category !== activeCategory) return false;
+   409→      if (!q) return true;
+   410→      return (t.name + ' ' + t.description + ' ' + t.benefit + ' ' + t.category).toLowerCase().includes(q);
+   411→    });
+   412→  }, [search, activeCategory]);
+   413→
+   414→  // Group filtered tools by category for the landscape grid
+   415→  const grouped = useMemo(() => {
+   416→    return CATEGORIES.map(c => ({
+   417→      category: c,
+   418→      tools: filtered.filter(t => t.category === c),
+   419→    })).filter(g => g.tools.length > 0);
+   420→  }, [filtered]);
+   421→
+   422→  // Global keyboard shortcuts — registered on window. See KeyboardShortcutsHelp
+   423→  // for the user-facing list. The handler is re-bound whenever any of its
+   424→  // dependencies change so the closures always see fresh state.
+   425→  useEffect(() => {
+   426→    const isTypingTarget = (el: Element | null) => {
+   427→      if (!el) return false;
+   428→      if (el instanceof HTMLInputElement) return true;
+   429→      if (el instanceof HTMLTextAreaElement) return true;
+   430→      if ((el as HTMLElement).isContentEditable) return true;
+   431→      return false;
+   432→    };
+   433→
+   434→    const handler = (e: KeyboardEvent) => {
+   435→      const mod = e.ctrlKey || e.metaKey;
+   436→
+   437→      // Ctrl+K / Cmd+K — focus the search input (always, even while typing elsewhere)
+   438→      if (mod && (e.key === 'k' || e.key === 'K')) {
+   439→        e.preventDefault();
+   440→        searchInputRef.current?.focus();
+   441→        searchInputRef.current?.select();
+   442→        return;
+   443→      }
+   444→
+   445→      // Esc — if a dialog is open, let Radix handle it; otherwise clear search.
+   446→      if (e.key === 'Escape') {
+   447→        if (openTool || compareOpen) return; // Radix closes the dialog
+   448→        if (search) {
+   449→          setSearch('');
+   450→          searchInputRef.current?.focus();
+   451→        }
+   452→        return;
+   453→      }
+   454→
+   455→      // From here on, don't trigger when the user is typing in an input/textarea.
+   456→      if (isTypingTarget(document.activeElement)) return;
+   457→
+   458→      // Ctrl+S / Cmd+S — save-preset placeholder toast (only if a tool dialog is open)
+   459→      if (mod && (e.key === 's' || e.key === 'S')) {
+   460→        if (openTool) {
+   461→          e.preventDefault();
+   462→          toast({
+   463→            title: 'Save preset',
+   464→            description: "Copy this tool's inputs to your notes (full preset persistence coming soon).",
+   465→          });
+   466→        }
+   467→        return;
+   468→      }
+   469→
+   470→      // Ctrl+E / Cmd+E — trigger the export bar's Copy action (only if a tool dialog is open)
+   471→      if (mod && (e.key === 'e' || e.key === 'E')) {
+   472→        if (openTool) {
+   473→          e.preventDefault();
+   474→          window.dispatchEvent(new CustomEvent(EXPORT_COPY_EVENT));
+   475→          toast({ title: 'Results copied to clipboard' });
+   476→        }
+   477→        return;
+   478→      }
+   479→
+   480→      // Number keys 1-9 — open the Nth visible tool (no dialog open, search not focused)
+   481→      if (!openTool && !compareOpen && /^[1-9]$/.test(e.key)) {
+   482→        const idx = parseInt(e.key, 10) - 1;
+   483→        const t = filtered[idx];
+   484→        if (t) {
+   485→          e.preventDefault();
+   486→          setOpenTool(t);
+   487→          addRecent(t.id);
+   488→        }
+   489→      }
+   490→    };
+   491→
+   492→    window.addEventListener('keydown', handler);
+   493→    return () => window.removeEventListener('keydown', handler);
+   494→  }, [openTool, compareOpen, search, filtered, addRecent]);
+   495→
+   496→  return (
+   497→    <section className="space-y-5">
+   498→      {/* Hero header */}
+   499→      <div className="rounded-xl p-5 sm:p-6 bg-gradient-to-br from-emerald-700 via-green-700 to-teal-800 text-white">
+   500→        <div className="flex items-center gap-2 mb-2 text-emerald-100 text-xs font-medium uppercase tracking-wide">
+   501→          <Sparkles className="h-3.5 w-3.5" /> 18 Free Agronomic Tools
+   502→        </div>
+   503→        <h2 className="text-xl sm:text-2xl font-bold leading-tight mb-1">NutriPlant PRO Free Tools</h2>
+   504→        <p className="text-sm text-emerald-100/90 max-w-2xl">
+   505→          A native reimplementation of NutriPlant PRO's public free-tools collection —
+   506→          converters, solution & water diagnostics, fertilizer calculators, soil & irrigation
+   507→          tools, and quick-reference matrices. All calculations run client-side; nothing is sent to a server.
+   508→        </p>
+   509→        <div className="flex flex-wrap gap-3 mt-3 text-xs">
+   510→          {CATEGORIES.map(c => {
+   511→            const count = TOOLS.filter(t => t.category === c).length;
+   512→            return (
+   513→              <div key={c} className="bg-white/10 backdrop-blur rounded px-2 py-1 border border-white/20 flex items-center gap-1.5">
+   514→                <span className="w-1.5 h-1.5 rounded-full" style={{ background: CATEGORY_DOT_COLORS[c] }} />
+   515→                <span className="text-emerald-100">{c}</span> <span className="font-bold ml-0.5">{count}</span>
+   516→              </div>
+   517→            );
+   518→          })}
+   519→        </div>
+   520→      </div>
+   521→
+   522→      {/* Introduction panel — What / How / Why */}
+   523→      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+   524→        <IntroCard
+   525→          icon={Info}
+   526→          color="#0891b2"
+   527→          title="What these tools are"
+   528→          body="A curated set of 18 calculators and reference tables covering the day-to-day workflow of agronomists, growers, and consultants: unit conversions, water & nutrient solution diagnostics, fertilizer formulation, soil & irrigation planning, and crop-nutrition reference data."
+   529→        />
+   530→        <IntroCard
+   531→          icon={BookOpen}
+   532→          color="#16a34a"
+   533→          title="How to use them"
+   534→          body="Browse the cards below, filter by category, or search by name. Click any card to open the tool in a dialog — enter your inputs and the result updates live. Each tool's dialog also shows a short benefit and step-by-step usage hint."
+   535→        />
+   536→        <IntroCard
+   537→          icon={Lightbulb}
+   538→          color="#d97706"
+   539→          title="Why use them"
+   540→          body="They replace guesswork with calculation: precise acid doses, exact NPK blends, FAO-56 irrigation sheets, CEC-based amendment plans, and fertilization carbon footprints — turning lab reports and field observations into defensible decisions."
+   541→        />
+   542→      </div>
+   543→
+   544→      {/* Search & filter */}
+   545→      <div className="sticky top-[120px] z-20 bg-background/95 backdrop-blur rounded-lg border border-border p-3">
+   546→        <div className="flex flex-wrap items-center gap-2">
+   547→          <div className="relative flex-1 min-w-[200px]">
+   548→            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+   549→            <Input
+   550→              ref={searchInputRef}
+   551→              value={search}
+   552→              onChange={e => setSearch(e.target.value)}
+   553→              placeholder="Search tools by name, description, or benefit... (Ctrl+K)"
+   554→              className="pl-9 pr-8 h-10"
+   555→            />
+   556→            {search && (
+   557→              <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+   558→                <X className="h-4 w-4" />
+   559→              </button>
+   560→            )}
+   561→          </div>
+   562→          <div className="flex flex-wrap gap-1">
+   563→            <CategoryChip active={activeCategory === 'All'} onClick={() => setActiveCategory('All')} label="All" count={TOOLS.length} />
+   564→            {CATEGORIES.map(c => (
+   565→              <CategoryChip
+   566→                key={c}
+   567→                active={activeCategory === c}
+   568→                onClick={() => setActiveCategory(c)}
+   569→                label={c}
+   570→                count={TOOLS.filter(t => t.category === c).length}
+   571→              />
+   572→            ))}
+   573→          </div>
+   574→          <KeyboardShortcutsHelp />
+   575→        </div>
+   576→      </div>
+   577→
+   578→      {/* Favorites + Recently used (auto-hide when empty) */}
+   579→      {(favorites.length > 0 || recent.length > 0) && (
+   580→        <div className="space-y-3">
+   581→          {favorites.length > 0 && (
+   582→            <ToolRow
+   583→              label="Favorites"
+   584→              icon={<Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />}
+   585→              ids={favorites}
+   586→              onOpen={openToolById}
+   587→            />
+   588→          )}
+   589→          {recent.length > 0 && (
+   590→            <ToolRow
+   591→              label="Recently used"
+   592→              icon={<Clock className="h-3.5 w-3.5 text-emerald-600" />}
+   593→              ids={recent}
+   594→              onOpen={openToolById}
+   595→            />
+   596→          )}
+   597→        </div>
+   598→      )}
+   599→
+   600→      {/* Tools grouped by category — landscape cards */}
+   601→      <div className="space-y-6">
+   602→        {grouped.map(group => (
+   603→          <div key={group.category} className="space-y-3">
+   604→            <div className="flex items-center gap-2">
+   605→              <div className="w-2 h-6 rounded-sm" style={{ background: CATEGORY_DOT_COLORS[group.category] }} />
+   606→              <h3 className="text-base font-bold tracking-tight">{group.category}</h3>
+   607→              <Badge variant="secondary" className="text-[10px] font-mono">{group.tools.length}</Badge>
+   608→            </div>
+   609→            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+   610→              {group.tools.map(tool => (
+   611→                <LandscapeToolCard
+   612→                  key={tool.id}
+   613→                  tool={tool}
+   614→                  onOpen={() => { setOpenTool(tool); addRecent(tool.id); }}
+   615→                  isFavorite={favorites.includes(tool.id)}
+   616→                  onToggleFavorite={() => toggleFavorite(tool.id)}
+   617→                  isInCompareTray={compareTray.includes(tool.id)}
+   618→                  compareTrayFull={compareTray.length >= 2}
+   619→                  onToggleCompare={() => toggleCompare(tool.id)}
+   620→                />
+   621→              ))}
+   622→            </div>
+   623→          </div>
+   624→        ))}
+   625→      </div>
+   626→
+   627→      {filtered.length === 0 && (
+   628→        <div className="text-center py-12">
+   629→          <div className="rounded-full bg-muted p-4 inline-flex mb-3">
+   630→            <Search className="h-8 w-8 text-muted-foreground" />
+   631→          </div>
+   632→          <h3 className="text-base font-semibold mb-1">No tools match</h3>
+   633→          <p className="text-sm text-muted-foreground">Try a different search or category.</p>
+   634→        </div>
+   635→      )}
+   636→
+   637→      {/* Tool dialog — near-fullscreen like NutriPlant PRO: header + full-height tool area */}
+   638→      <Dialog open={!!openTool} onOpenChange={open => !open && setOpenTool(null)}>
+   639→        <DialogContent className="!max-w-[1600px] w-[98vw] !max-h-[96vh] h-[96vh] overflow-hidden p-0 gap-0 flex flex-col">
+   640→          {/* Compact header bar — title + collapsible hints toggle */}
+   641→          <DialogHeader className="px-5 py-3 border-b border-border flex-shrink-0">
+   642→            <div className="flex items-center justify-between gap-3">
+   643→              <DialogTitle className="flex items-center gap-2 text-base">
+   644→                {openTool && (
+   645→                  <span
+   646→                    className="flex items-center justify-center h-8 w-8 rounded-lg"
+   647→                    style={{ background: `${CATEGORY_DOT_COLORS[openTool.category]}20`, color: CATEGORY_DOT_COLORS[openTool.category] }}
+   648→                  >
+   649→                    <openTool.icon className="h-4 w-4" />
+   650→                  </span>
+   651→                )}
+   652→                {openTool?.name}
+   653→                {openTool && (
+   654→                  <Badge variant="outline" className={`text-[10px] ml-1 ${CATEGORY_COLORS[openTool.category]}`}>
+   655→                    {openTool.category}
+   656→                  </Badge>
+   657→                )}
+   658→              </DialogTitle>
+   659→              <div className="flex items-center gap-2">
+   660→                <Button
+   661→                  size="sm"
+   662→                  variant="ghost"
+   663→                  className="h-8 gap-1.5 text-xs"
+   664→                  onClick={() => setShowHints(v => !v)}
+   665→                >
+   666→                  <HelpCircle className="h-3.5 w-3.5" />
+   667→                  {showHints ? 'Hide guide' : 'Show guide'}
+   668→                </Button>
+   669→              </div>
+   670→            </div>
+   671→            <DialogDescription className="text-xs mt-1">{openTool?.description}</DialogDescription>
+   672→
+   673→            {/* Collapsible benefit + how-to bar — inline, doesn't steal horizontal space from the tool */}
+   674→            {openTool && showHints && (
+   675→              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
+   676→                <div className="rounded-md px-3 py-2 border border-emerald-200 dark:border-emerald-900 bg-emerald-50/60 dark:bg-emerald-950/20">
+   677→                  <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-emerald-700 dark:text-emerald-300 font-semibold mb-0.5">
+   678→                    <Lightbulb className="h-3 w-3" /> Benefit
+   679→                  </div>
+   680→                  <p className="text-xs leading-snug text-foreground">{openTool.benefit}</p>
+   681→                </div>
+   682→                <div className="rounded-md px-3 py-2 border border-blue-200 dark:border-blue-900 bg-blue-50/60 dark:bg-blue-950/20">
+   683→                  <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-blue-700 dark:text-blue-300 font-semibold mb-0.5">
+   684→                    <HelpCircle className="h-3 w-3" /> How to use
+   685→                  </div>
+   686→                  <ol className="text-xs leading-snug text-foreground list-decimal pl-4 space-y-0.5">
+   687→                    {openTool.howToUse.map((step, i) => <li key={i}>{step}</li>)}
+   688→                  </ol>
+   689→                </div>
+   690→              </div>
+   691→            )}
+   692→          </DialogHeader>
+   693→
+   694→          {/* Full-height tool area — gets 100% of remaining viewport height */}
+   695→          <div className="flex-1 min-h-0 overflow-y-auto p-5">
+   696→            {openTool && <ToolExportBar tool={openTool} />}
+   697→            <div className={openTool ? 'mt-3' : ''}>
+   698→              {openTool && <openTool.Component />}
+   699→            </div>
+   700→            {/* Why this matters — collapsible educational panel */}
+   701→            {openTool && WHY_IT_MATTERS[openTool.id] && (
+   702→              <div className="mt-4">
+   703→                <WhyItMattersPanel content={WHY_IT_MATTERS[openTool.id]} />
+   704→              </div>
+   705→            )}
+   706→          </div>
+   707→        </DialogContent>
+   708→      </Dialog>
+   709→
+   710→      {/* Comparison tray — sticky bottom bar (visible when ≥1 tool selected) */}
+   711→      {compareTray.length > 0 && (
+   712→        <CompareTrayBar
+   713→          tools={compareTools}
+   714→          onClear={clearCompareTray}
+   715→          onOpenCompare={() => setCompareOpen(true)}
+   716→        />
+   717→      )}
+   718→
+   719→      {/* Side-by-side comparison dialog */}
+   720→      {compareTools.length === 2 && (
+   721→        <CompareDialog
+   722→          tools={[compareTools[0], compareTools[1]]}
+   723→          open={compareOpen}
+   724→          onOpenChange={setCompareOpen}
+   725→        />
+   726→      )}
+   727→    </section>
+   728→  );
+   729→}
+   730→
+   731→/** Sticky bottom bar that shows the current comparison tray state. */
+   732→function CompareTrayBar({
+   733→  tools, onClear, onOpenCompare,
+   734→}: {
+   735→  tools: ToolMeta[];
+   736→  onClear: () => void;
+   737→  onOpenCompare: () => void;
+   738→}) {
+   739→  const hasTwo = tools.length >= 2;
+   740→  return (
+   741→    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-1.5rem)] max-w-3xl">
+   742→      <div className="flex items-center gap-3 rounded-xl border border-emerald-300 dark:border-emerald-800 bg-emerald-50/95 dark:bg-emerald-950/90 backdrop-blur px-3 py-2 shadow-lg">
+   743→        <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300 flex-shrink-0">
+   744→          <Columns2 className="h-4 w-4" />
+   745→          <span className="text-xs font-semibold uppercase tracking-wide hidden sm:inline">Compare</span>
+   746→        </div>
+   747→        <div className="flex-1 min-w-0">
+   748→          {hasTwo ? (
+   749→            <div className="flex items-center gap-2 text-sm min-w-0">
+   750→              <span className="font-semibold truncate">{tools[0].name}</span>
+   751→              <span className="text-muted-foreground text-xs flex-shrink-0">vs</span>
+   752→              <span className="font-semibold truncate">{tools[1].name}</span>
+   753→            </div>
+   754→          ) : (
+   755→            <div className="text-xs text-emerald-800 dark:text-emerald-200">
+   756→              Select one more tool to compare <span className="font-mono opacity-70">(1/2 selected)</span>
+   757→            </div>
+   758→          )}
+   759→        </div>
+   760→        <div className="flex items-center gap-1.5 flex-shrink-0">
+   761→          {hasTwo && (
+   762→            <Button
+   763→              size="sm"
+   764→              className="h-8 gap-1.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
+   765→              onClick={onOpenCompare}
+   766→            >
+   767→              <Columns2 className="h-3.5 w-3.5" />
+   768→              <span className="hidden sm:inline">Open side-by-side</span>
+   769→              <span className="sm:hidden">Compare</span>
+   770→            </Button>
+   771→          )}
+   772→          <Button
+   773→            size="sm"
+   774→            variant="ghost"
+   775→            className="h-8 gap-1.5 text-xs text-emerald-800 dark:text-emerald-200 hover:bg-emerald-100 dark:hover:bg-emerald-900/50"
+   776→            onClick={onClear}
+   777→          >
+   778→            <X className="h-3.5 w-3.5" />
+   779→            Clear
+   780→          </Button>
+   781→        </div>
+   782→      </div>
+   783→    </div>
+   784→  );
+   785→}
+   786→
+   787→/** Landscape (horizontal) tool card — icon on the left, content on the right, action arrow on the far right. */
+   788→function LandscapeToolCard({
+   789→  tool, onOpen, isFavorite, onToggleFavorite, isInCompareTray, compareTrayFull, onToggleCompare,
+   790→}: {
+   791→  tool: ToolMeta;
+   792→  onOpen: () => void;
+   793→  isFavorite: boolean;
+   794→  onToggleFavorite: () => void;
+   795→  isInCompareTray: boolean;
+   796→  compareTrayFull: boolean;
+   797→  onToggleCompare: () => void;
+   798→}) {
+   799→  return (
+   800→    <div
+   801→      role="button"
+   802→      tabIndex={0}
+   803→      onClick={onOpen}
+   804→      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(); } }}
+   805→      className="group relative text-left rounded-xl border border-border bg-card p-4 sm:p-5 hover:border-emerald-400 hover:shadow-md transition-all flex gap-4 items-start cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+   806→    >
+   807→      {/* Compare toggle — top-right, just left of the star */}
+   808→      <button
+   809→        type="button"
+   810→        onClick={e => { e.stopPropagation(); onToggleCompare(); }}
+   811→        aria-label={isInCompareTray ? `Remove ${tool.name} from comparison` : `Add ${tool.name} to comparison`}
+   812→        aria-pressed={isInCompareTray}
+   813→        title={compareTrayFull && !isInCompareTray ? 'Comparison tray is full (max 2)' : (isInCompareTray ? 'Remove from comparison' : 'Add to comparison')}
+   814→        className={`absolute top-3 right-11 z-10 inline-flex items-center justify-center h-7 w-7 rounded-full border transition-all ${
+   815→          isInCompareTray
+   816→            ? 'bg-emerald-600 border-emerald-600 text-white hover:bg-emerald-700 hover:border-emerald-700'
+   817→            : 'bg-background/80 backdrop-blur border-border text-muted-foreground hover:text-emerald-600 hover:border-emerald-300 opacity-0 group-hover:opacity-100 focus-visible:opacity-100'
+   818→        }`}
+   819→      >
+   820→        <Columns2 className="h-3.5 w-3.5" />
+   821→        {isInCompareTray && (
+   822→          <span className="absolute -top-1.5 -right-1.5 inline-flex items-center justify-center h-3.5 w-3.5 rounded-full bg-emerald-700 text-white text-[8px] font-bold border border-background">
+   823→            <Check className="h-2.5 w-2.5" />
+   824→          </span>
+   825→        )}
+   826→      </button>
+   827→
+   828→      {/* Star toggle — top-right corner; always visible when favorited, otherwise on hover */}
+   829→      <button
+   830→        type="button"
+   831→        onClick={e => { e.stopPropagation(); onToggleFavorite(); }}
+   832→        aria-label={isFavorite ? `Remove ${tool.name} from favorites` : `Add ${tool.name} to favorites`}
+   833→        aria-pressed={isFavorite}
+   834→        className={`absolute top-3 right-3 z-10 inline-flex items-center justify-center h-7 w-7 rounded-full border transition-all ${
+   835→          isFavorite
+   836→            ? 'bg-amber-400 border-amber-400 text-white hover:bg-amber-500 hover:border-amber-500'
+   837→            : 'bg-background/80 backdrop-blur border-border text-muted-foreground hover:text-amber-500 hover:border-amber-300 opacity-0 group-hover:opacity-100 focus-visible:opacity-100'
+   838→        }`}
+   839→      >
+   840→        <Star className={`h-3.5 w-3.5 ${isFavorite ? 'fill-current' : ''}`} />
+   841→      </button>
+   842→
+   843→      {/* Icon block — colored by category */}
+   844→      <div
+   845→        className="flex-shrink-0 flex items-center justify-center h-14 w-14 rounded-lg transition-all group-hover:scale-105"
+   846→        style={{ background: `${CATEGORY_DOT_COLORS[tool.category]}20`, color: CATEGORY_DOT_COLORS[tool.category] }}
+   847→      >
+   848→        <tool.icon className="h-7 w-7" />
+   849→      </div>
+   850→
+   851→      {/* Content — pr-16 on mobile reserves room for both star + compare buttons; sm+ relies on the arrow column */}
+   852→      <div className="flex-1 min-w-0 space-y-1.5 pr-16 sm:pr-0">
+   853→        <div className="flex items-center gap-2 flex-wrap">
+   854→          <h4 className="text-base font-semibold leading-tight group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
+   855→            {tool.name}
+   856→          </h4>
+   857→          <Badge variant="outline" className={`text-[10px] ${CATEGORY_COLORS[tool.category]}`}>
+   858→            {tool.category}
+   859→          </Badge>
+   860→        </div>
+   861→        <p className="text-sm text-muted-foreground leading-relaxed">
+   862→          {tool.description}
+   863→        </p>
+   864→        <p className="text-xs text-foreground/80 leading-relaxed flex gap-1.5">
+   865→          <Lightbulb className="h-3.5 w-3.5 text-amber-500 flex-shrink-0 mt-0.5" />
+   866→          <span><span className="font-medium text-amber-700 dark:text-amber-400">Benefit:</span> {tool.benefit}</span>
+   867→        </p>
+   868→      </div>
+   869→
+   870→      {/* Action arrow */}
+   871→      <div className="flex-shrink-0 self-center hidden sm:flex items-center justify-center h-8 w-8 rounded-full border border-border text-muted-foreground group-hover:border-emerald-500 group-hover:bg-emerald-500 group-hover:text-white transition-all">
+   872→        <ArrowRight className="h-4 w-4" />
+   873→      </div>
+   874→    </div>
+   875→  );
+   876→}
+   877→
+   878→function IntroCard({ icon: Icon, color, title, body }: { icon: typeof Info; color: string; title: string; body: string }) {
+   879→  return (
+   880→    <div className="rounded-lg border border-border bg-card p-4">
+   881→      <div className="flex items-center gap-2 mb-2">
+   882→        <div className="flex items-center justify-center h-8 w-8 rounded-lg" style={{ background: color + '20', color }}>
+   883→          <Icon className="h-4 w-4" />
+   884→        </div>
+   885→        <h3 className="text-sm font-semibold" style={{ color }}>{title}</h3>
+   886→      </div>
+   887→      <p className="text-xs text-muted-foreground leading-relaxed">{body}</p>
+   888→    </div>
+   889→  );
+   890→}
+   891→
+   892→function CategoryChip({ active, onClick, label, count }: { active: boolean; onClick: () => void; label: string; count: number }) {
+   893→  return (
+   894→    <button
+   895→      onClick={onClick}
+   896→      className={`text-xs px-3 py-1.5 rounded-md border transition-all ${active ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-background border-border text-muted-foreground hover:border-emerald-300 hover:text-foreground'}`}
+   897→    >
+   898→      {label} <span className="ml-1 opacity-70 font-mono">({count})</span>
+   899→    </button>
+   900→  );
+   901→}
+   902→
+   903→/** Horizontal chip row for Favorites / Recently used — auto-hides when no tools match. */
+   904→function ToolRow({
+   905→  label, icon, ids, onOpen,
+   906→}: {
+   907→  label: string;
+   908→  icon: React.ReactNode;
+   909→  ids: string[];
+   910→  onOpen: (id: string) => void;
+   911→}) {
+   912→  const tools = ids.map(id => TOOLS.find(t => t.id === id)).filter(Boolean) as ToolMeta[];
+   913→  if (tools.length === 0) return null;
+   914→  return (
+   915→    <div className="rounded-lg border border-border bg-card p-3">
+   916→      <div className="flex items-center gap-1.5 mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+   917→        {icon}
+   918→        <span>{label}</span>
+   919→        <span className="font-mono opacity-70">{tools.length}</span>
+   920→      </div>
+   921→      <div className="flex flex-wrap gap-1.5">
+   922→        {tools.map(t => {
+   923→          const Icon = t.icon;
+   924→          return (
+   925→            <button
+   926→              key={t.id}
+   927→              onClick={() => onOpen(t.id)}
+   928→              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-2.5 py-1 text-xs hover:border-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
+   929→            >
+   930→              <span style={{ color: CATEGORY_DOT_COLORS[t.category] }}>
+   931→                <Icon className="h-3.5 w-3.5" />
+   932→              </span>
+   933→              <span className="font-medium">{t.name}</span>
+   934→            </button>
+   935→          );
+   936→        })}
+   937→      </div>
+   938→    </div>
+   939→  );
+   940→}
+   941→

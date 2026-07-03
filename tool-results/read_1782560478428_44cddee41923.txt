@@ -1,0 +1,879 @@
+     1→<!doctype html>
+     2→<html lang="es">
+     3→<head>
+     4→  <meta charset="UTF-8" />
+     5→  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+     6→  <link rel="stylesheet" href="assets/free-tools-watermark.css" />
+     7→  <script src="assets/free-tools-embed.js"></script>
+     8→  <title>💦 Diagnóstico de agua y acondicionamiento</title>
+     9→  <style>
+    10→    :root {
+    11→      --bg: #f1f5f9;
+    12→      --card: #ffffff;
+    13→      --line: #e2e8f0;
+    14→      --text: #0f172a;
+    15→      --muted: #64748b;
+    16→      --np-green: #0d9488;
+    17→      --np-green-soft: #ecfdf5;
+    18→      --np-blue: #0ea5e9;
+    19→      --np-blue-soft: #eff6ff;
+    20→    }
+    21→    * { box-sizing: border-box; }
+    22→    body {
+    23→      margin: 0;
+    24→      padding: 14px;
+    25→      background: var(--bg);
+    26→      color: var(--text);
+    27→      font-family: Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    28→      font-size: 14px;
+    29→    }
+    30→    .wrap { max-width: 980px; margin: 0 auto; }
+    31→    .card {
+    32→      background: var(--card);
+    33→      border: 1px solid var(--line);
+    34→      border-radius: 12px;
+    35→      margin-bottom: 14px;
+    36→      box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06);
+    37→      overflow: hidden;
+    38→    }
+    39→    .card-hero {
+    40→      padding: 16px 18px;
+    41→      background: linear-gradient(135deg, #ecfdf5 0%, #f0f9ff 100%);
+    42→      border-bottom: 1px solid #cbd5e1;
+    43→    }
+    44→    h1 {
+    45→      font-size: 18px;
+    46→      margin: 0 0 8px 0;
+    47→      color: #0f172a;
+    48→    }
+    49→    p.note {
+    50→      margin: 0;
+    51→      color: var(--muted);
+    52→      line-height: 1.5;
+    53→    }
+    54→    .section-head {
+    55→      display: flex;
+    56→      align-items: center;
+    57→      gap: 10px;
+    58→      padding: 12px 16px;
+    59→      font-size: 15px;
+    60→      font-weight: 700;
+    61→      color: #fff;
+    62→      margin: 0;
+    63→    }
+    64→    .section-head--green {
+    65→      background: linear-gradient(90deg, #0d9488 0%, #14b8a6 50%, #2dd4bf 100%);
+    66→    }
+    67→    .section-head--violet {
+    68→      background: linear-gradient(90deg, #5b21b6 0%, #7c3aed 50%, #a78bfa 100%);
+    69→    }
+    70→    .section-head--blue {
+    71→      background: linear-gradient(90deg, #0284c7 0%, #0ea5e9 50%, #38bdf8 100%);
+    72→    }
+    73→    .section-badge {
+    74→      display: inline-flex;
+    75→      align-items: center;
+    76→      justify-content: center;
+    77→      min-width: 26px;
+    78→      height: 26px;
+    79→      border-radius: 8px;
+    80→      background: rgba(255, 255, 255, 0.25);
+    81→      font-size: 13px;
+    82→    }
+    83→    .section-body {
+    84→      padding: 14px 16px 16px;
+    85→    }
+    86→    .input-matrix {
+    87→      border: 1px solid #e2e8f0;
+    88→      border-radius: 10px;
+    89→      overflow: hidden;
+    90→    }
+    91→    .input-matrix__grid {
+    92→      display: grid;
+    93→      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    94→    }
+    95→    .input-matrix .field {
+    96→      padding: 12px 14px;
+    97→      background: #fafafa;
+    98→      border-bottom: 1px solid #e2e8f0;
+    99→    }
+   100→    .input-matrix .field:nth-child(odd) { background: #f8fafc; }
+   101→    @media (min-width: 640px) {
+   102→      .input-matrix .field { border-right: 1px solid #e2e8f0; }
+   103→    }
+   104→    .field label {
+   105→      display: block;
+   106→      font-weight: 600;
+   107→      font-size: 12px;
+   108→      color: #334155;
+   109→      margin-bottom: 6px;
+   110→    }
+   111→    .field input.hardness-in,
+   112→    .field input.acid-in {
+   113→      width: 100%;
+   114→      border: 1px solid #cbd5e1;
+   115→      border-radius: 8px;
+   116→      padding: 9px 10px;
+   117→      font-size: 14px;
+   118→      outline: none;
+   119→      background: #fff;
+   120→    }
+   121→    .field--green .acid-in { border-color: #99f6e4; }
+   122→    .field--green .acid-in:focus {
+   123→      border-color: #14b8a6;
+   124→      box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.15);
+   125→    }
+   126→    .field--blue .acid-in { border-color: #7dd3fc; }
+   127→    .field--violet .ion-in, .field--violet .ion-unit {
+   128→      border: 1px solid #c4b5fd;
+   129→    }
+   130→    .field--violet .ion-in:focus, .field--violet .ion-unit:focus {
+   131→      border-color: #7c3aed;
+   132→      box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+   133→      outline: none;
+   134→    }
+   135→    .field--blue .acid-in:focus {
+   136→      border-color: #0ea5e9;
+   137→      box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
+   138→    }
+   139→    .ion-row {
+   140→      display: flex;
+   141→      gap: 8px;
+   142→      align-items: stretch;
+   143→    }
+   144→    .ion-row .ion-in {
+   145→      flex: 1;
+   146→      min-width: 0;
+   147→      border: 1px solid #cbd5e1;
+   148→      border-radius: 8px;
+   149→      padding: 9px 10px;
+   150→      font-size: 14px;
+   151→      background: #fff;
+   152→    }
+   153→    .ion-row .ion-unit {
+   154→      flex: 0 0 100px;
+   155→      border-radius: 8px;
+   156→      padding: 9px 8px;
+   157→      font-size: 13px;
+   158→      background: #fff;
+   159→    }
+   160→    .ion-out {
+   161→      font-weight: 700;
+   162→      color: #4c1d95;
+   163→      background: #faf5ff !important;
+   164→      cursor: default;
+   165→    }
+   166→    .field select {
+   167→      width: 100%;
+   168→      border: 1px solid #7dd3fc;
+   169→      border-radius: 8px;
+   170→      padding: 9px 10px;
+   171→      font-size: 14px;
+   172→      outline: none;
+   173→      background: #fff;
+   174→    }
+   175→    .field select:focus {
+   176→      border-color: #0ea5e9;
+   177→      box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
+   178→    }
+   179→    .result-pill {
+   180→      display: inline-block;
+   181→      margin-top: 12px;
+   182→      background: linear-gradient(90deg, #d1fae5, #ecfdf5);
+   183→      border: 1px solid #6ee7b7;
+   184→      color: #065f46;
+   185→      font-weight: 700;
+   186→      border-radius: 999px;
+   187→      padding: 8px 14px;
+   188→    }
+   189→    .result-pill--violet {
+   190→      background: linear-gradient(90deg, #ede9fe, #f5f3ff);
+   191→      border: 1px solid #a78bfa;
+   192→      color: #4c1d95;
+   193→    }
+   194→    .summary--violet {
+   195→      border: 1px solid #c4b5fd;
+   196→      background: linear-gradient(180deg, #f5f3ff 0%, #faf5ff 100%);
+   197→      color: #4c1d95;
+   198→    }
+   199→    .summary {
+   200→      margin-top: 10px;
+   201→      border: 1px solid #a7f3d0;
+   202→      background: linear-gradient(180deg, #ecfdf5 0%, #f0fdf4 100%);
+   203→      border-radius: 10px;
+   204→      padding: 12px 14px;
+   205→      color: #14532d;
+   206→      line-height: 1.5;
+   207→    }
+   208→    .warn, .tip {
+   209→      border-radius: 10px;
+   210→      padding: 10px 12px;
+   211→      line-height: 1.5;
+   212→      margin-top: 10px;
+   213→    }
+   214→    .warn {
+   215→      background: #fff7ed;
+   216→      border: 1px solid #fdba74;
+   217→      color: #9a3412;
+   218→    }
+   219→    .tip {
+   220→      background: #eff6ff;
+   221→      border: 1px solid #93c5fd;
+   222→      color: #1e40af;
+   223→    }
+   224→    .kpi {
+   225→      border: 1px solid #7dd3fc;
+   226→      background: linear-gradient(180deg, #f0f9ff 0%, #e0f2fe 100%);
+   227→      border-radius: 10px;
+   228→      padding: 12px 14px;
+   229→      margin-top: 12px;
+   230→      color: #0c4a6e;
+   231→      line-height: 1.55;
+   232→    }
+   233→    .muted { color: var(--muted); }
+   234→    .section-note { margin: 0 0 12px; color: var(--muted); line-height: 1.5; }
+   235→    .ref-box {
+   236→      border: 1px solid #d1d5db;
+   237→      border-radius: 10px;
+   238→      background: #fafafa;
+   239→      padding: 14px 16px;
+   240→    }
+   241→    .ref-box h2 {
+   242→      margin: 0 0 6px 0;
+   243→      font-size: 1rem;
+   244→      color: #0f172a;
+   245→    }
+   246→    .ref-box p.ref-foot {
+   247→      margin: 10px 0 0 0;
+   248→      font-size: 12px;
+   249→      color: #64748b;
+   250→      line-height: 1.45;
+   251→    }
+   252→    .ref-table-wrap { overflow-x: auto; margin-top: 10px; -webkit-overflow-scrolling: touch; }
+   253→    .ref-escala {
+   254→      width: 100%;
+   255→      min-width: 640px;
+   256→      border-collapse: collapse;
+   257→      font-size: 12px;
+   258→    }
+   259→    .ref-escala th, .ref-escala td {
+   260→      border: 1px solid #e2e8f0;
+   261→      padding: 8px 10px;
+   262→      text-align: left;
+   263→    }
+   264→    .ref-escala th {
+   265→      background: #e2e8f0;
+   266→      color: #334155;
+   267→      font-weight: 700;
+   268→    }
+   269→    .ref-escala td:first-child { font-weight: 600; color: #0f172a; }
+   270→    .ref-escala tbody tr:nth-child(odd) { background: #fff; }
+   271→    .ref-escala tbody tr:nth-child(even) { background: #f8fafc; }
+   272→    .tool-sections {
+   273→      display: flex;
+   274→      flex-direction: column;
+   275→      gap: 14px;
+   276→    }
+   277→    .embed-lead { display: none; }
+   278→    html.embed-dashboard body {
+   279→      padding: 10px 14px 16px;
+   280→      min-height: 0;
+   281→      height: auto;
+   282→    }
+   283→    html.embed-dashboard {
+   284→      height: auto;
+   285→    }
+   286→    html.embed-dashboard .wrap {
+   287→      max-width: none;
+   288→      width: 100%;
+   289→    }
+   290→    html.embed-dashboard .card-intro .card-hero {
+   291→      display: none;
+   292→    }
+   293→    html.embed-dashboard .embed-lead {
+   294→      display: block;
+   295→      margin: 0 0 12px;
+   296→      padding: 10px 14px;
+   297→      border-radius: 10px;
+   298→      border: 1px solid #cbd5e1;
+   299→      background: linear-gradient(135deg, #ecfdf5 0%, #f0f9ff 100%);
+   300→      color: #475569;
+   301→      font-size: 13px;
+   302→      line-height: 1.45;
+   303→    }
+   304→    html.embed-dashboard .card-intro .ref-box {
+   305→      margin-top: 0;
+   306→    }
+   307→    @media (min-width: 1000px) {
+   308→      html.embed-dashboard .tool-sections {
+   309→        display: grid;
+   310→        grid-template-columns: 1fr 1fr;
+   311→        gap: 14px;
+   312→        align-items: start;
+   313→      }
+   314→      html.embed-dashboard .tool-section--acid {
+   315→        grid-column: 1 / -1;
+   316→      }
+   317→    }
+   318→    @media (min-width: 1400px) {
+   319→      html.embed-dashboard .tool-sections {
+   320→        grid-template-columns: repeat(3, minmax(0, 1fr));
+   321→      }
+   322→      html.embed-dashboard .tool-section--acid {
+   323→        grid-column: auto;
+   324→      }
+   325→    }
+   326→  </style>
+   327→</head>
+   328→<body>
+   329→  <div class="wrap">
+   330→    <p class="embed-lead">
+   331→      <strong>1</strong> conversión y tiras · <strong>2</strong> dureza desde Ca y Mg de laboratorio · <strong>3</strong> dosis de ácido con colchón (residual objetivo).
+   332→    </p>
+   333→    <div class="card card-intro">
+   334→      <div class="card-hero">
+   335→        <div class="np-free-tool-head">
+   336→          <h1 class="np-free-tool-title">💦 Diagnóstico de agua y acondicionamiento</h1>
+   337→          <div class="np-free-watermark" aria-hidden="true"><img src="assets/N_Hoja_Azul.png" alt=""></div>
+   338→        </div>
+   339→        <p class="note">
+   340→          Herramienta independiente: <strong>1</strong> conversión y tiras o método sencillo; <strong>2</strong> dureza desde Ca y Mg de laboratorio; <strong>3</strong> dosis de ácido con colchón (residual objetivo).
+   341→        </p>
+   342→        <div class="ref-box" style="margin-top:14px;">
+   343→          <h2>📋 Clasificación y valores de referencia</h2>
+   344→          <p class="section-note" style="margin:0 0 4px 0;">Criterio en <strong>mg/L o ppm (CaCO₃)</strong>. meq/L y grados: <strong>equivalencias aproximadas</strong>.</p>
+   345→          <div class="ref-table-wrap">
+   346→            <table class="ref-escala">
+   347→              <thead>
+   348→                <tr>
+   349→                  <th>Clasificación</th>
+   350→                  <th>mg/L o ppm (CaCO₃)</th>
+   351→                  <th>meq/L</th>
+   352→                  <th>°dH (alemán)</th>
+   353→                  <th>°fH (francés)</th>
+   354→                  <th>°e (inglés, Clark°)</th>
+   355→                </tr>
+   356→              </thead>
+   357→              <tbody>
+   358→                <tr>
+   359→                  <td>Blanda</td>
+   360→                  <td>&lt; 60</td>
+   361→                  <td>&lt; 1,20</td>
+   362→                  <td>&lt; 3,36</td>
+   363→                  <td>&lt; 6,0</td>
+   364→                  <td>&lt; 4,21</td>
+   365→                </tr>
+   366→                <tr>
+   367→                  <td>Moderadamente dura</td>
+   368→                  <td>60 a &lt; 120</td>
+   369→                  <td>1,20 a &lt; 2,40</td>
+   370→                  <td>3,36 a &lt; 6,72</td>
+   371→                  <td>6,0 a &lt; 12,0</td>
+   372→                  <td>4,21 a &lt; 8,42</td>
+   373→                </tr>
+   374→                <tr>
+   375→                  <td>Dura</td>
+   376→                  <td>120 a &lt; 180</td>
+   377→                  <td>2,40 a &lt; 3,60</td>
+   378→                  <td>6,72 a &lt; 10,08</td>
+   379→                  <td>12,0 a &lt; 18,0</td>
+   380→                  <td>8,42 a &lt; 12,63</td>
+   381→                </tr>
+   382→                <tr>
+   383→                  <td>Muy dura</td>
+   384→                  <td>≥ 180</td>
+   385→                  <td>≥ 3,60</td>
+   386→                  <td>≥ 10,08</td>
+   387→                  <td>≥ 18,0</td>
+   388→                  <td>≥ 12,63</td>
+   389→                </tr>
+   390→              </tbody>
+   391→            </table>
+   392→          </div>
+   393→          <p class="ref-foot">* Referencia habitual (<a href="https://www.usgs.gov/special-topics/water-science-school/science/hardness-water" rel="noopener noreferrer" target="_blank">USGS</a>). Para contrastar, usa el CaCO₃ del informe; meq/° redondeados a 2 dec.</p>
+   394→        </div>
+   395→      </div>
+   396→    </div>
+   397→
+   398→    <div class="tool-sections">
+   399→    <div class="card tool-section tool-section--hardness">
+   400→      <h2 class="section-head section-head--green">
+   401→        <span class="section-badge">1</span>
+   402→        Dureza del agua (conversiones y rango)
+   403→      </h2>
+   404→      <div class="section-body">
+   405→        <p class="section-note">Escribe en cualquier casilla: las demás se actualizan al vuelo; al salir se redondea. Empieza vacío hasta que tú ingreses datos.</p>
+   406→        <div class="input-matrix">
+   407→          <div class="input-matrix__grid">
+   408→            <div class="field field--green">
+   409→              <label for="hardnessPpm">Dureza como CaCO₃ (ppm o mg/L)</label>
+   410→              <input id="hardnessPpm" class="hardness-in" type="text" inputmode="decimal" autocomplete="off" value="" placeholder="ej. 120" data-hardness="ppm" />
+   411→            </div>
+   412→            <div class="field field--green">
+   413→              <label for="hardnessMeq">Dureza (meq/L)</label>
+   414→              <input id="hardnessMeq" class="hardness-in" type="text" inputmode="decimal" autocomplete="off" value="" placeholder="ej. 2.4" data-hardness="meq" />
+   415→            </div>
+   416→            <div class="field field--green">
+   417→              <label for="hardnessDh">Dureza (°dH)</label>
+   418→              <input id="hardnessDh" class="hardness-in" type="text" inputmode="decimal" autocomplete="off" value="" placeholder="ej. 6.7" data-hardness="dh" />
+   419→            </div>
+   420→            <div class="field field--green">
+   421→              <label for="hardnessEh">Dureza (°e)</label>
+   422→              <input id="hardnessEh" class="hardness-in" type="text" inputmode="decimal" autocomplete="off" value="" placeholder="ej. 8.4" data-hardness="eh" />
+   423→            </div>
+   424→            <div class="field field--green">
+   425→              <label for="hardnessFh">Dureza (°fH)</label>
+   426→              <input id="hardnessFh" class="hardness-in" type="text" inputmode="decimal" autocomplete="off" value="" placeholder="ej. 12" data-hardness="fh" />
+   427→            </div>
+   428→          </div>
+   429→        </div>
+   430→        <div class="result-pill" id="hardnessClass">Clasificación: —</div>
+   431→        <div class="summary" id="hardnessSummary"><span class="muted">Introduce dureza en cualquier unidad (ppm, meq/L, °dH, °e, °fH).</span></div>
+   432→      </div>
+   433→    </div>
+   434→
+   435→    <div class="card tool-section tool-section--lab">
+   436→      <h2 class="section-head section-head--violet">
+   437→        <span class="section-badge">2</span>
+   438→        Dureza por Ca + Mg
+   439→      </h2>
+   440→      <div class="section-body">
+   441→        <p class="section-note">👉 Para quien trae análisis de laboratorio. Elige en cada renglón si el valor de Ca o Mg está en <strong>ppm (mg/L)</strong> o en <strong>meq/L</strong>; al salir de la casilla se redondea.</p>
+   442→        <div class="input-matrix">
+   443→          <div class="input-matrix__grid">
+   444→            <div class="field field--violet">
+   445→              <label for="caLab">Calcio (Ca) — ppm o meq/L</label>
+   446→              <div class="ion-row">
+   447→                <input id="caLab" class="ion-in" type="text" inputmode="decimal" autocomplete="off" value="" placeholder="ej. 40" data-ion="ca" />
+   448→                <select id="caLabUnit" class="ion-unit" data-ion-unit="ca" aria-label="Unidad de calcio">
+   449→                  <option value="ppm" selected>ppm</option>
+   450→                  <option value="meq">meq/L</option>
+   451→                </select>
+   452→              </div>
+   453→            </div>
+   454→            <div class="field field--violet">
+   455→              <label for="mgLab">Magnesio (Mg) — ppm o meq/L</label>
+   456→              <div class="ion-row">
+   457→                <input id="mgLab" class="ion-in" type="text" inputmode="decimal" autocomplete="off" value="" placeholder="ej. 12" data-ion="mg" />
+   458→                <select id="mgLabUnit" class="ion-unit" data-ion-unit="mg" aria-label="Unidad de magnesio">
+   459→                  <option value="ppm" selected>ppm</option>
+   460→                  <option value="meq">meq/L</option>
+   461→                </select>
+   462→              </div>
+   463→            </div>
+   464→            <div class="field field--violet">
+   465→              <label for="labCaco3Out">Dureza total como CaCO₃ (resultado)</label>
+   466→              <input id="labCaco3Out" type="text" readonly class="ion-in ion-out" value="" placeholder="—" title="Suma de las contribuciones de Ca y Mg a equivalente CaCO₃" />
+   467→            </div>
+   468→          </div>
+   469→        </div>
+   470→        <div class="result-pill result-pill--violet" id="labClass">Clasificación: —</div>
+   471→        <div class="summary summary--violet" id="labSummary"><span class="muted">Introduce al menos un valor (Ca o Mg) del análisis.</span></div>
+   472→      </div>
+   473→    </div>
+   474→
+   475→    <div class="card tool-section tool-section--acid">
+   476→      <h2 class="section-head section-head--blue">
+   477→        <span class="section-badge">3</span>
+   478→        Ácido para neutralizar HCO₃⁻ y CO₃²⁻ (con colchón)
+   479→      </h2>
+   480→      <div class="section-body">
+   481→        <p class="section-note">
+   482→          Meq de ácido por litro de agua = (HCO₃⁻ + CO₃²⁻) − residual (meq/L). Dosis mL/m³ = (meq/L × 1000) ÷ meq/mL del ácido, igual que en Análisis de agua. El <strong>volumen de preparación</strong> puede capturarse en L o m³ según tu tanque, calda o volumen a acidificar. Si el resultado es negativo, se toma como 0.
+   483→        </p>
+   484→        <div class="input-matrix">
+   485→          <div class="input-matrix__grid">
+   486→            <div class="field field--blue">
+   487→              <label for="hco3Meq">HCO₃⁻ (meq/L)</label>
+   488→              <input id="hco3Meq" class="acid-in" type="text" inputmode="decimal" autocomplete="off" data-acid-num="1" value="" placeholder="ej. 2" />
+   489→            </div>
+   490→            <div class="field field--blue">
+   491→              <label for="co3Meq">CO₃²⁻ (meq/L)</label>
+   492→              <input id="co3Meq" class="acid-in" type="text" inputmode="decimal" autocomplete="off" data-acid-num="1" value="" placeholder="0" />
+   493→            </div>
+   494→            <div class="field field--blue">
+   495→              <label for="residualMeq">Residual objetivo (meq/L)</label>
+   496→              <input id="residualMeq" class="acid-in" type="text" inputmode="decimal" autocomplete="off" data-acid-num="1" value="" placeholder="ej. 1" />
+   497→            </div>
+   498→            <div class="field field--blue">
+   499→              <label for="waterVolumeL">Volumen de preparación</label>
+   500→              <div class="ion-row">
+   501→                <input id="waterVolumeL" class="acid-in ion-in" type="text" inputmode="decimal" autocomplete="off" data-acid-num="1" data-acid-vol="1" value="" placeholder="ej. 200" />
+   502→                <select id="waterVolumeUnit" class="ion-unit" aria-label="Unidad del volumen de preparación">
+   503→                  <option value="L" selected>L</option>
+   504→                  <option value="m3">m³</option>
+   505→                </select>
+   506→              </div>
+   507→            </div>
+   508→            <div class="field field--blue">
+   509→              <label for="acidSelect">Ácido</label>
+   510→              <select id="acidSelect"></select>
+   511→            </div>
+   512→          </div>
+   513→        </div>
+   514→        <p class="section-note" id="volM3Equiv" style="margin-top:8px;">
+   515→          <span class="muted">Equivale a <strong>—</strong> m³ de agua (solo referencia).</span>
+   516→        </p>
+   517→
+   518→        <div class="kpi" id="acidResult"></div>
+   519→
+   520→        <div class="warn">
+   521→          ⚠️ Referencia técnica: no neutralizar al 100% por defecto. Ajusta con colchón (residual objetivo) y valida pH final de la solución.
+   522→        </div>
+   523→        <div class="tip">
+   524→          💡 Tip de aplicación foliar: prioriza compatibilidad del producto y rango de pH recomendado en etiqueta. Esta herramienta orienta, no reemplaza prueba de mezcla.
+   525→        </div>
+   526→        <div class="tip" style="margin-top:6px;">
+   527→          🧪 El cálculo es estimado según tus datos de entrada. Usa EPP y buenas prácticas al manipular ácidos.
+   528→        </div>
+   529→      </div>
+   530→    </div>
+   531→    </div>
+   532→  </div>
+   533→
+   534→  <script>
+   535→    if (/[?&]embed=dashboard(?:&|$)/.test(location.search || '')) {
+   536→      document.documentElement.classList.add('embed-dashboard');
+   537→    }
+   538→    const EQ_CACO3 = 50.043;
+   539→    /** Equivalente mg/L como CaCO₃ a partir de mg/L del catión (dureza clásica). */
+   540→    const PPM_CACO3_PER_PPM_CA = 100.086 / 40.078;
+   541→    const PPM_CACO3_PER_PPM_MG = 100.086 / 24.305;
+   542→    const PPM_PER_DH = 17.848;
+   543→    const PPM_PER_EH = 14.254;
+   544→    const PPM_PER_FH = 10.0;
+   545→
+   546→    const acids = [
+   547→      { id: 'acido_nitrico_55', name: 'Ácido Nítrico 55%', meqPerMl: 11.6, densityKgL: 1.37 },
+   548→      { id: 'acido_sulfurico_98', name: 'Ácido Sulfúrico 98%', meqPerMl: 36.7, densityKgL: 1.84 },
+   549→      { id: 'acido_fosforico_75', name: 'Ácido Fosfórico 75%', meqPerMl: 12.0, densityKgL: 1.57 },
+   550→      { id: 'acido_fosforico_85', name: 'Ácido Fosfórico 85%', meqPerMl: 14.6, densityKgL: 1.69 }
+   551→    ];
+   552→
+   553→    const el = {
+   554→      ppm: document.getElementById('hardnessPpm'),
+   555→      meq: document.getElementById('hardnessMeq'),
+   556→      dh: document.getElementById('hardnessDh'),
+   557→      eh: document.getElementById('hardnessEh'),
+   558→      fh: document.getElementById('hardnessFh'),
+   559→      hClass: document.getElementById('hardnessClass'),
+   560→      hSummary: document.getElementById('hardnessSummary'),
+   561→      caLab: document.getElementById('caLab'),
+   562→      mgLab: document.getElementById('mgLab'),
+   563→      caLabU: document.getElementById('caLabUnit'),
+   564→      mgLabU: document.getElementById('mgLabUnit'),
+   565→      labOut: document.getElementById('labCaco3Out'),
+   566→      labClass: document.getElementById('labClass'),
+   567→      labSummary: document.getElementById('labSummary'),
+   568→      hco3: document.getElementById('hco3Meq'),
+   569→      co3: document.getElementById('co3Meq'),
+   570→      residual: document.getElementById('residualMeq'),
+   571→      volumeL: document.getElementById('waterVolumeL'),
+   572→      volumeUnit: document.getElementById('waterVolumeUnit'),
+   573→      volM3Equiv: document.getElementById('volM3Equiv'),
+   574→      acid: document.getElementById('acidSelect'),
+   575→      acidResult: document.getElementById('acidResult')
+   576→    };
+   577→
+   578→    const hardnessFields = { ppm: el.ppm, meq: el.meq, dh: el.dh, eh: el.eh, fh: el.fh };
+   579→
+   580→    function n(v) { return Math.max(0, parseFloat(String(v).replace(',', '.')) || 0); }
+   581→    function f(v, d = 2) { return (parseFloat(v) || 0).toFixed(d); }
+   582→
+   583→    /** Mientras se escribe, permite cadena vacía o incompleta para no pisar al usuario. */
+   584→    function numOrZeroForDisplay(v) {
+   585→      const t = String(v).trim().replace(',', '.');
+   586→      if (t === '' || t === '.' || t === '-' ) return 0;
+   587→      const x = parseFloat(t);
+   588→      return Number.isNaN(x) ? 0 : Math.max(0, x);
+   589→    }
+   590→
+   591→    function fillAcids() {
+   592→      el.acid.innerHTML = acids.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
+   593→      el.acid.value = 'acido_nitrico_55';
+   594→    }
+   595→
+   596→    function isAllHardnessEmpty() {
+   597→      return Object.keys(hardnessFields).every((k) => String(hardnessFields[k].value).trim() === '');
+   598→    }
+   599→
+   600→    function setHardnessEmptyUI() {
+   601→      el.hClass.textContent = 'Clasificación: —';
+   602→      el.hSummary.innerHTML = '<span class="muted">Introduce dureza en cualquier unidad (ppm, meq/L, °dH, °e, °fH).</span>';
+   603→    }
+   604→
+   605→    function isAllLabEmpty() {
+   606→      return String(el.caLab.value).trim() === '' && String(el.mgLab.value).trim() === '';
+   607→    }
+   608→
+   609→    function caco3FromCaPpmOrMeq(v, unit) {
+   610→      if (unit === 'meq') return v * EQ_CACO3;
+   611→      return v * PPM_CACO3_PER_PPM_CA;
+   612→    }
+   613→    function caco3FromMgPpmOrMeq(v, unit) {
+   614→      if (unit === 'meq') return v * EQ_CACO3;
+   615→      return v * PPM_CACO3_PER_PPM_MG;
+   616→    }
+   617→
+   618→    function setLabEmptyUI() {
+   619→      el.labClass.textContent = 'Clasificación: —';
+   620→      el.labOut.value = '';
+   621→      el.labOut.placeholder = '—';
+   622→      el.labSummary.innerHTML = '<span class="muted">Introduce al menos un valor (Ca o Mg) del análisis.</span>';
+   623→    }
+   624→
+   625→    function updateLabCalc() {
+   626→      if (isAllLabEmpty()) {
+   627→        setLabEmptyUI();
+   628→        return;
+   629→      }
+   630→      const uCa = el.caLabU.value;
+   631→      const uMg = el.mgLabU.value;
+   632→      const caRaw = String(el.caLab.value).trim();
+   633→      const mgRaw = String(el.mgLab.value).trim();
+   634→      const vCa = caRaw === '' ? 0 : numOrZeroForDisplay(el.caLab.value);
+   635→      const vMg = mgRaw === '' ? 0 : numOrZeroForDisplay(el.mgLab.value);
+   636→      const partCa = caco3FromCaPpmOrMeq(vCa, uCa);
+   637→      const partMg = caco3FromMgPpmOrMeq(vMg, uMg);
+   638→      const total = partCa + partMg;
+   639→      el.labOut.value = f(total, 2);
+   640→      const cls = hardnessClassByPpm(total);
+   641→      el.labClass.textContent = `Clasificación: ${cls}`;
+   642→
+   643→      const lineA = caRaw === ''
+   644→        ? 'Ca: no indicado (0 en la suma).'
+   645→        : (uCa === 'meq' ? `Ca: <strong>${f(vCa, 2)}</strong> meq/L` : `Ca: <strong>${f(vCa, 2)}</strong> ppm`) + ` → <strong>${f(partCa, 1)}</strong> ppm eq. CaCO₃.`;
+   646→      const lineB = mgRaw === ''
+   647→        ? 'Mg: no indicado (0 en la suma).'
+   648→        : (uMg === 'meq' ? `Mg: <strong>${f(vMg, 2)}</strong> meq/L` : `Mg: <strong>${f(vMg, 2)}</strong> ppm`) + ` → <strong>${f(partMg, 1)}</strong> ppm eq. CaCO₃.`;
+   649→
+   650→      el.labSummary.innerHTML = `
+   651→        ${lineA}<br>${lineB}<br>
+   652→        <span class="muted">Suma durezas iónicas: ${f(partCa, 1)} + ${f(partMg, 1)} = <strong>${f(total, 2)} ppm</strong> como CaCO₃ · ${cls}.</span>
+   653→      `;
+   654→    }
+   655→
+   656→    function normalizeLabBlur(e) {
+   657→      const t = e.target;
+   658→      if (!t || t.id !== 'caLab' && t.id !== 'mgLab') return;
+   659→      if (isAllLabEmpty()) {
+   660→        setLabEmptyUI();
+   661→        return;
+   662→      }
+   663→      if (String(t.value).trim() === '') {
+   664→        updateLabCalc();
+   665→        return;
+   666→      }
+   667→      const v = n(t.value);
+   668→      t.value = f(v, 2);
+   669→      updateLabCalc();
+   670→    }
+   671→
+   672→    function setAcidPlaceholderUI() {
+   673→      el.acidResult.innerHTML = '<span class="muted">Completa alcalinidad (HCO₃⁻, CO₃²⁻), <strong>residual objetivo</strong> y <strong>volumen de preparación</strong> (tanque o volumen a acidificar, en L o m³) para ver la dosis de ácido.</span>';
+   674→      if (el.volM3Equiv) {
+   675→        el.volM3Equiv.innerHTML = '<span class="muted">Equivale a <strong>—</strong> m³ de agua (solo referencia).</span>';
+   676→      }
+   677→    }
+   678→
+   679→    function getAcidVolume() {
+   680→      const raw = el.volumeL && String(el.volumeL.value).trim() !== '' ? el.volumeL.value : '';
+   681→      const unit = el.volumeUnit ? el.volumeUnit.value : 'L';
+   682→      if (raw === '') return { raw, unit, inputValue: NaN, volL: NaN, volM3: NaN };
+   683→      const inputValue = n(raw);
+   684→      const volM3 = unit === 'm3' ? inputValue : inputValue / 1000;
+   685→      const volL = unit === 'm3' ? inputValue * 1000 : inputValue;
+   686→      return { raw, unit, inputValue, volL, volM3 };
+   687→    }
+   688→
+   689→    /**
+   690→     * Tramos mg/L como CaCO₃ alineados con referencia tipo USGS: dura 121–180,
+   691→     * muy dura &gt;180. Aquí: Dura 120 a &lt; 180, Muy dura ≥ 180.
+   692→     */
+   693→    function hardnessClassByPpm(ppm) {
+   694→      if (ppm < 60) return 'Blanda';
+   695→      if (ppm < 120) return 'Moderadamente dura';
+   696→      if (ppm < 180) return 'Dura';
+   697→      return 'Muy dura';
+   698→    }
+   699→
+   700→    /**
+   701→     * Sincroniza las 4 casillas "otras" a partir de ppm; NO escribe en skipKey.
+   702→     * skipKey: 'ppm'|'meq'|'dh'|'eh'|'fh'|null
+   703→     */
+   704→    function syncHardnessFromPpm(ppm, skipKey) {
+   705→      const meq = ppm / EQ_CACO3;
+   706→      const dHv = ppm / PPM_PER_DH;
+   707→      const eHv = ppm / PPM_PER_EH;
+   708→      const fHv = ppm / PPM_PER_FH;
+   709→      if (skipKey !== 'ppm') el.ppm.value = f(ppm, 2);
+   710→      if (skipKey !== 'meq') el.meq.value = f(meq, 2);
+   711→      if (skipKey !== 'dh') el.dh.value = f(dHv, 2);
+   712→      if (skipKey !== 'eh') el.eh.value = f(eHv, 2);
+   713→      if (skipKey !== 'fh') el.fh.value = f(fHv, 2);
+   714→
+   715→      const cls = hardnessClassByPpm(ppm);
+   716→      el.hClass.textContent = `Clasificación: ${cls}`;
+   717→      el.hSummary.innerHTML = `
+   718→        <strong>Lectura rápida:</strong> ${cls} · ${f(ppm, 1)} ppm como CaCO₃.<br>
+   719→        <span class="muted">Equivalente estimado: ${f(meq, 2)} meq/L · ${f(dHv, 2)} °dH · ${f(eHv, 2)} °e · ${f(fHv, 2)} °fH.</span>
+   720→      `;
+   721→    }
+   722→
+   723→    function ppmFromField(key, raw) {
+   724→      const v = numOrZeroForDisplay(raw);
+   725→      if (key === 'ppm') return v;
+   726→      if (key === 'meq') return v * EQ_CACO3;
+   727→      if (key === 'dh') return v * PPM_PER_DH;
+   728→      if (key === 'eh') return v * PPM_PER_EH;
+   729→      if (key === 'fh') return v * PPM_PER_FH;
+   730→      return v;
+   731→    }
+   732→
+   733→    function onHardnessInput(hardKey) {
+   734→      if (isAllHardnessEmpty()) {
+   735→        setHardnessEmptyUI();
+   736→        return;
+   737→      }
+   738→      const raw = hardnessFields[hardKey].value;
+   739→      if (String(raw).trim() === '') return;
+   740→      const ppm = ppmFromField(hardKey, raw);
+   741→      syncHardnessFromPpm(ppm, hardKey);
+   742→    }
+   743→
+   744→    function normalizeHardnessOnBlur(e) {
+   745→      const node = e.target;
+   746→      const key = node.getAttribute('data-hardness');
+   747→      if (!key) return;
+   748→      if (isAllHardnessEmpty()) {
+   749→        setHardnessEmptyUI();
+   750→        return;
+   751→      }
+   752→      if (String(node.value).trim() === '') {
+   753→        Object.values(hardnessFields).forEach((inp) => { inp.value = ''; });
+   754→        setHardnessEmptyUI();
+   755→        return;
+   756→      }
+   757→      const ppm = ppmFromField(key, node.value);
+   758→      syncHardnessFromPpm(ppm, null);
+   759→    }
+   760→
+   761→    function updateAcidCalc() {
+   762→      const acid = acids.find(a => a.id === el.acid.value) || acids[0];
+   763→      const meqPerMl = parseFloat(acid && acid.meqPerMl) || 0;
+   764→      const rho = parseFloat(acid && acid.densityKgL) || 0;
+   765→
+   766→      const vol = getAcidVolume();
+   767→      const volStr = vol.raw;
+   768→      const volL = vol.volL;
+   769→      const volM3 = vol.volM3;
+   770→
+   771→      if (volStr === '' || Number.isNaN(volL)) {
+   772→        setAcidPlaceholderUI();
+   773→        return;
+   774→      }
+   775→
+   776→      if (el.volM3Equiv) {
+   777→        el.volM3Equiv.innerHTML = '<span class="muted">Volumen usado: <strong>' + f(vol.inputValue, 3) + ' ' + (vol.unit === 'm3' ? 'm³' : 'L') + '</strong> = <strong>' + f(volM3, 3) + '</strong> m³ = <strong>' + f(volL, 2) + '</strong> L.</span>';
+   778→      }
+   779→
+   780→      const hco3 = n(el.hco3.value);
+   781→      const co3 = n(el.co3.value);
+   782→      const residual = n(el.residual.value);
+   783→      const sourceMeq = hco3 + co3;
+   784→      const needMeq = Math.max(0, sourceMeq - residual);
+   785→      // Igual que Análisis de agua: meq de ácido por m³ de agua = (meq/L) × 1000; mL/m³ = meq/m³ ÷ meq/mL del ácido.
+   786→      const meqPerM3 = needMeq * 1000;
+   787→      const mlPerM3 = meqPerMl > 0 ? meqPerM3 / meqPerMl : 0;
+   788→      const totalMl = mlPerM3 * volM3;
+   789→      const totalLAcid = totalMl / 1000;
+   790→      const kgPerM3Water = (mlPerM3 / 1000) * rho;
+   791→      const kgTotal = totalLAcid * rho;
+   792→
+   793→      el.acidResult.innerHTML = `
+   794→        <strong>Resultado con ${acid.name}:</strong><br>
+   795→        Meq/L a neutralizar = (${f(hco3, 2)} + ${f(co3, 2)}) − ${f(residual, 2)} = <strong>${f(needMeq, 2)} meq/L</strong><br>
+   796→        Dosis = <strong>${f(mlPerM3, 2)} mL/m³</strong> de ácido <span class="muted">(${f(kgPerM3Water, 3)} kg de ácido / m³ de agua, aprox.)</span><br>
+   797→        Para <strong>${f(vol.inputValue, vol.unit === 'm3' ? 3 : 2)} ${vol.unit === 'm3' ? 'm³' : 'L'}</strong> de agua (${f(volM3, 3)} m³ / ${f(volL, 2)} L): <strong>${f(totalLAcid, 3)} L</strong> de ácido (${f(totalMl, 1)} mL) · aprox. <strong>${f(kgTotal, 3)} kg</strong>
+   798→      `;
+   799→    }
+   800→
+   801→    function normalizeAcidInputBlur(e) {
+   802→      const t = e.target;
+   803→      if (!t || !t.getAttribute('data-acid-num')) return;
+   804→      if (String(t.value).trim() === '') {
+   805→        if (t.getAttribute('data-acid-vol') === '1') setAcidPlaceholderUI();
+   806→        return;
+   807→      }
+   808→      const v = n(t.value);
+   809→      t.value = f(v, 2);
+   810→    }
+   811→
+   812→    function updateVolumePlaceholder() {
+   813→      if (!el.volumeL || !el.volumeUnit) return;
+   814→      el.volumeL.placeholder = el.volumeUnit.value === 'm3' ? 'ej. 0.2' : 'ej. 200';
+   815→      updateAcidCalc();
+   816→    }
+   817→
+   818→    fillAcids();
+   819→    setHardnessEmptyUI();
+   820→    setLabEmptyUI();
+   821→    setAcidPlaceholderUI();
+   822→
+   823→    Object.keys(hardnessFields).forEach((key) => {
+   824→      const node = hardnessFields[key];
+   825→      node.addEventListener('input', () => onHardnessInput(key));
+   826→      node.addEventListener('focusout', normalizeHardnessOnBlur);
+   827→    });
+   828→
+   829→    [el.hco3, el.co3, el.residual, el.volumeL].forEach((node) => {
+   830→      if (!node) return;
+   831→      node.addEventListener('input', () => { updateAcidCalc(); });
+   832→      node.addEventListener('focusout', normalizeAcidInputBlur);
+   833→    });
+   834→    if (el.volumeUnit) el.volumeUnit.addEventListener('change', updateVolumePlaceholder);
+   835→    el.acid.addEventListener('change', updateAcidCalc);
+   836→
+   837→    [el.caLab, el.mgLab].forEach((node) => {
+   838→      if (!node) return;
+   839→      node.addEventListener('input', () => { updateLabCalc(); });
+   840→      node.addEventListener('focusout', normalizeLabBlur);
+   841→    });
+   842→    [el.caLabU, el.mgLabU].forEach((node) => {
+   843→      if (!node) return;
+   844→      node.addEventListener('change', () => { updateLabCalc(); });
+   845→    });
+   846→
+   847→    function snapshotAcidHardness() {
+   848→      return {
+   849→        ppm: el.ppm.value, meq: el.meq.value, dh: el.dh.value, eh: el.eh.value, fh: el.fh.value,
+   850→        caLab: el.caLab.value, mgLab: el.mgLab.value, caLabU: el.caLabU.value, mgLabU: el.mgLabU.value,
+   851→        hco3: el.hco3.value, co3: el.co3.value, residual: el.residual.value,
+   852→        volumeL: el.volumeL.value, volumeUnit: el.volumeUnit.value, acid: el.acid.value
+   853→      };
+   854→    }
+   855→    function applyAcidHardness(d) {
+   856→      if (!d) return;
+   857→      ['ppm', 'meq', 'dh', 'eh', 'fh', 'caLab', 'mgLab', 'hco3', 'co3', 'residual', 'volumeL'].forEach((k) => {
+   858→        if (d[k] != null && el[k]) el[k].value = d[k];
+   859→      });
+   860→      if (d.caLabU != null) el.caLabU.value = d.caLabU;
+   861→      if (d.mgLabU != null) el.mgLabU.value = d.mgLabU;
+   862→      if (d.volumeUnit != null) el.volumeUnit.value = d.volumeUnit;
+   863→      if (d.acid != null) el.acid.value = d.acid;
+   864→      if (String(el.ppm.value || '').trim()) onHardnessInput('ppm');
+   865→      else setHardnessEmptyUI();
+   866→      updateLabCalc();
+   867→      updateVolumePlaceholder();
+   868→      updateAcidCalc();
+   869→    }
+   870→  </script>
+   871→  <script src="assets/np-free-local-persist.js"></script>
+   872→  <script>
+   873→    (function () {
+   874→      window.NpFreePersist.bind('agua_dureza', snapshotAcidHardness, applyAcidHardness);
+   875→    })();
+   876→  </script>
+   877→</body>
+   878→</html>
+   879→

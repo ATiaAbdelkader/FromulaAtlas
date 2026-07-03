@@ -1,0 +1,755 @@
+     1→     1→     1→<!DOCTYPE html>
+     2→     2→     2→<html lang="es">
+     3→     3→     3→<head>
+     4→     4→     4→  <meta charset="UTF-8" />
+     5→     5→     5→  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+     6→     6→     6→  <link rel="stylesheet" href="assets/free-tools-watermark.css" />
+     7→     7→     7→  <script src="assets/free-tools-embed.js"></script>
+     8→     8→     8→  <title>Estimador de déficit de presión de vapor</title>
+     9→     9→     9→  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    10→    10→    10→  <link rel="stylesheet" href="dashboard.css" />
+    11→    11→    11→  <style>
+    12→    12→    12→    body {
+    13→    13→    13→      margin: 0;
+    14→    14→    14→      padding: 16px;
+    15→    15→    15→      background: #f8fafc;
+    16→    16→    16→      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    17→    17→    17→    }
+    18→    18→    18→    .wrap {
+    19→    19→    19→      position: relative;
+    20→    20→    20→      background: #fff;
+    21→    21→    21→      border-radius: 12px;
+    22→    22→    22→      padding: 16px;
+    23→    23→    23→    }
+    24→    24→    24→    .note {
+    25→    25→    25→      margin: 0 0 14px;
+    26→    26→    26→      color: #64748b;
+    27→    27→    27→      font-size: 12px;
+    28→    28→    28→      text-align: center;
+    29→    29→    29→    }
+    30→    30→    30→    .title {
+    31→    31→    31→      margin: 0 0 18px;
+    32→    32→    32→      font-size: 24px;
+    33→    33→    33→      color: #0f172a;
+    34→    34→    34→      font-weight: 800;
+    35→    35→    35→    }
+    36→    36→    36→    html.embed-login .np-free-tool-head {
+    37→    37→    37→      display: none;
+    38→    38→    38→    }
+    39→    39→    39→    html.embed-login body {
+    40→    40→    40→      padding: 12px 14px 16px;
+    41→    41→    41→    }
+    42→    42→    42→    /* Móvil: alinear inputs Temp y Humedad (misma altura) */
+    43→    43→    43→    @media (max-width: 600px) {
+    44→    44→    44→      .vpd-grid-cell {
+    45→    45→    45→        display: flex;
+    46→    46→    46→        flex-direction: column;
+    47→    47→    47→        align-items: stretch;
+    48→    48→    48→      }
+    49→    49→    49→      .vpd-grid-cell label {
+    50→    50→    50→        min-height: 2.8em;
+    51→    51→    51→        display: flex;
+    52→    52→    52→        align-items: flex-end;
+    53→    53→    53→        margin-bottom: 8px;
+    54→    54→    54→      }
+    55→    55→    55→      .vpd-grid-row {
+    56→    56→    56→        display: grid;
+    57→    57→    57→        grid-template-columns: 1fr 1fr;
+    58→    58→    58→        gap: 16px;
+    59→    59→    59→        align-items: end;
+    60→    60→    60→      }
+    61→    61→    61→    }
+    62→    62→    62→    #vpd-free-map {
+    63→    63→    63→      height: 220px;
+    64→    64→    64→      width: 100%;
+    65→    65→    65→      border-radius: 10px;
+    66→    66→    66→      border: 1px solid #cbd5e1;
+    67→    67→    67→      z-index: 1;
+    68→    68→    68→    }
+    69→    69→    69→    .vpd-map-actions {
+    70→    70→    70→      display: flex;
+    71→    71→    71→      flex-wrap: wrap;
+    72→    72→    72→      gap: 8px;
+    73→    73→    73→      align-items: center;
+    74→    74→    74→      margin-bottom: 10px;
+    75→    75→    75→    }
+    76→    76→    76→    .vpd-map-actions button {
+    77→    77→    77→      padding: 8px 12px;
+    78→    78→    78→      border-radius: 8px;
+    79→    79→    79→      border: 1px solid #cbd5e1;
+    80→    80→    80→      background: #fff;
+    81→    81→    81→      font-size: 13px;
+    82→    82→    82→      font-weight: 600;
+    83→    83→    83→      cursor: pointer;
+    84→    84→    84→      color: #0f172a;
+    85→    85→    85→    }
+    86→    86→    86→    .vpd-map-actions button.primary {
+    87→    87→    87→      background: linear-gradient(180deg, #0ea5e9 0%, #0284c7 100%);
+    88→    88→    88→      color: #fff;
+    89→    89→    89→      border-color: #0369a1;
+    90→    90→    90→    }
+    91→    91→    91→    .vpd-map-actions button:disabled {
+    92→    92→    92→      opacity: 0.55;
+    93→    93→    93→      cursor: not-allowed;
+    94→    94→    94→    }
+    95→    95→    95→    .vpd-coord-row {
+    96→    96→    96→      display: grid;
+    97→    97→    97→      grid-template-columns: 1fr 1fr;
+    98→    98→    98→      gap: 10px;
+    99→    99→    99→      margin-bottom: 10px;
+   100→   100→   100→    }
+   101→   101→   101→    @media (max-width: 520px) {
+   102→   102→   102→      .vpd-coord-row { grid-template-columns: 1fr; }
+   103→   103→   103→    }
+   104→   104→   104→    #vpd-geo-status {
+   105→   105→   105→      font-size: 12px;
+   106→   106→   106→      color: #64748b;
+   107→   107→   107→      margin: 0 0 8px;
+   108→   108→   108→      min-height: 1.2em;
+   109→   109→   109→    }
+   110→   110→   110→    .vpd-context-note {
+   111→   111→   111→      margin: 0 0 20px;
+   112→   112→   112→      padding: 12px 14px;
+   113→   113→   113→      font-size: 13px;
+   114→   114→   114→      line-height: 1.5;
+   115→   115→   115→      color: #334155;
+   116→   116→   116→      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+   117→   117→   117→      border-left: 4px solid #38bdf8;
+   118→   118→   118→      border-radius: 0 10px 10px 0;
+   119→   119→   119→      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+   120→   120→   120→    }
+   121→   121→   121→    .vpd-context-note strong {
+   122→   122→   122→      color: #0c4a6e;
+   123→   123→   123→    }
+   124→   124→   124→    .vpd-env-btn-row {
+   125→   125→   125→      display: flex;
+   126→   126→   126→      gap: 10px;
+   127→   127→   127→      flex-wrap: wrap;
+   128→   128→   128→      align-items: stretch;
+   129→   129→   129→      margin-bottom: 8px;
+   130→   130→   130→    }
+   131→   131→   131→    .vpd-env-btn-row #vpd-btn-env-calc {
+   132→   132→   132→      flex: 1;
+   133→   133→   133→      min-width: 160px;
+   134→   134→   134→      padding: 14px;
+   135→   135→   135→      background: #22c55e;
+   136→   136→   136→      color: #fff;
+   137→   137→   137→      border: none;
+   138→   138→   138→      border-radius: 8px;
+   139→   139→   139→      font-size: 15px;
+   140→   140→   140→      font-weight: 600;
+   141→   141→   141→      cursor: pointer;
+   142→   142→   142→    }
+   143→   143→   143→    .vpd-env-btn-row #vpd-btn-env-calc:hover:not(:disabled) {
+   144→   144→   144→      background: #16a34a;
+   145→   145→   145→    }
+   146→   146→   146→    .vpd-env-btn-row #vpd-btn-env-calc:disabled {
+   147→   147→   147→      opacity: 0.55;
+   148→   148→   148→      cursor: not-allowed;
+   149→   149→   149→    }
+   150→   150→   150→    .vpd-env-btn-row #vpd-btn-env-clear {
+   151→   151→   151→      padding: 14px 16px;
+   152→   152→   152→      background: #fff;
+   153→   153→   153→      color: #334155;
+   154→   154→   154→      border: 1px solid #cbd5e1;
+   155→   155→   155→      border-radius: 8px;
+   156→   156→   156→      font-size: 14px;
+   157→   157→   157→      font-weight: 600;
+   158→   158→   158→      cursor: pointer;
+   159→   159→   159→      white-space: nowrap;
+   160→   160→   160→    }
+   161→   161→   161→    .vpd-env-btn-row #vpd-btn-env-clear:hover {
+   162→   162→   162→      background: #f8fafc;
+   163→   163→   163→      border-color: #94a3b8;
+   164→   164→   164→    }
+   165→   165→   165→    #vpd-env-simple-locked-hint {
+   166→   166→   166→      display: none;
+   167→   167→   167→      margin: 0 0 10px;
+   168→   168→   168→      font-size: 12px;
+   169→   169→   169→      line-height: 1.45;
+   170→   170→   170→      color: #9a3412;
+   171→   171→   171→      background: #fff7ed;
+   172→   172→   172→      border: 1px solid #fdba74;
+   173→   173→   173→      border-radius: 8px;
+   174→   174→   174→      padding: 8px 10px;
+   175→   175→   175→    }
+   176→   176→   176→  </style>
+   177→   177→   177→</head>
+   178→   178→   178→<body>
+   179→   179→   179→  <div class="wrap">
+   180→   180→   180→    <div class="np-free-tool-head">
+   181→   181→   181→      <h2 class="title np-free-tool-title">🌡️ Estimador de déficit de presión de vapor</h2>
+   182→   182→   182→      <div class="np-free-watermark" aria-hidden="true"><img src="assets/N_Hoja_Azul.png" alt=""></div>
+   183→   183→   183→    </div>
+   184→   184→   184→    <p class="vpd-context-note" role="note">
+   185→   185→   185→      <strong>Foco técnico:</strong> el VPD aquí es <strong>ambiental</strong> (aire a escala meteorológica). Si usas el mapa, NutriPlant toma en ese punto temperatura, humedad y radiación a partir de <strong>información meteorológica con respaldo satelital</strong>; en el cultivo el <strong>microclima</strong> puede variar con el <strong>área foliar</strong>, el dosel o la ventilación.
+   186→   186→   186→      La T<sub>hoja</sub> manual o estimada por radiación es orientativa — <strong>valida en campo</strong>.
+   187→   187→   187→    </p>
+   188→   188→   188→
+   189→   189→   189→    <div style="background:#fefce8;border:2px solid #eab308;border-radius:12px;padding:20px;margin-bottom:20px;">
+   190→   190→   190→      <h3 style="margin:0 0 8px;color:#854d0e;font-size:17px;font-weight:600;">🗺️ Clima en un punto (mapa o GPS)</h3>
+   191→   191→   191→      <p style="margin:0 0 14px;font-size:13px;color:#713f12;line-height:1.45;">
+   192→   192→   192→        Elige un punto en el mapa o usa tu ubicación. NutriPlant obtiene la temperatura, humedad y radiación solar actuales en ese punto (<strong>información meteorológica con respaldo satelital</strong>); con radiación se estima <strong>T<sub>hoja</sub></strong> y el VPD.
+   193→   193→   193→      </p>
+   194→   194→   194→      <div class="vpd-coord-row">
+   195→   195→   195→        <div>
+   196→   196→   196→          <label style="display:block;font-size:12px;font-weight:600;color:#444;margin-bottom:4px;">Latitud</label>
+   197→   197→   197→          <input id="vpd-free-lat" type="number" step="any" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;" placeholder="ej. 19.4326" />
+   198→   198→   198→        </div>
+   199→   199→   199→        <div>
+   200→   200→   200→          <label style="display:block;font-size:12px;font-weight:600;color:#444;margin-bottom:4px;">Longitud</label>
+   201→   201→   201→          <input id="vpd-free-lng" type="number" step="any" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;" placeholder="ej. -99.1332" />
+   202→   202→   202→        </div>
+   203→   203→   203→      </div>
+   204→   204→   204→      <div class="vpd-map-actions">
+   205→   205→   205→        <button type="button" id="vpd-btn-geolocate" onclick="vpdFreeUseMyLocation()">📍 Mi ubicación</button>
+   206→   206→   206→        <button type="button" class="primary" id="vpd-btn-fetch-weather" onclick="vpdFreeFetchWeatherAndCalc()">🌤️ Obtener clima y calcular VPD</button>
+   207→   207→   207→      </div>
+   208→   208→   208→      <p id="vpd-geo-status" aria-live="polite"></p>
+   209→   209→   209→      <div id="vpd-free-map"></div>
+   210→   210→   210→    </div>
+   211→   211→   211→
+   212→   212→   212→    <div style="background:#f0f9ff;border:2px solid #0ea5e9;border-radius:12px;padding:24px;margin-bottom:24px;">
+   213→   213→   213→      <h3 style="margin:0 0 20px;color:#0369a1;font-size:18px;font-weight:600;">📊 Estimador ambiental simple</h3>
+   214→   214→   214→
+   215→   215→   215→      <div class="vpd-grid-row" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+   216→   216→   216→        <div class="vpd-grid-cell" style="background:white;padding:16px;border-radius:8px;border:1px solid #e5e7eb;">
+   217→   217→   217→          <label style="display:block;margin-bottom:8px;font-weight:500;color:#374151;">🌡️ Temperatura del Aire (°C)</label>
+   218→   218→   218→          <input id="vpd-env-temp" type="number" step="0.1" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:6px;font-size:16px;" placeholder="Ej: 20.5" />
+   219→   219→   219→        </div>
+   220→   220→   220→        <div class="vpd-grid-cell" style="background:white;padding:16px;border-radius:8px;border:1px solid #e5e7eb;">
+   221→   221→   221→          <label style="display:block;margin-bottom:8px;font-weight:500;color:#374151;">💧 Humedad Relativa (%)</label>
+   222→   222→   222→          <input id="vpd-env-humidity" type="number" step="0.1" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:6px;font-size:16px;" placeholder="Ej: 85" />
+   223→   223→   223→        </div>
+   224→   224→   224→      </div>
+   225→   225→   225→
+   226→   226→   226→      <div class="vpd-env-btn-row">
+   227→   227→   227→        <button type="button" id="vpd-btn-env-calc" onclick="calculateEnvironmentalVPDFree()">📊 Calcular VPD</button>
+   228→   228→   228→        <button type="button" id="vpd-btn-env-clear" onclick="vpdFreeClearEnvironmentalSimple()">🧹 Limpiar valores</button>
+   229→   229→   229→      </div>
+   230→   230→   230→      <p id="vpd-env-simple-locked-hint" role="status"></p>
+   231→   231→   231→      <div id="vpd-environmental-results" style="margin-top:16px;"></div>
+   232→   232→   232→    </div>
+   233→   233→   233→
+   234→   234→   234→    <div style="background:#f0fdf4;border:2px solid #22c55e;border-radius:12px;padding:24px;">
+   235→   235→   235→      <h3 style="margin:0 0 20px;color:#15803d;font-size:18px;font-weight:600;">🔬 Estimador avanzado</h3>
+   236→   236→   236→
+   237→   237→   237→      <div class="vpd-grid-row" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+   238→   238→   238→        <div class="vpd-grid-cell" style="background:white;padding:16px;border-radius:8px;border:1px solid #e5e7eb;">
+   239→   239→   239→          <label style="display:block;margin-bottom:8px;font-weight:500;color:#374151;">🌡️ Temperatura del Aire (°C)</label>
+   240→   240→   240→          <input id="vpd-adv-air-temp" type="number" step="0.1" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:6px;font-size:16px;" placeholder="Ej: 25" />
+   241→   241→   241→        </div>
+   242→   242→   242→        <div class="vpd-grid-cell" style="background:white;padding:16px;border-radius:8px;border:1px solid #e5e7eb;">
+   243→   243→   243→          <label style="display:block;margin-bottom:8px;font-weight:500;color:#374151;">💧 Humedad Relativa (%)</label>
+   244→   244→   244→          <input id="vpd-adv-humidity" type="number" step="0.1" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:6px;font-size:16px;" placeholder="Ej: 80" />
+   245→   245→   245→        </div>
+   246→   246→   246→      </div>
+   247→   247→   247→
+   248→   248→   248→      <div style="background:white;padding:16px;border-radius:8px;border:1px solid #e5e7eb;margin-bottom:20px;">
+   249→   249→   249→        <label style="display:block;margin-bottom:12px;font-weight:600;color:#1e293b;">Modo de Cálculo:</label>
+   250→   250→   250→        <div style="margin-bottom:16px;">
+   251→   251→   251→          <label style="display:flex;align-items:center;cursor:pointer;padding:12px;border-radius:8px;background:#f9fafb;margin-bottom:8px;">
+   252→   252→   252→            <input type="radio" name="vpd-mode-free" value="leaf" checked style="margin-right:10px;width:18px;height:18px;cursor:pointer;" onchange="toggleVPDModeFree()" />
+   253→   253→   253→            <span style="font-weight:500;">🌿 Temperatura de Hoja</span>
+   254→   254→   254→          </label>
+   255→   255→   255→          <div id="vpd-leaf-input" style="margin-left:28px;margin-top:8px;">
+   256→   256→   256→            <input id="vpd-leaf-temp" type="number" step="0.1" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:6px;font-size:16px;" placeholder="Ej: 27.4" />
+   257→   257→   257→          </div>
+   258→   258→   258→        </div>
+   259→   259→   259→        <div>
+   260→   260→   260→          <label style="display:flex;align-items:center;cursor:pointer;padding:12px;border-radius:8px;background:#f9fafb;">
+   261→   261→   261→            <input type="radio" name="vpd-mode-free" value="radiation" style="margin-right:10px;width:18px;height:18px;cursor:pointer;" onchange="toggleVPDModeFree()" />
+   262→   262→   262→            <span style="font-weight:500;">☀️ Radiación Solar</span>
+   263→   263→   263→          </label>
+   264→   264→   264→          <div id="vpd-radiation-input" style="margin-left:28px;margin-top:8px;display:none;">
+   265→   265→   265→            <input id="vpd-solar-radiation" type="number" step="1" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:6px;font-size:16px;" placeholder="Ej: 600 W/m²" />
+   266→   266→   266→            <p style="margin:8px 0 0;font-size:13px;color:#64748b;">La temperatura de hoja se calculará automáticamente</p>
+   267→   267→   267→          </div>
+   268→   268→   268→        </div>
+   269→   269→   269→      </div>
+   270→   270→   270→
+   271→   271→   271→      <button onclick="calculateAdvancedVPDFree()" style="width:100%;padding:14px;background:#22c55e;color:white;border:none;border-radius:8px;font-size:16px;font-weight:600;cursor:pointer;">📊 Calcular Déficit de Presión de Vapor</button>
+   272→   272→   272→      <div id="vpd-advanced-results" style="margin-top:16px;"></div>
+   273→   273→   273→    </div>
+   274→   274→   274→  </div>
+   275→   275→   275→
+   276→   276→   276→  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+   277→   277→   277→  <script src="assets/np-free-geolocation.js?v=202606201700"></script>
+   278→   278→   278→  <script>
+   279→   279→   279→    if (/[?&]embed=(?:login|dashboard)(?:&|$)/.test(location.search || '')) {
+   280→   280→   280→      document.documentElement.classList.add('embed-login');
+   281→   281→   281→    }
+   282→   282→   282→
+   283→   283→   283→    function isEnglishUI() {
+   284→   284→   284→      const title = (document.querySelector('.title') || document.querySelector('h2') || {}).textContent || '';
+   285→   285→   285→      return /\b(Vapor Pressure|Deficit|Calculator|Results|Humidity)\b/i.test(title);
+   286→   286→   286→    }
+   287→   287→   287→
+   288→   288→   288→    function t(es, en) {
+   289→   289→   289→      return isEnglishUI() ? en : es;
+   290→   290→   290→    }
+   291→   291→   291→
+   292→   292→   292→    /** Tras «Obtener clima…»: el botón manual simple queda bloqueado hasta «Limpiar valores». */
+   293→   293→   293→    var vpdFreeEnvSimpleLockedAfterSatellite = false;
+   294→   294→   294→
+   295→   295→   295→    function vpdFreeSetEnvSimpleLocked(locked) {
+   296→   296→   296→      vpdFreeEnvSimpleLockedAfterSatellite = !!locked;
+   297→   297→   297→      var calcBtn = document.getElementById('vpd-btn-env-calc');
+   298→   298→   298→      var hint = document.getElementById('vpd-env-simple-locked-hint');
+   299→   299→   299→      if (calcBtn) {
+   300→   300→   300→        calcBtn.disabled = !!locked;
+   301→   301→   301→        calcBtn.title = locked
+   302→   302→   302→          ? t(
+   303→   303→   303→              'Tras usar el clima del mapa: limpia estos campos para volver a calcular manualmente (solo T y HR).',
+   304→   304→   304→              'After map weather: clear fields to calculate manually (T + RH only).'
+   305→   305→   305→            )
+   306→   306→   306→          : '';
+   307→   307→   307→      }
+   308→   308→   308→      if (hint) {
+   309→   309→   309→        if (locked) {
+   310→   310→   310→          hint.style.display = 'block';
+   311→   311→   311→          hint.textContent = t(
+   312→   312→   312→            'El último cálculo vino del clima en el mapa (puede incluir radiación). Para usar solo temperatura y humedad manual aquí, primero pulsa «Limpiar valores».',
+   313→   313→   313→            'The last run used map weather (may include radiation). To use manual T and RH only here, tap «Clear values» first.'
+   314→   314→   314→          );
+   315→   315→   315→        } else {
+   316→   316→   316→          hint.style.display = 'none';
+   317→   317→   317→          hint.textContent = '';
+   318→   318→   318→        }
+   319→   319→   319→      }
+   320→   320→   320→    }
+   321→   321→   321→
+   322→   322→   322→    function vpdFreeClearEnvironmentalSimple() {
+   323→   323→   323→      var tIn = document.getElementById('vpd-env-temp');
+   324→   324→   324→      var hIn = document.getElementById('vpd-env-humidity');
+   325→   325→   325→      if (tIn) tIn.value = '';
+   326→   326→   326→      if (hIn) hIn.value = '';
+   327→   327→   327→      var res = document.getElementById('vpd-environmental-results');
+   328→   328→   328→      if (res) res.innerHTML = '';
+   329→   329→   329→      vpdFreeSetEnvSimpleLocked(false);
+   330→   330→   330→    }
+   331→   331→   331→
+   332→   332→   332→    function calculateSaturationAbsoluteHumidity(tempC) {
+   333→   333→   333→      return 5.018 + (0.32321 * tempC) + (0.0081847 * tempC * tempC) + (0.00031243 * tempC * tempC * tempC);
+   334→   334→   334→    }
+   335→   335→   335→
+   336→   336→   336→    function calculateVPDSimple(airTemp, humidity) {
+   337→   337→   337→      const es = 0.6108 * Math.exp((17.27 * airTemp) / (airTemp + 237.3));
+   338→   338→   338→      const ea = es * (humidity / 100);
+   339→   339→   339→      const vpd = es - ea;
+   340→   340→   340→      const hd = calculateSaturationAbsoluteHumidity(airTemp) * ((100 - humidity) / 100);
+   341→   341→   341→      return { vpd: parseFloat(vpd.toFixed(2)), hd: parseFloat(hd.toFixed(2)) };
+   342→   342→   342→    }
+   343→   343→   343→
+   344→   344→   344→    function calculateLeafTempFromRadiation(airTemp, solarRadiation) {
+   345→   345→   345→      const leafTemp = solarRadiation > 200
+   346→   346→   346→        ? airTemp + (((solarRadiation - 200) * 0.6) / 100)
+   347→   347→   347→        : airTemp;
+   348→   348→   348→      return parseFloat(leafTemp.toFixed(1));
+   349→   349→   349→    }
+   350→   350→   350→
+   351→   351→   351→    function calculateVPDAdvanced(airTemp, airHumidity, leafTemp) {
+   352→   352→   352→      const esLeaf = 0.6108 * Math.exp((17.27 * leafTemp) / (leafTemp + 237.3));
+   353→   353→   353→      const esAir = 0.6108 * Math.exp((17.27 * airTemp) / (airTemp + 237.3));
+   354→   354→   354→      const ea = esAir * (airHumidity / 100);
+   355→   355→   355→      const vpd = esLeaf - ea;
+   356→   356→   356→      const hd = calculateSaturationAbsoluteHumidity(leafTemp) -
+   357→   357→   357→        (calculateSaturationAbsoluteHumidity(airTemp) * (airHumidity / 100));
+   358→   358→   358→      return { vpd: parseFloat(vpd.toFixed(2)), hd: parseFloat(hd.toFixed(2)) };
+   359→   359→   359→    }
+   360→   360→   360→
+   361→   361→   361→    function getHumidityDeficitClass(hdValue) {
+   362→   362→   362→      const hd = Number(hdValue);
+   363→   363→   363→      if (!Number.isFinite(hd)) return { label: t('N/D', 'N/A'), message: t('Sin dato suficiente', 'Not enough data'), color: '#64748b', bg: '#f8fafc' };
+   364→   364→   364→      if (hd < 3) return { label: t('Muy bajo', 'Very low'), message: t('Ambiente húmedo / baja demanda evaporativa', 'Humid environment / low evaporative demand'), color: '#2563eb', bg: '#eff6ff' };
+   365→   365→   365→      if (hd < 6) return { label: t('Bajo-moderado', 'Low-moderate'), message: t('Demanda manejable', 'Manageable demand'), color: '#16a34a', bg: '#f0fdf4' };
+   366→   366→   366→      if (hd < 10) return { label: t('Moderado', 'Moderate'), message: t('Transpiración activa; vigilar cultivo sensible', 'Active transpiration; monitor sensitive crops'), color: '#ca8a04', bg: '#fefce8' };
+   367→   367→   367→      if (hd <= 15) return { label: t('Alto', 'High'), message: t('Alta demanda evaporativa', 'High evaporative demand'), color: '#ea580c', bg: '#fff7ed' };
+   368→   368→   368→      return { label: t('Muy alto', 'Very high'), message: t('Demanda muy alta; validar en campo', 'Very high demand; validate in crop'), color: '#dc2626', bg: '#fef2f2' };
+   369→   369→   369→    }
+   370→   370→   370→
+   371→   371→   371→    function renderHumidityDeficitBadge(hdValue) {
+   372→   372→   372→      const c = getHumidityDeficitClass(hdValue);
+   373→   373→   373→      return '<div style="margin-top:8px;width:100%;max-width:100%;box-sizing:border-box;padding:4px 0 0 0;">' +
+   374→   374→   374→        '<div style="font-size:10px;font-weight:800;color:#0d9488;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:6px;">' + t('DH', 'HD') + '</div>' +
+   375→   375→   375→        '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:5px 8px;border-radius:999px;background:' + c.bg + ';border:1px solid ' + c.color + '33;color:' + c.color + ';font-size:12px;font-weight:700;max-width:100%;box-sizing:border-box;" title="' + c.message + '">' +
+   376→   376→   376→        '<span style="width:9px;height:9px;border-radius:999px;background:' + c.color + ';display:inline-block;flex-shrink:0;"></span>' +
+   377→   377→   377→        c.label +
+   378→   378→   378→        '</div>' +
+   379→   379→   379→        '<div style="margin-top:4px;color:#64748b;font-size:12px;line-height:1.35;">' + c.message + '</div>' +
+   380→   380→   380→        '</div>';
+   381→   381→   381→    }
+   382→   382→   382→
+   383→   383→   383→    var vpdFreeMap = null;
+   384→   384→   384→    var vpdFreeMarker = null;
+   385→   385→   385→
+   386→   386→   386→    function vpdGeoSetStatus(msg) {
+   387→   387→   387→      var el = document.getElementById('vpd-geo-status');
+   388→   388→   388→      if (el) el.textContent = msg || '';
+   389→   389→   389→    }
+   390→   390→   390→
+   391→   391→   391→    function vpdFreeReadCoords() {
+   392→   392→   392→      var lat = parseFloat(document.getElementById('vpd-free-lat').value);
+   393→   393→   393→      var lng = parseFloat(document.getElementById('vpd-free-lng').value);
+   394→   394→   394→      return { lat: lat, lng: lng };
+   395→   395→   395→    }
+   396→   396→   396→
+   397→   397→   397→    function vpdFreeApplyCoords(lat, lng, moveMarker) {
+   398→   398→   398→      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+   399→   399→   399→      if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return;
+   400→   400→   400→      document.getElementById('vpd-free-lat').value = lat.toFixed(6);
+   401→   401→   401→      document.getElementById('vpd-free-lng').value = lng.toFixed(6);
+   402→   402→   402→      if (moveMarker && vpdFreeMarker && vpdFreeMap) {
+   403→   403→   403→        vpdFreeMarker.setLatLng([lat, lng]);
+   404→   404→   404→        vpdFreeMap.setView([lat, lng], Math.max(vpdFreeMap.getZoom(), 10));
+   405→   405→   405→      }
+   406→   406→   406→    }
+   407→   407→   407→
+   408→   408→   408→    function vpdFreeInitMap() {
+   409→   409→   409→      if (typeof L === 'undefined' || vpdFreeMap) return;
+   410→   410→   410→      var startLat = 19.4326;
+   411→   411→   411→      var startLng = -99.1332;
+   412→   412→   412→      vpdFreeMap = L.map('vpd-free-map', { scrollWheelZoom: true }).setView([startLat, startLng], 5);
+   413→   413→   413→      L.tileLayer(
+   414→   414→   414→        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+   415→   415→   415→        {
+   416→   416→   416→          maxZoom: 19,
+   417→   417→   417→          attribution:
+   418→   418→   418→            'Imágenes © <a href="https://www.esri.com/">Esri</a> — Maxar, Earthstar Geographics, comunidad GIS'
+   419→   419→   419→        }
+   420→   420→   420→      ).addTo(vpdFreeMap);
+   421→   421→   421→      vpdFreeMarker = L.marker([startLat, startLng], { draggable: true }).addTo(vpdFreeMap);
+   422→   422→   422→      vpdFreeMarker.on('dragend', function () {
+   423→   423→   423→        var ll = vpdFreeMarker.getLatLng();
+   424→   424→   424→        vpdFreeApplyCoords(ll.lat, ll.lng, false);
+   425→   425→   425→        vpdGeoSetStatus('');
+   426→   426→   426→      });
+   427→   427→   427→      vpdFreeMap.on('click', function (e) {
+   428→   428→   428→        vpdFreeMarker.setLatLng(e.latlng);
+   429→   429→   429→        vpdFreeApplyCoords(e.latlng.lat, e.latlng.lng, false);
+   430→   430→   430→        vpdGeoSetStatus('');
+   431→   431→   431→      });
+   432→   432→   432→      vpdFreeApplyCoords(startLat, startLng, false);
+   433→   433→   433→      setTimeout(function () { if (vpdFreeMap) vpdFreeMap.invalidateSize(); }, 300);
+   434→   434→   434→      setTimeout(function () { if (vpdFreeMap) vpdFreeMap.invalidateSize(); }, 800);
+   435→   435→   435→      if (window.NpFreeGeo && window.NpFreeGeo.isEmbedded()) {
+   436→   436→   436→        var st = document.getElementById('vpd-geo-status');
+   437→   437→   437→        if (st && st.parentNode && !st.parentNode.querySelector('.np-embed-geo-hint')) {
+   438→   438→   438→          var link = document.createElement('p');
+   439→   439→   439→          link.className = 'np-embed-geo-hint';
+   440→   440→   440→          link.style.cssText = 'font-size:11px;color:#64748b;margin:0 0 8px;';
+   441→   441→   441→          link.innerHTML = t(
+   442→   442→   442→            'Si el GPS falla aquí: <a href="vpd-free.html" target="_blank" rel="noopener" style="color:#2563eb;">abrir herramienta en página completa</a>.',
+   443→   443→   443→            'If GPS fails here: <a href="vpd-free.html" target="_blank" rel="noopener" style="color:#2563eb;">open tool in full page</a>.'
+   444→   444→   444→          );
+   445→   445→   445→          st.parentNode.insertBefore(link, st.nextSibling);
+   446→   446→   446→        }
+   447→   447→   447→      }
+   448→   448→   448→    }
+   449→   449→   449→
+   450→   450→   450→    document.addEventListener('visibilitychange', function () {
+   451→   451→   451→      if (document.visibilityState === 'visible' && vpdFreeMap) setTimeout(function () { vpdFreeMap.invalidateSize(); }, 200);
+   452→   452→   452→    });
+   453→   453→   453→
+   454→   454→   454→    ['vpd-free-lat', 'vpd-free-lng'].forEach(function (id) {
+   455→   455→   455→      var inp = document.getElementById(id);
+   456→   456→   456→      if (inp) inp.addEventListener('change', function () {
+   457→   457→   457→        var c = vpdFreeReadCoords();
+   458→   458→   458→        if (Number.isFinite(c.lat) && Number.isFinite(c.lng) && vpdFreeMarker && vpdFreeMap) {
+   459→   459→   459→          vpdFreeMarker.setLatLng([c.lat, c.lng]);
+   460→   460→   460→          vpdFreeMap.setView([c.lat, c.lng], Math.max(vpdFreeMap.getZoom(), 8));
+   461→   461→   461→        }
+   462→   462→   462→      });
+   463→   463→   463→    });
+   464→   464→   464→
+   465→   465→   465→    if (document.readyState === 'loading') {
+   466→   466→   466→      document.addEventListener('DOMContentLoaded', vpdFreeInitMap);
+   467→   467→   467→    } else {
+   468→   468→   468→      vpdFreeInitMap();
+   469→   469→   469→    }
+   470→   470→   470→
+   471→   471→   471→    async function vpdFreeGetWeatherData(lat, lng) {
+   472→   472→   472→      var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + encodeURIComponent(lat) +
+   473→   473→   473→        '&longitude=' + encodeURIComponent(lng) +
+   474→   474→   474→        '&current=temperature_2m,relative_humidity_2m,shortwave_radiation,uv_index';
+   475→   475→   475→      var response = await fetch(url);
+   476→   476→   476→      if (!response.ok) throw new Error('HTTP ' + response.status);
+   477→   477→   477→      var data = await response.json();
+   478→   478→   478→      if (!data || !data.current) throw new Error('Respuesta inválida');
+   479→   479→   479→      var cur = data.current;
+   480→   480→   480→      var rad = cur.shortwave_radiation;
+   481→   481→   481→      var radNum = (rad != null && Number.isFinite(Number(rad))) ? Number(rad) : null;
+   482→   482→   482→      var uv = cur.uv_index;
+   483→   483→   483→      var uvNum = (uv != null && Number.isFinite(Number(uv))) ? Number(uv) : null;
+   484→   484→   484→      return {
+   485→   485→   485→        temperature: cur.temperature_2m,
+   486→   486→   486→        humidity: cur.relative_humidity_2m,
+   487→   487→   487→        shortwaveRadiation: radNum,
+   488→   488→   488→        uvIndex: uvNum
+   489→   489→   489→      };
+   490→   490→   490→    }
+   491→   491→   491→
+   492→   492→   492→    function vpdFreeUseMyLocation() {
+   493→   493→   493→      var btn = document.getElementById('vpd-btn-geolocate');
+   494→   494→   494→      if (btn) btn.disabled = true;
+   495→   495→   495→      vpdGeoSetStatus(t('📍 Obteniendo ubicación…', '📍 Getting location…'));
+   496→   496→   496→      var geo = window.NpFreeGeo;
+   497→   497→   497→      if (!geo || typeof geo.requestLocation !== 'function') {
+   498→   498→   498→        vpdGeoSetStatus(t('No se pudo leer el GPS. Prueba seleccionando un punto en el mapa.', 'Could not read GPS. Pick a point on the map.'));
+   499→   499→   499→        if (btn) btn.disabled = false;
+   500→   500→   500→        return;
+   501→   501→   501→      }
+   502→   502→   502→      geo.requestLocation({ retry: true, t: t }).then(
+   503→   503→   503→        function (pos) {
+   504→   504→   504→          vpdFreeApplyCoords(pos.coords.latitude, pos.coords.longitude, true);
+   505→   505→   505→          vpdGeoSetStatus(t('Ubicación aplicada. Puedes afinar el punto en el mapa.', 'Location set. Drag the marker or tap the map to refine.'));
+   506→   506→   506→          if (btn) btn.disabled = false;
+   507→   507→   507→          setTimeout(function () { if (vpdFreeMap) vpdFreeMap.invalidateSize(); }, 150);
+   508→   508→   508→        },
+   509→   509→   509→        function (err) {
+   510→   510→   510→          vpdGeoSetStatus(err && err.message ? err.message : t('No se pudo leer el GPS. Prueba seleccionando un punto en el mapa.', 'Could not read GPS. Pick a point on the map.'));
+   511→   511→   511→          if (btn) btn.disabled = false;
+   512→   512→   512→        }
+   513→   513→   513→      );
+   514→   514→   514→    }
+   515→   515→   515→
+   516→   516→   516→    async function vpdFreeFetchWeatherAndCalc() {
+   517→   517→   517→      var c = vpdFreeReadCoords();
+   518→   518→   518→      if (!Number.isFinite(c.lat) || !Number.isFinite(c.lng)) {
+   519→   519→   519→        alert(t('⚠️ Indica latitud y longitud válidas o usa el mapa.', '⚠️ Enter valid latitude/longitude or use the map.'));
+   520→   520→   520→        return;
+   521→   521→   521→      }
+   522→   522→   522→      if (c.lat < -90 || c.lat > 90 || c.lng < -180 || c.lng > 180) {
+   523→   523→   523→        alert(t('⚠️ Coordenadas fuera de rango.', '⚠️ Coordinates out of range.'));
+   524→   524→   524→        return;
+   525→   525→   525→      }
+   526→   526→   526→      var btn = document.getElementById('vpd-btn-fetch-weather');
+   527→   527→   527→      if (btn) btn.disabled = true;
+   528→   528→   528→      vpdGeoSetStatus(t('🌤️ Consultando clima en el punto…', '🌤️ Fetching weather at point…'));
+   529→   529→   529→      try {
+   530→   530→   530→        var weather = await vpdFreeGetWeatherData(c.lat, c.lng);
+   531→   531→   531→        var temp = Number(weather.temperature);
+   532→   532→   532→        var hum = Number(weather.humidity);
+   533→   533→   533→        if (!Number.isFinite(temp) || !Number.isFinite(hum)) {
+   534→   534→   534→          throw new Error('Datos incompletos');
+   535→   535→   535→        }
+   536→   536→   536→        document.getElementById('vpd-env-temp').value = temp.toFixed(1);
+   537→   537→   537→        document.getElementById('vpd-env-humidity').value = Math.round(hum);
+   538→   538→   538→        document.getElementById('vpd-adv-air-temp').value = temp.toFixed(1);
+   539→   539→   539→        document.getElementById('vpd-adv-humidity').value = Math.round(hum);
+   540→   540→   540→
+   541→   541→   541→        var rad = weather.shortwaveRadiation;
+   542→   542→   542→        var uv = weather.uvIndex;
+   543→   543→   543→        var useSolar = rad != null && Number.isFinite(rad) && rad >= 0;
+   544→   544→   544→        var hasUv = uv != null && Number.isFinite(uv);
+   545→   545→   545→        var uvLabel = hasUv ? ((Math.round(uv * 10) / 10) % 1 === 0 ? String(Math.round(uv * 10) / 10) : (Math.round(uv * 10) / 10).toFixed(1)) : '';
+   546→   546→   546→        var uvBadge = '';
+   547→   547→   547→        if (hasUv) {
+   548→   548→   548→          var label = 'Extremo', color = '#6d28d9', bg = '#ede9fe';
+   549→   549→   549→          if (uv <= 2) { label = t('Bajo', 'Low'); color = '#166534'; bg = '#dcfce7'; }
+   550→   550→   550→          else if (uv <= 5) { label = t('Moderado', 'Moderate'); color = '#92400e'; bg = '#fef3c7'; }
+   551→   551→   551→          else if (uv <= 7) { label = t('Alto', 'High'); color = '#b45309'; bg = '#ffedd5'; }
+   552→   552→   552→          else if (uv <= 10) { label = t('Muy alto', 'Very high'); color = '#be123c'; bg = '#ffe4e6'; }
+   553→   553→   553→          uvBadge = '<div style="margin-top:6px;"><span style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;color:' + color + ';background:' + bg + ';">' + label + '</span></div>';
+   554→   554→   554→        }
+   555→   555→   555→        if (useSolar) {
+   556→   556→   556→          document.getElementById('vpd-solar-radiation').value = String(Math.round(rad));
+   557→   557→   557→          document.querySelector('input[name="vpd-mode-free"][value="radiation"]').checked = true;
+   558→   558→   558→          toggleVPDModeFree();
+   559→   559→   559→        }
+   560→   560→   560→
+   561→   561→   561→        var results;
+   562→   562→   562→        var leafFromRad = null;
+   563→   563→   563→        if (useSolar) {
+   564→   564→   564→          leafFromRad = calculateLeafTempFromRadiation(temp, rad);
+   565→   565→   565→          results = calculateVPDAdvanced(temp, hum, leafFromRad);
+   566→   566→   566→        } else {
+   567→   567→   567→          results = calculateVPDSimple(temp, hum);
+   568→   568→   568→        }
+   569→   569→   569→
+   570→   570→   570→        var foot = '';
+   571→   571→   571→        if (useSolar && leafFromRad != null) {
+   572→   572→   572→          foot =
+   573→   573→   573→            '<div style="margin:0 0 14px;padding:10px 12px;background:#ecfdf5;border:1px solid #6ee7b7;border-radius:8px;font-size:13px;color:#065f46;line-height:1.45;">' +
+   574→   574→   574→            '<strong>' + t('VPD con radiación solar', 'VPD with solar radiation') + '</strong> — ' +
+   575→   575→   575→            rad.toFixed(0) + ' W/m². ' +
+   576→   576→   576→            t('T<sub>hoja</sub> estimada', 'Estimated leaf T') + ': <strong>' + leafFromRad + ' °C</strong>. ' +
+   577→   577→   577→            t('Punto:', 'Point:') + ' ' + c.lat.toFixed(5) + ', ' + c.lng.toFixed(5) +
+   578→   578→   578→            '</div>';
+   579→   579→   579→        } else {
+   580→   580→   580→          foot =
+   581→   581→   581→            '<div style="margin:0 0 12px;font-size:13px;color:#64748b;">' +
+   582→   582→   582→            t('Sin dato útil de radiación en esta respuesta — VPD simple (solo T y HR). Punto:',
+   583→   583→   583→              'No usable radiation in this response — simple VPD. Point:') +
+   584→   584→   584→            ' ' + c.lat.toFixed(5) + ', ' + c.lng.toFixed(5) + '</div>';
+   585→   585→   585→        }
+   586→   586→   586→
+   587→   587→   587→        document.getElementById('vpd-environmental-results').innerHTML =
+   588→   588→   588→          foot +
+   589→   589→   589→          '<div style="background:white;padding:20px;border-radius:8px;border:1px solid #e5e7eb;">' +
+   590→   590→   590→          '<h4 style="margin:0 0 16px;color:#1e293b;font-size:16px;font-weight:600;">' + t('Resultados:', 'Results:') + '</h4>' +
+   591→   591→   591→          '<div class="vpd-results-metrics-grid" style="--vpd-metric-cols:' + (2 + (useSolar ? 1 : 0) + (hasUv ? 1 : 0)) + '">' +
+   592→   592→   592→          '<div><div style="color:#64748b;font-size:14px;margin-bottom:4px;">' + t('Déficit de Presión de Vapor', 'Vapor Pressure Deficit') + '</div><div style="font-size:24px;font-weight:700;color:#0284c7;">' + results.vpd + ' kPa</div></div>' +
+   593→   593→   593→          '<div><div style="color:#64748b;font-size:14px;margin-bottom:4px;">' + t('Déficit de Humedad', 'Humidity Deficit') + '</div><div style="font-size:24px;font-weight:700;color:#0d9488;">' + results.hd + ' g/m³</div>' + renderHumidityDeficitBadge(results.hd) + '</div>' +
+   594→   594→   594→          (useSolar
+   595→   595→   595→            ? '<div><div style="color:#64748b;font-size:14px;margin-bottom:4px;">☀️ ' + t('Radiación solar', 'Solar radiation') + '</div><div style="font-size:24px;font-weight:700;color:#d97706;">' + rad.toFixed(0) + ' W/m²</div></div>'
+   596→   596→   596→            : '') +
+   597→   597→   597→          (hasUv
+   598→   598→   598→            ? '<div><div style="color:#64748b;font-size:14px;margin-bottom:4px;">🟣 ' + t('Índice UV', 'UV Index') + '</div><div style="font-size:24px;font-weight:700;color:#7c3aed;">' + uvLabel + '</div>' + uvBadge + '</div>'
+   599→   599→   599→            : '') +
+   600→   600→   600→          '</div>' +
+   601→   601→   601→          createVPDRangeChart(results.vpd) +
+   602→   602→   602→          '</div>';
+   603→   603→   603→
+   604→   604→   604→        vpdGeoSetStatus(t('✅ Datos aplicados al estimador ambiental simple y a los campos del estimador avanzado.',
+   605→   605→   605→          '✅ Data filled in simple & advanced inputs.'));
+   606→   606→   606→        document.getElementById('vpd-environmental-results').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+   607→   607→   607→        vpdFreeSetEnvSimpleLocked(true);
+   608→   608→   608→      } catch (e) {
+   609→   609→   609→        console.warn(e);
+   610→   610→   610→        vpdGeoSetStatus(t('Error al obtener clima. Intenta de nuevo.', 'Weather fetch failed. Try again.'));
+   611→   611→   611→        alert(t('No se pudieron obtener datos del clima. Revisa tu conexión.', 'Could not fetch weather. Check your connection.'));
+   612→   612→   612→      } finally {
+   613→   613→   613→        if (btn) btn.disabled = false;
+   614→   614→   614→      }
+   615→   615→   615→    }
+   616→   616→   616→
+   617→   617→   617→    function createVPDRangeChart(vpdValue) {
+   618→   618→   618→      const minVPD = 0;
+   619→   619→   619→      const maxVPD = 3.0;
+   620→   620→   620→      const optimalMin = 0.5;
+   621→   621→   621→      const optimalMax = 1.5;
+   622→   622→   622→      const range = maxVPD - minVPD;
+   623→   623→   623→      let barColor = '#10b981';
+   624→   624→   624→      let status = t('Óptimo', 'Optimal');
+   625→   625→   625→      if (vpdValue < optimalMin) { barColor = '#3b82f6'; status = t('Bajo', 'Low'); }
+   626→   626→   626→      else if (vpdValue > optimalMax) { barColor = '#ef4444'; status = t('Alto', 'High'); }
+   627→   627→   627→      const position = Math.max(0, Math.min(100, ((vpdValue - minVPD) / range) * 100));
+   628→   628→   628→      const blueEndPos = (0.5 / range) * 100;
+   629→   629→   629→      const greenEndPos = (1.5 / range) * 100;
+   630→   630→   630→      const tickLabelsHTML = [];
+   631→   631→   631→      for (let i = 0.5; i <= 3.0; i += 0.5) {
+   632→   632→   632→        const tickPos = (i / range) * 100;
+   633→   633→   633→        tickLabelsHTML.push(`<div style="position:absolute;left:${tickPos}%;top:0;transform:translateX(-50%);font-size:10px;color:#64748b;white-space:nowrap;">${i.toFixed(1)}</div>`);
+   634→   634→   634→      }
+   635→   635→   635→      return `
+   636→   636→   636→        <div style="margin:20px 0;">
+   637→   637→   637→          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:50px;">
+   638→   638→   638→            <span style="font-weight:600;color:#1e293b;">${t('Rango Óptimo', 'Optimal Range')}: ${optimalMin} - ${optimalMax} kPa</span>
+   639→   639→   639→            <span style="font-weight:600;color:${barColor};">${t('Estado', 'Status')}: ${status}</span>
+   640→   640→   640→          </div>
+   641→   641→   641→          <div style="position:relative;height:50px;background:linear-gradient(to right,#3b82f6 0%,#3b82f6 ${blueEndPos * 0.85}%,#60a5fa ${blueEndPos * 0.92}%,#34d399 ${blueEndPos * 0.98}%,#22d3ee ${blueEndPos}%,#10b981 ${blueEndPos + (greenEndPos - blueEndPos) * 0.3}%,#10b981 ${greenEndPos * 0.85}%,#10b981 ${greenEndPos}%,#fbbf24 ${greenEndPos + (100 - greenEndPos) * 0.15}%,#fbbf24 ${greenEndPos + (100 - greenEndPos) * 0.35}%,#f59e0b ${greenEndPos + (100 - greenEndPos) * 0.5}%,#fb923c ${greenEndPos + (100 - greenEndPos) * 0.65}%,#f97316 ${greenEndPos + (100 - greenEndPos) * 0.78}%,#f87171 ${greenEndPos + (100 - greenEndPos) * 0.88}%,#ef4444 95%,#dc2626 100%);border-radius:8px;overflow:visible;border:2px solid #e5e7eb;box-shadow:inset 0 2px 4px rgba(0,0,0,0.1);">
+   642→   642→   642→            <div style="position:absolute;left:${blueEndPos}%;width:2px;height:100%;background:rgba(255,255,255,0.9);box-shadow:0 0 3px rgba(0,0,0,0.4);z-index:2;"></div>
+   643→   643→   643→            <div style="position:absolute;left:${greenEndPos}%;width:2px;height:100%;background:rgba(255,255,255,0.9);box-shadow:0 0 3px rgba(0,0,0,0.4);z-index:2;"></div>
+   644→   644→   644→            <div style="position:absolute;left:${position}%;top:-8px;width:3px;height:66px;background:white;border-radius:2px;box-shadow:0 3px 6px rgba(0,0,0,0.4);transform:translateX(-50%);z-index:10;"></div>
+   645→   645→   645→            <div style="position:absolute;left:${position}%;top:-12px;width:24px;height:24px;background:white;border:3px solid #1e293b;border-radius:50%;box-shadow:0 3px 8px rgba(0,0,0,0.5);transform:translateX(-50%);z-index:11;display:flex;align-items:center;justify-content:center;"><div style="width:8px;height:8px;background:#1e293b;border-radius:50%;"></div></div>
+   646→   646→   646→            <div style="position:absolute;left:${position}%;top:-52px;transform:translateX(-50%);z-index:12;background:#1e293b;color:white;padding:4px 8px;border-radius:6px;font-size:12px;font-weight:700;white-space:nowrap;box-shadow:0 2px 4px rgba(0,0,0,0.3);">${vpdValue.toFixed(2)} kPa</div>
+   647→   647→   647→          </div>
+   648→   648→   648→          <div style="position:relative;height:20px;margin-top:2px;">${tickLabelsHTML.join('')}</div>
+   649→   649→   649→          <div style="display:flex;justify-content:space-between;margin-top:4px;font-size:12px;color:#64748b;"><span style="font-weight:500;">0 kPa</span><span style="font-weight:500;">3.0 kPa</span></div>
+   650→   650→   650→        </div>
+   651→   651→   651→      `;
+   652→   652→   652→    }
+   653→   653→   653→
+   654→   654→   654→    function calculateEnvironmentalVPDFree() {
+   655→   655→   655→      if (vpdFreeEnvSimpleLockedAfterSatellite) {
+   656→   656→   656→        alert(
+   657→   657→   657→          t(
+   658→   658→   658→            'Primero pulsa «Limpiar valores» para borrar el resultado del clima del mapa y poder calcular manualmente solo con temperatura y humedad.',
+   659→   659→   659→            'First tap «Clear values» to reset map weather results, then you can calculate manually with temperature and humidity only.'
+   660→   660→   660→          )
+   661→   661→   661→        );
+   662→   662→   662→        return;
+   663→   663→   663→      }
+   664→   664→   664→      const airTemp = parseFloat(document.getElementById('vpd-env-temp').value);
+   665→   665→   665→      const h = parseFloat(document.getElementById('vpd-env-humidity').value);
+   666→   666→   666→      if (isNaN(airTemp) || isNaN(h)) {
+   667→   667→   667→        alert(t('⚠️ Por favor ingresa temperatura del aire y humedad relativa', '⚠️ Please enter air temperature and relative humidity'));
+   668→   668→   668→        return;
+   669→   669→   669→      }
+   670→   670→   670→      if (h < 0 || h > 100) {
+   671→   671→   671→        alert(t('⚠️ La humedad relativa debe estar entre 0 y 100%', '⚠️ Relative humidity must be between 0 and 100%'));
+   672→   672→   672→        return;
+   673→   673→   673→      }
+   674→   674→   674→      const r = calculateVPDSimple(airTemp, h);
+   675→   675→   675→      document.getElementById('vpd-environmental-results').innerHTML = `
+   676→   676→   676→        <div style="background:white;padding:20px;border-radius:8px;border:1px solid #e5e7eb;">
+   677→   677→   677→          <h4 style="margin:0 0 16px;color:#1e293b;font-size:16px;font-weight:600;">${t('Resultados:', 'Results:')}</h4>
+   678→   678→   678→          <div class="vpd-results-metrics-grid" style="--vpd-metric-cols:2">
+   679→   679→   679→            <div><div style="color:#64748b;font-size:14px;margin-bottom:4px;">${t('Déficit de Presión de Vapor', 'Vapor Pressure Deficit')}</div><div style="font-size:24px;font-weight:700;color:#0284c7;">${r.vpd} kPa</div></div>
+   680→   680→   680→            <div><div style="color:#64748b;font-size:14px;margin-bottom:4px;">${t('Déficit de Humedad', 'Humidity Deficit')}</div><div style="font-size:24px;font-weight:700;color:#0d9488;">${r.hd} g/m³</div>${renderHumidityDeficitBadge(r.hd)}</div>
+   681→   681→   681→          </div>
+   682→   682→   682→          ${createVPDRangeChart(r.vpd)}
+   683→   683→   683→        </div>
+   684→   684→   684→      `;
+   685→   685→   685→    }
+   686→   686→   686→
+   687→   687→   687→    function toggleVPDModeFree() {
+   688→   688→   688→      const mode = document.querySelector('input[name="vpd-mode-free"]:checked')?.value;
+   689→   689→   689→      const leaf = document.getElementById('vpd-leaf-input');
+   690→   690→   690→      const rad = document.getElementById('vpd-radiation-input');
+   691→   691→   691→      if (mode === 'leaf') { leaf.style.display = 'block'; rad.style.display = 'none'; }
+   692→   692→   692→      else { leaf.style.display = 'none'; rad.style.display = 'block'; }
+   693→   693→   693→    }
+   694→   694→   694→
+   695→   695→   695→    function calculateAdvancedVPDFree() {
+   696→   696→   696→      const airTemp = parseFloat(document.getElementById('vpd-adv-air-temp').value);
+   697→   697→   697→      const airHumidity = parseFloat(document.getElementById('vpd-adv-humidity').value);
+   698→   698→   698→      const mode = document.querySelector('input[name="vpd-mode-free"]:checked')?.value;
+   699→   699→   699→      if (isNaN(airTemp) || isNaN(airHumidity)) {
+   700→   700→   700→        alert(t('⚠️ Por favor ingresa temperatura del aire y humedad relativa', '⚠️ Please enter air temperature and relative humidity'));
+   701→   701→   701→        return;
+   702→   702→   702→      }
+   703→   703→   703→      if (airHumidity < 0 || airHumidity > 100) {
+   704→   704→   704→        alert(t('⚠️ La humedad relativa debe estar entre 0 y 100%', '⚠️ Relative humidity must be between 0 and 100%'));
+   705→   705→   705→        return;
+   706→   706→   706→      }
+   707→   707→   707→      let leafTemp = null;
+   708→   708→   708→      let calculatedLeafTemp = null;
+   709→   709→   709→      if (mode === 'leaf') {
+   710→   710→   710→        leafTemp = parseFloat(document.getElementById('vpd-leaf-temp').value);
+   711→   711→   711→        if (isNaN(leafTemp)) { alert(t('⚠️ Por favor ingresa la temperatura de hoja', '⚠️ Please enter leaf temperature')); return; }
+   712→   712→   712→      } else {
+   713→   713→   713→        const solarRadiation = parseFloat(document.getElementById('vpd-solar-radiation').value);
+   714→   714→   714→        if (isNaN(solarRadiation)) { alert(t('⚠️ Por favor ingresa la radiación solar', '⚠️ Please enter solar radiation')); return; }
+   715→   715→   715→        calculatedLeafTemp = calculateLeafTempFromRadiation(airTemp, solarRadiation);
+   716→   716→   716→        leafTemp = calculatedLeafTemp;
+   717→   717→   717→      }
+   718→   718→   718→      const r = calculateVPDAdvanced(airTemp, airHumidity, leafTemp);
+   719→   719→   719→      document.getElementById('vpd-advanced-results').innerHTML = `
+   720→   720→   720→        <div style="background:white;padding:20px;border-radius:8px;border:1px solid #e5e7eb;">
+   721→   721→   721→          <h4 style="margin:0 0 16px;color:#1e293b;font-size:16px;font-weight:600;">${t('Resultados:', 'Results:')}</h4>
+   722→   722→   722→          <div class="vpd-results-metrics-grid" style="--vpd-metric-cols:2">
+   723→   723→   723→            <div><div style="color:#64748b;font-size:14px;margin-bottom:4px;">${t('Déficit de Presión de Vapor', 'Vapor Pressure Deficit')}</div><div style="font-size:24px;font-weight:700;color:#0284c7;">${r.vpd} kPa</div></div>
+   724→   724→   724→            <div><div style="color:#64748b;font-size:14px;margin-bottom:4px;">${t('Déficit de Humedad', 'Humidity Deficit')}</div><div style="font-size:24px;font-weight:700;color:#0d9488;">${r.hd} g/m³</div>${renderHumidityDeficitBadge(r.hd)}</div>
+   725→   725→   725→          </div>
+   726→   726→   726→          ${calculatedLeafTemp ? `<div style="margin-bottom:16px;padding:12px;background:#f0fdf4;border-radius:6px;border:1px solid #86efac;"><div style="color:#15803d;font-size:14px;margin-bottom:4px;">🌿 ${t('Temperatura de Hoja Calculada', 'Calculated Leaf Temperature')}:</div><div style="font-size:20px;font-weight:700;color:#15803d;">${calculatedLeafTemp} °C</div></div>` : ''}
+   727→   727→   727→          ${createVPDRangeChart(r.vpd)}
+   728→   728→   728→        </div>
+   729→   729→   729→      `;
+   730→   730→   730→    }
+   731→   731→   731→  </script>
+   732→   732→   732→  <script src="assets/np-free-local-persist.js"></script>
+   733→   733→   733→  <script>
+   734→   734→   734→    (function () {
+   735→   735→   735→      var IDS = [
+   736→   736→   736→        'vpd-free-lat', 'vpd-free-lng', 'vpd-env-temp', 'vpd-env-humidity',
+   737→   737→   737→        'vpd-adv-air-temp', 'vpd-adv-humidity', 'vpd-leaf-temp', 'vpd-solar-radiation'
+   738→   738→   738→      ];
+   739→   739→   739→      function snap() {
+   740→   740→   740→        var o = window.NpFreePersist.collectIds(IDS);
+   741→   741→   741→        o.mode = window.NpFreePersist.getRadio('vpd-mode-free');
+   742→   742→   742→        return o;
+   743→   743→   743→      }
+   744→   744→   744→      function apply(d) {
+   745→   745→   745→        if (!d) return;
+   746→   746→   746→        window.NpFreePersist.applyIds(d, IDS);
+   747→   747→   747→        if (d.mode) window.NpFreePersist.applyRadio('vpd-mode-free', d.mode);
+   748→   748→   748→        if (typeof toggleVPDModeFree === 'function') toggleVPDModeFree();
+   749→   749→   749→      }
+   750→   750→   750→      window.NpFreePersist.bind('vpd', snap, apply);
+   751→   751→   751→    })();
+   752→   752→   752→  </script>
+   753→   753→   753→</body>
+   754→   754→   754→</html>
+   755→   755→   755→

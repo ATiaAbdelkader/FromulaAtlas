@@ -1,0 +1,696 @@
+     1→/**
+     2→ * NutriPlant PRO — Glossary of agronomic technical terms
+     3→ *
+     4→ * Used across the 18 free tools to drive tooltip popovers and inline term
+     5→ * highlighting. Each entry has a canonical `term`, a list of `aliases` that
+     6→ * should also trigger the tooltip (case-insensitive), a one-line plain-language
+     7→ * `short` definition (≤120 chars) and a fuller 1–2 sentence `long` explanation.
+     8→ *
+     9→ * Categories: soil | water | fertilizer | plant | climate | units
+    10→ */
+    11→
+    12→export type GlossaryCategory = 'soil' | 'water' | 'fertilizer' | 'plant' | 'climate' | 'units';
+    13→
+    14→export interface GlossaryEntry {
+    15→  term: string;
+    16→  aliases: string[];
+    17→  short: string;
+    18→  long: string;
+    19→  category: GlossaryCategory;
+    20→}
+    21→
+    22→export const GLOSSARY: GlossaryEntry[] = [
+    23→  // ===========================================================================
+    24→  // SOIL
+    25→  // ===========================================================================
+    26→  {
+    27→    term: 'CEC',
+    28→    aliases: ['CIC', 'cation exchange capacity', 'capacidad de intercambio catiónico'],
+    29→    category: 'soil',
+    30→    short: 'Capacity of soil to hold positively charged nutrients (cations) on exchange sites.',
+    31→    long: 'Cation Exchange Capacity. Higher CEC means the soil can retain more Ca²⁺, Mg²⁺, K⁺, NH₄⁺ and resist nutrient leaching. Typically 5–60 meq/100g depending on clay and organic matter.',
+    32→  },
+    33→  {
+    34→    term: 'meq/100g',
+    35→    aliases: ['meq/100 g', 'meq per 100g', 'meq/100 g soil'],
+    36→    category: 'soil',
+    37→    short: 'Milliequivalents per 100 g of soil; traditional unit for CEC and exchangeable cations.',
+    38→    long: 'Expresses the quantity of charge per 100 g of dry soil. Still widely used in soil-test reports despite being a non-SI unit; numerically identical to cmolc/kg.',
+    39→  },
+    40→  {
+    41→    term: 'cmolc/kg',
+    42→    aliases: ['cmol(+)/kg', 'cmolc kg', 'centimoles of charge per kg'],
+    43→    category: 'soil',
+    44→    short: 'Centimoles of charge per kg; SI equivalent of meq/100g (1:1 conversion).',
+    45→    long: 'Preferred SI unit for CEC and exchangeable cations. One cmolc/kg = one meq/100 g of soil — the conversion is exact.',
+    46→  },
+    47→  {
+    48→    term: 'bulk density',
+    49→    aliases: ['DA', 'densidad aparente', 'dry bulk density'],
+    50→    category: 'soil',
+    51→    short: 'Dry mass of soil per unit volume (g/cm³); indicator of compaction and pore space.',
+    52→    long: 'Typical values 1.0–1.6 g/cm³ for mineral soils. Higher bulk density means less pore space, more compaction, and restricted root growth.',
+    53→  },
+    54→  {
+    55→    term: 'field capacity',
+    56→    aliases: ['CC', 'capacidad de campo', 'FC'],
+    57→    category: 'soil',
+    58→    short: 'Water content remaining in soil after gravity drainage, typically 1–3 days after saturation.',
+    59→    long: 'Lower bound of the gravitational water range. Often approximated at soil water potential of −33 kPa (−0.33 bar) in loamy soils.',
+    60→  },
+    61→  {
+    62→    term: 'permanent wilting point',
+    63→    aliases: ['PMP', 'punto de marchitez permanente', 'PWP', 'wilting point'],
+    64→    category: 'soil',
+    65→    short: 'Soil water content below which plants wilt and cannot recover in humid air.',
+    66→    long: 'Lower limit of plant-available water, typically at −1500 kPa (−15 bar) soil water potential.',
+    67→  },
+    68→  {
+    69→    term: 'available water',
+    70→    aliases: ['AU', 'agua útil', 'plant available water', 'PAW'],
+    71→    category: 'soil',
+    72→    short: 'Water held between field capacity and permanent wilting point, accessible to roots.',
+    73→    long: 'Calculated as CC − PMP on a volumetric or gravimetric basis. The objective band in irrigation scheduling is often 40–60% of available water depleted.',
+    74→  },
+    75→  {
+    76→    term: 'soil texture',
+    77→    aliases: ['textura de suelo', 'USDA texture'],
+    78→    category: 'soil',
+    79→    short: 'Proportion of sand, silt and clay particles (≤2 mm) in the mineral soil fraction.',
+    80→    long: 'Classified using the USDA triangle into 12 texture classes (sand, loamy sand, sandy loam, … clay). Texture is stable and drives water-holding capacity and CEC.',
+    81→  },
+    82→  {
+    83→    term: 'clay',
+    84→    aliases: ['arcilla'],
+    85→    category: 'soil',
+    86→    short: 'Soil particles <0.002 mm; high surface area, plasticity, CEC and water retention.',
+    87→    long: 'Layered aluminosilicates (kaolinite, illite, montmorillonite). Clays hold water tightly (much is unavailable) but contribute most of the soil CEC.',
+    88→  },
+    89→  {
+    90→    term: 'silt',
+    91→    aliases: ['limo'],
+    92→    category: 'soil',
+    93→    short: 'Soil particles 0.002–0.05 mm; smooth flour-like feel, moderate water retention.',
+    94→    long: 'Intermediate size fraction; feels smooth when dry and soapy when wet. Susceptible to erosion and crusting.',
+    95→  },
+    96→  {
+    97→    term: 'sand',
+    98→    aliases: ['arena'],
+    99→    category: 'soil',
+   100→    short: 'Soil particles 0.05–2 mm; high drainage, low CEC, low water-holding capacity.',
+   101→    long: 'Coarse quartz-rich fraction; gritty feel. Sandy soils drain fast, lose nutrients easily and need frequent irrigation.',
+   102→  },
+   103→  {
+   104→    term: 'pH',
+   105→    aliases: ['soil pH', 'acidity', 'alkalinity'],
+   106→    category: 'soil',
+   107→    short: 'Negative log of H⁺ activity; scale 0–14, measures soil acidity/alkalinity.',
+   108→    long: 'Affects nutrient availability, microbial activity and CEC saturation. Most crops prefer 6.0–7.0; acid-loving crops (blueberry, coffee) prefer 4.5–5.5.',
+   109→  },
+   110→  {
+   111→    term: 'organic matter',
+   112→    aliases: ['OM', 'MO', 'materia orgánica', 'soil organic matter'],
+   113→    category: 'soil',
+   114→    short: 'Decomposed plant and animal residues in soil; drives CEC, structure and nutrient cycling.',
+   115→    long: 'Humus fraction contributes 200–400 meq/100g of CEC per percent OM. Also improves aggregation, water infiltration and mineralizable N supply.',
+   116→  },
+   117→  {
+   118→    term: 'base saturation',
+   119→    aliases: ['saturación de bases', 'BS'],
+   120→    category: 'soil',
+   121→    short: '% of CEC occupied by base cations (Ca, Mg, K, Na); typical ideal 80–90%.',
+   122→    long: 'Reported per-cation (e.g. Ca 65%, Mg 15%, K 5%). Drives the Amendment Balance by CEC tool; targets vary by crop.',
+   123→  },
+   124→  {
+   125→    term: 'rhizosphere',
+   126→    aliases: ['rizósfera', 'root zone'],
+   127→    category: 'soil',
+   128→    short: 'Soil zone (1–2 mm) immediately surrounding roots, enriched by exudates and microbes.',
+   129→    long: 'Site of intense biological activity and nutrient uptake. pH, EC and microbial community differ markedly from bulk soil.',
+   130→  },
+   131→
+   132→  // ===========================================================================
+   133→  // WATER
+   134→  // ===========================================================================
+   135→  {
+   136→    term: 'hardness',
+   137→    aliases: ['dureza', 'water hardness', 'total hardness'],
+   138→    category: 'water',
+   139→    short: 'Sum of Ca²⁺ and Mg²⁺ concentrations in water, expressed as mg/L CaCO₃.',
+   140→    long: 'Classified as soft (<60), moderately hard (60–120), hard (120–180) or very hard (>180 mg/L CaCO₃). Causes scale and alters fertilizer solubility.',
+   141→  },
+   142→  {
+   143→    term: 'CaCO₃ equivalent',
+   144→    aliases: ['CaCO3 equivalent', 'calcium carbonate equivalent', 'CCE'],
+   145→    category: 'water',
+   146→    short: 'Standard way to express Ca, Mg or acidity on a common CaCO₃ molar basis (EW = 50 g/eq).',
+   147→    long: 'Lets you sum hardness, alkalinity and amendment doses on a single equivalent-weight basis. 1 meq/L = 50 mg/L CaCO₃.',
+   148→  },
+   149→  {
+   150→    term: 'bicarbonate (HCO₃⁻)',
+   151→    aliases: ['HCO3', 'bicarbonate', 'bicarbonato'],
+   152→    category: 'water',
+   153→    short: 'HCO₃⁻ ion; main contributor to water alkalinity at pH 6.3–10.3.',
+   154→    long: 'Elevated HCO₃⁻ (>2 meq/L) raises pH in the root zone, precipitates Ca as CaCO₃ and locks up Fe; corrected by acid injection.',
+   155→  },
+   156→  {
+   157→    term: 'carbonate (CO₃²⁻)',
+   158→    aliases: ['CO3', 'carbonate', 'carbonato'],
+   159→    category: 'water',
+   160→    short: 'CO₃²⁻ ion; dominates alkalinity only above pH 10.3.',
+   161→    long: 'Rare in irrigation water but appears in sodic/alkaline soils. Combined with bicarbonate gives total alkalinity (mg/L CaCO₃).',
+   162→  },
+   163→  {
+   164→    term: 'alkalinity',
+   165→    aliases: ['alcalinidad', 'total alkalinity'],
+   166→    category: 'water',
+   167→    short: 'Water capacity to neutralize acid; sum of HCO₃⁻ + CO₃²⁻ + OH⁻ as mg/L CaCO₃.',
+   168→    long: 'High alkalinity (>100 mg/L CaCO₃) buffers pH upward and demands acid injection; <30 mg/L is unstable and easily acidified.',
+   169→  },
+   170→  {
+   171→    term: 'EC',
+   172→    aliases: ['electrical conductivity', 'CE', 'conductividad eléctrica'],
+   173→    category: 'water',
+   174→    short: 'Electrical conductivity of water or soil solution; proxy for total dissolved salts.',
+   175→    long: 'Reported in dS/m or mS/cm. Approximate conversion: 1 dS/m ≈ 640 mg/L TDS (NaCl basis) or ≈ 10 meq/L for typical hydroponic ions.',
+   176→  },
+   177→  {
+   178→    term: 'TDS',
+   179→    aliases: ['total dissolved solids', 'sólidos disueltos totales'],
+   180→    category: 'water',
+   181→    short: 'Total Dissolved Solids; sum of all dissolved ions, mg/L.',
+   182→    long: 'Often estimated as EC × 640 (NaCl) or EC × 700 (KCl/4-2-1 hydro mixes). True gravimetric measurement requires evaporation.',
+   183→  },
+   184→  {
+   185→    term: 'acid neutralization',
+   186→    aliases: ['neutralización ácida', 'acid demand'],
+   187→    category: 'water',
+   188→    short: 'Amount of acid required to lower water alkalinity to a target pH (meq/L).',
+   189→    long: 'Calculated from total alkalinity and target pH using the carbonate speciation curve. Strong acids (HNO₃, H₂SO₄, H₃PO₄) also contribute nutrients.',
+   190→  },
+   191→  {
+   192→    term: 'residual',
+   193→    aliases: ['residual sodium carbonate', 'RSC', 'carbonato residual'],
+   194→    category: 'water',
+   195→    short: 'Residual Sodium Carbonate = (HCO₃⁻ + CO₃²⁻) − (Ca²⁺ + Mg²⁺), meq/L.',
+   196→    long: 'Positive RSC (>2.5 meq/L) indicates water that will precipitate Ca/Mg as carbonates and leave Na⁺ to degrade soil structure.',
+   197→  },
+   198→
+   199→  // ===========================================================================
+   200→  // FERTILIZER
+   201→  // ===========================================================================
+   202→  {
+   203→    term: 'N-P-K',
+   204→    aliases: ['NPK', 'N P K ratio'],
+   205→    category: 'fertilizer',
+   206→    short: 'Nitrogen, Phosphorus and Potassium; the three primary macronutrients on a fertilizer grade.',
+   207→    long: 'Reported as %N-%P₂O₅-%K₂O (oxide form, US convention) or as %N-%P-%K (elemental form, EU convention since 2019).',
+   208→  },
+   209→  {
+   210→    term: 'oxide form',
+   211→    aliases: ['forma óxido', 'oxide basis'],
+   212→    category: 'fertilizer',
+   213→    short: 'Nutrient expressed as the oxide (P₂O₅, K₂O, CaO, MgO); traditional NPK convention.',
+   214→    long: 'Historical convention still printed on fertilizer bags in the Americas. Convert oxide→element with stoichiometric factors (e.g. P = P₂O₅ × 0.436).',
+   215→  },
+   216→  {
+   217→    term: 'elemental form',
+   218→    aliases: ['forma elemental', 'elemental basis'],
+   219→    category: 'fertilizer',
+   220→    short: 'Nutrient expressed as the pure element (P, K, Ca, Mg); EU fertilizer labeling convention.',
+   221→    long: 'Used in hydroponics and scientific work. Convert P₂O₅→P (×0.436), K₂O→K (×0.830), CaO→Ca (×0.715), MgO→Mg (×0.603).',
+   222→  },
+   223→  {
+   224→    term: 'P₂O₅',
+   225→    aliases: ['P2O5', 'phosphorus pentoxide', 'phosphate'],
+   226→    category: 'fertilizer',
+   227→    short: 'Phosphorus pentoxide; oxide form used on fertilizer labels. 1 P = 2.291 P₂O₅.',
+   228→    long: 'Conversion: P × 2.291 = P₂O₅; P₂O₅ × 0.436 = P. Most common P source: MAP (11-52-0) or DAP (18-46-0).',
+   229→  },
+   230→  {
+   231→    term: 'K₂O',
+   232→    aliases: ['K2O', 'potassium oxide', 'potash'],
+   233→    category: 'fertilizer',
+   234→    short: 'Potassium oxide; oxide form used on fertilizer labels. 1 K = 1.205 K₂O.',
+   235→    long: 'Conversion: K × 1.205 = K₂O; K₂O × 0.830 = K. Common K sources: MOP (KCl), SOP (K₂SO₄), MKP (KH₂PO₄), potassium nitrate.',
+   236→  },
+   237→  {
+   238→    term: 'CaO',
+   239→    aliases: ['CaO', 'calcium oxide', 'lime as CaO'],
+   240→    category: 'fertilizer',
+   241→    short: 'Calcium oxide; oxide form for Ca in amendments. 1 Ca = 1.399 CaO.',
+   242→    long: 'Conversion: Ca × 1.399 = CaO; CaO × 0.715 = Ca. Used for liming equivalence (CaCO₃ has 56% CaO by mass).',
+   243→  },
+   244→  {
+   245→    term: 'MgO',
+   246→    aliases: ['MgO', 'magnesium oxide'],
+   247→    category: 'fertilizer',
+   248→    short: 'Magnesium oxide; oxide form for Mg. 1 Mg = 1.658 MgO.',
+   249→    long: 'Conversion: Mg × 1.658 = MgO; MgO × 0.603 = Mg. Dolomite contains ~20% MgO and ~30% CaO.',
+   250→  },
+   251→  {
+   252→    term: 'fertilizer grade',
+   253→    aliases: ['grade', 'análisis garantizado', 'guaranteed analysis'],
+   254→    category: 'fertilizer',
+   255→    short: 'Legally guaranteed nutrient content of a fertilizer, expressed as %N-%P₂O₅-%K₂O.',
+   256→    long: 'A 15-15-15 grade guarantees 15% N, 15% P₂O₅ and 15% K₂O by mass; secondary nutrients may be declared in elemental or oxide form.',
+   257→  },
+   258→  {
+   259→    term: 'solubility',
+   260→    aliases: ['solubilidad'],
+   261→    category: 'fertilizer',
+   262→    short: 'Maximum mass of fertilizer dissolvable per litre of water (g/L) at a given temperature.',
+   263→    long: 'Drives fertigation stock-solution concentration limits. Reported as cold-water (20°C) and hot-water (40°C) values; hygroscopic fertilizers may have lower practical solubility.',
+   264→  },
+   265→  {
+   266→    term: 'salt index',
+   267→    aliases: ['IS', 'índice salino', 'SI'],
+   268→    category: 'fertilizer',
+   269→    short: 'Osmotic pressure of a fertilizer relative to NaNO₃ (=100); lower = safer near roots.',
+   270→    long: 'MOP has IS=116.3 (highest); Ca(NO₃)₂ ≈ 65; DAP ≈ 34; MKP ≈ 14. High IS materials must be banded away from germinating seeds.',
+   271→  },
+   272→  {
+   273→    term: 'hygroscopic',
+   274→    aliases: ['higroscópico', 'deliquescent'],
+   275→    category: 'fertilizer',
+   276→    short: 'Fertilizer that absorbs moisture from air, caking or liquefying above a critical humidity.',
+   277→    long: 'Critical relative humidity: urea 73%, ammonium nitrate 59%, calcium nitrate 47%. Hygroscopic fertilizers need sealed storage.',
+   278→  },
+   279→  {
+   280→    term: 'blend',
+   281→    aliases: ['mezcla física', 'fertilizer blend', 'bulk blend'],
+   282→    category: 'fertilizer',
+   283→    short: 'Physical mixture of two or more dry fertilizer materials to reach a target grade.',
+   284→    long: 'Unlike compounds, blends can segregate by particle size; raw materials must be size-matched within ±10% to avoid stratification.',
+   285→  },
+   286→  {
+   287→    term: 'amendment',
+   288→    aliases: ['enmienda', 'soil amendment'],
+   289→    category: 'fertilizer',
+   290→    short: 'Material added to soil to modify physical/chemical properties (pH, structure, CEC), not primarily to feed NPK.',
+   291→    long: 'Includes liming materials (calcitic lime, dolomite), gypsum, elemental S, organic composts. Distinguished from fertilizers by nutrient content threshold.',
+   292→  },
+   293→  {
+   294→    term: 'gypsum',
+   295→    aliases: ['yeso', 'CaSO₄·2H₂O', 'calcium sulfate'],
+   296→    category: 'fertilizer',
+   297→    short: 'Calcium sulfate dihydrate; Ca 23%, S 19%; amendment for Na-displaced soils.',
+   298→    long: 'Does not change pH. Supplies Ca²⁺ to displace Na⁺ from the exchange complex; the soluble Na₂SO₄ is then leached. Typical dose 2–5 t/ha.',
+   299→  },
+   300→  {
+   301→    term: 'lime',
+   302→    aliases: ['cal', 'calcitic lime', 'agricultural lime', 'CaCO₃'],
+   303→    category: 'fertilizer',
+   304→    short: 'Calcium carbonate (CaCO₃); liming amendment that raises soil pH. CCE ≈ 100%.',
+   305→    long: 'Reacts with soil acidity: CaCO₃ + 2H⁺ → Ca²⁺ + CO₂ + H₂O. Fineness of grind (60% < 60 mesh) controls reactivity; full effect takes 6–12 months.',
+   306→  },
+   307→  {
+   308→    term: 'dolomite',
+   309→    aliases: ['dolomita', 'dolomitic lime', 'CaMg(CO₃)₂'],
+   310→    category: 'fertilizer',
+   311→    short: 'CaMg(CO₃)₂; liming amendment supplying both Ca (≈22%) and Mg (≈13%).',
+   312→    long: 'Preferred when both pH and Mg are low. CCE ≈ 90–108% depending on purity; slower-acting than calcitic lime due to higher Mg content.',
+   313→  },
+   314→  {
+   315→    term: 'SOP',
+   316→    aliases: ['sulfato potásico', 'potassium sulfate', 'K₂SO₄'],
+   317→    category: 'fertilizer',
+   318→    short: 'Sulfate of Potash (K₂SO₄); K 42–44% (≈50% K₂O), S 17–18%; chloride-free.',
+   319→    long: 'Preferred for chloride-sensitive crops (potato, tobacco, avocado, strawberry) and high-value hydroponics. Lower solubility (~120 g/L) than MOP.',
+   320→  },
+   321→  {
+   322→    term: 'MOP',
+   323→    aliases: ['cloruro potásico', 'potassium chloride', 'KCl', 'muriate of potash'],
+   324→    category: 'fertilizer',
+   325→    short: 'Muriate of Potash (KCl); K 50–52% (≈60% K₂O); most concentrated K source.',
+   326→    long: 'Cheapest K source but contains 47% Cl. Suitable for most field crops but avoided on chloride-sensitive species and in fertigation.',
+   327→  },
+   328→  {
+   329→    term: 'MAP',
+   330→    aliases: ['monoammonium phosphate', 'fosfato monoamónico', 'NH₄H₂PO₄'],
+   331→    category: 'fertilizer',
+   332→    short: 'Monoammonium phosphate (11-52-0); N 11%, P₂O₅ 52%; mildly acidifying.',
+   333→    long: 'Water-soluble P source (≈370 g/L) used in fertigation and as a starter fertilizer. pH of 1% solution ≈ 4.5; lowers rhizosphere pH slightly.',
+   334→  },
+   335→  {
+   336→    term: 'DAP',
+   337→    aliases: ['diammonium phosphate', 'fosfato diamónico', '(NH₄)₂HPO₄'],
+   338→    category: 'fertilizer',
+   339→    short: 'Diammonium phosphate (18-46-0); N 18%, P₂O₅ 46%; mildly alkaline.',
+   340→    long: 'Highest-P fertilizer in widespread use; pH of 1% solution ≈ 8.0. Solubility ≈ 430 g/L. Temporary ammonia loss risk if banded near germinating seeds.',
+   341→  },
+   342→  {
+   343→    term: 'MKP',
+   344→    aliases: ['monopotassium phosphate', 'KH₂PO₄', 'potassium dihydrogen phosphate'],
+   345→    category: 'fertilizer',
+   346→    short: 'Monopotassium phosphate (0-52-34); fully water-soluble P + K, chloride-free.',
+   347→    long: 'Solubility ≈ 230 g/L; pH of 1% solution ≈ 4.5. Used in hydroponics and foliar sprays; incompatible with Ca/Mg concentrates (precipitates as CaHPO₄).',
+   348→  },
+   349→  {
+   350→    term: 'chelate',
+   351→    aliases: ['quelato', 'chelated micronutrient'],
+   352→    category: 'fertilizer',
+   353→    short: 'Organic ligand that binds a metal micronutrient, keeping it soluble across a pH range.',
+   354→    long: 'Without chelation, Fe³⁺ precipitates as Fe(OH)₃ above pH 3; chelates extend solubility into the alkaline range and protect against phosphate antagonism.',
+   355→  },
+   356→  {
+   357→    term: 'EDTA',
+   358→    aliases: ['ethylenediaminetetraacetic acid'],
+   359→    category: 'fertilizer',
+   360→    short: 'EDTA chelating agent; effective for Fe, Zn, Cu, Mn at pH 4–6.5.',
+   361→    long: 'Cheapest chelate but loses Fe above pH 6.5; not recommended for calcareous soils. Common forms: Fe-EDTA 13%, Zn-EDTA 15%.',
+   362→  },
+   363→  {
+   364→    term: 'DTPA',
+   365→    aliases: ['diethylenetriaminepentaacetic acid'],
+   366→    category: 'fertilizer',
+   367→    short: 'DTPA chelating agent; holds Fe stable up to pH 7.5.',
+   368→    long: 'Best for slightly alkaline soils and hydroponics at pH 6.0–7.0. Common form: Fe-DTPA 11%.',
+   369→  },
+   370→  {
+   371→    term: 'EDDHA',
+   372→    aliases: ['ethylenediaminedihydroxyphenylacetic acid', 'EDDHA-Fe'],
+   373→    category: 'fertilizer',
+   374→    short: 'EDDHA chelating agent; holds Fe stable up to pH 11, for calcareous/alkaline soils.',
+   375→    long: 'Strongest Fe chelate; small soil applications (1–5 kg/ha) correct Fe chlorosis in citrus, grapevine and olive on calcareous soils. Premium-priced.',
+   376→  },
+   377→  {
+   378→    term: 'fertigation',
+   379→    aliases: ['fertirrigación', 'fertirrigation'],
+   380→    category: 'fertilizer',
+   381→    short: 'Application of dissolved fertilizers through the irrigation system (drip, sprinkler).',
+   382→    long: 'Enables split dosing and tight control of root-zone EC and pH. Requires soluble fertilizers and backflow prevention; incompatible fertilizer pairs must be split into separate tanks.',
+   383→  },
+   384→  {
+   385→    term: 'stock solution',
+   386→    aliases: ['solución madre', 'concentrate', 'tank concentrate'],
+   387→    category: 'fertilizer',
+   388→    short: 'Concentrated fertilizer solution, later diluted 1:100 to 1:300 into irrigation water.',
+   389→    long: 'Limited by the solubility of the least soluble fertilizer and by precipitation pairs (Ca²⁺ vs SO₄²⁻/PO₄³⁻). Typical concentration 100–300× the final feed.',
+   390→  },
+   391→  {
+   392→    term: 'tank A/B',
+   393→    aliases: ['tanque A/B', 'A/B tank', 'twin tank'],
+   394→    category: 'fertilizer',
+   395→    short: 'Two-tank fertigation setup separating Ca (tank A) from sulfates/phosphates (tank B).',
+   396→    long: 'Prevents CaSO₄ and Ca₃(PO₄)₂ precipitation in the concentrate. Tank A holds Ca(NO₃)₂ + micros; tank B holds KNO₃ + MKP + MgSO₄ + ammonium salts.',
+   397→  },
+   398→
+   399→  // ===========================================================================
+   400→  // PLANT
+   401→  // ===========================================================================
+   402→  {
+   403→    term: 'macronutrient',
+   404→    aliases: ['macronutriente', 'macro element'],
+   405→    category: 'plant',
+   406→    short: 'Essential element required in large amounts (>0.1% dry matter); N, P, K, Ca, Mg, S.',
+   407→    long: 'Sometimes split into primary (N-P-K) and secondary (Ca-Mg-S). Concentrations in plant tissue range from 0.1% to 5% of dry matter.',
+   408→  },
+   409→  {
+   410→    term: 'micronutrient',
+   411→    aliases: ['micronutriente', 'micro element', 'trace element'],
+   412→    category: 'plant',
+   413→    short: 'Essential element required in small amounts (<100 mg/kg dry matter); Fe, Mn, Zn, Cu, B, Mo, Cl, Ni.',
+   414→    long: 'Deficiency and toxicity ranges are narrow; foliar analysis is critical. Most act as enzyme cofactors (e.g. Fe in cytochromes, Mo in nitrate reductase).',
+   415→  },
+   416→  {
+   417→    term: 'essential element',
+   418→    aliases: ['elemento esencial', 'essential nutrient'],
+   419→    category: 'plant',
+   420→    short: 'Chemical element required for a plant to complete its life cycle (17 elements).',
+   421→    long: 'CHOPKINS CaFe MgMnB CuZn MoClNi — Arnon & Stout criteria: specific function, irreplaceable, direct role in metabolism.',
+   422→  },
+   423→  {
+   424→    term: 'beneficial element',
+   425→    aliases: ['elemento benéfico', 'beneficial nutrient'],
+   426→    category: 'plant',
+   427→    short: 'Element not essential to all plants but stimulatory for some (Si, Na, Co, Se, V, Al, Ti).',
+   428→    long: 'Si strengthens cell walls in grasses (rice, sugarcane); Co for N-fixing legumes; Se in selenium-accumulator forages.',
+   429→  },
+   430→  {
+   431→    term: 'mobility',
+   432→    aliases: ['movilidad', 'nutrient mobility'],
+   433→    category: 'plant',
+   434→    short: 'Ability of an element to be retranslocated from old to young plant tissue.',
+   435→    long: 'Mobile nutrients (N, P, K, Mg, Cl, Mo) show deficiency on old leaves first; immobile nutrients (Ca, B, Fe, Mn, Zn, Cu, S) show on young leaves.',
+   436→  },
+   437→  {
+   438→    term: 'antagonism',
+   439→    aliases: ['antagonismo', 'ion antagonism'],
+   440→    category: 'plant',
+   441→    short: 'Inhibition of one ion uptake by another competing at the root absorption site.',
+   442→    long: 'Classic pairs: K⁺↔Mg²⁺, Ca²⁺↔Mg²⁺, Fe²⁺↔Mn²⁺, NH₄⁺↔K⁺, PO₄³⁻↔Zn²⁺. Mapped on the Mulder diagram.',
+   443→  },
+   444→  {
+   445→    term: 'synergy',
+   446→    aliases: ['sinergia', 'ion synergy'],
+   447→    category: 'plant',
+   448→    short: 'Enhancement of one ion uptake by another (e.g. NO₃⁻ improves K⁺ uptake).',
+   449→    long: 'NO₃⁻ uptake alkalinizes the rhizosphere and stimulates cation uptake; NH₄⁺ uptake acidifies and improves anion uptake. Mapped as dashed lines on the Mulder diagram.',
+   450→  },
+   451→  {
+   452→    term: 'Mulder diagram',
+   453→    aliases: ['diagrama de Mulder', 'Mulder chart'],
+   454→    category: 'plant',
+   455→    short: '14-ion chart of antagonism (solid) and synergy (dashed) relationships (Mulder, 1953).',
+   456→    long: 'Diagnostic reference for nutrient interaction: e.g. high K suppresses Mg → Mg deficiency despite adequate soil Mg. Central in the Nutrient Interactions tool.',
+   457→  },
+   458→  {
+   459→    term: 'mass flow',
+   460→    aliases: ['flujo másico', 'mass flow of nutrients'],
+   461→    category: 'plant',
+   462→    short: 'Nutrient transport to roots dissolved in transpiration-driven water flow.',
+   463→    long: 'Dominant mechanism for mobile nutrients (N-NO₃, S-SO₄, Ca, Mg, Cl). Accounts for ~80% of N uptake in maize.',
+   464→  },
+   465→  {
+   466→    term: 'diffusion',
+   467→    aliases: ['difusión'],
+   468→    category: 'plant',
+   469→    short: 'Nutrient movement down a concentration gradient to the depleted root surface.',
+   470→    long: 'Dominant mechanism for low-mobility nutrients (P, K, micronutrients). Root uptake lowers local concentration by 100–1000×, creating the gradient.',
+   471→  },
+   472→  {
+   473→    term: 'root interception',
+   474→    aliases: ['intercepción radical'],
+   475→    category: 'plant',
+   476→    short: 'Nutrient uptake by roots physically growing into fresh soil volumes.',
+   477→    long: 'Accounts for <10% of total nutrient uptake for most ions, but is significant for Ca in dense-rooted crops. Drives slow nutrient exploitation of bulk soil.',
+   478→  },
+   479→  {
+   480→    term: 'chlorosis',
+   481→    aliases: ['clorosis', 'yellowing'],
+   482→    category: 'plant',
+   483→    short: 'Loss of chlorophyll, leaves turn yellow while veins may remain green.',
+   484→    long: 'Most commonly Fe, S, or N deficiency. Interveinal chlorosis (green veins, yellow blade) is the classic signature of Fe, Mn or Zn immobile-element deficiency.',
+   485→  },
+   486→  {
+   487→    term: 'necrosis',
+   488→    aliases: ['necrosis', 'tissue death'],
+   489→    category: 'plant',
+   490→    short: 'Localized death of plant tissue; appears as brown, dry or papery lesions.',
+   491→    long: 'Final stage of severe deficiency or toxicity: K deficiency causes leaf-edge necrosis; B toxicity causes tip necrosis; Ca deficiency causes blossom-end rot.',
+   492→  },
+   493→  {
+   494→    term: 'interveinal',
+   495→    aliases: ['internervial', 'interveinal chlorosis'],
+   496→    category: 'plant',
+   497→    short: 'Affecting the tissue between leaf veins, leaving veins themselves green.',
+   498→    long: 'Diagnostic pattern for immobile micronutrient deficiencies (Fe, Mn, Zn) and Mg (mobile but translocates from interveinal tissue first).',
+   499→  },
+   500→  {
+   501→    term: 'blossom-end rot',
+   502→    aliases: ['BER', 'podredumbre apical', 'blossom end rot'],
+   503→    category: 'plant',
+   504→    short: 'Dark sunken necrotic lesion at the blossom end of tomato/pepper fruit; Ca deficiency.',
+   505→    long: 'Triggered by Ca transport failure during rapid fruit expansion, often under water stress rather than low soil Ca. Manage with consistent irrigation and Ca foliar sprays.',
+   506→  },
+   507→
+   508→  // ===========================================================================
+   509→  // CLIMATE
+   510→  // ===========================================================================
+   511→  {
+   512→    term: 'VPD',
+   513→    aliases: ['vapor pressure deficit', 'déficit de presión de vapor'],
+   514→    category: 'climate',
+   515→    short: 'Vapor Pressure Deficit; difference between saturation and actual vapor pressure (kPa).',
+   516→    long: 'Drives transpiration. Optimum 0.8–1.2 kPa for most greenhouse crops; >1.5 kPa closes stomata and reduces photosynthesis, <0.4 kPa limits transpiration and Ca transport.',
+   517→  },
+   518→  {
+   519→    term: 'SVP',
+   520→    aliases: ['saturated vapor pressure', 'presión de vapor saturada', 'es'],
+   521→    category: 'climate',
+   522→    short: 'Saturation Vapor Pressure; maximum partial pressure of water vapor at a given temperature.',
+   523→    long: 'Calculated via Tetens equation: SVP = 0.6108 · exp(17.27·T / (T+237.3)) kPa. At 25°C, SVP ≈ 3.17 kPa.',
+   524→  },
+   525→  {
+   526→    term: 'humidity deficit',
+   527→    aliases: ['HD', 'déficit de humedad', 'air humidity deficit'],
+   528→    category: 'climate',
+   529→    short: 'Mass of water missing from saturated air at the current temperature (g/m³).',
+   530→    long: 'HD = saturated absolute humidity − actual absolute humidity. Directly proportional to VPD via the ideal gas law; used in greenhouse control systems.',
+   531→  },
+   532→  {
+   533→    term: 'ETo',
+   534→    aliases: ['reference evapotranspiration', 'evapotranspiración de referencia'],
+   535→    category: 'climate',
+   536→    short: 'Reference evapotranspiration; ET of a well-watered 0.12 m tall grass surface (mm/day).',
+   537→    long: 'Computed via FAO-56 Penman-Monteith from temperature, humidity, wind and solar radiation. Serves as the climate-driven baseline for crop ETc.',
+   538→  },
+   539→  {
+   540→    term: 'ETc',
+   541→    aliases: ['crop evapotranspiration', 'evapotranspiración del cultivo'],
+   542→    category: 'climate',
+   543→    short: 'Crop evapotranspiration under standard conditions (mm/day); ETc = Kc × ETo.',
+   544→    long: 'Represents water demand of a specific crop at a specific growth stage. Cumulative ETc over the season gives the irrigation requirement net of rainfall.',
+   545→  },
+   546→  {
+   547→    term: 'Kc',
+   548→    aliases: ['crop coefficient', 'coeficiente de cultivo'],
+   549→    category: 'climate',
+   550→    short: 'Crop coefficient; ratio of actual crop ET to reference grass ET at a given stage.',
+   551→    long: 'Four FAO-56 stages: initial (Kc_ini), development (rising), mid (Kc_mid, peak), late (Kc_end). Tabulated per crop in FAO-56 Annex 12.',
+   552→  },
+   553→  {
+   554→    term: 'FAO-56',
+   555→    aliases: ['FAO 56', 'Allen 1998', 'Penman-Monteith FAO'],
+   556→    category: 'climate',
+   557→    short: 'FAO Irrigation and Drainage Paper 56; standard reference for crop ET calculation.',
+   558→    long: 'Allen et al. (1998). Defines the dual/crop-coefficient approach, Kc tables for ~80 crops, and stress-adjustment equations. Universally adopted in irrigation scheduling software.',
+   559→  },
+   560→  {
+   561→    term: 'transpiration',
+   562→    aliases: ['transpiración'],
+   563→    category: 'climate',
+   564→    short: 'Water loss from plant leaves through stomata, driven by VPD.',
+   565→    long: 'Cools the leaf, transports nutrients via mass flow, and maintains turgor. Equal to ETc when soil evaporation is negligible (full canopy cover).',
+   566→  },
+   567→  {
+   568→    term: 'dew point',
+   569→    aliases: ['punto de rocío', 'Td'],
+   570→    category: 'climate',
+   571→    short: 'Temperature at which air becomes saturated (RH=100%) and dew starts to form.',
+   572→    long: 'Computed from vapor pressure via the Magnus formula. Difference between air T and Td indicates how close the air is to saturation; equals 0 in fog.',
+   573→  },
+   574→  {
+   575→    term: 'solar radiation',
+   576→    aliases: ['radiación solar', 'global radiation', 'Rs'],
+   577→    category: 'climate',
+   578→    short: 'Total shortwave radiation from the sun reaching a horizontal surface (W/m² or MJ/m²·d).',
+   579→    long: 'Drives photosynthesis and ET. Peak ~1000 W/m² at solar noon on a clear day; daily total 5–30 MJ/m²·d depending on latitude and season.',
+   580→  },
+   581→  {
+   582→    term: 'PAR',
+   583→    aliases: ['photosynthetically active radiation', 'radiación fotosintéticamente activa'],
+   584→    category: 'climate',
+   585→    short: 'Photosynthetically Active Radiation; 400–700 nm waveband, ~45% of total solar.',
+   586→    long: 'Measured in µmol photons/m²·s. Light-saturation point: ~500 µmol/m²·s for C3 crops, ~1500 for C4. Daily integral 10–50 mol/m²·d for productive canopies.',
+   587→  },
+   588→
+   589→  // ===========================================================================
+   590→  // UNITS
+   591→  // ===========================================================================
+   592→  {
+   593→    term: 'ppm',
+   594→    aliases: ['parts per million', 'mg/kg'],
+   595→    category: 'units',
+   596→    short: 'Parts per million; 1 mg of solute per kg of solution (≈ mg/L in dilute water).',
+   597→    long: 'For irrigation water, 1 ppm = 1 mg/L = 1 g/m³. In concentrated stock solutions, density differs and the conversion is approximate.',
+   598→  },
+   599→  {
+   600→    term: 'mg/L',
+   601→    aliases: ['milligrams per litre', 'mg L-1'],
+   602→    category: 'units',
+   603→    short: 'Milligrams per litre; mass concentration, numerically equal to ppm in dilute water.',
+   604→    long: 'Standard water-test unit. For soil extracts (1:5 soil:water), mg/L in the extract × extraction ratio → mg/kg soil.',
+   605→  },
+   606→  {
+   607→    term: 'mmol/L',
+   608→    aliases: ['millimolar', 'mM', 'mmol L-1'],
+   609→    category: 'units',
+   610→    short: 'Millimoles per litre; molar concentration (1 mmol/L = 6.022×10²⁰ ions per litre).',
+   611→    long: 'Converts to ppm via molecular weight (1 mmol/L of Ca²⁺ = 40.08 mg/L Ca). Used in hydroponics and water chemistry for charge-balanced comparison.',
+   612→  },
+   613→  {
+   614→    term: 'µmol/L',
+   615→    aliases: ['micromolar', 'µM', 'umol/L', 'micromoles per litre'],
+   616→    category: 'units',
+   617→    short: 'Micromoles per litre; 1/1000 of mmol/L. Standard for micronutrients.',
+   618→    long: 'Typical tissue-Si is 100–1000 µmol/L in sap; hydroponic Fe is 5–50 µmol/L (= 0.28–2.8 mg/L Fe). Avoids small decimal values in mmol/L.',
+   619→  },
+   620→  {
+   621→    term: 'meq/L',
+   622→    aliases: ['milliequivalents per litre', 'meq L-1', 'miliequivalentes por litro'],
+   623→    category: 'units',
+   624→    short: 'Milliequivalents per litre; ion concentration weighted by charge. 1 meq/L = mmol/L × valence.',
+   625→    long: 'Used to charge-balance hydroponic and irrigation water analyses. Ca²⁺ at 1 meq/L = 0.5 mmol/L = 20 mg/L Ca; K⁺ at 1 meq/L = 1 mmol/L = 39.1 mg/L K.',
+   626→  },
+   627→  {
+   628→    term: 'dS/m',
+   629→    aliases: ['decisiemens per metre', 'dS m-1', 'mS/cm'],
+   630→    category: 'units',
+   631→    short: 'Decisiemens per metre; standard unit of electrical conductivity in soils and water.',
+   632→    long: '1 dS/m = 1 mS/cm = 1000 µS/cm. In water, ~640 mg/L TDS (NaCl) or ~10 meq/L of ions. In saturated soil paste, threshold for salinity stress is ~4 dS/m.',
+   633→  },
+   634→  {
+   635→    term: 'kPa',
+   636→    aliases: ['kilopascal', 'kPa pressure'],
+   637→    category: 'units',
+   638→    short: 'Kilopascal; 1000 Pa. Standard unit for vapor pressure and soil water potential.',
+   639→    long: 'Field capacity ≈ −33 kPa; permanent wilting point ≈ −1500 kPa. Saturation vapor pressure at 25°C ≈ 3.17 kPa. 1 bar = 100 kPa = 0.987 atm.',
+   640→  },
+   641→  {
+   642→    term: 'W/m²',
+   643→    aliases: ['watts per square metre', 'W m-2', 'irradiance'],
+   644→    category: 'units',
+   645→    short: 'Watts per square metre; instantaneous radiative flux density on a horizontal surface.',
+   646→    long: 'Solar noon peak ~1000 W/m² on a clear day. Convert to daily MJ/m²·d by integrating (1 W/m² × 1 h = 3.6 kJ/m²). PAR sensor reads separately in µmol/m²·s.',
+   647→  },
+   648→  {
+   649→    term: 'kg/ha',
+   650→    aliases: ['kilograms per hectare', 'kg ha-1'],
+   651→    category: 'units',
+   652→    short: 'Kilograms per hectare; standard nutrient-application rate. 1 kg/ha = 0.1 g/m².',
+   653→    long: 'Fertilizer rates are reported in product kg/ha, nutrient kg/ha, or nutrient kg/ha as oxide (N-P₂O₅-K₂O). 100 kg N/ha on 1 ha of 1.3 g/cm³ soil to 20 cm raises soil N by 38 mg/kg.',
+   654→  },
+   655→  {
+   656→    term: 'm³/ha',
+   657→    aliases: ['cubic metres per hectare', 'm3 ha-1', 'volume per hectare'],
+   658→    category: 'units',
+   659→    short: 'Cubic metres per hectare; irrigation or amendment volume per unit area. 1 m³/ha = 0.1 mm depth.',
+   660→    long: 'To convert irrigation depth in mm to volume: m³/ha = mm × 10. So 50 mm irrigation = 500 m³/ha. Used in water-balance calculations and drip-system design.',
+   661→  },
+   662→];
+   663→
+   664→/**
+   665→ * Find a glossary entry by term or alias, case-insensitively.
+   666→ * Returns the first matching entry or null.
+   667→ */
+   668→export function findGlossary(term: string): GlossaryEntry | null {
+   669→  const t = term.trim().toLowerCase();
+   670→  if (!t) return null;
+   671→  for (const e of GLOSSARY) {
+   672→    if (e.term.toLowerCase() === t) return e;
+   673→    if (e.aliases.some(a => a.toLowerCase() === t)) return e;
+   674→  }
+   675→  return null;
+   676→}
+   677→
+   678→/**
+   679→ * All categories in display order.
+   680→ */
+   681→export const GLOSSARY_CATEGORIES: GlossaryCategory[] = [
+   682→  'soil', 'water', 'fertilizer', 'plant', 'climate', 'units',
+   683→];
+   684→
+   685→/**
+   686→ * Category labels for UI display.
+   687→ */
+   688→export const GLOSSARY_CATEGORY_LABELS: Record<GlossaryCategory, string> = {
+   689→  soil: 'Soil',
+   690→  water: 'Water',
+   691→  fertilizer: 'Fertilizer',
+   692→  plant: 'Plant',
+   693→  climate: 'Climate',
+   694→  units: 'Units',
+   695→};
+   696→

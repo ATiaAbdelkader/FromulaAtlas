@@ -1,0 +1,799 @@
+     1→     1→<!DOCTYPE html>
+     2→     2→<html lang="es">
+     3→     3→<head>
+     4→     4→  <meta charset="UTF-8" />
+     5→     5→  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+     6→     6→  <link rel="stylesheet" href="assets/free-tools-watermark.css" />
+     7→     7→  <script src="assets/free-tools-embed.js"></script>
+     8→     8→  <title>Composición de fertilizantes (%)</title>
+     9→     9→  <link rel="stylesheet" href="dashboard.css" />
+    10→    10→  <style>
+    11→    11→    body { margin: 0; padding: 14px 16px 28px; background: #f8fafc; font-family: Inter, system-ui, sans-serif; font-size: 14px; color: #0f172a; }
+    12→    12→    .guest-note { margin: 0 0 14px; font-size: 12px; color: #64748b; text-align: center; }
+    13→    13→    .guest-note strong { color: #475569; }
+    14→    14→    .lead { margin: 0 0 20px; color: #475569; line-height: 1.5; max-width: 720px; }
+    15→    15→    .panel { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; margin-bottom: 18px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+    16→    16→    .panel h2 { margin: 0 0 12px; font-size: 1.05rem; color: #0f172a; }
+    17→    17→    .row-input { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; margin-bottom: 8px; }
+    18→    18→    .row-input label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 600; color: #334155; }
+    19→    19→    .formula-field-wrap { max-width: 320px; flex: 0 1 320px; }
+    20→    20→    .formula-field-wrap input[type="text"] { width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; }
+    21→    21→    .btn { border: 0; padding: 10px 18px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; }
+    22→    22→    .btn-primary { background: #16a34a; color: #fff; }
+    23→    23→    .btn-primary:hover { background: #15803d; }
+    24→    24→    .btn-ghost { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; }
+    25→    25→    .hint { font-size: 12px; color: #64748b; margin: 0 0 10px; }
+    26→    26→    .err { color: #b91c1c; font-size: 13px; margin: 8px 0 0; }
+    27→    27→    .ok-tag { display: inline-block; margin-top: 10px; padding: 8px 12px; background: #ecfdf5; border: 1px solid #86efac; border-radius: 8px; color: #14532d; font-weight: 700; font-size: 15px; }
+    28→    28→    .pm-line { font-size: 15px; margin: 12px 0 8px; color: #1e293b; }
+    29→    29→    .pm-line strong { color: #047857; }
+    30→    30→    .nut-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-top: 14px; }
+    31→    31→    .nut-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; }
+    32→    32→    .nut-card.is-nutrient { background: #f0fdf4; border-color: #86efac; }
+    33→    33→    .nut-card h3 { margin: 0 0 8px; font-size: 13px; color: #047857; }
+    34→    34→    .nut-card .elem { font-size: 18px; font-weight: 800; color: #0f172a; }
+    35→    35→    .nut-card .sub { font-size: 12px; color: #64748b; margin-top: 4px; }
+    36→    36→    .legend { margin-top: 14px; font-size: 12px; color: #64748b; line-height: 1.45; border-top: 1px solid #e2e8f0; padding-top: 12px; }
+    37→    37→    .mol-block { border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 14px; margin-bottom: 14px; background: #fafafa; }
+    38→    38→    .mol-block .mol-theory-title { font-size: 12px; color: #64748b; margin: 0 0 10px; }
+    39→    39→    .mol-block .nut-grid { margin-top: 10px; }
+    40→    40→    .mol-detail-inner { padding-top: 4px; }
+    41→    41→    .blend-panel .blend-line { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; margin-bottom: 4px; width: 100%; }
+    42→    42→    .blend-panel .blend-line-formula { position: relative; flex: 1 1 160px; min-width: 140px; max-width: min(100%, 360px); }
+    43→    43→    .blend-panel .blend-line-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-left: auto; flex-shrink: 0; }
+    44→    44→    .blend-panel .formula-input-narrow { width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; box-sizing: border-box; }
+    45→    45→    .row-suggestions {
+    46→    46→      display: none;
+    47→    47→      position: absolute;
+    48→    48→      left: 0;
+    49→    49→      right: 0;
+    50→    50→      top: calc(100% + 4px);
+    51→    51→      z-index: 35;
+    52→    52→      background: #fff;
+    53→    53→      border: 1px solid #cbd5e1;
+    54→    54→      border-radius: 8px;
+    55→    55→      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.16);
+    56→    56→      max-height: 220px;
+    57→    57→      overflow-y: auto;
+    58→    58→    }
+    59→    59→    .row-suggestion-item {
+    60→    60→      width: 100%;
+    61→    61→      border: 0;
+    62→    62→      background: transparent;
+    63→    63→      text-align: left;
+    64→    64→      padding: 8px 10px;
+    65→    65→      font-size: 13px;
+    66→    66→      color: #0f172a;
+    67→    67→      cursor: pointer;
+    68→    68→    }
+    69→    69→    .row-suggestion-item:hover { background: #f1f5f9; }
+    70→    70→    .blend-panel .pct-compact { width: 72px; padding: 8px; border: 1px solid #cbd5e1; border-radius: 8px; text-align: center; font-size: 13px; }
+    71→    71→    .blend-panel .pct-lbl { font-size: 12px; color: #64748b; white-space: nowrap; }
+    72→    72→    .btn-sm { padding: 6px 10px; font-size: 12px; border-radius: 6px; border: 0; cursor: pointer; }
+    73→    73→    .btn-add { background: #16a34a; color: #fff; }
+    74→    74→    .btn-del { background: #dc2626; color: #fff; }
+    75→    75→    .btn-clear { background: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1; margin-left: 8px; }
+    76→    76→    .blend-total-box { margin-top: 14px; padding: 12px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; font-size: 13px; display: none; }
+    77→    77→    .blend-total-box h3 { margin: 0 0 8px; font-size: 14px; color: #1e40af; }
+    78→    78→    .blend-total-label { margin: 12px 0 6px; font-size: 11px; font-weight: 700; color: #1d4ed8; letter-spacing: 0.02em; text-transform: uppercase; }
+    79→    79→    .blend-total-label:first-of-type { margin-top: 0; }
+    80→    80→    .blend-total-line { margin: 0 0 4px; line-height: 1.55; }
+    81→    81→    .blend-detail-card {
+    82→    82→      margin-top: 10px;
+    83→    83→      padding: 12px 14px;
+    84→    84→      background: #fff;
+    85→    85→      border: 2px solid #60a5fa;
+    86→    86→      border-radius: 10px;
+    87→    87→      box-shadow: 0 2px 10px rgba(30, 64, 175, 0.14);
+    88→    88→    }
+    89→    89→    .blend-detail-card-title {
+    90→    90→      margin: 0 0 10px;
+    91→    91→      font-size: 12px;
+    92→    92→      font-weight: 800;
+    93→    93→      color: #1e3a8a;
+    94→    94→      letter-spacing: 0.03em;
+    95→    95→    }
+    96→    96→    .others-row-inline { display: flex; align-items: center; gap: 10px; margin: 12px 0; max-width: 440px; flex-wrap: wrap; }
+    97→    97→    .others-row-inline label { font-size: 13px; font-weight: 600; color: #334155; }
+    98→    98→    .others-row-inline input { width: 80px; padding: 8px; border-radius: 8px; border: 1px solid #cbd5e1; }
+    99→    99→    .modal-overlay-fc { display: none; position: fixed; inset: 0; background: rgba(15,23,42,.45); z-index: 9999; align-items: center; justify-content: center; padding: 16px; }
+   100→   100→    .modal-overlay-fc.open { display: flex; }
+   101→   101→    .modal-fc { background: #fff; border-radius: 12px; max-width: 720px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 20px; box-shadow: 0 20px 50px rgba(0,0,0,.2); }
+   102→   102→    .fc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+   103→   103→    .fc-grid label { display: flex; flex-direction: column; font-size: 12px; gap: 4px; }
+   104→   104→    .fc-grid input { padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; }
+   105→   105→    .manual-box { border: 1px dashed #cbd5e1; border-radius: 8px; padding: 10px; margin-top: 10px; }
+   106→   106→    .manual-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+   107→   107→    .manual-grid label { font-size: 11px; color: #64748b; }
+   108→   108→    @media (max-width: 640px) {
+   109→   109→      .manual-grid { grid-template-columns: repeat(2, 1fr); }
+   110→   110→      .fc-grid { grid-template-columns: 1fr; }
+   111→   111→    }
+   112→   112→  </style>
+   113→   113→</head>
+   114→   114→<body>
+   115→   115→  <div class="np-free-tool-head">
+   116→   116→    <h1 class="np-free-tool-title">⚗️ Composición de fertilizantes (%)</h1>
+   117→   117→    <div class="np-free-watermark" aria-hidden="true"><img src="assets/N_Hoja_Azul.png" alt=""></div>
+   118→   118→  </div>
+   119→   119→  <p class="lead">
+   120→   120→    Agrega una o más <strong>filas</strong>: en cada una eliges la <strong>fórmula</strong> y el <strong>% en el producto</strong>. Soporta <strong>hidratos</strong> (<code>Ca(NO3)2·4H2O</code>) y <strong>sales dobles / mezclas</strong> con <strong>+</strong> o <strong>·</strong> entre bloques (ej. nitrato de calcio granular: <code>5Ca(NO3)2+NH4NO3+10H2O</code>). Debajo de cada fila verás la composición teórica de esa molécula; al final, <strong>Otros %</strong> y el total ponderado cuando la suma sea 100%.
+   121→   121→  </p>
+   122→   122→
+   123→   123→  <div class="panel blend-panel">
+   124→   124→    <h2>Moléculas en el producto</h2>
+   125→   125→    <p class="hint">El desplegable muestra solo <strong>fórmulas</strong>. <strong>También puedes escribir la fórmula manualmente</strong> (aunque no esté en la lista). Una fila = un ingrediente; usa <strong>+ Agregar molécula</strong> para mezclas (ej. NKS). <strong>Otros</strong> = inerte / aditivos / humedad.</p>
+   126→   126→    <div id="blendLines"></div>
+   127→   127→    <button type="button" class="btn-sm btn-add" onclick="addBlendRow()">+ Agregar molécula</button>
+   128→   128→    <button type="button" class="btn-sm btn-clear" onclick="clearBlend()">Vaciar</button>
+   129→   129→    <div class="others-row-inline">
+   130→   130→      <label>Otros (%) (impurezas, antiapelmazantes, etc.)</label>
+   131→   131→      <input type="number" id="othersPctInput" min="0" max="100" step="0.01" value="0" />
+   132→   132→    </div>
+   133→   133→    <p id="blendValidation" style="margin:8px 0 0;font-size:13px;font-weight:600;"></p>
+   134→   134→    <div class="blend-total-box" id="blendTotalBox">
+   135→   135→      <h3>Nutriente total en el producto (ponderado)</h3>
+   136→   136→      <p style="margin:0 0 8px;font-size:12px;color:#64748b;">Primer renglón: <strong>todos los % en forma elemental</strong> (N, fracciones de N si aplica, P, K, Ca, Mg, Si, S, micros y elementos de estructura). Debajo, <strong>celda con marco</strong>: equivalente <strong>en óxido</strong> (P₂O₅, K₂O, CaO, MgO, SiO₂).</p>
+   137→   137→      <div id="blendTotalNutrients"></div>
+   138→   138→    </div>
+   139→   139→    <p class="legend" style="margin-top:16px;">
+   140→   140→      <strong>Nota:</strong> Las tarjetas bajo cada fila son la molécula <strong>pura</strong>. El recuadro azul: arriba <strong>todo en elemental</strong>; la caja con borde = <strong>óxidos equivalentes</strong> de P, K, Ca, Mg y Si.
+   141→   141→    </p>
+   142→   142→  </div>
+   143→   143→
+   144→   144→  <script>
+   145→   145→    const LS_CUSTOM = 'np_login_fertilizer_composition_customs_v1';
+   146→   146→    const COLS = ['N', 'P', 'K', 'Ca', 'Mg', 'S', 'Si', 'C', 'H', 'O', 'N_NO3', 'N_NH4', 'P2O5', 'K2O', 'CaO', 'MgO', 'SiO2', 'Zn', 'Fe', 'Mn', 'B', 'Cu', 'Mo'];
+   147→   147→    const ELEM = {
+   148→   148→      H: 1.008, C: 12.011, N: 14.01, O: 16.0, P: 30.97, K: 39.10, Ca: 40.08, Mg: 24.31, S: 32.07, Si: 28.085,
+   149→   149→      Zn: 65.38, Fe: 55.845, Mn: 54.938, Cu: 63.546, B: 10.81, Mo: 95.95, Cl: 35.45, Na: 22.99
+   150→   150→    };
+   151→   151→    const OX = { P2O5: 2.29, K2O: 1.20, CaO: 1.40, MgO: 1.66, SiO2: 2.14 };
+   152→   152→    const SUBSCRIPT_MAP = {
+   153→   153→      '₀':'0','₁':'1','₂':'2','₃':'3','₄':'4','₅':'5','₆':'6','₇':'7','₈':'8','₉':'9',
+   154→   154→      '⁰':'0','¹':'1','²':'2','³':'3','⁴':'4','⁵':'5','⁶':'6','⁷':'7','⁸':'8','⁹':'9',
+   155→   155→      '⁺':'+','⁻':'-'
+   156→   156→    };
+   157→   157→
+   158→   158→    const BASE_MATERIALS = [
+   159→   159→      // Nitrogenados
+   160→   160→      { formula: 'CH4N2O', aliases: ['urea', 'Urea'] },
+   161→   161→      { formula: 'NH4NO3', aliases: ['nitrato de amonio', 'Nitrato de amonio', 'NO3NH4'] },
+   162→   162→      { formula: 'Ca(NO3)2·4H2O', aliases: ['nitrato de calcio tetrahidratado', 'Nitrato de calcio tetrahidratado'] },
+   163→   163→      { formula: 'Ca(NO3)2' },
+   164→   164→      { formula: '5Ca(NO3)2+NH4NO3+10H2O', aliases: ['nitrato de calcio granular', 'Nitrato de calcio granular', 'sal doble calcio', 'calcio granular'] },
+   165→   165→      { formula: '(NH4)2SO4' },
+   166→   166→
+   167→   167→      // Fosforados
+   168→   168→      { formula: 'NH4H2PO4', aliases: ['map', 'MAP'] },
+   169→   169→      { formula: '(NH4)2HPO4', aliases: ['dap', 'DAP'] },
+   170→   170→      { formula: 'KH2PO4', aliases: ['mkp', 'MKP'] },
+   171→   171→
+   172→   172→      // Potásicos
+   173→   173→      { formula: 'KNO3' },
+   174→   174→      { formula: 'K2SO4', aliases: ['sop', 'SOP'] },
+   175→   175→
+   176→   176→      // Magnésicos y secundarios
+   177→   177→      { formula: 'MgSO4·7H2O' },
+   178→   178→      { formula: 'MgSO4·H2O' },
+   179→   179→
+   180→   180→      // Microelementos frecuentes
+   181→   181→      { formula: 'ZnSO4' },
+   182→   182→      { formula: 'FeSO4·7H2O' },
+   183→   183→      { formula: 'MnSO4·H2O' },
+   184→   184→      { formula: 'CuSO4·5H2O' },
+   185→   185→      { formula: 'H3BO3' }
+   186→   186→    ];
+   187→   187→
+   188→   188→    let blendRowId = 0;
+   189→   189→    const blendRows = [];
+   190→   190→    let othersPct = 0;
+   191→   191→    let formulaSuggestions = [];
+   192→   192→
+   193→   193→    function zeroComp() {
+   194→   194→      const o = {};
+   195→   195→      COLS.forEach(k => { o[k] = 0; });
+   196→   196→      return o;
+   197→   197→    }
+   198→   198→
+   199→   199→    function num(v) {
+   200→   200→      const n = Number(v);
+   201→   201→      return Number.isFinite(n) ? n : 0;
+   202→   202→    }
+   203→   203→
+   204→   204→    function fromElementalsToComp(base) {
+   205→   205→      const out = zeroComp();
+   206→   206→      out.N = num(base.N);
+   207→   207→      out.P = num(base.P);
+   208→   208→      out.K = num(base.K);
+   209→   209→      out.Ca = num(base.Ca);
+   210→   210→      out.Mg = num(base.Mg);
+   211→   211→      out.S = num(base.S);
+   212→   212→      out.Si = num(base.Si);
+   213→   213→      out.Zn = num(base.Zn);
+   214→   214→      out.Fe = num(base.Fe);
+   215→   215→      out.Mn = num(base.Mn);
+   216→   216→      out.B = num(base.B);
+   217→   217→      out.Cu = num(base.Cu);
+   218→   218→      out.Mo = num(base.Mo);
+   219→   219→      out.N_NO3 = Math.min(out.N, Math.max(0, num(base.N_NO3)));
+   220→   220→      out.N_NH4 = Math.min(out.N - out.N_NO3, Math.max(0, num(base.N_NH4)));
+   221→   221→      out.P2O5 = out.P * OX.P2O5;
+   222→   222→      out.K2O = out.K * OX.K2O;
+   223→   223→      out.CaO = out.Ca * OX.CaO;
+   224→   224→      out.MgO = out.Mg * OX.MgO;
+   225→   225→      out.SiO2 = out.Si * OX.SiO2;
+   226→   226→      return out;
+   227→   227→    }
+   228→   228→
+   229→   229→    function normalizeFormula(raw) {
+   230→   230→      const text = String(raw || '').trim();
+   231→   231→      if (!text) return '';
+   232→   232→      return text
+   233→   233→        .split('')
+   234→   234→        .map(ch => SUBSCRIPT_MAP[ch] || ch)
+   235→   235→        .join('')
+   236→   236→        .replace(/[−]/g, '-')
+   237→   237→        .replace(/\s+/g, '')
+   238→   238→        .replace(/\{/g, '(')
+   239→   239→        .replace(/\}/g, ')')
+   240→   240→        .replace(/\[/g, '(')
+   241→   241→        .replace(/\]/g, ')')
+   242→   242→        .replace(/:/g, '·')
+   243→   243→        .replace(/\)\(/g, ')*(')
+   244→   244→        .replace(/([0-9)\]])([\*+])([0-9(A-Z])/g, '$1·$3')
+   245→   245→        .replace(/\.+/g, '.');
+   246→   246→    }
+   247→   247→
+   248→   248→    function parseNumber(str, index) {
+   249→   249→      let i = index;
+   250→   250→      let seenDot = false;
+   251→   251→      let token = '';
+   252→   252→      while (i < str.length) {
+   253→   253→        const ch = str[i];
+   254→   254→        if (ch >= '0' && ch <= '9') { token += ch; i += 1; continue; }
+   255→   255→        if (ch === '.' && !seenDot) { seenDot = true; token += ch; i += 1; continue; }
+   256→   256→        break;
+   257→   257→      }
+   258→   258→      if (!token) return { value: 1, index };
+   259→   259→      const val = Number(token);
+   260→   260→      if (!Number.isFinite(val) || val <= 0) throw new Error('Número inválido en fórmula.');
+   261→   261→      return { value: val, index: i };
+   262→   262→    }
+   263→   263→
+   264→   264→    function parseTerms(str, index, stopChar) {
+   265→   265→      const terms = [];
+   266→   266→      let i = index;
+   267→   267→      while (i < str.length) {
+   268→   268→        const ch = str[i];
+   269→   269→        if (stopChar && ch === stopChar) return { terms, index: i + 1 };
+   270→   270→        if (ch === '+' || ch === '-' || ch === '^') { i += 1; continue; }
+   271→   271→        if (ch === '(') {
+   272→   272→          const nested = parseTerms(str, i + 1, ')');
+   273→   273→          const cnt = parseNumber(str, nested.index);
+   274→   274→          terms.push({ type: 'group', terms: nested.terms, count: cnt.value });
+   275→   275→          i = cnt.index;
+   276→   276→          continue;
+   277→   277→        }
+   278→   278→        if (ch >= 'A' && ch <= 'Z') {
+   279→   279→          let symbol = ch;
+   280→   280→          i += 1;
+   281→   281→          if (i < str.length && str[i] >= 'a' && str[i] <= 'z') { symbol += str[i]; i += 1; }
+   282→   282→          if (!Object.prototype.hasOwnProperty.call(ELEM, symbol)) throw new Error('Elemento no soportado: ' + symbol);
+   283→   283→          const cnt = parseNumber(str, i);
+   284→   284→          terms.push({ type: 'element', symbol, count: cnt.value });
+   285→   285→          i = cnt.index;
+   286→   286→          continue;
+   287→   287→        }
+   288→   288→        throw new Error('Carácter inválido en fórmula: ' + ch);
+   289→   289→      }
+   290→   290→      if (stopChar) throw new Error('Paréntesis sin cerrar en fórmula.');
+   291→   291→      return { terms, index: i };
+   292→   292→    }
+   293→   293→
+   294→   294→    function collectElements(terms, mult, out) {
+   295→   295→      terms.forEach(t => {
+   296→   296→        if (t.type === 'element') {
+   297→   297→          out[t.symbol] = (out[t.symbol] || 0) + (t.count * mult);
+   298→   298→        } else {
+   299→   299→          collectElements(t.terms, mult * t.count, out);
+   300→   300→        }
+   301→   301→      });
+   302→   302→    }
+   303→   303→
+   304→   304→    function countMotifInTerms(terms, mult, motif) {
+   305→   305→      let total = 0;
+   306→   306→      for (let i = 0; i <= terms.length - motif.length; i += 1) {
+   307→   307→        let ok = true;
+   308→   308→        for (let j = 0; j < motif.length; j += 1) {
+   309→   309→          const term = terms[i + j];
+   310→   310→          const m = motif[j];
+   311→   311→          if (!term || term.type !== 'element' || term.symbol !== m.symbol || Math.abs(term.count - m.count) > 1e-9) {
+   312→   312→            ok = false;
+   313→   313→            break;
+   314→   314→          }
+   315→   315→        }
+   316→   316→        if (ok) total += mult;
+   317→   317→      }
+   318→   318→      terms.forEach(t => {
+   319→   319→        if (t.type === 'group') total += countMotifInTerms(t.terms, mult * t.count, motif);
+   320→   320→      });
+   321→   321→      return total;
+   322→   322→    }
+   323→   323→
+   324→   324→    function parseCompound(rawFormula) {
+   325→   325→      const normalized = normalizeFormula(rawFormula);
+   326→   326→      if (!normalized) throw new Error('Escribe una fórmula.');
+   327→   327→      const parts = normalized.split(/[·•.]/).filter(Boolean);
+   328→   328→      if (!parts.length) throw new Error('Fórmula no válida.');
+   329→   329→      const segments = [];
+   330→   330→      parts.forEach(part => {
+   331→   331→        const m = part.match(/^(\d+(?:\.\d+)?)(.*)$/);
+   332→   332→        let coef = 1;
+   333→   333→        let body = part;
+   334→   334→        if (m && m[2]) {
+   335→   335→          coef = Number(m[1]);
+   336→   336→          body = m[2];
+   337→   337→        }
+   338→   338→        const parsed = parseTerms(body, 0, null);
+   339→   339→        if (parsed.index !== body.length) throw new Error('Error al parsear la fórmula.');
+   340→   340→        segments.push({ coef, terms: parsed.terms });
+   341→   341→      });
+   342→   342→      const atomCounts = {};
+   343→   343→      segments.forEach(seg => collectElements(seg.terms, seg.coef, atomCounts));
+   344→   344→      let mw = 0;
+   345→   345→      Object.keys(atomCounts).forEach(sym => { mw += atomCounts[sym] * ELEM[sym]; });
+   346→   346→      if (!(mw > 0)) throw new Error('No se pudo calcular el PM.');
+   347→   347→      const no3Count = segments.reduce((s, seg) =>
+   348→   348→        s + countMotifInTerms(seg.terms, seg.coef, [{ symbol: 'N', count: 1 }, { symbol: 'O', count: 3 }]), 0);
+   349→   349→      const nh4Count = segments.reduce((s, seg) =>
+   350→   350→        s + countMotifInTerms(seg.terms, seg.coef, [{ symbol: 'N', count: 1 }, { symbol: 'H', count: 4 }]), 0);
+   351→   351→      return { normalized, atomCounts, mw, no3Count, nh4Count };
+   352→   352→    }
+   353→   353→
+   354→   354→    function pctElem(atomCounts, sym, mw) {
+   355→   355→      return ((atomCounts[sym] || 0) * ELEM[sym] / mw) * 100;
+   356→   356→    }
+   357→   357→
+   358→   358→    function compFromFormula(formula) {
+   359→   359→      const parsed = parseCompound(formula);
+   360→   360→      const c = parsed.atomCounts;
+   361→   361→      const mw = parsed.mw;
+   362→   362→      const out = zeroComp();
+   363→   363→      out.N = pctElem(c, 'N', mw);
+   364→   364→      out.P = pctElem(c, 'P', mw);
+   365→   365→      out.K = pctElem(c, 'K', mw);
+   366→   366→      out.Ca = pctElem(c, 'Ca', mw);
+   367→   367→      out.Mg = pctElem(c, 'Mg', mw);
+   368→   368→      out.S = pctElem(c, 'S', mw);
+   369→   369→      out.Si = pctElem(c, 'Si', mw);
+   370→   370→      out.C = pctElem(c, 'C', mw);
+   371→   371→      out.H = pctElem(c, 'H', mw);
+   372→   372→      out.O = pctElem(c, 'O', mw);
+   373→   373→      out.Zn = pctElem(c, 'Zn', mw);
+   374→   374→      out.Fe = pctElem(c, 'Fe', mw);
+   375→   375→      out.Mn = pctElem(c, 'Mn', mw);
+   376→   376→      out.B = pctElem(c, 'B', mw);
+   377→   377→      out.Cu = pctElem(c, 'Cu', mw);
+   378→   378→      out.Mo = pctElem(c, 'Mo', mw);
+   379→   379→
+   380→   380→      const nAtoms = c.N || 0;
+   381→   381→      if (nAtoms > 0) {
+   382→   382→        let no3Atoms = Math.max(0, parsed.no3Count);
+   383→   383→        let nh4Atoms = Math.max(0, parsed.nh4Count);
+   384→   384→        const forms = no3Atoms + nh4Atoms;
+   385→   385→        if (forms > nAtoms && forms > 0) {
+   386→   386→          const k = nAtoms / forms;
+   387→   387→          no3Atoms *= k;
+   388→   388→          nh4Atoms *= k;
+   389→   389→        }
+   390→   390→        out.N_NO3 = forms > 0 ? out.N * (no3Atoms / nAtoms) : 0;
+   391→   391→        out.N_NH4 = forms > 0 ? out.N * (nh4Atoms / nAtoms) : 0;
+   392→   392→      }
+   393→   393→      out.P2O5 = out.P * OX.P2O5;
+   394→   394→      out.K2O = out.K * OX.K2O;
+   395→   395→      out.CaO = out.Ca * OX.CaO;
+   396→   396→      out.MgO = out.Mg * OX.MgO;
+   397→   397→      out.SiO2 = out.Si * OX.SiO2;
+   398→   398→      return { comp: out, mw };
+   399→   399→    }
+   400→   400→
+   401→   401→    function loadCustoms() {
+   402→   402→      try {
+   403→   403→        const raw = localStorage.getItem(LS_CUSTOM);
+   404→   404→        if (!raw) return [];
+   405→   405→        const arr = JSON.parse(raw);
+   406→   406→        return Array.isArray(arr) ? arr : [];
+   407→   407→      } catch (e) { return []; }
+   408→   408→    }
+   409→   409→
+   410→   410→    function saveCustoms(items) {
+   411→   411→      localStorage.setItem(LS_CUSTOM, JSON.stringify(items));
+   412→   412→    }
+   413→   413→
+   414→   414→    function getCatalog() {
+   415→   415→      return BASE_MATERIALS.concat(loadCustoms());
+   416→   416→    }
+   417→   417→
+   418→   418→    function catalogFormulasSeen() {
+   419→   419→      const seen = {};
+   420→   420→      const out = [];
+   421→   421→      getCatalog().forEach(entry => {
+   422→   422→        if (!entry.formula) return;
+   423→   423→        const n = normalizeFormula(entry.formula);
+   424→   424→        if (!n || seen[n]) return;
+   425→   425→        seen[n] = true;
+   426→   426→        out.push(entry.formula);
+   427→   427→      });
+   428→   428→      return out;
+   429→   429→    }
+   430→   430→
+   431→   431→    function refreshSuggestions() {
+   432→   432→      formulaSuggestions = catalogFormulasSeen();
+   433→   433→    }
+   434→   434→
+   435→   435→    function escapeJsSingle(s) {
+   436→   436→      return String(s || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+   437→   437→    }
+   438→   438→
+   439→   439→    function getFormulaSuggestions(query) {
+   440→   440→      var q = normalizeFormula(query || '').toLowerCase();
+   441→   441→      var list = formulaSuggestions.slice();
+   442→   442→      if (!q) return list.slice(0, 40);
+   443→   443→      var starts = list.filter(function(f) { return normalizeFormula(f).toLowerCase().indexOf(q) === 0; });
+   444→   444→      var contains = list.filter(function(f) { return normalizeFormula(f).toLowerCase().indexOf(q) > 0; });
+   445→   445→      return starts.concat(contains).slice(0, 40);
+   446→   446→    }
+   447→   447→
+   448→   448→    function hideRowSuggestions(id) {
+   449→   449→      var host = document.getElementById('row_suggestions_' + id);
+   450→   450→      if (host) {
+   451→   451→        host.innerHTML = '';
+   452→   452→        host.style.display = 'none';
+   453→   453→      }
+   454→   454→    }
+   455→   455→
+   456→   456→    function deferHideRowSuggestions(id) {
+   457→   457→      setTimeout(function() { hideRowSuggestions(id); }, 120);
+   458→   458→    }
+   459→   459→
+   460→   460→    function showRowSuggestions(id, query) {
+   461→   461→      var host = document.getElementById('row_suggestions_' + id);
+   462→   462→      if (!host) return;
+   463→   463→      var opts = getFormulaSuggestions(query);
+   464→   464→      if (!opts.length) {
+   465→   465→        hideRowSuggestions(id);
+   466→   466→        return;
+   467→   467→      }
+   468→   468→      host.innerHTML = opts.map(function(f) {
+   469→   469→        return '<button type="button" class="row-suggestion-item" onmousedown="selectRowSuggestion(' + id + ',\'' + escapeJsSingle(f) + '\');return false;">' + escapeHtml(f) + '</button>';
+   470→   470→      }).join('');
+   471→   471→      host.style.display = 'block';
+   472→   472→    }
+   473→   473→
+   474→   474→    function selectRowSuggestion(id, formula) {
+   475→   475→      var r = blendRows.find(function(x) { return x.id === id; });
+   476→   476→      if (!r) return;
+   477→   477→      r.material = formula;
+   478→   478→      var input = document.getElementById('formula_input_' + id);
+   479→   479→      if (input) input.value = formula;
+   480→   480→      hideRowSuggestions(id);
+   481→   481→      updateRowDetail(id);
+   482→   482→      recalcBlend();
+   483→   483→    }
+   484→   484→
+   485→   485→    function matchCatalogEntry(raw) {
+   486→   486→      const r = String(raw || '').trim();
+   487→   487→      if (!r) return null;
+   488→   488→      const rn = normalizeFormula(r);
+   489→   489→      for (let i = 0; i < getCatalog().length; i += 1) {
+   490→   490→        const e = getCatalog()[i];
+   491→   491→        if (e.formula && normalizeFormula(e.formula) === rn) return e;
+   492→   492→        if (e.name && e.name.toLowerCase() === r.toLowerCase()) return e;
+   493→   493→        if (e.aliases && e.aliases.some(function(a) { return a.toLowerCase() === r.toLowerCase(); })) return e;
+   494→   494→      }
+   495→   495→      return null;
+   496→   496→    }
+   497→   497→
+   498→   498→    function resolveMaterial(text) {
+   499→   499→      const raw = String(text || '').trim();
+   500→   500→      if (!raw) return { ok: false, error: 'Escribe una fórmula.' };
+   501→   501→      const entry = matchCatalogEntry(raw);
+   502→   502→      if (entry) {
+   503→   503→        if (entry.analysis) {
+   504→   504→          return {
+   505→   505→            ok: true,
+   506→   506→            comp: fromElementalsToComp(entry.analysis),
+   507→   507→            displayFormula: entry.name + ' (análisis manual)',
+   508→   508→            mw: null
+   509→   509→          };
+   510→   510→        }
+   511→   511→        try {
+   512→   512→          const out = compFromFormula(entry.formula);
+   513→   513→          return {
+   514→   514→            ok: true,
+   515→   515→            comp: out.comp,
+   516→   516→            displayFormula: normalizeFormula(entry.formula),
+   517→   517→            mw: out.mw
+   518→   518→          };
+   519→   519→        } catch (err) {
+   520→   520→          return { ok: false, error: 'Error al calcular desde catálogo.' };
+   521→   521→        }
+   522→   522→      }
+   523→   523→      try {
+   524→   524→        const out = compFromFormula(raw);
+   525→   525→        return { ok: true, comp: out.comp, displayFormula: normalizeFormula(raw), mw: out.mw };
+   526→   526→      } catch (err) {
+   527→   527→        return { ok: false, error: err && err.message ? err.message : 'Fórmula no válida.' };
+   528→   528→      }
+   529→   529→    }
+   530→   530→
+   531→   531→    function fmt(n, d) {
+   532→   532→      const x = num(n);
+   533→   533→      if (Math.abs(x) < 1e-8) return '—';
+   534→   534→      return x.toFixed(d != null ? d : 2);
+   535→   535→    }
+   536→   536→
+   537→   537→    function fmtOx(x) {
+   538→   538→      const v = num(x);
+   539→   539→      if (v < 1e-8) return '0,00';
+   540→   540→      return v.toFixed(2).replace('.', ',');
+   541→   541→    }
+   542→   542→
+   543→   543→    function nutCard(title, elemPct, subLine, showElementalWord, isNutrient) {
+   544→   544→      var line1 = fmt(elemPct) + ' % en masa' + (showElementalWord ? ' <span style="font-weight:600;color:#64748b;">(elemental)</span>' : '');
+   545→   545→      var cls = 'nut-card' + (isNutrient ? ' is-nutrient' : '');
+   546→   546→      return (
+   547→   547→        '<div class="' + cls + '">' +
+   548→   548→        '<h3>' + title + '</h3>' +
+   549→   549→        '<div class="elem">' + line1 + '</div>' +
+   550→   550→        (subLine ? '<div class="sub">' + subLine + '</div>' : '') +
+   551→   551→        '</div>'
+   552→   552→      );
+   553→   553→    }
+   554→   554→
+   555→   555→    function buildNutrientsHtml(comp) {
+   556→   556→      var parts = [];
+   557→   557→      parts.push(nutCard('N (total)', comp.N, null, false, true));
+   558→   558→      if (num(comp.N) > 1e-6 && (num(comp.N_NO3) > 1e-4 || num(comp.N_NH4) > 1e-4)) {
+   559→   559→        parts.push(nutCard('N como NO₃⁻ (aprox.)', comp.N_NO3, null, false, true));
+   560→   560→        parts.push(nutCard('N como NH₄⁺ (aprox.)', comp.N_NH4, null, false, true));
+   561→   561→      }
+   562→   562→      if (num(comp.P) > 1e-8) {
+   563→   563→        parts.push(nutCard('Fósforo (P)', comp.P, 'Equivalente <strong>P₂O₅</strong> (uso agronómico): ' + fmtOx(comp.P2O5) + ' %', true, true));
+   564→   564→      }
+   565→   565→      if (num(comp.K) > 1e-8) {
+   566→   566→        parts.push(nutCard('Potasio (K)', comp.K, 'Equivalente <strong>K₂O</strong> (uso agronómico): ' + fmtOx(comp.K2O) + ' %', true, true));
+   567→   567→      }
+   568→   568→      if (num(comp.Ca) > 1e-8) {
+   569→   569→        parts.push(nutCard('Calcio (Ca)', comp.Ca, 'Equivalente <strong>CaO</strong> (uso agronómico): ' + fmtOx(comp.CaO) + ' %', true, true));
+   570→   570→      }
+   571→   571→      if (num(comp.Mg) > 1e-8) {
+   572→   572→        parts.push(nutCard('Magnesio (Mg)', comp.Mg, 'Equivalente <strong>MgO</strong> (uso agronómico): ' + fmtOx(comp.MgO) + ' %', true, true));
+   573→   573→      }
+   574→   574→      if (num(comp.S) > 1e-8) parts.push(nutCard('Azufre (S)', comp.S, null, false, true));
+   575→   575→      if (num(comp.Si) > 1e-8) parts.push(nutCard('Silicio (Si)', comp.Si, 'Equivalente <strong>SiO₂</strong> (referencia): ' + fmtOx(comp.SiO2) + ' %', true, true));
+   576→   576→      if (num(comp.Zn) > 1e-8) parts.push(nutCard('Zinc (Zn)', comp.Zn, null, false, true));
+   577→   577→      if (num(comp.Fe) > 1e-8) parts.push(nutCard('Hierro (Fe)', comp.Fe, null, false, true));
+   578→   578→      if (num(comp.Mn) > 1e-8) parts.push(nutCard('Manganeso (Mn)', comp.Mn, null, false, true));
+   579→   579→      if (num(comp.B) > 1e-8) parts.push(nutCard('Boro (B)', comp.B, null, false, true));
+   580→   580→      if (num(comp.Cu) > 1e-8) parts.push(nutCard('Cobre (Cu)', comp.Cu, null, false, true));
+   581→   581→      if (num(comp.Mo) > 1e-8) parts.push(nutCard('Molibdeno (Mo)', comp.Mo, null, false, true));
+   582→   582→      if (num(comp.C) > 1e-8) parts.push(nutCard('Carbono (C)', comp.C, null, false, false));
+   583→   583→      if (num(comp.H) > 1e-8) parts.push(nutCard('Hidrógeno (H)', comp.H, null, false, false));
+   584→   584→      if (num(comp.O) > 1e-8) parts.push(nutCard('Oxígeno (O)', comp.O, null, false, false));
+   585→   585→      return parts.join('');
+   586→   586→    }
+   587→   587→
+   588→   588→    function npkTheoreticalHtml(comp) {
+   589→   589→      if (num(comp.P2O5) > 1e-6 || num(comp.K2O) > 1e-6 || num(comp.N) > 1e-6) {
+   590→   590→        var n = num(comp.N).toFixed(1).replace('.', ',');
+   591→   591→        var p = num(comp.P2O5).toFixed(1).replace('.', ',');
+   592→   592→        var k = num(comp.K2O).toFixed(1).replace('.', ',');
+   593→   593→        return '<div class="ok-tag" style="margin-top:8px;display:inline-block;">Etiqueta tipo N – P₂O₅ – K₂O (teórico, %): ' + n + ' – ' + p + ' – ' + k + '</div>';
+   594→   594→      }
+   595→   595→      return '';
+   596→   596→    }
+   597→   597→
+   598→   598→    function updateRowDetail(id) {
+   599→   599→      var wrap = document.getElementById('mol_wrap_' + id);
+   600→   600→      if (!wrap) return;
+   601→   601→      var r = blendRows.find(function(x) { return x.id === id; });
+   602→   602→      if (!r || !String(r.material).trim()) {
+   603→   603→        wrap.innerHTML = '<p style="margin:0;font-size:12px;color:#94a3b8;">Escribe o elige una fórmula para ver el detalle teórico de esta molécula.</p>';
+   604→   604→        return;
+   605→   605→      }
+   606→   606→      var info = resolveMaterial(r.material);
+   607→   607→      if (!info.ok) {
+   608→   608→        wrap.innerHTML = '<p class="err" style="margin:0;">' + escapeHtml(info.error) + '</p>';
+   609→   609→        return;
+   610→   610→      }
+   611→   611→      var c = info.comp;
+   612→   612→      var pmLine = info.mw
+   613→   613→        ? '<div class="pm-line">PM: <strong>' + info.mw.toFixed(2) + ' g/mol</strong></div>'
+   614→   614→        : '<div class="pm-line">PM: no aplica (análisis manual).</div>';
+   615→   615→      wrap.innerHTML =
+   616→   616→        '<p class="mol-theory-title"><strong>Composición teórica</strong> de esta molécula al 100% (sustancia pura)</p>' +
+   617→   617→        '<div class="pm-line">Fórmula: <strong>' + escapeHtml(info.displayFormula || '') + '</strong></div>' +
+   618→   618→        pmLine +
+   619→   619→        npkTheoreticalHtml(c) +
+   620→   620→        '<div class="nut-grid">' + buildNutrientsHtml(c) + '</div>';
+   621→   621→    }
+   622→   622→
+   623→   623→    function refreshAllRowDetails() {
+   624→   624→      blendRows.forEach(function(r) { updateRowDetail(r.id); });
+   625→   625→    }
+   626→   626→
+   627→   627→    function addBlendRow(formula, pct) {
+   628→   628→      blendRows.push({ id: ++blendRowId, material: formula || '', pct: pct != null ? String(pct) : '' });
+   629→   629→      renderBlend();
+   630→   630→    }
+   631→   631→
+   632→   632→    function removeBlendRow(id) {
+   633→   633→      const i = blendRows.findIndex(r => r.id === id);
+   634→   634→      if (i >= 0) {
+   635→   635→        blendRows.splice(i, 1);
+   636→   636→        if (!blendRows.length) {
+   637→   637→          blendRows.push({ id: ++blendRowId, material: '', pct: '100' });
+   638→   638→        }
+   639→   639→        renderBlend();
+   640→   640→      }
+   641→   641→    }
+   642→   642→
+   643→   643→    function clearBlend() {
+   644→   644→      if (!blendRows.length && !othersPct) return;
+   645→   645→      if (!confirm('¿Vaciar filas y Otros?')) return;
+   646→   646→      blendRows.length = 0;
+   647→   647→      othersPct = 0;
+   648→   648→      var oi = document.getElementById('othersPctInput');
+   649→   649→      if (oi) oi.value = '0';
+   650→   650→      addBlendRow('', '100');
+   651→   651→    }
+   652→   652→
+   653→   653→    function onBlendMat(id, v) {
+   654→   654→      const r = blendRows.find(x => x.id === id);
+   655→   655→      if (r) {
+   656→   656→        r.material = v;
+   657→   657→        updateRowDetail(id);
+   658→   658→        recalcBlend();
+   659→   659→        showRowSuggestions(id, v);
+   660→   660→      }
+   661→   661→    }
+   662→   662→
+   663→   663→    function onBlendPct(id, v) {
+   664→   664→      const r = blendRows.find(x => x.id === id);
+   665→   665→      if (r) { r.pct = v; recalcBlend(); }
+   666→   666→    }
+   667→   667→
+   668→   668→    function renderBlend() {
+   669→   669→      const host = document.getElementById('blendLines');
+   670→   670→      if (!blendRows.length) {
+   671→   671→        host.innerHTML = '<p style="margin:0 0 10px;font-size:13px;color:#64748b;">Pulsa <strong>+ Agregar molécula</strong> y elige fórmulas del listado (ej. KNO3, K2SO4).</p>';
+   672→   672→        recalcBlend();
+   673→   673→        return;
+   674→   674→      }
+   675→   675→      host.innerHTML = blendRows.map(function(r) {
+   676→   676→        return (
+   677→   677→          '<div class="mol-block" data-bid="' + r.id + '">' +
+   678→   678→          '<div class="blend-line">' +
+   679→   679→          '<div class="blend-line-formula">' +
+   680→   680→          '<input type="text" id="formula_input_' + r.id + '" class="formula-input-narrow" placeholder="Fórmula" autocomplete="off" autocapitalize="off" spellcheck="false" ' +
+   681→   681→          'value="' + escapeAttr(r.material) + '" onfocus="showRowSuggestions(' + r.id + ',this.value)" onblur="deferHideRowSuggestions(' + r.id + ')" oninput="onBlendMat(' + r.id + ',this.value)" />' +
+   682→   682→          '<div id="row_suggestions_' + r.id + '" class="row-suggestions"></div>' +
+   683→   683→          '</div>' +
+   684→   684→          '<div class="blend-line-actions">' +
+   685→   685→          '<span class="pct-lbl">% en producto</span>' +
+   686→   686→          '<input type="number" class="pct-compact" min="0" max="100" step="0.01" value="' + escapeAttr(r.pct) + '" oninput="onBlendPct(' + r.id + ',this.value)" />' +
+   687→   687→          '<button type="button" class="btn-sm btn-del" onclick="removeBlendRow(' + r.id + ')">Quitar</button>' +
+   688→   688→          '</div>' +
+   689→   689→          '</div>' +
+   690→   690→          '<div id="mol_wrap_' + r.id + '" class="mol-detail-inner"></div>' +
+   691→   691→          '</div>'
+   692→   692→        );
+   693→   693→      }).join('');
+   694→   694→      recalcBlend();
+   695→   695→      refreshAllRowDetails();
+   696→   696→    }
+   697→   697→
+   698→   698→    function recalcBlend() {
+   699→   699→      othersPct = num(document.getElementById('othersPctInput').value);
+   700→   700→      const totals = zeroComp();
+   701→   701→      let sumMat = 0;
+   702→   702→      blendRows.forEach(function(r) {
+   703→   703→        const p = Math.max(0, num(r.pct));
+   704→   704→        sumMat += p;
+   705→   705→        const info = resolveMaterial(r.material);
+   706→   706→        if (info.ok) {
+   707→   707→          COLS.forEach(function(k) {
+   708→   708→            totals[k] += (p / 100) * num(info.comp[k]);
+   709→   709→          });
+   710→   710→        }
+   711→   711→      });
+   712→   712→      const totalPct = sumMat + othersPct;
+   713→   713→      const box = document.getElementById('blendValidation');
+   714→   714→      const totalBox = document.getElementById('blendTotalBox');
+   715→   715→      const nutDiv = document.getElementById('blendTotalNutrients');
+   716→   716→      if (Math.abs(totalPct - 100) <= 0.02 && blendRows.some(function(r) { return String(r.material).trim(); })) {
+   717→   717→        box.textContent = 'Suma: ' + totalPct.toFixed(2) + '% — OK.';
+   718→   718→        box.style.color = '#166534';
+   719→   719→        totalBox.style.display = 'block';
+   720→   720→        var labels = { N: 'N', P: 'P', K: 'K', Ca: 'Ca', Mg: 'Mg', S: 'S', Si: 'Si', C: 'C', H: 'H', O: 'O', Zn: 'Zn', Fe: 'Fe', Mn: 'Mn', B: 'B', Cu: 'Cu', Mo: 'Mo',
+   721→   721→          N_NO3: 'N-NO₃', N_NH4: 'N-NH₄', P2O5: 'P₂O₅', K2O: 'K₂O', CaO: 'CaO', MgO: 'MgO', SiO2: 'SiO₂' };
+   722→   722→        var elemOrder = ['N', 'N_NO3', 'N_NH4', 'P', 'K', 'Ca', 'Mg', 'S', 'Si', 'Zn', 'Fe', 'Mn', 'B', 'Cu', 'Mo', 'C', 'H', 'O'];
+   723→   723→        var oxOrder = ['P2O5', 'K2O', 'CaO', 'MgO', 'SiO2'];
+   724→   724→        var lineElem = [];
+   725→   725→        elemOrder.forEach(function(k) {
+   726→   726→          if (totals[k] > 1e-4) lineElem.push('<strong>' + labels[k] + '</strong>: ' + totals[k].toFixed(2) + ' %');
+   727→   727→        });
+   728→   728→        var lineOx = [];
+   729→   729→        oxOrder.forEach(function(k) {
+   730→   730→          if (totals[k] > 1e-4) lineOx.push('<strong>' + labels[k] + '</strong>: ' + totals[k].toFixed(2) + ' %');
+   731→   731→        });
+   732→   732→        nutDiv.innerHTML =
+   733→   733→          '<p class="blend-total-label">% ponderado — forma elemental (todo lo que aporta)</p>' +
+   734→   734→          '<p class="blend-total-line">' + (lineElem.length ? lineElem.join(' · ') : '—') + '</p>' +
+   735→   735→          '<div class="blend-detail-card">' +
+   736→   736→          '<div class="blend-detail-card-title">Equivalente en óxido (P₂O₅, K₂O, CaO, MgO, SiO₂)</div>' +
+   737→   737→          '<p class="blend-total-line" style="margin:0;">' + (lineOx.length ? lineOx.join(' · ') : '—') + '</p>' +
+   738→   738→          '</div>';
+   739→   739→      } else {
+   740→   740→        box.textContent = blendRows.length
+   741→   741→          ? ('Suma: ' + totalPct.toFixed(2) + '% — Ajusta a 100% (ingredientes + Otros).')
+   742→   742→          : '';
+   743→   743→        box.style.color = '#b91c1c';
+   744→   744→        totalBox.style.display = 'none';
+   745→   745→      }
+   746→   746→    }
+   747→   747→
+   748→   748→    document.getElementById('othersPctInput').addEventListener('input', function() {
+   749→   749→      recalcBlend();
+   750→   750→    });
+   751→   751→
+   752→   752→    function escapeHtml(s) {
+   753→   753→      const d = document.createElement('div');
+   754→   754→      d.textContent = s;
+   755→   755→      return d.innerHTML;
+   756→   756→    }
+   757→   757→
+   758→   758→    function escapeAttr(s) {
+   759→   759→      return String(s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+   760→   760→    }
+   761→   761→
+   762→   762→    document.addEventListener('click', function(e) {
+   763→   763→      if (e.target.closest('.blend-line-formula')) return;
+   764→   764→      blendRows.forEach(function(r) { hideRowSuggestions(r.id); });
+   765→   765→    });
+   766→   766→
+   767→   767→    function snapshotBlend() {
+   768→   768→      return {
+   769→   769→        blendRowId: blendRowId,
+   770→   770→        othersPct: document.getElementById('othersPctInput').value,
+   771→   771→        rows: blendRows.map(function (r) { return { material: r.material, pct: r.pct }; })
+   772→   772→      };
+   773→   773→    }
+   774→   774→    function applyBlend(d) {
+   775→   775→      if (!d || !Array.isArray(d.rows) || !d.rows.length) return;
+   776→   776→      blendRowId = Number(d.blendRowId) || 0;
+   777→   777→      blendRows.length = 0;
+   778→   778→      d.rows.forEach(function (r) {
+   779→   779→        blendRows.push({ id: ++blendRowId, material: r.material || '', pct: r.pct != null ? String(r.pct) : '' });
+   780→   780→      });
+   781→   781→      othersPct = parseFloat(d.othersPct) || 0;
+   782→   782→      document.getElementById('othersPctInput').value = othersPct;
+   783→   783→      renderBlend();
+   784→   784→    }
+   785→   785→
+   786→   786→    refreshSuggestions();
+   787→   787→  </script>
+   788→   788→  <script src="assets/np-free-local-persist.js"></script>
+   789→   789→  <script>
+   790→   790→    (function () {
+   791→   791→      var loaded = window.NpFreePersist.load('fertilizer_composition');
+   792→   792→      if (loaded && loaded.rows && loaded.rows.length) applyBlend(loaded);
+   793→   793→      else addBlendRow('', '100');
+   794→   794→      window.NpFreePersist.bind('fertilizer_composition', snapshotBlend, applyBlend);
+   795→   795→    })();
+   796→   796→  </script>
+   797→   797→</body>
+   798→   798→</html>
+   799→   799→

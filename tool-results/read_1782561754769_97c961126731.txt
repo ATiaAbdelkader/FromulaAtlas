@@ -1,0 +1,502 @@
+  1851→            'El movimiento de fotoasimilados al fruto suele relacionarse con gradientes osmóticos donde K es protagonista.'
+  1852→        },
+  1853→        {
+  1854→          text: 'Calidad (color, sabor, firmeza) y tolerancia a estrés',
+  1855→          detail:
+  1856→            'Incide en pigmentación, firmeza y equilibrio hídrico del tejido; carencias muestran bajas relativas incluso cuando el síntoma “clásico” aún es leve.'
+  1857→        },
+  1858→        {
+  1859→          text: 'Activación de enzimas y balance iónico con otros cationes',
+  1860→          detail:
+  1861→            'Coexiste en solución raíz con Ca²⁺, Mg²⁺ y NH₄⁺; el balance K/Mg/Ca en hoja aclara mejor que una cifra aislada de suelo.'
+  1862→        }
+  1863→      ],
+  1864→      tip: 'Puede confundirse con Mg; revisar K/Mg/Ca en hoja y síntomas marginales vs intervenales.'
+  1865→    },
+  1866→    Mg: {
+  1867→      mob: 'Alta', where: 'Hojas viejas', sym: 'Clorosis intervenal en láminas maduras, nervadura a menudo más verde',
+  1868→      functions: [
+  1869→        {
+  1870→          text: 'Átomo central de la molécula de clorofila',
+  1871→          detail:
+  1872→            'Sin Mg estable no hay anillo Mg-porfirínico funcional; la clorosis intervenal en láminas maduras es una señal frecuente al movilizarse desde lo viejo.'
+  1873→        },
+  1874→        {
+  1875→          text: 'Fotosíntesis y enzimas clave (p. ej. activadores)',
+  1876→          detail:
+  1877→            'Actúa como cofactor en reacciones de transferencia energética; “apaga” rutas fotoquímicas si la disponibilidad es baja.'
+  1878→        },
+  1879→        {
+  1880→          text: 'Metabolismo de carbono y respuesta a luz',
+  1881→          detail:
+  1882→            'El rendimiento fotosintético integrado depende del acople cloroplasto–citoplasma; Mg insuficiente reduce el gasto efectivo de luz útil.'
+  1883→        },
+  1884→        {
+  1885→          text: 'Síntesis de lípidos y estabilidad de membranas',
+  1886→          detail:
+  1887→            'Participa en lipídos de membrana y fosfolípidos; no todo síntoma de Mg se limita al patrón clásico intervenal tras largas carencias.'
+  1888→        }
+  1889→      ],
+  1890→      tip: 'Exceso relativo de K, Ca o NH₄ puede alterar el balance de Mg aunque el análisis global parezca suficiente.'
+  1891→    },
+  1892→    Mo: {
+  1893→      mob: 'Alta (matriz de Mo en planta puede variar)', where: 'Hojas viejas (se confunde a veces con carencia de N)',
+  1894→      sym: 'Amarillamiento general o moteo; en leguminosas puede ligarse a eficiencia del uso de nitrato',
+  1895→      functions: [
+  1896→        {
+  1897→          text: 'Cofactor de la nitratoreductasa y enzimas del metabolismo del N',
+  1898→          detail:
+  1899→            'La reducción NO₃⁻ → NO₂⁻ se detiene si falta Mo; el síntoma puede parecer “falta de N” habiendo nitrato en la solución o el suelo.'
+  1900→        },
+  1901→        {
+  1902→          text: 'Fijación biológica de N en leguminosas (nódulos)',
+  1903→          detail:
+  1904→            'La nitrogenasa de muchos sistemas símbióticos requiere el centro Fe–Mo; sin él los nódulos existen pero el aporte efectivo cae.'
+  1905→        },
+  1906→        {
+  1907→          text: 'Metabolismo de ácidos nucleicos y azufre (contextos específicos)',
+  1908→          detail:
+  1909→            'En rutas de asimilación nitrogenada coexisten vínculos con compuestos azufrados; ayuda contextualizar síntomas con el programa N/S de la especie.'
+  1910→        }
+  1911→      ],
+  1912→      tip: 'Interpretar con especie, forma de N aportada y síntomas foliares; no es un “clásico único” en todas las fichas.'
+  1913→    },
+  1914→    S: {
+  1915→      mob: 'Intermedia / baja según cultivo y etapa', where: 'Hojas jóvenes',
+  1916→      sym: 'Clorosis más uniforme en tejido nuevo; en algunas especies puede asociarse a tonos rojizos',
+  1917→      functions: [
+  1918→        {
+  1919→          text: 'Puentes disulfuro en proteínas (estructura y enzimas)',
+  1920→          detail:
+  1921→            'Estabiliza plegamiento proteico en cloroplastos y tejidos; la deficiencia afecta estructuras que se renuevan en hoja nueva.'
+  1922→        },
+  1923→        {
+  1924→          text: 'Compuestos de defensa y metabolitos secundarios azufrados',
+  1925→          detail:
+  1926→            'Glucosinolatos, aliínas u otros compuestos S participan en defensa frente a plagas/patógenos y en calidad aromatica.'
+  1927→        },
+  1928→        {
+  1929→          text: 'Fotosíntesis (componentes proteicos del aparato fotosintético)',
+  1930→          detail:
+  1931→            'Varias proteína del fotosistema contienen cisteína; tras carencia prolongada se acentúa palidez más homogénea en tejidos jóvenes.'
+  1932→        }
+  1933→      ],
+  1934→      tip: 'En hidro u inertes puede manifestarse en hoja joven antes que otros patrones “clásicos”.'
+  1935→    },
+  1936→    Fe: {
+  1937→      mob: 'Baja', where: 'Hojas jóvenes', sym: 'Clorosis intervenal con nervaduras más verdes (patrón típico, según especie)',
+  1938→      functions: [
+  1939→        {
+  1940→          text: 'Síntesis y mantenimiento de cloroplastos (efecto indirecto sobre clorofila)',
+  1941→          detail:
+  1942→            'Fe interviene en la maquinaria de biosíntesis de clorofila dentro del cloroplasto; síntomas se expresan en expansión laminar.'
+  1943→        },
+  1944→        {
+  1945→          text: 'Cadena de transporte de electrones en fotosíntesis y respiración',
+  1946→          detail:
+  1947→            'Complejos citocrómicos dependen de Fe; antes de necrosis marcada aparece menor eficiencia y cloroplastos “livianos”.'
+  1948→        },
+  1949→        {
+  1950→          text: 'Enzimas redox y metabolismo del nitrógeno',
+  1951→          detail:
+  1952→            'Rutinas de assimilación/reducción nitrogenada cargan sistemas hierro‑azufre; la clorosis puede cruzarse con programas muy nitratados.'
+  1953→        }
+  1954→      ],
+  1955→      tip: 'pH alto, bicarbonatos o frío radical pueden inducir clorosis férrica con Fe “total” alto en suelo.'
+  1956→    },
+  1957→    Mn: {
+  1958→      mob: 'Baja', where: 'Hojas jóvenes', sym: 'Moteado, clorosis intervenal; “ojos de pájaro” en algunos casos',
+  1959→      functions: [
+  1960→        {
+  1961→          text: 'Fotosíntesis (fotosistema y fotoprotección)',
+  1962→          detail:
+  1963→            'El complejo divisor de agua lleva centro Mn; la fotooxidación aumenta cuando el equipo no está bien armado enzimáticamente.'
+  1964→        },
+  1965→        {
+  1966→          text: 'Activación de enzimas y metabolismo del oxígeno',
+  1967→          detail:
+  1968→            'Mn²⁺ activa decenas de hidrolasas y descarboxilasas; repercute en lignificación local y desarrollo laminar ordenado.'
+  1969→        },
+  1970→        {
+  1971→          text: 'Defensa oxidativa (contexto de estrés)',
+  1972→          detail:
+  1973→            'En plantas estrés alta luz/sobreflujo de electrones, Mn equilibra parcialmente el exceso de radicales cuando está disponible en hoja joven.'
+  1974→        }
+  1975→      ],
+  1976→      tip: 'Síntomas pueden asemejar Fe; la edad de la hoja y el modelo de síntomas ayuda a orientar.'
+  1977→    },
+  1978→    Zn: {
+  1979→      mob: 'Baja', where: 'Hojas jóvenes', sym: 'Hojas más pequeñas, clorosis, hojas “rígidas” o acartonadas en cultivos sensibles',
+  1980→      functions: [
+  1981→        {
+  1982→          text: 'Auxinas y morfogénesis foliar',
+  1983→          detail:
+  1984→            'Regula niveles efectivos de auxina en ápices; la carencia se nota como hojas pequeñas en roseta (“achaparramiento”) antes de otros signos tardíos.'
+  1985→        },
+  1986→        {
+  1987→          text: 'Cofactor de enzimas (carbohidratos, proteínas, defensa)',
+  1988→          detail:
+  1989→            'Carbono anhidrasa, carboxipeptidasas u otras deshidrogenasas Zn‑dependientes acoplan fotosíntesis y uso de fotoasimilados.'
+  1990→        },
+  1991→        {
+  1992→          text: 'Integridad de membranas y crecimiento meristemático',
+  1993→          detail:
+  1994→            'El meristemo apical es sensible porque la división rápida gasta rutas sintéticas que usan Zinc en varios puntos enzimáticos.'
+  1995→        }
+  1996→      ],
+  1997→      tip: 'P alto, frío o restricción radicular suelen empeorar la expresión foliar.'
+  1998→    },
+  1999→    Cu: {
+  2000→      mob: 'Baja', where: 'Hojas jóvenes', sym: 'Deformación, clorosis; ápices pueden necrosar en casos fuertes',
+  2001→      functions: [
+  2002→        {
+  2003→          text: 'Lignificación y pared celular',
+  2004→          detail:
+  2005→            'Laccasas u oxidasas dependientes de cobre endurecen vasos y esclerénquima; deficiencias producen láminas “blandas” o curvadas.'
+  2006→        },
+  2007→        {
+  2008→          text: 'Fotosíntesis (plastocianina) y metabolismo oxidativo',
+  2009→          detail:
+  2010→            'La plastocianina porta electrones entre fotosistemas; un cuello ahí tiene efecto rápido en cloroplastos nuevos.'
+  2011→        },
+  2012→        {
+  2013→          text: 'Polen y fertilidad (según cultivo)',
+  2014→          detail:
+  2015→            'El polen fértil requiere integridad enzimática y pared pollinica adecuada; la carencia de Cu aparece antes en programas muy generativos.'
+  2016→        }
+  2017→      ],
+  2018→      tip: 'Cuidado con acumulación por fungicidas cupríacos en programas intensivos.'
+  2019→    },
+  2020→    Ca: {
+  2021→      mob: 'Baja (poco redistribuido en floema)', where: 'Tejidos jóvenes, meristemos, puntos de crecimiento y frutos',
+  2022→      sym: 'Necrosis marginal en hojas nuevas, deformación, blossom-end rot u otras necrosis en fruto',
+  2023→      functions: [
+  2024→        {
+  2025→          text: 'Pared celular (pectinas) y estabilidad tisular',
+  2026→          detail:
+  2027→            'Los puentes ion Ca²⁺ entre pectinas dan firmeza; tejidos jóvenes con bajo flujo transpiratorio son focos típicos de fallo.'
+  2028→        },
+  2029→        {
+  2030→          text: 'Membranas y señalización (calmodulina, respuesta a estímulos)',
+  2031→          detail:
+  2032→            'La calmodulina transduce señales de Ca citosólico; esto ata respuestas a sequía breve o herida con integridad membrane dependiente.'
+  2033→        },
+  2034→        {
+  2035→          text: 'Integridad de fruto y tejidos en expansión',
+  2036→          detail:
+  2037→            'Frutos de llenado rápido (tomate, pimientos, algunos berry) muestran BER u otras necrosis incluso si el suelo reporta Ca “adecuado”.'
+  2038→        }
+  2039→      ],
+  2040→      tip: 'Puede haber Ca adecuado en suelo y fallar en fruto/meristemo por baja distribución o baja transpiración local.'
+  2041→    },
+  2042→    B: {
+  2043→      mob: 'Baja en la mayoría de cultivos (excepción “boromóvil” vía polioles en algunos)',
+  2044→      where: 'Brotes, yemas, meristemos, flores y frutos',
+  2045→      sym: 'Muerte de puntos de crecimiento, deformación, floración o cuajado irregular',
+  2046→      functions: [
+  2047→        {
+  2048→          text: 'Pared celular y estabilidad de membranas',
+  2049→          detail:
+  2050→            'El B interviene en la red de pectinas y en enlaces que ordenan la pared nueva; brotes deformes o láminas “engrosadas” sugieren menor armado ordenado del tejido.'
+  2051→        },
+  2052→        {
+  2053→          text: 'Polinización (tubo polínico) y retención floral',
+  2054→          detail:
+  2055→            'El tubo polínico debe atravesar el estilo de forma ordenada y requiere continuidad sintética; pueden verse abortos florales o polen poco viable antes que necrosis marcada.'
+  2056→        },
+  2057→        {
+  2058→          text: 'Transporte de azúcares y meristemos en expansión',
+  2059→          detail:
+  2060→            'Se asocia a movilización de fotoasimilados hacia puntos de crecimiento; meristemos y flores nuevas revelan rápido un cuello de transporte‑metabólico.'
+  2061→        },
+  2062→        {
+  2063→          text: 'Calidad de fruto y lignificación (según etapa/cultivo)',
+  2064→          detail:
+  2065→            'En aguacate, déficit suele relacionarse con frutos deformes, lignificación irregular o aborted fruitlets en olas de floración tensas; también en otros sensibles con carga alta.'
+  2066→        }
+  2067→      ],
+  2068→      tip:
+  2069→        'En manzano, pera (rosáceas), aguacate (sensible en olas florales densas) y cultivos delicados en polinización/cuajado, el comportamiento efectivo del B suele diferir respecto de olivo o vid; validar síntomas y análisis foliar/agua‑suelo por cultivo.'
+  2070→    }
+  2071→  };
+  2072→
+  2073→  var pillsOld = document.getElementById('pillsOld');
+  2074→  var pillsYoung = document.getElementById('pillsYoung');
+  2075→  var pillsCrit = document.getElementById('pillsCrit');
+  2076→  var mobFichaTitle = document.getElementById('mobFichaTitle');
+  2077→  var mobFichaBody = document.getElementById('mobFichaBody');
+  2078→  var mobFicha = document.getElementById('mobFicha');
+  2079→  var mobilityLayout = document.querySelector('.mobility-layout');
+  2080→
+  2081→  [['N', 'P', 'K', 'Mg', 'Mo'], ['S', 'Fe', 'Mn', 'Zn', 'Cu', 'Ca', 'B'], ['Ca', 'B']].forEach(function (group, gi) {
+  2082→    var host = gi === 0 ? pillsOld : gi === 1 ? pillsYoung : pillsCrit;
+  2083→    group.forEach(function (sym) {
+  2084→      var b = document.createElement('button');
+  2085→      b.type = 'button';
+  2086→      b.className = 'mob-pill';
+  2087→      b.setAttribute('data-mob-sym', sym);
+  2088→      b.textContent = sym;
+  2089→      host.appendChild(b);
+  2090→    });
+  2091→  });
+  2092→
+  2093→  function setActiveMobSym(sym) {
+  2094→    document.querySelectorAll('[data-mob-sym]').forEach(function (el) {
+  2095→      el.classList.toggle('is-active', el.getAttribute('data-mob-sym') === sym);
+  2096→    });
+  2097→  }
+  2098→
+  2099→  function showMob(sym) {
+  2100→    var m = MOBILITY[sym];
+  2101→    if (!m) return;
+  2102→    mobSymActive = sym;
+  2103→    setActiveMobSym(sym);
+  2104→    mobFichaTitle.textContent = sym + ' — ' + (EL_NAMES[sym] || '');
+  2105→    function esc(s) {
+  2106→      return String(s)
+  2107→        .replace(/&/g, '&amp;')
+  2108→        .replace(/</g, '&lt;')
+  2109→        .replace(/>/g, '&gt;')
+  2110→        .replace(/"/g, '&quot;');
+  2111→    }
+  2112→    var fnHtml = '';
+  2113→    if (m.functions && m.functions.length) {
+  2114→      fnHtml =
+  2115→        '<p class="mob-line" style="margin:10px 0 4px;font-weight:600;color:#14532d;">Funciones principales</p>' +
+  2116→        '<ul class="mob-fn-list">' +
+  2117→        m.functions
+  2118→          .map(function (item, idx) {
+  2119→            var mk = 'mob-fn-marker--' + ((idx % 3) + 1);
+  2120→            var det =
+  2121→              item.detail && String(item.detail).trim()
+  2122→                ? '<span class="mob-fn-detail">' + esc(item.detail) + '</span>'
+  2123→                : '';
+  2124→            return (
+  2125→              '<li><span class="mob-fn-marker ' +
+  2126→              mk +
+  2127→              '" aria-hidden="true"></span><span class="mob-fn-copy"><span class="mob-fn-lead">' +
+  2128→              esc(item.text) +
+  2129→              '</span>' +
+  2130→              det +
+  2131→              '</span></li>'
+  2132→            );
+  2133→          })
+  2134→          .join('') +
+  2135→        '</ul>';
+  2136→    } else if (m.fn) {
+  2137→      fnHtml = '<p class="mob-line"><strong>Funciones principales:</strong> ' + esc(m.fn) + '</p>';
+  2138→    }
+  2139→    mobFichaBody.innerHTML =
+  2140→      '<p class="mob-line"><strong>Movilidad:</strong> ' + esc(m.mob) + '</p>' +
+  2141→      '<p class="mob-line"><strong>Dónde se ve primero:</strong> ' + esc(m.where) + '</p>' +
+  2142→      '<p class="mob-line"><strong>Síntoma común:</strong> ' + esc(m.sym) + '</p>' +
+  2143→      fnHtml +
+  2144→      '<p class="mob-line" style="margin-top:12px;padding-top:10px;border-top:1px solid #bbf7d0;"><strong>Tip:</strong> ' +
+  2145→      esc(m.tip) +
+  2146→      '</p>';
+  2147→    requestAnimationFrame(function () {
+  2148→      if (mobFicha) mobFicha.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  2149→    });
+  2150→  }
+  2151→
+  2152→  if (mobilityLayout) {
+  2153→    mobilityLayout.addEventListener('click', function (ev) {
+  2154→      var btn = ev.target.closest('button[data-mob-sym]');
+  2155→      if (!btn || !mobilityLayout.contains(btn)) return;
+  2156→      var s = btn.getAttribute('data-mob-sym');
+  2157→      if (s) showMob(s);
+  2158→    });
+  2159→  }
+  2160→
+  2161→  // ——— Sección 4: disponibilidad ~ pH (esquemático) ———
+  2162→  var PH_MIN = 4;
+  2163→  var PH_MAX = 9;
+  2164→  var PH_CHART_H = 48;
+  2165→  var PH_CHART_PAD_TOP = 6;
+  2166→  var PH_CHART_CURVE_H = PH_CHART_H - PH_CHART_PAD_TOP - 6;
+  2167→  function phX(pH) {
+  2168→    return (pH - PH_MIN) / (PH_MAX - PH_MIN) * 100;
+  2169→  }
+  2170→  function phY(av) {
+  2171→    return PH_CHART_PAD_TOP + (1 - av) * PH_CHART_CURVE_H;
+  2172→  }
+  2173→  function phAreaPath(points) {
+  2174→    if (!points.length) return '';
+  2175→    var baseY = PH_CHART_H - 2;
+  2176→    var x0 = phX(points[0][0]);
+  2177→    var d = 'M ' + x0 + ' ' + baseY + ' L ' + x0 + ' ' + phY(points[0][1]);
+  2178→    for (var i = 1; i < points.length; i++) {
+  2179→      d += ' L ' + phX(points[i][0]) + ' ' + phY(points[i][1]);
+  2180→    }
+  2181→    d += ' L ' + phX(points[points.length - 1][0]) + ' ' + baseY + ' Z';
+  2182→    return d;
+  2183→  }
+  2184→  function phPolyPoints(points) {
+  2185→    return points.map(function (pt) {
+  2186→      return phX(pt[0]) + ',' + phY(pt[1]);
+  2187→    }).join(' ');
+  2188→  }
+  2189→
+  2190→  var PH_NUTRIENTS = [
+  2191→    { id: 'N', lab: 'N', name: 'Nitrógeno', color: '#15803d',
+  2192→      points: [[4,0.12],[4.5,0.22],[5,0.48],[5.5,0.78],[6,0.92],[6.5,0.95],[7,0.93],[7.5,0.86],[8,0.68],[8.5,0.48],[9,0.32]],
+  2193→      tag: 'MO, mineralización y gestión del N',
+  2194→      intro: 'El N que la planta “ve” integra fuentes orgánicas (mineralización), aplicaciones y pérdidas; no es un único número fijado solo por el pH.',
+  2195→      bullets: [
+  2196→        'En <strong>pH muy ácido</strong> suele reducirse la mineralización de MO y la actividad microbiana útil.',
+  2197→        'En <strong>pH intermedio</strong> a menudo hay mayor actividad microbiana y reciclaje de N orgánico.',
+  2198→        'En <strong>pH alto</strong>, mal manejo de urea / amoníaco puede favorecer <strong>volatilización de NH₃</strong>.',
+  2199→        '<strong>NO₃⁻</strong> es muy móvil: puede <strong>lixiviarse</strong> con exceso de agua en el perfil.' ]
+  2200→    },
+  2201→    { id: 'P', lab: 'P', name: 'Fósforo', color: '#18181b',
+  2202→      points: [[4,0.2],[4.5,0.28],[5,0.42],[5.5,0.62],[6,0.82],[6.5,0.95],[7,0.88],[7.5,0.55],[8,0.28],[8.5,0.22],[9,0.3]],
+  2203→      tag: 'Fijación química en suelo',
+  2204→      intro: 'El P “disponible” cae mucho cuando se fija a óxidos de Fe/Al (ácido) o precipita con Ca (calcareo). Por eso la curva es un “humo” centrado en pH moderados (textura y MO lo deforman).',
+  2205→      bullets: [
+  2206→        'Suelos <strong>ácidos</strong>: fuerte adsorción a <strong>Fe/Al</strong>; P puede estar “en el análisis” pero poco en solución.',
+  2207→        'Suelos <strong>calcareos / pH alto</strong>: precipitación con <strong>Ca</strong>, fosfatos de baja solubilidad.',
+  2208→        'Óptimo ilustrativo ~ <strong>6,0–6,8</strong> (no regla universal: arcilla, MO y equilibrio iónico cambian todo).' ]
+  2209→    },
+  2210→    { id: 'K', lab: 'K', name: 'Potasio', color: '#404040',
+  2211→      points: [[4,0.08],[4.5,0.18],[5,0.38],[5.5,0.62],[6,0.82],[6.5,0.9],[7,0.94],[7.5,0.95],[8,0.96],[8.5,0.95],[9,0.92]],
+  2212→      tag: 'CEC efectiva y equilibrio catiónico',
+  2213→      intro: 'K+ intercambia en superficies; al subir el pH suele aumentar la CEC efectiva en suelos variables y mejorar el “pool” intercambiable, salvo bloqueos por salinidad o compactación.',
+  2214→      bullets: [
+  2215→        'En <strong>pH bajo</strong> a veces hay menor saturación respecto a Al³⁺/H⁺ y menor base intercambiable.',
+  2216→        'Al <strong>subir pH</strong> (hasta cierto punto) suele incrementarse <strong>CEC</strong> en coloides variables → más retención catiónica.',
+  2217→        'En <strong>suelos salinos / K muy alto</strong> el problema puede ser equilibrio iónico, no “falta de pH”.' ]
+  2218→    },
+  2219→    { id: 'S', lab: 'S', name: 'Azufre', color: '#0f766e',
+  2220→      points: [[4,0.1],[4.5,0.22],[5,0.45],[5.5,0.72],[6,0.88],[6.5,0.9],[7,0.88],[7.5,0.82],[8,0.7],[8.5,0.52],[9,0.38]],
+  2221→      tag: 'Sulfato y MO orgánica',
+  2222→      intro: 'El S disponible se relaciona con mineralización de materia orgánica sulfatada y con SO₄²⁻ en solución; en pH altos el anión puede ser más móvil y lixiviar.',
+  2223→      bullets: [
+  2224→        '<strong>MO</strong>: principal reservorio orgánico; mineralización depende de biota y humedad.',
+  2225→        '<strong>pH alto / mucho riego</strong>: riesgo de <strong>lixiviación de SO₄²⁻</strong> en perfiles arenosos.',
+  2226→        'No confundir con carencias por <strong>aporte insuficiente</strong> en suelos muy empobrecidos.' ]
+  2227→    },
+  2228→    { id: 'Ca', lab: 'Ca', name: 'Calcio', color: '#52525b',
+  2229→      points: [[4,0.05],[4.5,0.12],[5,0.28],[5.5,0.52],[6,0.78],[6.5,0.9],[7,0.94],[7.5,0.93],[8,0.88],[8.5,0.72],[9,0.55]],
+  2230→      tag: 'CEC, bases y equilibrio',
+  2231→      intro: 'Ca²⁺ forma parte del complejo adsorbido; suele aumentar con la saturación de bases al acercarse a pH neutros, pero el “Ca disponible” también depende de carbonatos, SO₄, Na y fuerza iónica.',
+  2232→      bullets: [
+  2233→        'En <strong>acidificación fuerte</strong> puede haber más Al/Mn tóxicos y presión sobre raíz aunque el Ca total parezca medio.',
+  2234→        'En <strong>calcareo</strong> hay mucho Ca “total” pero puede haber interferencia de otros iones o baja actividad en rizósfera.',
+  2235→        '<strong>Ber / punta</strong> a veces es transporte en planta, no solo “pH del suelo”.' ]
+  2236→    },
+  2237→    { id: 'Mg', lab: 'Mg', name: 'Magnesio', color: '#52525b',
+  2238→      points: [[4,0.06],[4.5,0.15],[5,0.32],[5.5,0.55],[6,0.78],[6.5,0.88],[7,0.9],[7.5,0.88],[8,0.8],[8.5,0.62],[9,0.45]],
+  2239→      tag: 'CEC y competencia catiónica',
+  2240→      intro: 'Mg²⁺ compite con K+, NH₄+ y Ca²+ por sitios de adsorción y transporte. La forma de la curva es orientativa: suelos arenosos y lixiviación pueden “aplanar” lo que el dibujo sugiere.',
+  2241→      bullets: [
+  2242→        '<strong>Exceso de K</strong> puede empujar deficiencia relativa de Mg aunque Mg “medio” en suelo.',
+  2243→        'Patrones de <strong>Ca/Mg</strong> en complejo son clave en muchas regiones.',
+  2244→        'En <strong>pH extremo</strong> el problema puede ser toxicidad (Al) más que Mg “químico” bajo.' ]
+  2245→    },
+  2246→    { id: 'Fe', lab: 'Fe', name: 'Hierro', color: '#dc2626',
+  2247→      points: [[4,0.96],[4.5,0.92],[5,0.82],[5.5,0.62],[6,0.42],[6.5,0.25],[7,0.14],[7.5,0.08],[8,0.04],[8.5,0.02],[9,0.02]],
+  2248→      tag: 'Precipitación de óxidos/hidróxidos',
+  2249→      intro: 'Fe disponible baja marcadamente al subir pH por precipitación e hidrólisis; por eso la clorosis férrica es frecuente en suelos calcareos o con bicarbonatos en agua de riego.',
+  2250→      bullets: [
+  2251→        'La planta toma principalmente <strong>Fe²⁺</strong> / quelatos, no el “Fe total” del suelo.',
+  2252→        'En <strong>pH alto</strong>, aportar <strong>quelatos</strong> o reducir antagonismo (HCO₃⁻) es parte clásica del manejo.',
+  2253→        '<strong>Foliar</strong> es recurso útil pero el problema de fondo suele ser química de rizósfera.' ]
+  2254→    },
+  2255→    { id: 'Mn', lab: 'Mn', name: 'Manganeso', color: '#dc2626',
+  2256→      points: [[4,0.92],[4.5,0.88],[5,0.78],[5.5,0.6],[6,0.38],[6.5,0.2],[7,0.1],[7.5,0.05],[8,0.03],[8.5,0.02],[9,0.02]],
+  2257→      tag: 'Redox y pH',
+  2258→      intro: 'Mn se vuelve más disponible en suelos ácidos; puede ser tóxico; en alcalino cae y se asemeja a carencias férricas en hoja joven.',
+  2259→      bullets: [
+  2260→        'En <strong>pH bajo</strong> vigilar <strong>toxicidad</strong> más que carencia.',
+  2261→        'En <strong>pH alto</strong> puede competir con Fe en la foto del síntoma (discriminación fina con análisis).',
+  2262→        'Oxigenación de rizósfera (encharcamiento) cambia el juego de Mn por <strong>redox</strong>.' ]
+  2263→    },
+  2264→    { id: 'B', lab: 'B', name: 'Boro', color: '#ca8a04',
+  2265→      points: [[4,0.15],[4.5,0.28],[5,0.52],[5.5,0.78],[6,0.9],[6.5,0.92],[7,0.88],[7.5,0.55],[8,0.28],[8.5,0.35],[9,0.42]],
+  2266→      tag: 'Especiación y lixiviación',
+  2267→      intro: 'El boro ácido / borato cambia con el pH; en rango intermedio suele haber mejor equilibrio; en alcalino y con riego puede lixiviarse o quedar “raro” en arcillas.',
+  2268→      bullets: [
+  2269→        'Ventana de manejo fina: entre <strong>carencia y toxicidad</strong> hay poco margen en muchos cultivos.',
+  2270→        '<strong>pH alto + fuerte lixiviación</strong> pueden bajar B aunque el suelo “no sea extremo”.',
+  2271→        'Variedad y <strong>boromovilidad</strong> cambian el síntoma en planta.' ]
+  2272→    },
+  2273→    { id: 'Cu', lab: 'Cu', name: 'Cobre', color: '#dc2626',
+  2274→      points: [[4,0.9],[4.5,0.85],[5,0.72],[5.5,0.55],[6,0.4],[6.5,0.28],[7,0.2],[7.5,0.14],[8,0.1],[8.5,0.08],[9,0.06]],
+  2275→      tag: 'Adsorción y complejación',
+  2276→      intro: 'Cu y otros micros con carga positiva se adsorben más fuerte al subir pH (superficies más negativas, precipitación). En ácido suele haber más en solución con riesgo de toxicidad por acumulación si hay cobre de fungicidas.',
+  2277→      bullets: [
+  2278→        'Suelos <strong>orgánicos</strong> o con mucha MO pueden complejar fuerte el Cu.',
+  2279→        'Exceso de <strong>P</strong> o interacciones iónicas pueden modificar lectura de disponibilidad.',
+  2280→        'Toxicidad por <strong>fungicidas cupríacos</strong> en programas intensivos.' ]
+  2281→    },
+  2282→    { id: 'Zn', lab: 'Zn', name: 'Zinc', color: '#dc2626',
+  2283→      points: [[4,0.88],[4.5,0.82],[5,0.68],[5.5,0.52],[6,0.38],[6.5,0.25],[7,0.16],[7.5,0.1],[8,0.07],[8.5,0.05],[9,0.04]],
+  2284→      tag: 'Adsorción y pH',
+  2285→      intro: 'Como Fe/Mn/Cu, el Zn suele ser más soluble en ácido y caer al alcalinizar; carbonatos y fosfatos altos agravan la “disponibilidad funcional”.',
+  2286→      bullets: [
+  2287→        '<strong>P alto</strong> puede inducir carencia relativa de Zn aunque el mapa muestre una forma general.',
+  2288→        'Raíces en frío / compactación reducen toma aunque el suelo “tenga Zn”.',
+  2289→        'Revisar <strong>matriz arcillosa</strong> vs textura (CIC y adsorción).' ]
+  2290→    },
+  2291→    { id: 'Mo', lab: 'Mo', name: 'Molibdeno', color: '#2563eb',
+  2292→      points: [[4,0.08],[4.5,0.12],[5,0.2],[5.5,0.32],[6,0.48],[6.5,0.62],[7,0.8],[7.5,0.9],[8,0.94],[8.5,0.95],[9,0.96]],
+  2293→      tag: 'Aniónico / forma MoO₄²⁻',
+  2294→      intro: 'Mo como molibdato se comporta como anión de carga mayor en pH altos; en suelos muy ácidos puede haber menor disponibilidad relativa según mineralogía y adsorción.',
+  2295→      bullets: [
+  2296→        'Por eso en <strong>ácido extremo</strong> a veces se recomienda corregir pH o aplicar Mo de forma acorde.',
+  2297→        'Interacción con <strong>SO₄²⁻</strong> en exceso (competencia aniónica) puede aparecer en práctica.',
+  2298→        'Importante para <strong>nitratoreductasa</strong> y leguminosas (fijación).' ]
+  2299→    },
+  2300→    { id: 'Cl', lab: 'Cl', name: 'Cloro', color: '#2563eb',
+  2301→      points: [[4,0.18],[4.5,0.25],[5,0.35],[5.5,0.5],[6,0.65],[6.5,0.78],[7,0.88],[7.5,0.92],[8,0.94],[8.5,0.95],[9,0.94]],
+  2302→      tag: 'Anión muy móvil',
+  2303→      intro: 'Cl⁻ es un anión que compite en solución; su “curva” ilustra disponibilidad cualitativa más que un límite universal — en calidad de agua y fertilización puede ser exceso antes que carencia.',
+  2304→      bullets: [
+  2305→        '<strong>Movilidad alta</strong> con el flujo de agua; puede acumular o lavar según balance.',
+  2306→        'Sensibilidad varietal a Cl⁻ en ciertos cultivos.',
+  2307→        'Integrar con análisis de <strong>agua de riego</strong> y programa nutritivo.' ]
+  2308→    },
+  2309→    { id: 'Al', lab: 'Al', name: 'Aluminio (toxicidad)', color: '#a16207',
+  2310→      points: [[4,0.98],[4.5,0.88],[5,0.42],[5.5,0.08],[6,0.02],[6.5,0.01],[7,0.01],[7.5,0.01],[8,0.01],[8.5,0.01],[9,0.01]],
+  2311→      tag: 'Toxicidad · no nutriente',
+  2312→      intro: 'El “disponible” aquí es señal de riesgo: Al³⁺ es tóxico para raíz en pH muy bajo. Al subir pH precipita como hidróxido y baja en solución (no es fertilizante).',
+  2313→      bullets: [
+  2314→        'Muy asociado a <strong>pH < ~5,5</strong> y a Aluminio intercambiable alto.',
+  2315→        'Precipitación tipo <strong>Al(OH)₃</strong> al neutralizar.',
+  2316→        'Mitigar con cal/dolomita/gesso según diagnóstico; siempre validar con análisis y cultivo.' ]
+  2317→    }
+  2318→  ];
+  2319→
+  2320→  var phRowsEl = document.getElementById('phRows');
+  2321→  var phFichaTitle = document.getElementById('phFichaTitle');
+  2322→  var phFichaBody = document.getElementById('phFichaBody');
+  2323→  var phFichaEl = document.getElementById('phFicha');
+  2324→  var selPhId = null;
+  2325→
+  2326→  function renderPhExplain(row) {
+  2327→    var h = '<span class="ph-tag">' + row.tag + '</span>';
+  2328→    h += '<p style="margin:0 0 6px">' + row.intro + '</p>';
+  2329→    if (row.bullets && row.bullets.length) {
+  2330→      h += '<ul>';
+  2331→      for (var b = 0; b < row.bullets.length; b++) {
+  2332→        h += '<li>' + row.bullets[b] + '</li>';
+  2333→      }
+  2334→      h += '</ul>';
+  2335→    }
+  2336→    return h;
+  2337→  }
+  2338→
+  2339→  function renderPhRows() {
+  2340→    if (!phRowsEl) return;
+  2341→    phRowsEl.innerHTML = '';
+  2342→    PH_NUTRIENTS.forEach(function (row, idx) {
+  2343→      var gid = 'ph-grad-' + idx;
+  2344→      var active = selPhId === row.id;
+  2345→      var btn = document.createElement('button');
+  2346→      btn.type = 'button';
+  2347→      btn.className = 'ph-row' + (active ? ' is-active' : '');
+  2348→      btn.setAttribute('data-ph-id', row.id);
+  2349→      btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+  2350→      var lab = document.createElement('span');
+
+[showing lines 1851-2350 of 2444; use offset=2351 with limit to continue reading]

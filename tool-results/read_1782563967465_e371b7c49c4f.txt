@@ -1,0 +1,1482 @@
+     1→     1→/**
+     2→     2→ * NutriPlant PRO — Free Tools shared data & engines
+     3→     3→ *
+     4→     4→ * Reimplemented natively (TypeScript / React) from
+     5→     5→ * https://nutriplantpro.com/login.html free-tools modal.
+     6→     6→ *
+     7→     7→ * This file aggregates the constants, lookup tables, and pure-function
+     8→     8→ * engines shared across the 18 free tools:
+     9→     9→ *   1.  Conversion Calculator (oxide ↔ elemental)
+    10→    10→ *   2.  Nutrient Units Converter (ppm / mmol / meq)
+    11→    11→ *   3.  Measure Units Converter (length, area, volume, mass, temp, …)
+    12→    12→ *   4.  Hydroponic Solution Designer
+    13→    13→ *   5.  Water Hardness Diagnostic
+    14→    14→ *   6.  VPD Estimator
+    15→    15→ *   7.  Amendment Balance by CEC
+    16→    16→ *   8.  Granular Mix Formulation
+    17→    17→ *   9.  Fertilizer Composition (% from chemical formula)
+    18→    18→ *   10. Nutrient Distribution by Stage (%)
+    19→    19→ *   11. Periodic Table of Essential Plant Nutrients
+    20→    20→ *   12. Fertilizer Compatibility Matrix
+    21→    21→ *   13. Nutrient Interactions & Mobility
+    22→    22→ *   14. Mineralizable N Estimation
+    23→    23→ *   15. Soil Water & Texture (USDA triangle)
+    24→    24→ *   16. Irrigation Sheet & Water Balance
+    25→    25→ *   17. Solubility & Salt Index
+    26→    26→ *   18. Fertilizer Carbon Footprint
+    27→    27→ */
+    28→    28→
+    29→    29→// ============================================================================
+    30→    30→// 1. CONVERSION CALCULATOR — Oxide ↔ Elemental factors
+    31→    31→// ============================================================================
+    32→    32→
+    33→    33→export interface ConversionPair {
+    34→    34→  key: string;
+    35→    35→  oxide: string;
+    36→    36→  elemental: string;
+    37→    37→  oxideToElement: number;
+    38→    38→  elementToOxide: number;
+    39→    39→}
+    40→    40→
+    41→    41→/** Each row: from oxide → element uses factor `oxideToElement`; reverse uses `elementToOxide`. */
+    42→    42→export const OXIDE_CONVERSIONS: ConversionPair[] = [
+    43→    43→  { key: 'ca',  oxide: 'CaO',   elemental: 'Ca',   oxideToElement: 0.715, elementToOxide: 1.399 },
+    44→    44→  { key: 'k',   oxide: 'K₂O',   elemental: 'K',    oxideToElement: 0.830, elementToOxide: 1.205 },
+    45→    45→  { key: 'p',   oxide: 'P₂O₅',  elemental: 'P',    oxideToElement: 0.436, elementToOxide: 2.291 },
+    46→    46→  { key: 'mg',  oxide: 'MgO',   elemental: 'Mg',   oxideToElement: 0.603, elementToOxide: 1.658 },
+    47→    47→  { key: 'n-no3', oxide: 'NO₃', elemental: 'N',    oxideToElement: 0.226, elementToOxide: 4.429 },
+    48→    48→  { key: 'n-nh4', oxide: 'NH₄', elemental: 'N',    oxideToElement: 0.778, elementToOxide: 1.286 },
+    49→    49→  { key: 's-so4', oxide: 'SO₄', elemental: 'S',    oxideToElement: 0.333, elementToOxide: 3.000 },
+    50→    50→  { key: 's-so3', oxide: 'SO₃', elemental: 'S',    oxideToElement: 0.400, elementToOxide: 2.497 },
+    51→    51→  { key: 'zn',  oxide: 'ZnO',   elemental: 'Zn',   oxideToElement: 0.803, elementToOxide: 1.245 },
+    52→    52→  { key: 'fe',  oxide: 'Fe₂O₃', elemental: 'Fe',   oxideToElement: 0.699, elementToOxide: 1.430 },
+    53→    53→  { key: 'mn',  oxide: 'MnO',   elemental: 'Mn',   oxideToElement: 0.775, elementToOxide: 1.291 },
+    54→    54→  { key: 'b',   oxide: 'B₂O₃',  elemental: 'B',    oxideToElement: 0.311, elementToOxide: 3.220 },
+    55→    55→  { key: 'cu',  oxide: 'CuO',   elemental: 'Cu',   oxideToElement: 0.799, elementToOxide: 1.252 },
+    56→    56→  { key: 'si',  oxide: 'SiO₂',  elemental: 'Si',   oxideToElement: 0.467, elementToOxide: 2.139 },
+    57→    57→  { key: 'mo',  oxide: 'MoO₃',  elemental: 'Mo',   oxideToElement: 0.667, elementToOxide: 1.500 },
+    58→    58→];
+    59→    59→
+    60→    60→// ============================================================================
+    61→    61→// 2. NUTRIENT UNITS CONVERTER — ppm ↔ mmol ↔ meq
+    62→    62→// ============================================================================
+    63→    63→
+    64→    64→export interface NutrientData {
+    65→    65→  key: string;
+    66→    66→  label: string;
+    67→    67→  mw: number;       // molecular weight (g/mol)
+    68→    68→  valence: number;  // charge magnitude
+    69→    69→  useUmol?: boolean; // micros use µmol instead of mmol
+    70→    70→}
+    71→    71→
+    72→    72→export const NUTRIENT_DATA: NutrientData[] = [
+    73→    73→  { key: 'n',     label: 'N',     mw: 14.01,  valence: 1 },
+    74→    74→  { key: 'p',     label: 'P',     mw: 30.97,  valence: 1 },
+    75→    75→  { key: 'k',     label: 'K',     mw: 39.10,  valence: 1 },
+    76→    76→  { key: 'ca',    label: 'Ca',    mw: 40.08,  valence: 2 },
+    77→    77→  { key: 'mg',    label: 'Mg',    mw: 24.31,  valence: 2 },
+    78→    78→  { key: 's',     label: 'S',     mw: 32.07,  valence: 2 },
+    79→    79→  { key: 'fe',    label: 'Fe',    mw: 55.85,  valence: 2, useUmol: true },
+    80→    80→  { key: 'mn',    label: 'Mn',    mw: 54.94,  valence: 2, useUmol: true },
+    81→    81→  { key: 'zn',    label: 'Zn',    mw: 65.38,  valence: 2, useUmol: true },
+    82→    82→  { key: 'b',     label: 'B',     mw: 10.81,  valence: 1, useUmol: true },
+    83→    83→  { key: 'cu',    label: 'Cu',    mw: 63.55,  valence: 2, useUmol: true },
+    84→    84→  { key: 'mo',    label: 'Mo',    mw: 95.95,  valence: 2, useUmol: true },
+    85→    85→  { key: 'hco3',  label: 'HCO₃',  mw: 61.02,  valence: 1 },
+    86→    86→  { key: 'co3',   label: 'CO₃',   mw: 60.01,  valence: 2 },
+    87→    87→  { key: 'h2po4', label: 'H₂PO₄', mw: 96.99,  valence: 1 },
+    88→    88→  { key: 'hpo4',  label: 'HPO₄',  mw: 95.98,  valence: 2 },
+    89→    89→  { key: 'h3po4', label: 'H₃PO₄', mw: 97.99,  valence: 1 },
+    90→    90→  { key: 'hno3',  label: 'HNO₃',  mw: 63.01,  valence: 1 },
+    91→    91→  { key: 'h2so4', label: 'H₂SO₄', mw: 98.08,  valence: 2 },
+    92→    92→  { key: 'so4',   label: 'SO₄',   mw: 96.06,  valence: 2 },
+    93→    93→  { key: 'no3',   label: 'NO₃',   mw: 62.00,  valence: 1 },
+    94→    94→  { key: 'nh4',   label: 'NH₄',   mw: 18.04,  valence: 1 },
+    95→    95→];
+    96→    96→
+    97→    97→// ============================================================================
+    98→    98→// 3. MEASURE UNITS CONVERTER
+    99→    99→// ============================================================================
+   100→   100→
+   101→   101→export interface UnitDef {
+   102→   102→  id: string;
+   103→   103→  name: string;
+   104→   104→  toBase: number;
+   105→   105→  isTemp?: boolean;
+   106→   106→  group?: 'solution' | 'soil';
+   107→   107→}
+   108→   108→
+   109→   109→export const MEASURE_UNITS: Record<string, UnitDef[]> = {
+   110→   110→  length: [
+   111→   111→    { id: 'm',  name: 'm (meter)',      toBase: 1 },
+   112→   112→    { id: 'km', name: 'km',             toBase: 1000 },
+   113→   113→    { id: 'cm', name: 'cm',             toBase: 0.01 },
+   114→   114→    { id: 'ft', name: 'ft (foot)',      toBase: 0.3048 },
+   115→   115→    { id: 'in', name: 'in (inch)',      toBase: 0.0254 },
+   116→   116→    { id: 'yd', name: 'yd (yard)',      toBase: 0.9144 },
+   117→   117→    { id: 'mi', name: 'mi (mile)',      toBase: 1609.344 },
+   118→   118→  ],
+   119→   119→  area: [
+   120→   120→    { id: 'm2',   name: 'm²',           toBase: 1 },
+   121→   121→    { id: 'ha',   name: 'ha (hectare)', toBase: 10000 },
+   122→   122→    { id: 'acre', name: 'acre',         toBase: 4046.86 },
+   123→   123→    { id: 'ft2',  name: 'ft²',          toBase: 0.092903 },
+   124→   124→    { id: 'km2',  name: 'km²',          toBase: 1e6 },
+   125→   125→  ],
+   126→   126→  volume: [
+   127→   127→    { id: 'L',      name: 'L (liter)',  toBase: 1 },
+   128→   128→    { id: 'mL',     name: 'mL',         toBase: 0.001 },
+   129→   129→    { id: 'm3',     name: 'm³',         toBase: 1000 },
+   130→   130→    { id: 'galUS',  name: 'gal (US)',   toBase: 3.78541 },
+   131→   131→    { id: 'galUK',  name: 'gal (UK)',   toBase: 4.54609 },
+   132→   132→    { id: 'ft3',    name: 'ft³',        toBase: 28.3168 },
+   133→   133→    { id: 'flozUS', name: 'fl oz (US)', toBase: 0.0295735 },
+   134→   134→  ],
+   135→   135→  weight: [
+   136→   136→    { id: 'kg', name: 'kg',             toBase: 1 },
+   137→   137→    { id: 'g',  name: 'g',              toBase: 0.001 },
+   138→   138→    { id: 'mg', name: 'mg',             toBase: 0.000001 },
+   139→   139→    { id: 't',  name: 't (tonne)',      toBase: 1000 },
+   140→   140→    { id: 'lb', name: 'lb (pound)',     toBase: 0.453592 },
+   141→   141→    { id: 'oz', name: 'oz (ounce)',     toBase: 0.0283495 },
+   142→   142→  ],
+   143→   143→  temperature: [
+   144→   144→    { id: 'C', name: '°C', toBase: 1, isTemp: true },
+   145→   145→    { id: 'F', name: '°F', toBase: 1, isTemp: true },
+   146→   146→    { id: 'K', name: 'K',  toBase: 1, isTemp: true },
+   147→   147→  ],
+   148→   148→  pressure: [
+   149→   149→    { id: 'kPa',  name: 'kPa',  toBase: 1 },
+   150→   150→    { id: 'psi',  name: 'psi',  toBase: 6.89476 },
+   151→   151→    { id: 'bar',  name: 'bar',  toBase: 100 },
+   152→   152→    { id: 'atm',  name: 'atm',  toBase: 101.325 },
+   153→   153→    { id: 'mmHg', name: 'mmHg', toBase: 0.133322 },
+   154→   154→  ],
+   155→   155→  concentration: [
+   156→   156→    { id: 'mgL',        name: 'mg/L',                                 toBase: 1 },
+   157→   157→    { id: 'ppm',        name: 'ppm (≈ mg/L, dilute water)',           toBase: 1 },
+   158→   158→    { id: 'ugL',        name: 'µg/L (ppb)',                           toBase: 0.001 },
+   159→   159→    { id: 'gm3',        name: 'g/m³ (= mg/L)',                        toBase: 1 },
+   160→   160→    { id: 'mgm3',       name: 'mg/m³',                                toBase: 0.001 },
+   161→   161→    { id: 'gL',         name: 'g/L',                                  toBase: 1000 },
+   162→   162→    { id: 'kgm3',       name: 'kg/m³',                                toBase: 1000 },
+   163→   163→    { id: 'lbMgalUS',   name: 'lb / million US gal',                  toBase: 0.1198264273 },
+   164→   164→    { id: 'lb100galUS', name: 'lb / 100 US gal',                      toBase: 1198.264273 },
+   165→   165→    { id: 'ozGalUSmass',name: 'oz mass / US gal',                     toBase: 7489.086034 },
+   166→   166→  ],
+   167→   167→  ionic: [
+   168→   168→    { id: 'meqL',    name: 'meq/L (solution)',                toBase: 1,    group: 'solution' },
+   169→   169→    { id: 'cmolL',   name: 'cmol(+)/L (solution)',            toBase: 10,   group: 'solution' },
+   170→   170→    { id: 'mmolL',   name: 'mmol/L (monovalent)',             toBase: 1,    group: 'solution' },
+   171→   171→    { id: 'umolL',   name: 'µmol/L (monovalent)',             toBase: 0.001,group: 'solution' },
+   172→   172→    { id: 'meq100g', name: 'meq/100 g (soil, CEC)',           toBase: 1,    group: 'soil' },
+   173→   173→    { id: 'cmolKg',  name: 'cmolc/kg (soil)',                 toBase: 1,    group: 'soil' },
+   174→   174→  ],
+   175→   175→};
+   176→   176→
+   177→   177→export const MEASURE_CATEGORIES = [
+   178→   178→  { id: 'length',        label: 'Length' },
+   179→   179→  { id: 'area',          label: 'Area' },
+   180→   180→  { id: 'volume',        label: 'Volume' },
+   181→   181→  { id: 'weight',        label: 'Mass / Weight' },
+   182→   182→  { id: 'temperature',   label: 'Temperature' },
+   183→   183→  { id: 'pressure',      label: 'Pressure' },
+   184→   184→  { id: 'concentration', label: 'Concentration' },
+   185→   185→  { id: 'ionic',         label: 'Ionic (soil / solution)' },
+   186→   186→];
+   187→   187→
+   188→   188→/** Convert between measure units. Returns null when conversion is blocked (e.g. soil↔solution). */
+   189→   189→export function convertMeasure(
+   190→   190→  value: number,
+   191→   191→  from: UnitDef,
+   192→   192→  to: UnitDef,
+   193→   193→  category: string
+   194→   194→): number | null {
+   195→   195→  if (category === 'temperature') {
+   196→   196→    let c: number;
+   197→   197→    if (from.id === 'F') c = (value - 32) * 5 / 9;
+   198→   198→    else if (from.id === 'K') c = value - 273.15;
+   199→   199→    else c = value;
+   200→   200→    if (to.id === 'F') return c * 9 / 5 + 32;
+   201→   201→    if (to.id === 'K') return c + 273.15;
+   202→   202→    return c;
+   203→   203→  }
+   204→   204→  if (from.group && to.group && from.group !== to.group) return null;
+   205→   205→  const base = value * from.toBase;
+   206→   206→  return base / to.toBase;
+   207→   207→}
+   208→   208→
+   209→   209→// ============================================================================
+   210→   210→// 4. HYDROPONIC SOLUTION — equivalent weights & equilibrium polygons
+   211→   211→// ============================================================================
+   212→   212→
+   213→   213→export const HYDRO_EQ_WEIGHTS: Record<string, number> = {
+   214→   214→  N_NO3: 14.0,
+   215→   215→  N_NH4: 14.0,
+   216→   216→  P: 31.0,
+   217→   217→  K: 39.1,
+   218→   218→  Ca: 20.04,
+   219→   219→  Mg: 12.15,
+   220→   220→  S: 16.03,
+   221→   221→  Cl: 35.45,
+   222→   222→};
+   223→   223→
+   224→   224→export const HYDRO_MEQ_NUTRIENTS = ['N_NO3', 'P', 'S', 'Cl', 'K', 'Ca', 'Mg', 'N_NH4'];
+   225→   225→
+   226→   226→export const HYDRO_ANION_LIMITS = { NO3: [20, 80], H2PO4: [1.25, 10], SO4: [10, 70] };
+   227→   227→export const HYDRO_CATION_LIMITS = { K: [10, 65], Ca: [22.5, 62.5], Mg: [0.5, 40] };
+   228→   228→
+   229→   229→export const HYDRO_ANION_POLYGON: [number, number, number][] = [
+   230→   230→  [20, 10, 70], [28.75, 1.25, 70], [80, 1.25, 18.75], [80, 10, 10],
+   231→   231→];
+   232→   232→
+   233→   233→export const HYDRO_CATION_POLYGON: [number, number, number][] = [
+   234→   234→  [10, 62.5, 27.5], [32.5, 62.5, 5], [65, 30, 5],
+   235→   235→  [65, 22.5, 12.5], [37.5, 22.5, 40], [10, 50, 40],
+   236→   236→];
+   237→   237→
+   238→   238→export const HYDRO_NUTRIENT_LABELS: Record<string, { ion: string; name: string }> = {
+   239→   239→  N_NO3: { ion: 'N-NO₃⁻', name: 'Nitrate' },
+   240→   240→  N_NH4: { ion: 'N-NH₄⁺', name: 'Ammonium' },
+   241→   241→  P:     { ion: 'P-H₂PO₄⁻', name: 'Phosphate' },
+   242→   242→  S:     { ion: 'S-SO₄²⁻', name: 'Sulfate' },
+   243→   243→  Cl:    { ion: 'Cl⁻',     name: 'Chloride' },
+   244→   244→  K:     { ion: 'K⁺',      name: 'Potassium' },
+   245→   245→  Ca:    { ion: 'Ca²⁺',    name: 'Calcium' },
+   246→   246→  Mg:    { ion: 'Mg²⁺',    name: 'Magnesium' },
+   247→   247→};
+   248→   248→
+   249→   249→// ============================================================================
+   250→   250→// 5. WATER HARDNESS — constants
+   251→   251→// ============================================================================
+   252→   252→
+   253→   253→export const EQ_CACO3 = 50.043;
+   254→   254→export const PPM_CACO3_PER_PPM_CA = 100.086 / 40.078;
+   255→   255→export const PPM_CACO3_PER_PPM_MG = 100.086 / 24.305;
+   256→   256→export const PPM_PER_DH = 17.848;
+   257→   257→export const PPM_PER_EH = 14.254;
+   258→   258→export const PPM_PER_FH = 10.0;
+   259→   259→
+   260→   260→export interface AcidDef {
+   261→   261→  id: string;
+   262→   262→  name: string;
+   263→   263→  meqPerMl: number;
+   264→   264→  densityKgL: number;
+   265→   265→}
+   266→   266→
+   267→   267→export const ACIDS: AcidDef[] = [
+   268→   268→  { id: 'acido_nitrico_55',   name: 'Nitric Acid 55%',    meqPerMl: 11.6, densityKgL: 1.37 },
+   269→   269→  { id: 'acido_sulfurico_98', name: 'Sulfuric Acid 98%',  meqPerMl: 36.7, densityKgL: 1.84 },
+   270→   270→  { id: 'acido_fosforico_75', name: 'Phosphoric Acid 75%', meqPerMl: 12.0, densityKgL: 1.57 },
+   271→   271→  { id: 'acido_fosforico_85', name: 'Phosphoric Acid 85%', meqPerMl: 14.6, densityKgL: 1.69 },
+   272→   272→];
+   273→   273→
+   274→   274→export function hardnessClassByPpm(ppm: number): { label: string; color: string } {
+   275→   275→  if (ppm < 60)  return { label: 'Soft',             color: '#16a34a' };
+   276→   276→  if (ppm < 120) return { label: 'Moderately hard',  color: '#0891b2' };
+   277→   277→  if (ppm < 180) return { label: 'Hard',             color: '#ca8a04' };
+   278→   278→  return            { label: 'Very hard',          color: '#dc2626' };
+   279→   279→}
+   280→   280→
+   281→   281→// ============================================================================
+   282→   282→// 6. VPD ESTIMATOR — formulas & classification
+   283→   283→// ============================================================================
+   284→   284→
+   285→   285→export function svpFromTemp(t: number): number {
+   286→   286→  return 0.6108 * Math.exp((17.27 * t) / (t + 237.3));
+   287→   287→}
+   288→   288→
+   289→   289→export function satAbsHum(t: number): number {
+   290→   290→  return 5.018 + 0.32321 * t + 0.0081847 * t * t + 0.00031243 * t * t * t;
+   291→   291→}
+   292→   292→
+   293→   293→export function leafTempFromRadiation(airTemp: number, solarRad: number): number {
+   294→   294→  if (solarRad > 200) return airTemp + (((solarRad - 200) * 0.6) / 100);
+   295→   295→  return airTemp;
+   296→   296→}
+   297→   297→
+   298→   298→export interface VpdResult {
+   299→   299→  vpd: number;  // kPa
+   300→   300→  hd: number;   // g/m³
+   301→   301→  leafTemp?: number;
+   302→   302→}
+   303→   303→
+   304→   304→export function calcVpdSimple(airTemp: number, humidity: number): VpdResult {
+   305→   305→  const es = svpFromTemp(airTemp);
+   306→   306→  const ea = es * (humidity / 100);
+   307→   307→  const vpd = es - ea;
+   308→   308→  const hd = satAbsHum(airTemp) * ((100 - humidity) / 100);
+   309→   309→  return { vpd: Math.round(vpd * 100) / 100, hd: Math.round(hd * 100) / 100 };
+   310→   310→}
+   311→   311→
+   312→   312→export function calcVpdAdvanced(
+   313→   313→  airTemp: number,
+   314→   314→  humidity: number,
+   315→   315→  leafTemp: number
+   316→   316→): VpdResult {
+   317→   317→  const esLeaf = svpFromTemp(leafTemp);
+   318→   318→  const esAir = svpFromTemp(airTemp);
+   319→   319→  const ea = esAir * (humidity / 100);
+   320→   320→  const vpd = esLeaf - ea;
+   321→   321→  const hd = satAbsHum(leafTemp) - satAbsHum(airTemp) * (humidity / 100);
+   322→   322→  return {
+   323→   323→    vpd: Math.round(vpd * 100) / 100,
+   324→   324→    hd: Math.round(hd * 100) / 100,
+   325→   325→    leafTemp,
+   326→   326→  };
+   327→   327→}
+   328→   328→
+   329→   329→export function vpdStatus(vpd: number): { color: string; label: string } {
+   330→   330→  if (vpd < 0.5) return { color: '#3b82f6', label: 'Low' };
+   331→   331→  if (vpd > 1.5) return { color: '#ef4444', label: 'High' };
+   332→   332→  return            { color: '#10b981', label: 'Optimal' };
+   333→   333→}
+   334→   334→
+   335→   335→export function hdClass(hd: number): { label: string; message: string; color: string } {
+   336→   336→  if (!Number.isFinite(hd)) return { label: 'N/A',  message: 'Not enough data', color: '#64748b' };
+   337→   337→  if (hd < 3)  return { label: 'Very low',     message: 'Humid environment; low evaporative demand',      color: '#2563eb' };
+   338→   338→  if (hd < 6)  return { label: 'Low-moderate', message: 'Manageable demand',                              color: '#16a34a' };
+   339→   339→  if (hd < 10) return { label: 'Moderate',     message: 'Active transpiration; watch sensitive crops',    color: '#ca8a04' };
+   340→   340→  if (hd <= 15)return { label: 'High',         message: 'High evaporative demand',                        color: '#ea580c' };
+   341→   341→  return            { label: 'Very high',     message: 'Very high demand; validate in field',             color: '#dc2626' };
+   342→   342→}
+   343→   343→
+   344→   344→// ============================================================================
+   345→   345→// 7. AMENDMENT BALANCE BY CEC
+   346→   346→// ============================================================================
+   347→   347→
+   348→   348→export const IDEAL_CATION_RANGES: Record<string, { min: number; max: number }> = {
+   349→   349→  k:  { min: 3,  max: 7  },
+   350→   350→  ca: { min: 65, max: 75 },
+   351→   351→  mg: { min: 10, max: 15 },
+   352→   352→  h:  { min: 0,  max: 10 },
+   353→   353→  na: { min: 0,  max: 1  },
+   354→   354→  al: { min: 0,  max: 1  },
+   355→   355→};
+   356→   356→
+   357→   357→export const CATION_LABELS: Record<string, { ion: string; name: string }> = {
+   358→   358→  k:  { ion: 'K⁺',   name: 'Potassium' },
+   359→   359→  ca: { ion: 'Ca²⁺', name: 'Calcium' },
+   360→   360→  mg: { ion: 'Mg²⁺', name: 'Magnesium' },
+   361→   361→  h:  { ion: 'H⁺',   name: 'Hydrogen' },
+   362→   362→  na: { ion: 'Na⁺',  name: 'Sodium' },
+   363→   363→  al: { ion: 'Al³⁺', name: 'Aluminum' },
+   364→   364→};
+   365→   365→
+   366→   366→export interface AmendmentDef {
+   367→   367→  id: string;
+   368→   368→  name: string;
+   369→   369→  formula: string;
+   370→   370→  ca: number;
+   371→   371→  mg: number;
+   372→   372→  k: number;
+   373→   373→  so4: number;
+   374→   374→  co3: number;
+   375→   375→  h2o: number;
+   376→   376→  si: number;
+   377→   377→}
+   378→   378→
+   379→   379→export const BASE_AMENDMENTS: AmendmentDef[] = [
+   380→   380→  { id: 'gypsum',       name: 'Gypsum (Agricultural)',        formula: 'CaSO₄·2H₂O',  ca: 23.3, mg: 0,    k: 0,    so4: 55.8, co3: 0,    h2o: 20.9, si: 0 },
+   381→   381→  { id: 'lime',         name: 'Lime (Agricultural)',          formula: 'CaCO₃',        ca: 40.0, mg: 0,    k: 0,    so4: 0,    co3: 60,   h2o: 0,    si: 0 },
+   382→   382→  { id: 'dolomite',     name: 'Dolomitic Lime',               formula: 'CaCO₃+MgCO₃',  ca: 21.7, mg: 13.2, k: 0,    so4: 0,    co3: 65.2, h2o: 0,    si: 0 },
+   383→   383→  { id: 'mgso4-mono',   name: 'Mg Sulfate Monohydrate',       formula: 'MgSO₄·H₂O',    ca: 0,    mg: 17,   k: 0,    so4: 69,   co3: 0,    h2o: 14,   si: 0 },
+   384→   384→  { id: 'sop-granular', name: 'Potassium Sulfate (SOP)',      formula: 'K₂SO₄',        ca: 0,    mg: 0,    k: 41.5, so4: 54.1, co3: 0,    h2o: 0,    si: 0 },
+   385→   385→];
+   386→   386→
+   387→   387→export const EQUIV_WEIGHTS = { ca: 20.04, mg: 12.15, k: 39.1, na: 23.0 };
+   388→   388→
+   389→   389→export function cationStatus(
+   390→   390→  value: number,
+   391→   391→  cic: number
+   392→   392→): { pct: number; status: 'ok' | 'low' | 'high' | 'none' } {
+   393→   393→  if (!Number.isFinite(value) || value === 0 || cic === 0) {
+   394→   394→    return { pct: 0, status: 'none' };
+   395→   395→  }
+   396→   396→  const pct = (value / cic) * 100;
+   397→   397→  // Find the matching cation
+   398→   398→  return { pct, status: 'ok' };
+   399→   399→}
+   400→   400→
+   401→   401→export function phIndicator(ph: number): { label: string; color: string } {
+   402→   402→  if (!ph) return { label: 'Enter pH', color: '#64748b' };
+   403→   403→  if (ph < 6.5) return { label: 'Acidic',  color: '#dc2626' };
+   404→   404→  if (ph <= 7.2) return { label: 'Neutral', color: '#16a34a' };
+   405→   405→  return { label: 'Alkaline', color: '#ca8a04' };
+   406→   406→}
+   407→   407→
+   408→   408→// ============================================================================
+   409→   409→// 8. GRANULAR MIX — base materials library
+   410→   410→// ============================================================================
+   411→   411→
+   412→   412→export const GRANULAR_KEYS = ['N','P2O5','K2O','CaO','MgO','SO4','Fe','Mn','B','Zn','Cu','Mo','SiO2'] as const;
+   413→   413→export type GranularKey = typeof GRANULAR_KEYS[number];
+   414→   414→
+   415→   415→export const GRANULAR_MATERIALS: Record<string, Record<string, number>> = {
+   416→   416→  'Urea':                                { N:46,   P2O5:0,  K2O:0,  CaO:0,    SO4:0,    MgO:0,    SiO2:0,    Zn:0,    Fe:0,   B:0,     Mn:0,    Cu:0,    Mo:0   },
+   417→   417→  'Nitrophosphate 33-03-00':             { N:33,   P2O5:3,  K2O:0,  CaO:0,    SO4:0,    MgO:0,    SiO2:0,    Zn:0,    Fe:0,   B:0,     Mn:0,    Cu:0,    Mo:0   },
+   418→   418→  'Ammonium Sulfate (Granular)':         { N:21,   P2O5:0,  K2O:0,  CaO:0,    SO4:72,   MgO:0,    SiO2:0,    Zn:0,    Fe:0,   B:0,     Mn:0,    Cu:0,    Mo:0   },
+   419→   419→  'DAP':                                 { N:18,   P2O5:46, K2O:0,  CaO:0,    SO4:0,    MgO:0,    SiO2:0,    Zn:0,    Fe:0,   B:0,     Mn:0,    Cu:0,    Mo:0   },
+   420→   420→  'MAP':                                 { N:11,   P2O5:52, K2O:0,  CaO:0,    SO4:0,    MgO:0,    SiO2:0,    Zn:0,    Fe:0,   B:0,     Mn:0,    Cu:0,    Mo:0   },
+   421→   421→  'Single Superphosphate':               { N:0,    P2O5:18, K2O:0,  CaO:12,   SO4:12,   MgO:0,    SiO2:0,    Zn:0,    Fe:0,   B:0,     Mn:0,    Cu:0,    Mo:0   },
+   422→   422→  'Triple Superphosphate':               { N:0,    P2O5:45, K2O:0,  CaO:13,   SO4:0,    MgO:0,    SiO2:0,    Zn:0,    Fe:0,   B:0,     Mn:0,    Cu:0,    Mo:0   },
+   423→   423→  'Potassium Sulfate':                   { N:0,    P2O5:0,  K2O:50, CaO:0,    SO4:52,   MgO:0,    SiO2:0,    Zn:0,    Fe:0,   B:0,     Mn:0,    Cu:0,    Mo:0   },
+   424→   424→  'Potassium Chloride (MOP)':            { N:0,    P2O5:0,  K2O:60, CaO:0,    SO4:0,    MgO:0,    SiO2:0,    Zn:0,    Fe:0,   B:0,     Mn:0,    Cu:0,    Mo:0   },
+   425→   425→  'Potassium Nitrate':                   { N:13,   P2O5:0,  K2O:46, CaO:0,    SO4:0,    MgO:0,    SiO2:0,    Zn:0,    Fe:0,   B:0,     Mn:0,    Cu:0,    Mo:0   },
+   426→   426→  'Potassium Silicate':                  { N:0,    P2O5:0,  K2O:23, CaO:0,    SO4:0,    MgO:0,    SiO2:26,   Zn:0,    Fe:0,   B:0,     Mn:0,    Cu:0,    Mo:0   },
+   427→   427→  'Calcium Nitrate':                     { N:15.5, P2O5:0,  K2O:0,  CaO:26,   SO4:0,    MgO:0,    SiO2:0,    Zn:0,    Fe:0,   B:0,     Mn:0,    Cu:0,    Mo:0   },
+   428→   428→  'K-Mg Sulfate (Langbeinite)':          { N:0,    P2O5:0,  K2O:22, CaO:0,    SO4:68.91,MgO:18,   SiO2:0,    Zn:0,    Fe:0,   B:0,     Mn:0,    Cu:0,    Mo:0   },
+   429→   429→  'Magnesium Sulfate':                   { N:0,    P2O5:0,  K2O:0,  CaO:0,    SO4:40,   MgO:16,   SiO2:0,    Zn:0,    Fe:0,   B:0,     Mn:0,    Cu:0,    Mo:0   },
+   430→   430→  'Iron Sulfate':                        { N:0,    P2O5:0,  K2O:0,  CaO:0,    SO4:55,   MgO:0,    SiO2:0,    Zn:0,    Fe:20,  B:0,     Mn:0,    Cu:0,    Mo:0   },
+   431→   431→  'Manganese Sulfate':                   { N:0,    P2O5:0,  K2O:0,  CaO:0,    SO4:55,   MgO:0,    SiO2:0,    Zn:0,    Fe:0,   B:0,     Mn:32,   Cu:0,    Mo:0   },
+   432→   432→  'Zinc Sulfate':                        { N:0,    P2O5:0,  K2O:0,  CaO:0,    SO4:52,   MgO:0,    SiO2:0,    Zn:36,   Fe:0,   B:0,     Mn:0,    Cu:0,    Mo:0   },
+   433→   433→  'Granular Boron':                      { N:0,    P2O5:0,  K2O:0,  CaO:0,    SO4:0,    MgO:0,    SiO2:0,    Zn:0,    Fe:0,   B:15,    Mn:0,    Cu:0,    Mo:0   },
+   434→   434→  'Copper Sulfate':                      { N:0,    P2O5:0,  K2O:0,  CaO:0,    SO4:37,   MgO:0,    SiO2:0,    Zn:0,    Fe:0,   B:0,     Mn:0,    Cu:25,   Mo:0   },
+   435→   435→  'Sodium Molybdate':                    { N:0,    P2O5:0,  K2O:0,  CaO:0,    SO4:0,    MgO:0,    SiO2:0,    Zn:0,    Fe:0,   B:0,     Mn:0,    Cu:0,    Mo:39  },
+   436→   436→  'Micro Mix':                           { N:0,    P2O5:0,  K2O:0,  CaO:0,    SO4:6.25, MgO:4,    SiO2:0,    Zn:4,    Fe:8,   B:1,     Mn:1,    Cu:0,    Mo:0.06},
+   437→   437→  'Complex 12-11-18':                    { N:12,   P2O5:11, K2O:18, CaO:0,    SO4:24,   MgO:2.7,  SiO2:0,    Zn:0.02, Fe:0.2, B:0.015, Mn:0.02, Cu:0,    Mo:0   },
+   438→   438→  'Complex 12-12-17':                    { N:12,   P2O5:12, K2O:17, CaO:0,    SO4:24,   MgO:2,    SiO2:0,    Zn:0.01, Fe:0,   B:0.02,  Mn:0,    Cu:0,    Mo:0   },
+   439→   439→  'Complex Triple 16':                   { N:16,   P2O5:16, K2O:16, CaO:0,    SO4:0,    MgO:0,    SiO2:0,    Zn:0,    Fe:0,   B:0,     Mn:0,    Cu:0,    Mo:0   },
+   440→   440→};
+   441→   441→
+   442→   442→export const GRANULAR_KEY_LABELS: Record<string, string> = {
+   443→   443→  N: 'N', P2O5: 'P₂O₅', K2O: 'K₂O', CaO: 'CaO', MgO: 'MgO',
+   444→   444→  SO4: 'SO₄', Fe: 'Fe', Mn: 'Mn', B: 'B', Zn: 'Zn', Cu: 'Cu', Mo: 'Mo', SiO2: 'SiO₂',
+   445→   445→};
+   446→   446→
+   447→   447→// ============================================================================
+   448→   448→// 9. FERTILIZER COMPOSITION — atomic weights, oxide factors, formula engine
+   449→   449→// ============================================================================
+   450→   450→
+   451→   451→export const ATOMIC_WEIGHTS: Record<string, number> = {
+   452→   452→  H: 1.008, C: 12.011, N: 14.007, O: 15.999, P: 30.974, K: 39.098,
+   453→   453→  Ca: 40.078, Mg: 24.305, S: 32.06, Si: 28.085,
+   454→   454→  Zn: 65.38, Fe: 55.845, Mn: 54.938, Cu: 63.546, B: 10.81, Mo: 95.95,
+   455→   455→  Cl: 35.45, Na: 22.99,
+   456→   456→};
+   457→   457→
+   458→   458→export const OXIDE_FACTORS: Record<string, number> = {
+   459→   459→  P2O5: 2.29, K2O: 1.20, CaO: 1.40, MgO: 1.66, SiO2: 2.14,
+   460→   460→};
+   461→   461→
+   462→   462→export const SUBSCRIPT_MAP: Record<string, string> = {
+   463→   463→  '₀':'0','₁':'1','₂':'2','₃':'3','₄':'4','₅':'5','₆':'6','₇':'7','₈':'8','₉':'9',
+   464→   464→  '⁰':'0','¹':'1','²':'2','³':'3','⁴':'4','⁵':'5','⁶':'6','⁷':'7','⁸':'8','⁹':'9',
+   465→   465→  '⁺':'+','⁻':'-',
+   466→   466→};
+   467→   467→
+   468→   468→/** Normalize a chemical formula string (handle unicode subscripts, separators, brackets). */
+   469→   469→export function normalizeFormula(input: string): string {
+   470→   470→  let s = String(input);
+   471→   471→  for (const [k, v] of Object.entries(SUBSCRIPT_MAP)) s = s.split(k).join(v);
+   472→   472→  s = s.replace(/−/g, '-').replace(/\s+/g, '');
+   473→   473→  s = s.replace(/[\{\[]/g, '(').replace(/[\}\]]/g, ')');
+   474→   474→  s = s.replace(/:/g, '·');
+   475→   475→  s = s.replace(/\)\(/g, ')*(');
+   476→   476→  s = s.replace(/([0-9)\]])([\*+])([0-9(A-Z])/g, '$1·$3');
+   477→   477→  s = s.replace(/\.+/g, '·');
+   478→   478→  return s;
+   479→   479→}
+   480→   480→
+   481→   481→type Term =
+   482→   482→  | { type: 'element'; symbol: string; count: number }
+   483→   483→  | { type: 'group'; terms: Term[]; count: number };
+   484→   484→
+   485→   485→function parseNumber(s: string, i: number): [number, number] {
+   486→   486→  let j = i;
+   487→   487→  let str = '';
+   488→   488→  while (j < s.length && /[0-9.]/.test(s[j])) { str += s[j]; j++; }
+   489→   489→  return [str ? parseFloat(str) : 1, j];
+   490→   490→}
+   491→   491→
+   492→   492→function parseTerms(s: string, i: number, stop: string | null): [Term[], number] {
+   493→   493→  const terms: Term[] = [];
+   494→   494→  while (i < s.length) {
+   495→   495→    const c = s[i];
+   496→   496→    if (stop && c === stop) return [terms, i + 1];
+   497→   497→    if (c === '(') {
+   498→   498→      const [inner, j] = parseTerms(s, i + 1, ')');
+   499→   499→      const [count, k] = parseNumber(s, j);
+   500→   500→      terms.push({ type: 'group', terms: inner, count });
+   501→   501→      i = k;
+   502→   502→    } else if (/[A-Z]/.test(c)) {
+   503→   503→      let sym = c;
+   504→   504→      let j = i + 1;
+   505→   505→      if (j < s.length && /[a-z]/.test(s[j])) { sym += s[j]; j++; }
+   506→   506→      const [count, k] = parseNumber(s, j);
+   507→   507→      terms.push({ type: 'element', symbol: sym, count });
+   508→   508→      i = k;
+   509→   509→    } else if (c === '+' || c === '-' || c === '^') {
+   510→   510→      i++;
+   511→   511→    } else {
+   512→   512→      throw new Error(`Invalid char in formula: ${c}`);
+   513→   513→    }
+   514→   514→  }
+   515→   515→  if (stop) throw new Error('Unclosed parenthesis');
+   516→   516→  return [terms, i];
+   517→   517→}
+   518→   518→
+   519→   519→function collectTerms(terms: Term[], mult: number, out: Record<string, number>) {
+   520→   520→  for (const t of terms) {
+   521→   521→    if (t.type === 'element') {
+   522→   522→      out[t.symbol] = (out[t.symbol] || 0) + t.count * mult;
+   523→   523→    } else {
+   524→   524→      collectTerms(t.terms, mult * t.count, out);
+   525→   525→    }
+   526→   526→  }
+   527→   527→}
+   528→   528→
+   529→   529→function countMotif(terms: Term[], mult: number, motif: { symbol: string; count: number }[]): number {
+   530→   530→  let total = 0;
+   531→   531→  for (let i = 0; i + motif.length <= terms.length; i++) {
+   532→   532→    let ok = true;
+   533→   533→    for (let j = 0; j < motif.length; j++) {
+   534→   534→      const t = terms[i + j];
+   535→   535→      if (t.type !== 'element' || t.symbol !== motif[j].symbol || Math.abs(t.count - motif[j].count) > 1e-9) {
+   536→   536→        ok = false; break;
+   537→   537→      }
+   538→   538→    }
+   539→   539→    if (ok) total += mult;
+   540→   540→  }
+   541→   541→  for (const t of terms) {
+   542→   542→    if (t.type === 'group') total += countMotif(t.terms, mult * t.count, motif);
+   543→   543→  }
+   544→   544→  return total;
+   545→   545→}
+   546→   546→
+   547→   547→export interface CompositionResult {
+   548→   548→  ok: boolean;
+   549→   549→  mw?: number;
+   550→   550→  comp?: Record<string, number>;
+   551→   551→  error?: string;
+   552→   552→  normalized?: string;
+   553→   553→}
+   554→   554→
+   555→   555→/** Compute elemental composition (%) from a chemical formula string. */
+   556→   556→export function compFromFormula(input: string): CompositionResult {
+   557→   557→  try {
+   558→   558→    const normalized = normalizeFormula(input);
+   559→   559→    if (!normalized) return { ok: false, error: 'Empty formula' };
+   560→   560→    const segments = normalized.split(/[·•.]/).filter(Boolean);
+   561→   561→    const atoms: Record<string, number> = {};
+   562→   562→    let no3 = 0, nh4 = 0;
+   563→   563→    let mw = 0;
+   564→   564→
+   565→   565→    for (const seg of segments) {
+   566→   566→      let coef = 1, body = seg;
+   567→   567→      const m = seg.match(/^(\d+(?:\.\d+)?)(.*)$/);
+   568→   568→      if (m && m[2]) { coef = parseFloat(m[1]); body = m[2]; }
+   569→   569→      const [terms] = parseTerms(body, 0, null);
+   570→   570→      const segAtoms: Record<string, number> = {};
+   571→   571→      collectTerms(terms, coef, segAtoms);
+   572→   572→      for (const [sym, cnt] of Object.entries(segAtoms)) {
+   573→   573→        atoms[sym] = (atoms[sym] || 0) + cnt;
+   574→   574→        if (ATOMIC_WEIGHTS[sym]) mw += cnt * ATOMIC_WEIGHTS[sym];
+   575→   575→      }
+   576→   576→      no3 += countMotif(terms, coef, [{ symbol: 'N', count: 1 }, { symbol: 'O', count: 3 }]);
+   577→   577→      nh4 += countMotif(terms, coef, [{ symbol: 'N', count: 1 }, { symbol: 'H', count: 4 }]);
+   578→   578→    }
+   579→   579→
+   580→   580→    if (mw <= 0) return { ok: false, error: 'Could not compute molecular weight' };
+   581→   581→
+   582→   582→    const comp: Record<string, number> = {};
+   583→   583→    const nAtoms = atoms['N'] || 0;
+   584→   584→    for (const sym of ['N','P','K','Ca','Mg','S','Si','C','H','O','Zn','Fe','Mn','B','Cu','Mo']) {
+   585→   585→      if (atoms[sym]) comp[sym] = (atoms[sym] * ATOMIC_WEIGHTS[sym] / mw) * 100;
+   586→   586→    }
+   587→   587→    // N partition into NO3 / NH4
+   588→   588→    if (nAtoms > 0 && (no3 > 0 || nh4 > 0)) {
+   589→   589→      let no3Atoms = Math.max(0, no3);
+   590→   590→      let nh4Atoms = Math.max(0, nh4);
+   591→   591→      const forms = no3Atoms + nh4Atoms;
+   592→   592→      if (forms > nAtoms && forms > 0) {
+   593→   593→        const k = nAtoms / forms;
+   594→   594→        no3Atoms *= k; nh4Atoms *= k;
+   595→   595→      }
+   596→   596→      comp['N_NO3'] = comp['N'] * (no3Atoms / nAtoms);
+   597→   597→      comp['N_NH4'] = comp['N'] * (nh4Atoms / nAtoms);
+   598→   598→    }
+   599→   599→    // Oxide equivalents
+   600→   600→    comp['P2O5'] = (comp['P'] || 0) * OXIDE_FACTORS.P2O5;
+   601→   601→    comp['K2O']  = (comp['K']  || 0) * OXIDE_FACTORS.K2O;
+   602→   602→    comp['CaO']  = (comp['Ca'] || 0) * OXIDE_FACTORS.CaO;
+   603→   603→    comp['MgO']  = (comp['Mg'] || 0) * OXIDE_FACTORS.MgO;
+   604→   604→    comp['SiO2'] = (comp['Si'] || 0) * OXIDE_FACTORS.SiO2;
+   605→   605→
+   606→   606→    return { ok: true, mw, comp, normalized };
+   607→   607→  } catch (e) {
+   608→   608→    return { ok: false, error: e instanceof Error ? e.message : 'Parse error' };
+   609→   609→  }
+   610→   610→}
+   611→   611→
+   612→   612→// ============================================================================
+   613→   613→// 10. NUTRIENT DISTRIBUTION BY STAGE — defaults
+   614→   614→// ============================================================================
+   615→   615→
+   616→   616→export const STAGE_BASE = [
+   617→   617→  { id: 'n',  label: 'N',  total: 180 },
+   618→   618→  { id: 'p',  label: 'P',  total: 40  },
+   619→   619→  { id: 'k',  label: 'K',  total: 220 },
+   620→   620→  { id: 'ca', label: 'Ca', total: 120 },
+   621→   621→  { id: 'mg', label: 'Mg', total: 35  },
+   622→   622→];
+   623→   623→
+   624→   624→export const STAGE_OPTIONAL = [
+   625→   625→  { id: 's',  label: 'S',  total: 25   },
+   626→   626→  { id: 'fe', label: 'Fe', total: 3    },
+   627→   627→  { id: 'mn', label: 'Mn', total: 2    },
+   628→   628→  { id: 'b',  label: 'B',  total: 0.5  },
+   629→   629→  { id: 'zn', label: 'Zn', total: 0.3  },
+   630→   630→  { id: 'cu', label: 'Cu', total: 0.2  },
+   631→   631→  { id: 'mo', label: 'Mo', total: 0.05 },
+   632→   632→];
+   633→   633→
+   634→   634→export const STAGE_DEFAULTS = ['Bud break', 'Vegetative', 'Flowering', 'Filling', 'Ripening'];
+   635→   635→
+   636→   636→export const STAGE_DEFAULT_PCT: Record<string, number[]> = {
+   637→   637→  n:  [10, 30, 20, 30, 10],
+   638→   638→  p:  [15, 25, 25, 20, 15],
+   639→   639→  k:  [5,  20, 25, 35, 15],
+   640→   640→  ca: [12, 28, 22, 28, 10],
+   641→   641→  mg: [12, 28, 22, 28, 10],
+   642→   642→};
+   643→   643→
+   644→   644→export const STAGE_COLORS = [
+   645→   645→  '#2563eb', '#16a34a', '#ea580c', '#7c3aed', '#0891b2',
+   646→   646→  '#ca8a04', '#db2777', '#0d9488', '#4f46e5', '#64748b',
+   647→   647→  '#059669', '#b45309', '#be185d',
+   648→   648→];
+   649→   649→
+   650→   650→// ============================================================================
+   651→   651→// 11. PERIODIC TABLE — elements, atomic weights, details
+   652→   652→// ============================================================================
+   653→   653→
+   654→   654→export const ESSENTIAL_ELEMENTS = new Set(['N','P','K','Ca','Mg','S','Fe','Mn','Zn','Cu','B','Mo','Cl','Ni']);
+   655→   655→export const BENEFICIAL_ELEMENTS = new Set(['Si','Na','Ti','Al','Co','Se','V']);
+   656→   656→export const CHO_ELEMENTS = new Set(['C','H','O']);
+   657→   657→
+   658→   658→export function elementCategory(sym: string): 'cho' | 'essential' | 'beneficial' | 'other' {
+   659→   659→  if (CHO_ELEMENTS.has(sym)) return 'cho';
+   660→   660→  if (ESSENTIAL_ELEMENTS.has(sym)) return 'essential';
+   661→   661→  if (BENEFICIAL_ELEMENTS.has(sym)) return 'beneficial';
+   662→   662→  return 'other';
+   663→   663→}
+   664→   664→
+   665→   665→export interface PeriodicElement {
+   666→   666→  z: number;
+   667→   667→  s: string;
+   668→   668→  n: string;
+   669→   669→  p: number;
+   670→   670→  g: number;
+   671→   671→}
+   672→   672→
+   673→   673→export const PERIODIC_ELEMENTS: PeriodicElement[] = [
+   674→   674→  { z:1,s:'H',n:'Hydrogen',p:1,g:1 }, { z:2,s:'He',n:'Helium',p:1,g:18 },
+   675→   675→  { z:3,s:'Li',n:'Lithium',p:2,g:1 }, { z:4,s:'Be',n:'Beryllium',p:2,g:2 }, { z:5,s:'B',n:'Boron',p:2,g:13 }, { z:6,s:'C',n:'Carbon',p:2,g:14 }, { z:7,s:'N',n:'Nitrogen',p:2,g:15 }, { z:8,s:'O',n:'Oxygen',p:2,g:16 }, { z:9,s:'F',n:'Fluorine',p:2,g:17 }, { z:10,s:'Ne',n:'Neon',p:2,g:18 },
+   676→   676→  { z:11,s:'Na',n:'Sodium',p:3,g:1 }, { z:12,s:'Mg',n:'Magnesium',p:3,g:2 }, { z:13,s:'Al',n:'Aluminum',p:3,g:13 }, { z:14,s:'Si',n:'Silicon',p:3,g:14 }, { z:15,s:'P',n:'Phosphorus',p:3,g:15 }, { z:16,s:'S',n:'Sulfur',p:3,g:16 }, { z:17,s:'Cl',n:'Chlorine',p:3,g:17 }, { z:18,s:'Ar',n:'Argon',p:3,g:18 },
+   677→   677→  { z:19,s:'K',n:'Potassium',p:4,g:1 }, { z:20,s:'Ca',n:'Calcium',p:4,g:2 }, { z:21,s:'Sc',n:'Scandium',p:4,g:3 }, { z:22,s:'Ti',n:'Titanium',p:4,g:4 }, { z:23,s:'V',n:'Vanadium',p:4,g:5 }, { z:24,s:'Cr',n:'Chromium',p:4,g:6 }, { z:25,s:'Mn',n:'Manganese',p:4,g:7 }, { z:26,s:'Fe',n:'Iron',p:4,g:8 }, { z:27,s:'Co',n:'Cobalt',p:4,g:9 }, { z:28,s:'Ni',n:'Nickel',p:4,g:10 }, { z:29,s:'Cu',n:'Copper',p:4,g:11 }, { z:30,s:'Zn',n:'Zinc',p:4,g:12 }, { z:31,s:'Ga',n:'Gallium',p:4,g:13 }, { z:32,s:'Ge',n:'Germanium',p:4,g:14 }, { z:33,s:'As',n:'Arsenic',p:4,g:15 }, { z:34,s:'Se',n:'Selenium',p:4,g:16 }, { z:35,s:'Br',n:'Bromine',p:4,g:17 }, { z:36,s:'Kr',n:'Krypton',p:4,g:18 },
+   678→   678→  { z:37,s:'Rb',n:'Rubidium',p:5,g:1 }, { z:38,s:'Sr',n:'Strontium',p:5,g:2 }, { z:39,s:'Y',n:'Yttrium',p:5,g:3 }, { z:40,s:'Zr',n:'Zirconium',p:5,g:4 }, { z:41,s:'Nb',n:'Niobium',p:5,g:5 }, { z:42,s:'Mo',n:'Molybdenum',p:5,g:6 }, { z:43,s:'Tc',n:'Technetium',p:5,g:7 }, { z:44,s:'Ru',n:'Ruthenium',p:5,g:8 }, { z:45,s:'Rh',n:'Rhodium',p:5,g:9 }, { z:46,s:'Pd',n:'Palladium',p:5,g:10 }, { z:47,s:'Ag',n:'Silver',p:5,g:11 }, { z:48,s:'Cd',n:'Cadmium',p:5,g:12 }, { z:49,s:'In',n:'Indium',p:5,g:13 }, { z:50,s:'Sn',n:'Tin',p:5,g:14 }, { z:51,s:'Sb',n:'Antimony',p:5,g:15 }, { z:52,s:'Te',n:'Tellurium',p:5,g:16 }, { z:53,s:'I',n:'Iodine',p:5,g:17 }, { z:54,s:'Xe',n:'Xenon',p:5,g:18 },
+   679→   679→  { z:55,s:'Cs',n:'Cesium',p:6,g:1 }, { z:56,s:'Ba',n:'Barium',p:6,g:2 }, { z:57,s:'La',n:'Lanthanum',p:6,g:3 }, { z:72,s:'Hf',n:'Hafnium',p:6,g:4 }, { z:73,s:'Ta',n:'Tantalum',p:6,g:5 }, { z:74,s:'W',n:'Tungsten',p:6,g:6 }, { z:75,s:'Re',n:'Rhenium',p:6,g:7 }, { z:76,s:'Os',n:'Osmium',p:6,g:8 }, { z:77,s:'Ir',n:'Iridium',p:6,g:9 }, { z:78,s:'Pt',n:'Platinum',p:6,g:10 }, { z:79,s:'Au',n:'Gold',p:6,g:11 }, { z:80,s:'Hg',n:'Mercury',p:6,g:12 }, { z:81,s:'Tl',n:'Thallium',p:6,g:13 }, { z:82,s:'Pb',n:'Lead',p:6,g:14 }, { z:83,s:'Bi',n:'Bismuth',p:6,g:15 }, { z:84,s:'Po',n:'Polonium',p:6,g:16 }, { z:85,s:'At',n:'Astatine',p:6,g:17 }, { z:86,s:'Rn',n:'Radon',p:6,g:18 },
+   680→   680→  { z:87,s:'Fr',n:'Francium',p:7,g:1 }, { z:88,s:'Ra',n:'Radium',p:7,g:2 }, { z:89,s:'Ac',n:'Actinium',p:7,g:3 }, { z:104,s:'Rf',n:'Rutherfordium',p:7,g:4 }, { z:105,s:'Db',n:'Dubnium',p:7,g:5 }, { z:106,s:'Sg',n:'Seaborgium',p:7,g:6 }, { z:107,s:'Bh',n:'Bohrium',p:7,g:7 }, { z:108,s:'Hs',n:'Hassium',p:7,g:8 }, { z:109,s:'Mt',n:'Meitnerium',p:7,g:9 }, { z:110,s:'Ds',n:'Darmstadtium',p:7,g:10 }, { z:111,s:'Rg',n:'Roentgenium',p:7,g:11 }, { z:112,s:'Cn',n:'Copernicium',p:7,g:12 }, { z:113,s:'Nh',n:'Nihonium',p:7,g:13 }, { z:114,s:'Fl',n:'Flerovium',p:7,g:14 }, { z:115,s:'Mc',n:'Moscovium',p:7,g:15 }, { z:116,s:'Lv',n:'Livermorium',p:7,g:16 }, { z:117,s:'Ts',n:'Tennessine',p:7,g:17 }, { z:118,s:'Og',n:'Oganesson',p:7,g:18 },
+   681→   681→  // Lanthanides (period 8)
+   682→   682→  { z:58,s:'Ce',n:'Cerium',p:8,g:4 }, { z:59,s:'Pr',n:'Praseodymium',p:8,g:5 }, { z:60,s:'Nd',n:'Neodymium',p:8,g:6 }, { z:61,s:'Pm',n:'Promethium',p:8,g:7 }, { z:62,s:'Sm',n:'Samarium',p:8,g:8 }, { z:63,s:'Eu',n:'Europium',p:8,g:9 }, { z:64,s:'Gd',n:'Gadolinium',p:8,g:10 }, { z:65,s:'Tb',n:'Terbium',p:8,g:11 }, { z:66,s:'Dy',n:'Dysprosium',p:8,g:12 }, { z:67,s:'Ho',n:'Holmium',p:8,g:13 }, { z:68,s:'Er',n:'Erbium',p:8,g:14 }, { z:69,s:'Tm',n:'Thulium',p:8,g:15 }, { z:70,s:'Yb',n:'Ytterbium',p:8,g:16 }, { z:71,s:'Lu',n:'Lutetium',p:8,g:17 },
+   683→   683→  // Actinides (period 9)
+   684→   684→  { z:90,s:'Th',n:'Thorium',p:9,g:4 }, { z:91,s:'Pa',n:'Protactinium',p:9,g:5 }, { z:92,s:'U',n:'Uranium',p:9,g:6 }, { z:93,s:'Np',n:'Neptunium',p:9,g:7 }, { z:94,s:'Pu',n:'Plutonium',p:9,g:8 }, { z:95,s:'Am',n:'Americium',p:9,g:9 }, { z:96,s:'Cm',n:'Curium',p:9,g:10 }, { z:97,s:'Bk',n:'Berkelium',p:9,g:11 }, { z:98,s:'Cf',n:'Californium',p:9,g:12 }, { z:99,s:'Es',n:'Einsteinium',p:9,g:13 }, { z:100,s:'Fm',n:'Fermium',p:9,g:14 }, { z:101,s:'Md',n:'Mendelevium',p:9,g:15 }, { z:102,s:'No',n:'Nobelium',p:9,g:16 }, { z:103,s:'Lr',n:'Lawrencium',p:9,g:17 },
+   685→   685→];
+   686→   686→
+   687→   687→export interface ElementDetail {
+   688→   688→  aw: string;
+   689→   689→  val: string;
+   690→   690→  rad: string;
+   691→   691→  en: string;
+   692→   692→  role: string;
+   693→   693→}
+   694→   694→
+   695→   695→export const ELEMENT_DETAILS: Record<string, ElementDetail> = {
+   696→   696→  H:  { aw: '1.008',   val: '+1',             rad: '53 pm',  en: '2.20', role: 'Structural element (CHO). Present in water and organic compounds.' },
+   697→   697→  C:  { aw: '12.011',  val: '-4, +2, +4',     rad: '67 pm',  en: '2.55', role: 'Main structural element of plant biomass.' },
+   698→   698→  O:  { aw: '15.999',  val: '-2',             rad: '48 pm',  en: '3.44', role: 'Structural element (water, organics, respiration).' },
+   699→   699→  N:  { aw: '14.007',  val: '-3, +3, +5',     rad: '56 pm',  en: '3.04', role: 'Essential macronutrient: proteins, chlorophyll, vegetative growth.' },
+   700→   700→  P:  { aw: '30.974',  val: '+5, +3',         rad: '98 pm',  en: '2.19', role: 'Essential macronutrient: energy (ATP), roots, flowering.' },
+   701→   701→  K:  { aw: '39.098',  val: '+1',             rad: '227 pm', en: '0.82', role: 'Essential macronutrient: osmotic regulation, quality, transport.' },
+   702→   702→  Ca: { aw: '40.078',  val: '+2',             rad: '197 pm', en: '1.00', role: 'Essential macronutrient: cell wall, firmness, apical growth.' },
+   703→   703→  Mg: { aw: '24.305',  val: '+2',             rad: '145 pm', en: '1.31', role: 'Essential macronutrient: central chlorophyll atom.' },
+   704→   704→  S:  { aw: '32.06',   val: '-2, +4, +6',     rad: '88 pm',  en: '2.58', role: 'Essential macronutrient: sulfur amino acids, metabolism.' },
+   705→   705→  Fe: { aw: '55.845',  val: '+2, +3',         rad: '126 pm', en: '1.83', role: 'Essential micronutrient: chlorophyll synthesis, redox enzymes.' },
+   706→   706→  Mn: { aw: '54.938',  val: '+2, +4, +7',     rad: '127 pm', en: '1.55', role: 'Essential micronutrient: photosynthesis, enzyme activation.' },
+   707→   707→  Zn: { aw: '65.38',   val: '+2',             rad: '134 pm', en: '1.65', role: 'Essential micronutrient: hormone regulation, enzymes.' },
+   708→   708→  Cu: { aw: '63.546',  val: '+1, +2',         rad: '128 pm', en: '1.90', role: 'Essential micronutrient: enzymes, oxidative metabolism.' },
+   709→   709→  B:  { aw: '10.81',   val: '+3',             rad: '85 pm',  en: '2.04', role: 'Essential micronutrient: cell wall, flowering, fruit set.' },
+   710→   710→  Mo: { aw: '95.95',   val: '+6, +4',         rad: '139 pm', en: '2.16', role: 'Essential micronutrient: nitrogen metabolism.' },
+   711→   711→  Cl: { aw: '35.45',   val: '-1, +1, +5, +7', rad: '79 pm',  en: '3.16', role: 'Essential trace micronutrient: ionic balance, stomata.' },
+   712→   712→  Ni: { aw: '58.693',  val: '+2',             rad: '124 pm', en: '1.91', role: 'Essential at low doses: urease, N metabolism.' },
+   713→   713→  Si: { aw: '28.085',  val: '+4',             rad: '111 pm', en: '1.90', role: 'Beneficial element: tissue reinforcement, stress tolerance.' },
+   714→   714→  Na: { aw: '22.990',  val: '+1',             rad: '186 pm', en: '0.93', role: 'Beneficial in some species; supports osmotic balance.' },
+   715→   715→  Ti: { aw: '47.867',  val: '+4, +3',         rad: '147 pm', en: '1.54', role: 'Beneficial element reported in traces (species-dependent).' },
+   716→   716→  Al: { aw: '26.982',  val: '+3',             rad: '143 pm', en: '1.61', role: 'Not essential; often toxic in acid soils.' },
+   717→   717→  Co: { aw: '58.933',  val: '+2, +3',         rad: '125 pm', en: '1.88', role: 'Beneficial for biological N fixation (legumes).' },
+   718→   718→  Se: { aw: '78.971',  val: '-2, +4, +6',     rad: '103 pm', en: '2.55', role: 'Beneficial trace element; excess can be toxic.' },
+   719→   719→  V:  { aw: '50.942',  val: '+5, +4, +3',     rad: '134 pm', en: '1.63', role: 'Beneficial element reported under specific conditions.' },
+   720→   720→};
+   721→   721→
+   722→   722→// ============================================================================
+   723→   723→// 12. FERTILIZER COMPATIBILITY — matrix data
+   724→   724→// ============================================================================
+   725→   725→
+   726→   726→export interface FertilizerCompatDef { id: string; name: string; }
+   727→   727→
+   728→   728→export const FERTILIZERS_COMPAT: FertilizerCompatDef[] = [
+   729→   729→  { id: 'urea', name: 'Urea' },
+   730→   730→  { id: 'nitrato_amonio', name: 'Ammonium Nitrate' },
+   731→   731→  { id: 'fosfonitrato_33_03_00', name: 'Nitrophosphate' },
+   732→   732→  { id: 'sulfato_amonio_soluble', name: 'Ammonium Sulfate' },
+   733→   733→  { id: 'nitrato_calcio_granular', name: 'Calcium Nitrate (granular)' },
+   734→   734→  { id: 'nitrato_calcio_cristal', name: 'Calcium Nitrate (crystal)' },
+   735→   735→  { id: 'nitrato_magnesio', name: 'Magnesium Nitrate' },
+   736→   736→  { id: 'map', name: 'MAP' },
+   737→   737→  { id: 'mkp', name: 'MKP' },
+   738→   738→  { id: 'nks', name: 'NKS' },
+   739→   739→  { id: 'nk_mg', name: 'NK + Mg' },
+   740→   740→  { id: 'sop', name: 'Potassium Sulfate (SOP)' },
+   741→   741→  { id: 'kcl_soluble', name: 'Potassium Chloride (KCl)' },
+   742→   742→  { id: 'cacl2_dihidratado', name: 'Calcium Chloride' },
+   743→   743→  { id: 'sulfato_magnesio', name: 'Magnesium Sulfate' },
+   744→   744→  { id: 'triple_19_me', name: 'Triple 19 + Me' },
+   745→   745→  { id: 'npk_13_04_25_znb', name: '13-4-25 Zn+B' },
+   746→   746→  { id: 'mix_micros_edta', name: 'Mix micros EDTA' },
+   747→   747→  { id: 'quelato_fe', name: 'Fe EDTA' },
+   748→   748→  { id: 'fe_dtpa', name: 'Fe DTPA' },
+   749→   749→  { id: 'fe_eddha', name: 'Fe EDDHA' },
+   750→   750→  { id: 'quelato_mn', name: 'Mn EDTA' },
+   751→   751→  { id: 'quelato_zn', name: 'Zn EDTA' },
+   752→   752→  { id: 'quelato_cu', name: 'Cu EDTA' },
+   753→   753→  { id: 'acido_borico', name: 'Boric Acid' },
+   754→   754→  { id: 'molibdato_sodio', name: 'Sodium Molybdate' },
+   755→   755→  { id: 'sulfatos_micros', name: 'Metal-sulfate micros' },
+   756→   756→  { id: 'silicio', name: 'Silicon source' },
+   757→   757→  { id: 'acido_fosforico_75', name: 'Phosphoric Acid 75%' },
+   758→   758→  { id: 'acido_fosforico_85', name: 'Phosphoric Acid 85%' },
+   759→   759→  { id: 'acido_nitrico_55', name: 'Nitric Acid 55%' },
+   760→   760→  { id: 'acido_sulfurico_98', name: 'Sulfuric Acid 98%' },
+   761→   761→];
+   762→   762→
+   763→   763→export const FERTILIZER_TRAITS: Record<string, Record<string, boolean>> = {
+   764→   764→  urea: { urea: true },
+   765→   765→  nitrato_amonio: { nh4: true, no3: true },
+   766→   766→  fosfonitrato_33_03_00: { n: true, p: true, po4: true },
+   767→   767→  sulfato_amonio_soluble: { nh4: true, so4: true },
+   768→   768→  nitrato_calcio_granular: { ca_no3: true, ca: true },
+   769→   769→  nitrato_calcio_cristal: { ca_no3: true, ca: true },
+   770→   770→  nitrato_magnesio: { no3: true, mg: true },
+   771→   771→  map: { nh4: true, po4: true, p_acid: true },
+   772→   772→  mkp: { k: true, po4: true, p_acid: true },
+   773→   773→  nks: { no3: true, k: true, so4: true },
+   774→   774→  nk_mg: { no3: true, k: true, mg: true },
+   775→   775→  sop: { k: true, so4: true },
+   776→   776→  kcl_soluble: { k: true, cl: true },
+   777→   777→  cacl2_dihidratado: { ca: true, cl: true },
+   778→   778→  sulfato_magnesio: { mg: true, so4: true },
+   779→   779→  triple_19_me: { npk: true, po4: true, nh4: true, no3: true, k: true, micro: true },
+   780→   780→  npk_13_04_25_znb: { npk: true, po4: true, nh4: true, no3: true, k: true, so4: true, micro: true },
+   781→   781→  mix_micros_edta: { chelate: true, edta: true, micro: true },
+   782→   782→  quelato_fe: { chelate: true, edta: true, fe: true },
+   783→   783→  fe_dtpa: { chelate: true, dtpa: true, fe: true },
+   784→   784→  fe_eddha: { chelate: true, eddha: true, fe: true },
+   785→   785→  quelato_mn: { chelate: true, edta: true, mn: true },
+   786→   786→  quelato_zn: { chelate: true, edta: true, zn: true },
+   787→   787→  quelato_cu: { chelate: true, edta: true, cu: true },
+   788→   788→  acido_borico: { b: true, weak_acid: true },
+   789→   789→  molibdato_sodio: { mo: true },
+   790→   790→  sulfatos_micros: { metal_sulfate: true, so4: true, micro: true },
+   791→   791→  silicio: { si: true },
+   792→   792→  acido_fosforico_75: { strong_acid: true, h3po4: true, po4: true },
+   793→   793→  acido_fosforico_85: { strong_acid: true, h3po4: true, po4: true },
+   794→   794→  acido_nitrico_55: { strong_acid: true, hno3: true, no3: true },
+   795→   795→  acido_sulfurico_98: { strong_acid: true, h2so4: true, so4: true },
+   796→   796→};
+   797→   797→
+   798→   798→export const COMPAT_OVERRIDE: Record<string, 'C' | 'R' | 'I'> = {
+   799→   799→  'mkp|nitrato_calcio_granular': 'I',
+   800→   800→  'map|nitrato_calcio_granular': 'I',
+   801→   801→  'map|nitrato_calcio_cristal': 'I',
+   802→   802→  'mkp|nitrato_calcio_cristal': 'I',
+   803→   803→  'sulfato_amonio_soluble|nitrato_calcio_granular': 'I',
+   804→   804→  'sulfato_amonio_soluble|nitrato_calcio_cristal': 'I',
+   805→   805→  'sulfato_magnesio|nitrato_calcio_granular': 'I',
+   806→   806→  'sulfato_magnesio|nitrato_calcio_cristal': 'I',
+   807→   807→  'sop|nitrato_calcio_granular': 'I',
+   808→   808→  'sop|nitrato_calcio_cristal': 'I',
+   809→   809→  'acido_fosforico_75|nitrato_calcio_granular': 'I',
+   810→   810→  'acido_fosforico_75|nitrato_calcio_cristal': 'I',
+   811→   811→  'acido_fosforico_85|nitrato_calcio_granular': 'I',
+   812→   812→  'acido_fosforico_85|nitrato_calcio_cristal': 'I',
+   813→   813→  'acido_sulfurico_98|nitrato_calcio_granular': 'I',
+   814→   814→  'acido_sulfurico_98|nitrato_calcio_cristal': 'I',
+   815→   815→  'nks|sulfato_amonio_soluble': 'R',
+   816→   816→  'sop|nks': 'R',
+   817→   817→  'map|sulfatos_micros': 'I',
+   818→   818→  'mkp|sulfatos_micros': 'I',
+   819→   819→  'mix_micros_edta|map': 'R',
+   820→   820→  'mix_micros_edta|mkp': 'R',
+   821→   821→  'fe_eddha|map': 'R',
+   822→   822→  'fe_eddha|mkp': 'R',
+   823→   823→  'nitrato_magnesio|mix_micros_edta': 'R',
+   824→   824→  'nitrato_magnesio|quelato_fe': 'R',
+   825→   825→};
+   826→   826→
+   827→   827→export function inferCompatLevel(aid: string, bid: string): 'C' | 'R' | 'I' {
+   828→   828→  if (aid === bid) return 'C';
+   829→   829→  const k = aid < bid ? `${aid}|${bid}` : `${bid}|${aid}`;
+   830→   830→  if (COMPAT_OVERRIDE[k]) return COMPAT_OVERRIDE[k];
+   831→   831→  const A = FERTILIZER_TRAITS[aid] || {};
+   832→   832→  const B = FERTILIZER_TRAITS[bid] || {};
+   833→   833→  const ca = A.ca_no3 || B.ca_no3;
+   834→   834→  const has = (t: string) => !!(A[t] || B[t]);
+   835→   835→  const isMap = aid === 'map' || bid === 'map';
+   836→   836→  const isMkp = aid === 'mkp' || bid === 'mkp';
+   837→   837→
+   838→   838→  if (ca && (has('po4') || has('p_acid') || (has('npk') && (A.po4 || B.po4)))) {
+   839→   839→    if ((A.po4 || B.po4 || A.npk || B.npk) && !has('hno3')) return 'I';
+   840→   840→  }
+   841→   841→  if (ca && (has('h3po4') || (A.strong_acid && A.h3po4) || (B.strong_acid && B.h3po4))) return 'I';
+   842→   842→  if (ca && (has('h2so4') || A.h2so4 || B.h2so4)) return 'I';
+   843→   843→
+   844→   844→  if (ca && has('so4') && (A.so4 || B.so4)) {
+   845→   845→    if ((A.nh4 && A.so4) || (B.nh4 && B.so4)) return 'I';
+   846→   846→    if ([aid, bid].some(x => ['sop', 'sulfato_magnesio'].includes(x))) return 'I';
+   847→   847→    if ([aid, bid].some(x => x === 'nks')) return 'I';
+   848→   848→  }
+   849→   849→
+   850→   850→  if (has('metal_sulfate') && (has('po4') || isMap || isMkp)) return 'I';
+   851→   851→  if ((A.chelate || B.chelate) && (isMap || isMkp || (has('po4') && (A.npk || B.npk)))) return 'R';
+   852→   852→  if ([aid, bid].some(x => ['nks', 'nk_mg'].includes(x)) && (has('nh4') && has('so4'))) return 'R';
+   853→   853→  if ([aid, bid].some(x => x === 'nks') && [aid, bid].some(x => x === 'sop')) return 'R';
+   854→   854→  if (A.strong_acid && B.strong_acid && aid !== bid) return 'R';
+   855→   855→
+   856→   856→  return 'C';
+   857→   857→}
+   858→   858→
+   859→   859→export const COMPAT_LABELS: Record<'C'|'R'|'I', { label: string; color: string; bg: string; title: string }> = {
+   860→   860→  C: { label: 'C', color: '#14532d', bg: '#bbf7d0', title: 'Compatible' },
+   861→   861→  R: { label: 'R', color: '#713f12', bg: '#fef08a', title: 'Caution' },
+   862→   862→  I: { label: 'I', color: '#7f1d1d', bg: '#fecaca', title: 'Incompatible' },
+   863→   863→};
+   864→   864→
+   865→   865→// ============================================================================
+   866→   866→// 13. NUTRIENT INTERACTIONS — Mulder diagram + mobility + pH curves
+   867→   867→// ============================================================================
+   868→   868→
+   869→   869→export interface IonSpec {
+   870→   870→  id: string;
+   871→   871→  ion: string;
+   872→   872→  name: string;
+   873→   873→  antagonists: string[];
+   874→   874→  synergists: string[];
+   875→   875→  functional: string[];
+   876→   876→  shortTip: string;
+   877→   877→}
+   878→   878→
+   879→   879→export const ION_SPEC: IonSpec[] = [
+   880→   880→  { id: 'no3', ion: 'NO₃⁻', name: 'Nitrate',
+   881→   881→    antagonists: ['cl'], synergists: ['k','nh4','moo4'],
+   882→   882→    functional: ['Protein synthesis (with NH₄⁺)','Anion balance','Cation uptake relation'],
+   883→   883→    shortTip: 'Blue synergies = frequent joint management (e.g. KNO₃, NH₄+NO₃, Mo in NO₃ chain). Excess Cl⁻ can compete for transport.' },
+   884→   884→  { id: 'nh4', ion: 'NH₄⁺', name: 'Ammonium',
+   885→   885→    antagonists: ['k','ca','mg'], synergists: ['h2po4','so4','no3'],
+   886→   886→    functional: ['Direct assimilation','Rhizosphere pH effect'],
+   887→   887→    shortTip: 'High NH₄⁺ can compete with K⁺, Ca²⁺, Mg²⁺ for transport and alter cation balance.' },
+   888→   888→  { id: 'h2po4', ion: 'H₂PO₄⁻', name: 'Phosphate',
+   889→   889→    antagonists: ['zn','fe','cu','mn','ca'], synergists: ['nh4','k','mg'],
+   890→   890→    functional: ['Energy (ATP/ADP)','Nucleic acids','Root strategy'],
+   891→   891→    shortTip: 'High P often antagonizes micros (Zn, Fe, Cu, Mn) and Ca²⁺ (precipitation in calcareous soils).' },
+   892→   892→  { id: 'k', ion: 'K⁺', name: 'Potassium',
+   893→   893→    antagonists: ['mg','ca','nh4'], synergists: ['no3','h2po4','so4','cl'],
+   894→   894→    functional: ['Osmotic regulation','Sugar transport','Stomatal control'],
+   895→   895→    shortTip: 'High K can pressure Mg and Ca uptake, especially with unbalanced cation ratio.' },
+   896→   896→  { id: 'ca', ion: 'Ca²⁺', name: 'Calcium',
+   897→   897→    antagonists: ['mg','k','nh4','h2po4'], synergists: ['so4','no3','moo4'],
+   898→   898→    functional: ['Cell wall','Membranes','Signal transmission'],
+   899→   899→    shortTip: 'Excess P can reduce Ca²⁺ availability by precipitation; low transpiration affects fruit/young tissue delivery.' },
+   900→   900→  { id: 'mg', ion: 'Mg²⁺', name: 'Magnesium',
+   901→   901→    antagonists: ['k','ca','nh4'], synergists: ['h2po4','so4','no3'],
+   902→   902→    functional: ['Chlorophyll center','Enzyme activation'],
+   903→   903→    shortTip: 'Relative excess of K, Ca or NH₄ can affect Mg balance.' },
+   904→   904→  { id: 'so4', ion: 'SO₄²⁻', name: 'Sulfate',
+   905→   905→    antagonists: ['moo4'], synergists: ['no3','nh4','k'],
+   906→   906→    functional: ['Sulfur amino acids','Stress and defense'],
+   907→   907→    shortTip: 'Excess sulfate can affect MoO₄²⁻ uptake (anionic competition).' },
+   908→   908→  { id: 'fe', ion: 'Fe²⁺/Fe³⁺', name: 'Iron',
+   909→   909→    antagonists: ['h2po4','zn','cu','mn'], synergists: ['no3','moo4'],
+   910→   910→    functional: ['Chloroplasts','Redox enzymes'],
+   911→   911→    shortTip: 'High P, Zn, Cu or Mn (in acid) worsen Fe availability; high pH and carbonates too.' },
+   912→   912→  { id: 'mn', ion: 'Mn²⁺', name: 'Manganese',
+   913→   913→    antagonists: ['h2po4','fe','zn','cu'], synergists: ['no3'],
+   914→   914→    functional: ['Photosynthesis','Enzyme activation'],
+   915→   915→    shortTip: 'Interacts with pH and sometimes Fe, Cu, P; with Cu and Zn usually competition dominates.' },
+   916→   916→  { id: 'zn', ion: 'Zn²⁺', name: 'Zinc',
+   917→   917→    antagonists: ['h2po4','cu','ca','fe','mn'], synergists: [],
+   918→   918→    functional: ['Auxins','Enzymes','Membrane integrity'],
+   919→   919→    shortTip: 'High P, Fe or Cu excess, and Mn in acid soils can induce relative Zn deficiency.' },
+   920→   920→  { id: 'cu', ion: 'Cu²⁺', name: 'Copper',
+   921→   921→    antagonists: ['zn','h2po4','fe','mn'], synergists: ['no3'],
+   922→   922→    functional: ['Lignification','Photosynthesis'],
+   923→   923→    shortTip: 'Excess Zn or interference with Fe/P can modify Cu balance.' },
+   924→   924→  { id: 'b', ion: 'H₃BO₃', name: 'Boron',
+   925→   925→    antagonists: ['ca'], synergists: ['nh4'],
+   926→   926→    functional: ['Cell wall','Cell division','Pollination'],
+   927→   927→    shortTip: 'High Ca can reduce B availability; B is sensitive to moisture and leaching.' },
+   928→   928→  { id: 'moo4', ion: 'MoO₄²⁻', name: 'Molybdate',
+   929→   929→    antagonists: ['so4'], synergists: ['no3','nh4'],
+   930→   930→    functional: ['Nitrate reductase','N fixation','Fe cofactors in N chain'],
+   931→   931→    shortTip: 'Excess SO₄²⁻ can compete with MoO₄²⁻.' },
+   932→   932→  { id: 'cl', ion: 'Cl⁻', name: 'Chloride',
+   933→   933→    antagonists: ['no3'], synergists: ['k','nh4'],
+   934→   934→    functional: ['Ionic balance','Photosynthesis (PSII)','Osmotic adaptation'],
+   935→   935→    shortTip: 'Cl⁻ and NO₃⁻ compete in some conditions.' },
+   936→   936→];
+   937→   937→
+   938→   938→export interface ArrivalRow {
+   939→   939→  id: string; lab: string; name: string;
+   940→   940→  mf: number; dif: number; int: number;
+   941→   941→  dom: string; mean: string; dep: string; risk: string;
+   942→   942→}
+   943→   943→
+   944→   944→export const ROOT_ARRIVAL: ArrivalRow[] = [
+   945→   945→  { id:'no3', lab:'NO₃⁻', name:'Nitrate', mf:78, dif:14, int:8,
+   946→   946→    dom:'Mass flow', mean:'Moves well with water toward roots under active transpiration.',
+   947→   947→    dep:'Transpiration, soil moisture, root distribution.', risk:'Leaching if supply exceeds demand.' },
+   948→   948→  { id:'nh4', lab:'NH₄⁺', name:'Ammonium', mf:38, dif:47, int:15,
+   949→   949→    dom:'Diffusion + mass flow', mean:'Largely held on CEC; less mobile than nitrate.',
+   950→   950→    dep:'CEC, moisture, temperature, nitrification.', risk:'Ammonium toxicity if accumulated; competition with K⁺, Ca²⁺, Mg²⁺.' },
+   951→   951→  { id:'h2po4', lab:'H₂PO₄⁻', name:'Phosphate', mf:8, dif:80, int:12,
+   952→   952→    dom:'Diffusion', mean:'Moves slowly toward root; availability ≠ root arrival rate.',
+   953→   953→    dep:'Moisture, active root, pH, Ca, Fe, Al, temperature.', risk:'Soil P may exist but not reach root at demand rate.' },
+   954→   954→  { id:'k', lab:'K⁺', name:'Potassium', mf:24, dif:66, int:10,
+   955→   955→    dom:'Diffusion (strong) + mass flow', mean:'High demand creates depletion zone near root.',
+   956→   956→    dep:'CEC, K buffers, moisture, root density, transpiration.', risk:'Imbalance with other cations; leaching in sandy soils.' },
+   957→   957→  { id:'ca', lab:'Ca²⁺', name:'Calcium', mf:70, dif:18, int:12,
+   958→   958→    dom:'Mass flow + root interception', mean:'Strongly depends on water movement and transpiration.',
+   959→   959→    dep:'Moisture, EC, VPD, active root, tissue demand.', risk:'Ca may be in soil but not reach fruit/young tissues.' },
+   960→   960→  { id:'mg', lab:'Mg²⁺', name:'Magnesium', mf:62, dif:24, int:14,
+   961→   961→    dom:'Mass flow + diffusion', mean:'Less mass-flow dominant than Ca.',
+   962→   962→    dep:'CEC, moisture, competition with K⁺/NH₄⁺/Ca²⁺.', risk:'Relative deficiency with high K fertilization.' },
+   963→   963→  { id:'so4', lab:'SO₄²⁻', name:'Sulfate', mf:58, dif:30, int:12,
+   964→   964→    dom:'Mass flow + diffusion', mean:'Mobile anion; less retained than phosphate.',
+   965→   965→    dep:'Moisture, leaching, S foliar/water supply.', risk:'Leaching; interaction with MoO₄²⁻ in excess.' },
+   966→   966→  { id:'fe', lab:'Fe²⁺/Fe³⁺', name:'Iron', mf:18, dif:58, int:24,
+   967→   967→    dom:'Diffusion + rhizosphere', mean:'Very dilute in solution; mass flow minor vs diffusion + rhizosphere.',
+   968→   968→    dep:'pH, carbonates, redox, competition (Cu, Mn, Zn), rhizosphere.', risk:'Iron chlorosis at high pH even with high total Fe.' },
+   969→   969→  { id:'mn', lab:'Mn²⁺', name:'Manganese', mf:38, dif:42, int:20,
+   970→   970→    dom:'Diffusion + mass flow (pH-dependent)', mean:'Very sensitive to pH and redox.',
+   971→   971→    dep:'Low pH increases Mn availability (toxicity risk).', risk:'Toxicity in acid soils; deficiency in alkaline.' },
+   972→   972→  { id:'zn', lab:'Zn²⁺', name:'Zinc', mf:36, dif:44, int:20,
+   973→   973→    dom:'Diffusion (main)', mean:'Low soil mobility; diffusion to rhizosphere.',
+   974→   974→    dep:'pH, P, carbonates, organic matter.', risk:'Relative deficiency with high P.' },
+   975→   975→  { id:'cu', lab:'Cu²⁺', name:'Copper', mf:34, dif:46, int:20,
+   976→   976→    dom:'Diffusion', mean:'Uptake tied to complexing organic matter and pH.',
+   977→   977→    dep:'pH, OM, antagonisms with Zn/Fe.', risk:'Toxicity from accumulated cupric fungicides.' },
+   978→   978→  { id:'b', lab:'H₃BO₃', name:'Boron', mf:28, dif:48, int:24,
+   979→   979→    dom:'Diffusion + mass flow', mean:'Boric acid diffusion; mass flow with xylem transpiration.',
+   980→   980→    dep:'Moisture, texture, leaching, Ca, pH.', risk:'Deficiency bands from moisture lack; toxicity in excess.' },
+   981→   981→  { id:'moo4', lab:'MoO₄²⁻', name:'Molybdate', mf:40, dif:45, int:15,
+   982→   982→    dom:'Mass flow + diffusion', mean:'Anion competing with sulfate.',
+   983→   983→    dep:'SO₄²⁻, pH, organic matter.', risk:'Deficiency in acid soils.' },
+   984→   984→  { id:'cl', lab:'Cl⁻', name:'Chloride', mf:75, dif:15, int:10,
+   985→   985→    dom:'Mass flow', mean:'Very mobile in solution with water.',
+   986→   986→    dep:'Supply (water/fertilizer), drainage, NO₃⁻.', risk:'Varietal Cl⁻ sensitivity; competition with NO₃⁻.' },
+   987→   987→];
+   988→   988→
+   989→   989→export interface MobilityInfo {
+   990→   990→  mob: string;
+   991→   991→  where: string;
+   992→   992→  sym: string;
+   993→   993→  functions: { text: string; detail: string }[];
+   994→   994→  tip: string;
+   995→   995→}
+   996→   996→
+   997→   997→export const EL_NAMES: Record<string, string> = {
+   998→   998→  N:'Nitrogen', P:'Phosphorus', K:'Potassium', Mg:'Magnesium', Mo:'Molybdenum',
+   999→   999→  S:'Sulfur', Fe:'Iron', Mn:'Manganese', Zn:'Zinc', Cu:'Copper', Ca:'Calcium', B:'Boron',
+  1000→  1000→};
+  1001→  1001→
+  1002→  1002→export const MOBILITY_INFO: Record<string, MobilityInfo> = {
+  1003→  1003→  N: { mob:'High', where:'Old leaves',
+  1004→  1004→    sym:'General chlorosis / yellowing, lower leaves paler',
+  1005→  1005→    functions: [
+  1006→  1006→      { text:'Protein, enzyme, and N-metabolite synthesis', detail:'N is in amino acids and nitrogenous bases; low intake limits mitosis, budbreak, and filling tissue formation.' },
+  1007→  1007→      { text:'Chlorophyll and photosynthesis', detail:'Chlorophyll contains N in its ring; deficiency pales foliage and drops photosynthetic yield.' },
+  1008→  1008→      { text:'Vegetative growth, branching, leaf area', detail:'New shoots and leaves are active sinks; N mobilizes from old tissue.' },
+  1009→  1009→      { text:'Hormone relations and stress response', detail:'Modulates cytokinin routes and shade/salinity/drought responses.' },
+  1010→  1010→    ],
+  1011→  1011→    tip:'Early deficiency often shows on older leaves when N mobilizes to new tissue.' },
+  1012→  1012→  P: { mob:'High', where:'Old leaves',
+  1013→  1013→    sym:'Darker foliage tones, purpling on veins or stems in some crops; reduced growth',
+  1014→  1014→    functions: [
+  1015→  1015→      { text:'Energy (ATP/ADP) and phosphate transfer', detail:'Without ATP no electrogenic transport, biosynthesis, or gradient maintenance.' },
+  1016→  1016→      { text:'Nucleic acids (DNA/RNA) and cell division', detail:'Meristems, flowers, and seeds are exposed because cellular demand grows fast there.' },
+  1017→  1017→      { text:'Root development, flowering, seed/fruit set', detail:'Root architecture and the flowering→set→filling chain need continuous P pulses.' },
+  1018→  1018→      { text:'Metabolic regulation and phosphorylated compounds', detail:'Many signals transit via phosphorylated states.' },
+  1019→  1019→    ],
+  1020→  1020→    tip:'Cold, P-fixing soils or extreme pH can worsen symptoms even when soil test is "medium".' },
+  1021→  1021→  K: { mob:'High', where:'Old leaves',
+  1022→  1022→    sym:'Marginal chlorosis or darkening; edge necrosis ("burn") in advanced cases',
+  1023→  1023→    functions: [
+  1024→  1024→      { text:'Osmotic regulation and stomatal aperture', detail:'K⁺ accompanies guard cells; controls transpiration, CO₂ entry, and cooling.' },
+  1025→  1025→      { text:'Sugar mobilization and fruit osmotic loading', detail:'Photoassimilate movement to fruit often depends on K osmotic gradients.' },
+  1026→  1026→      { text:'Quality (color, flavor, firmness) and stress tolerance', detail:'Affects pigmentation, firmness, and tissue water balance.' },
+  1027→  1027→      { text:'Enzyme activation and ionic balance with other cations', detail:'Coexists in root solution with Ca²⁺, Mg²⁺, NH₄⁺; leaf K/Mg/Ca ratio clarifies better than isolated soil K.' },
+  1028→  1028→    ],
+  1029→  1029→    tip:'Can be confused with Mg; check leaf K/Mg/Ca and marginal vs interveinal symptoms.' },
+  1030→  1030→  Mg: { mob:'High', where:'Old leaves',
+  1031→  1031→    sym:'Interveinal chlorosis on mature blades, veins often greener',
+  1032→  1032→    functions: [
+  1033→  1033→      { text:'Central atom of chlorophyll molecule', detail:'Without stable Mg no functional Mg-porphyrin ring; interveinal chlorosis on mature blades is a frequent signal.' },
+  1034→  1034→      { text:'Photosynthesis and key enzymes', detail:'Cofactor in energy-transfer reactions; "turns off" photochemical routes if low.' },
+  1035→  1035→      { text:'Carbon metabolism and light response', detail:'Integrated photosynthetic yield depends on chloroplast–cytoplasm coupling.' },
+  1036→  1036→      { text:'Lipid synthesis and membrane stability', detail:'Participates in membrane lipids and phospholipids.' },
+  1037→  1037→    ],
+  1038→  1038→    tip:'Relative excess of K, Ca or NH₄ can alter Mg balance even when total seems sufficient.' },
+  1039→  1039→  Mo: { mob:'High', where:'Old leaves (sometimes confused with N deficiency)',
+  1040→  1040→    sym:'General yellowing or mottling; in legumes tied to nitrate-use efficiency',
+  1041→  1041→    functions: [
+  1042→  1042→      { text:'Nitrate reductase cofactor', detail:'NO₃⁻ → NO₂⁻ stops without Mo; symptom may look like "N lack" with nitrate present.' },
+  1043→  1043→      { text:'Biological N fixation in legumes', detail:'Nitrogenase requires Fe–Mo center; nodules exist but effective contribution drops.' },
+  1044→  1044→      { text:'Nucleic acid and sulfur metabolism', detail:'Links with sulfur compounds in nitrogen-assimilation routes.' },
+  1045→  1045→    ],
+  1046→  1046→    tip:'Interpret with species, N form supplied, and leaf symptoms.' },
+  1047→  1047→  S: { mob:'Intermediate / low', where:'Young leaves',
+  1048→  1048→    sym:'More uniform chlorosis on new tissue; sometimes reddish tones',
+  1049→  1049→    functions: [
+  1050→  1050→      { text:'Disulfide bridges in proteins', detail:'Stabilizes protein folding in chloroplasts and tissues.' },
+  1051→  1051→      { text:'Defense compounds and sulfur secondary metabolites', detail:'Glucosinolates and alliins participate in pest/pathogen defense and aromatic quality.' },
+  1052→  1052→      { text:'Photosynthesis (photosystem protein components)', detail:'Several photosystem proteins contain cysteine.' },
+  1053→  1053→    ],
+  1054→  1054→    tip:'In hydroponics or inert media may appear on young leaves before "classic" patterns.' },
+  1055→  1055→  Fe: { mob:'Low', where:'Young leaves',
+  1056→  1056→    sym:'Interveinal chlorosis with greener veins (typical pattern)',
+  1057→  1057→    functions: [
+  1058→  1058→      { text:'Chloroplast synthesis and maintenance', detail:'Fe intervenes in chlorophyll biosynthesis machinery.' },
+  1059→  1059→      { text:'Electron transport chain in photosynthesis and respiration', detail:'Cytochrome complexes depend on Fe.' },
+  1060→  1060→      { text:'Redox enzymes and N metabolism', detail:'N assimilation/reduction uses Fe-S systems.' },
+  1061→  1061→    ],
+  1062→  1062→    tip:'High pH, bicarbonates or cold roots can induce iron chlorosis with high total Fe in soil.' },
+  1063→  1063→  Mn: { mob:'Low', where:'Young leaves',
+  1064→  1064→    sym:'Mottling, interveinal chlorosis; "bird\'s eyes" in some cases',
+  1065→  1065→    functions: [
+  1066→  1066→      { text:'Photosynthesis (photosystem, photoprotection)', detail:'Water-splitting complex carries Mn center.' },
+  1067→  1067→      { text:'Enzyme activation and oxygen metabolism', detail:'Mn²⁺ activates dozens of hydrolases and decarboxylases.' },
+  1068→  1068→      { text:'Oxidative defense (stress context)', detail:'Under high-light/electron overflow, Mn helps balance radicals.' },
+  1069→  1069→    ],
+  1070→  1070→    tip:'Symptoms may resemble Fe; leaf age and symptom pattern help orient.' },
+  1071→  1071→  Zn: { mob:'Low', where:'Young leaves',
+  1072→  1072→    sym:'Smaller leaves, chlorosis, "rigid" or leathery leaves in sensitive crops',
+  1073→  1073→    functions: [
+  1074→  1074→      { text:'Auxins and leaf morphogenesis', detail:'Regulates effective auxin levels in apices; deficiency shows as small "rosette" leaves.' },
+  1075→  1075→      { text:'Enzyme cofactor', detail:'Carbonic anhydrase, carboxypeptidases, Zn-dependent dehydrogenases couple photosynthesis and photoassimilate use.' },
+  1076→  1076→      { text:'Membrane integrity and meristematic growth', detail:'Apical meristem is sensitive because rapid division uses Zn-dependent synthetic routes.' },
+  1077→  1077→    ],
+  1078→  1078→    tip:'High P, cold or root restriction worsen foliar expression.' },
+  1079→  1079→  Cu: { mob:'Low', where:'Young leaves',
+  1080→  1080→    sym:'Deformation, chlorosis; apices may necrose in strong cases',
+  1081→  1081→    functions: [
+  1082→  1082→      { text:'Lignification and cell wall', detail:'Laccases and Cu oxidases harden vessels and sclerenchyma.' },
+  1083→  1083→      { text:'Photosynthesis (plastocyanin) and oxidative metabolism', detail:'Plastocyanin carries electrons between photosystems.' },
+  1084→  1084→      { text:'Pollen and fertility', detail:'Fertile pollen requires enzymatic integrity and pollen wall adequacy.' },
+  1085→  1085→    ],
+  1086→  1086→    tip:'Watch accumulation from cupric fungicides in intensive programs.' },
+  1087→  1087→  Ca: { mob:'Low (poorly redistributed in phloem)', where:'Young tissues, meristems, fruits',
+  1088→  1088→    sym:'Marginal necrosis on new leaves, deformation, blossom-end rot or other fruit necrosis',
+  1089→  1089→    functions: [
+  1090→  1090→      { text:'Cell wall (pectins) and tissue stability', detail:'Ca²⁺ bridges between pectins give firmness; young low-transpiration tissues are typical failure foci.' },
+  1091→  1091→      { text:'Membranes and signaling (calmodulin)', detail:'Calmodulin transduces cytosolic Ca signals; ties drought/wound responses to membrane integrity.' },
+  1092→  1092→      { text:'Fruit and expanding tissue integrity', detail:'Fast-filling fruit (tomato, peppers, berries) show BER even when soil Ca is "adequate".' },
+  1093→  1093→    ],
+  1094→  1094→    tip:'Adequate soil Ca can still fail in fruit/meristem due to low distribution or low local transpiration.' },
+  1095→  1095→  B: { mob:'Low in most crops (exception: polyol-mobile in some)',
+  1096→  1096→    where:'Shoots, buds, meristems, flowers, fruits',
+  1097→  1097→    sym:'Death of growth points, deformation, irregular flowering or fruit set',
+  1098→  1098→    functions: [
+  1099→  1099→      { text:'Cell wall and membrane stability', detail:'B is in the pectin network; deformed shoots or thickened blades suggest poor tissue assembly.' },
+  1100→  1100→      { text:'Pollination (pollen tube) and floral retention', detail:'Pollen tube needs orderly synthesis; floral abortion or low pollen viability can precede necrosis.' },
+  1101→  1101→      { text:'Sugar transport and expanding meristems', detail:'Linked to photoassiminate mobilization to growth points.' },
+  1102→  1102→      { text:'Fruit quality and lignification', detail:'In avocado, deficit relates to deformed fruit, irregular lignification or aborted fruitlets.' },
+  1103→  1103→    ],
+  1104→  1104→    tip:'In avocado, apple/pear (rosaceae) and pollination-sensitive crops, effective B behavior differs from olive or grape.' },
+  1105→  1105→};
+  1106→  1106→
+  1107→  1107→export interface PhNutrient {
+  1108→  1108→  id: string; lab: string; name: string; color: string;
+  1109→  1109→  points: [number, number][];
+  1110→  1110→  tag: string; intro: string; bullets: string[];
+  1111→  1111→}
+  1112→  1112→
+  1113→  1113→export const PH_NUTRIENTS: PhNutrient[] = [
+  1114→  1114→  { id:'N', lab:'N', name:'Nitrogen', color:'#15803d',
+  1115→  1115→    points:[[4,0.12],[4.5,0.22],[5,0.48],[5.5,0.78],[6,0.92],[6.5,0.95],[7,0.93],[7.5,0.86],[8,0.68],[8.5,0.48],[9,0.32]],
+  1116→  1116→    tag:'OM, mineralization, N management',
+  1117→  1117→    intro:'Plant-available N integrates organic (mineralization), applications, and losses; not a single pH-fixed number.',
+  1118→  1118→    bullets:[
+  1119→  1119→      'In <strong>very acid pH</strong>, OM mineralization and useful microbial activity usually drop.',
+  1120→  1120→      'In <strong>intermediate pH</strong>, higher microbial activity and N recycling.',
+  1121→  1121→      'In <strong>high pH</strong>, poor urea/ammonia management can favor <strong>NH₃ volatilization</strong>.',
+  1122→  1122→      '<strong>NO₃⁻</strong> is very mobile: can <strong>leach</strong> with excess water.' ] },
+  1123→  1123→  { id:'P', lab:'P', name:'Phosphorus', color:'#18181b',
+  1124→  1124→    points:[[4,0.2],[4.5,0.28],[5,0.42],[5.5,0.62],[6,0.82],[6.5,0.95],[7,0.88],[7.5,0.55],[8,0.28],[8.5,0.22],[9,0.3]],
+  1125→  1125→    tag:'Chemical fixation in soil',
+  1126→  1126→    intro:'Available P drops sharply when fixed to Fe/Al oxides (acid) or precipitated with Ca (calcareous). Curve peaks at moderate pH.',
+  1127→  1127→    bullets:[
+  1128→  1128→      '<strong>Acid soils</strong>: strong adsorption to <strong>Fe/Al</strong>; P can be "in test" but little in solution.',
+  1129→  1129→      '<strong>Calcareous / high pH</strong>: precipitation with <strong>Ca</strong>, low-solubility phosphates.',
+  1130→  1130→      'Illustrative optimum ~ <strong>6.0–6.8</strong> (not universal: clay, OM and ionic balance change everything).' ] },
+  1131→  1131→  { id:'K', lab:'K', name:'Potassium', color:'#404040',
+  1132→  1132→    points:[[4,0.08],[4.5,0.18],[5,0.38],[5.5,0.62],[6,0.82],[6.5,0.9],[7,0.94],[7.5,0.95],[8,0.96],[8.5,0.95],[9,0.92]],
+  1133→  1133→    tag:'Effective CEC and cation balance',
+  1134→  1134→    intro:'K⁺ exchanges on surfaces; raising pH usually increases effective CEC on variable-charge soils and improves exchangeable pool.',
+  1135→  1135→    bullets:[
+  1136→  1136→      'In <strong>low pH</strong>, lower base saturation relative to Al³⁺/H⁺.',
+  1137→  1137→      'As <strong>pH rises</strong>, <strong>CEC</strong> on variable colloids usually increases → more cation retention.',
+  1138→  1138→      'In <strong>saline / very high K</strong> soils, the issue may be ionic balance, not pH.' ] },
+  1139→  1139→  { id:'S', lab:'S', name:'Sulfur', color:'#0f766e',
+  1140→  1140→    points:[[4,0.1],[4.5,0.22],[5,0.45],[5.5,0.72],[6,0.88],[6.5,0.9],[7,0.88],[7.5,0.82],[8,0.7],[8.5,0.52],[9,0.38]],
+  1141→  1141→    tag:'Sulfate and organic S',
+  1142→  1142→    intro:'Available S relates to OM mineralization and SO₄²⁻ in solution; at high pH the anion can be more mobile and leach.',
+  1143→  1143→    bullets:[
+  1144→  1144→      '<strong>OM</strong>: main organic reservoir; mineralization depends on biota and moisture.',
+  1145→  1145→      '<strong>High pH / heavy irrigation</strong>: <strong>SO₄²⁻ leaching</strong> risk in sandy profiles.',
+  1146→  1146→      'Don\'t confuse with <strong>insufficient supply</strong> in depleted soils.' ] },
+  1147→  1147→  { id:'Ca', lab:'Ca', name:'Calcium', color:'#52525b',
+  1148→  1148→    points:[[4,0.05],[4.5,0.12],[5,0.28],[5.5,0.52],[6,0.78],[6.5,0.9],[7,0.94],[7.5,0.93],[8,0.88],[8.5,0.72],[9,0.55]],
+  1149→  1149→    tag:'CEC, bases, balance',
+  1150→  1150→    intro:'Ca²⁺ is part of the adsorbed complex; usually increases with base saturation near neutral pH, but "available Ca" also depends on carbonates, SO₄, Na and ionic strength.',
+  1151→  1151→    bullets:[
+  1152→  1152→      'In <strong>strong acidification</strong>, more Al/Mn toxic and root pressure even with medium total Ca.',
+  1153→  1153→      'In <strong>calcareous</strong>, high "total" Ca but interference from other ions or low rhizosphere activity.',
+  1154→  1154→      '<strong>BER / tip</strong> sometimes is plant transport, not just "soil pH".' ] },
+  1155→  1155→  { id:'Mg', lab:'Mg', name:'Magnesium', color:'#52525b',
+  1156→  1156→    points:[[4,0.06],[4.5,0.15],[5,0.32],[5.5,0.55],[6,0.78],[6.5,0.88],[7,0.9],[7.5,0.88],[8,0.8],[8.5,0.62],[9,0.45]],
+  1157→  1157→    tag:'CEC and cation competition',
+  1158→  1158→    intro:'Mg²⁺ competes with K⁺, NH₄⁺ and Ca²⁺ for adsorption and transport sites. Curve is indicative.',
+  1159→  1159→    bullets:[
+  1160→  1160→      '<strong>Excess K</strong> can push relative Mg deficiency even with "medium" soil Mg.',
+  1161→  1161→      '<strong>Ca/Mg</strong> patterns in the complex are key in many regions.',
+  1162→  1162→      'In <strong>extreme pH</strong>, the issue may be (Al) toxicity rather than chemical Mg low.' ] },
+  1163→  1163→  { id:'Fe', lab:'Fe', name:'Iron', color:'#dc2626',
+  1164→  1164→    points:[[4,0.96],[4.5,0.92],[5,0.82],[5.5,0.62],[6,0.42],[6.5,0.25],[7,0.14],[7.5,0.08],[8,0.04],[8.5,0.02],[9,0.02]],
+  1165→  1165→    tag:'Oxide/hydroxide precipitation',
+  1166→  1166→    intro:'Available Fe drops sharply with pH by precipitation/hydrolysis; hence iron chlorosis is common in calcareous soils or with bicarbonates in irrigation water.',
+  1167→  1167→    bullets:[
+  1168→  1168→      'Plant takes mainly <strong>Fe²⁺</strong> / chelates, not "total soil Fe".',
+  1169→  1169→      'In <strong>high pH</strong>, supply <strong>chelates</strong> or reduce antagonism (HCO₃⁻).',
+  1170→  1170→      '<strong>Foliar</strong> is useful but the underlying issue is usually rhizosphere chemistry.' ] },
+  1171→  1171→  { id:'Mn', lab:'Mn', name:'Manganese', color:'#dc2626',
+  1172→  1172→    points:[[4,0.92],[4.5,0.88],[5,0.78],[5.5,0.6],[6,0.38],[6.5,0.2],[7,0.1],[7.5,0.05],[8,0.03],[8.5,0.02],[9,0.02]],
+  1173→  1173→    tag:'Redox and pH',
+  1174→  1174→    intro:'Mn becomes more available in acid soils; can be toxic; in alkaline drops and resembles Fe deficiency on young leaves.',
+  1175→  1175→    bullets:[
+  1176→  1176→      'In <strong>low pH</strong> watch <strong>toxicity</strong> rather than deficiency.',
+  1177→  1177→      'In <strong>high pH</strong> can compete with Fe in the symptom picture.',
+  1178→  1178→      'Rhizosphere oxygenation (waterlogging) shifts Mn by <strong>redox</strong>.' ] },
+  1179→  1179→  { id:'B', lab:'B', name:'Boron', color:'#ca8a04',
+  1180→  1180→    points:[[4,0.15],[4.5,0.28],[5,0.52],[5.5,0.78],[6,0.9],[6.5,0.92],[7,0.88],[7.5,0.55],[8,0.28],[8.5,0.35],[9,0.42]],
+  1181→  1181→    tag:'Speciation and leaching',
+  1182→  1182→    intro:'Boric acid / borate changes with pH; intermediate range usually best; in alkaline + irrigation can leach or behave "oddly" in clays.',
+  1183→  1183→    bullets:[
+  1184→  1184→      'Fine management window: little margin between <strong>deficiency and toxicity</strong> in many crops.',
+  1185→  1185→      '<strong>High pH + strong leaching</strong> can drop B even in non-extreme soils.',
+  1186→  1186→      'Variety and <strong>B mobility</strong> change plant symptom.' ] },
+  1187→  1187→  { id:'Cu', lab:'Cu', name:'Copper', color:'#dc2626',
+  1188→  1188→    points:[[4,0.9],[4.5,0.85],[5,0.72],[5.5,0.55],[6,0.4],[6.5,0.28],[7,0.2],[7.5,0.14],[8,0.1],[8.5,0.08],[9,0.06]],
+  1189→  1189→    tag:'Adsorption and complexation',
+  1190→  1190→    intro:'Cu and other positive-charge micros adsorb more strongly as pH rises. In acid, more in solution with toxicity risk if cupric fungicide Cu has accumulated.',
+  1191→  1191→    bullets:[
+  1192→  1192→      '<strong>Organic</strong> soils can strongly complex Cu.',
+  1193→  1193→      'Excess <strong>P</strong> or ionic interactions can modify availability.',
+  1194→  1194→      'Toxicity from <strong>cupric fungicides</strong> in intensive programs.' ] },
+  1195→  1195→  { id:'Zn', lab:'Zn', name:'Zinc', color:'#dc2626',
+  1196→  1196→    points:[[4,0.88],[4.5,0.82],[5,0.68],[5.5,0.52],[6,0.38],[6.5,0.25],[7,0.16],[7.5,0.1],[8,0.07],[8.5,0.05],[9,0.04]],
+  1197→  1197→    tag:'Adsorption and pH',
+  1198→  1198→    intro:'Like Fe/Mn/Cu, Zn is more soluble in acid and drops as pH rises; high carbonates and phosphates worsen "functional availability".',
+  1199→  1199→    bullets:[
+  1200→  1200→      '<strong>High P</strong> can induce relative Zn deficiency.',
+  1201→  1201→      'Cold / compacted roots reduce uptake even with soil Zn.',
+  1202→  1202→      'Check <strong>clay matrix</strong> vs texture (CEC and adsorption).' ] },
+  1203→  1203→  { id:'Mo', lab:'Mo', name:'Molybdenum', color:'#2563eb',
+  1204→  1204→    points:[[4,0.08],[4.5,0.12],[5,0.2],[5.5,0.32],[6,0.48],[6.5,0.62],[7,0.8],[7.5,0.9],[8,0.94],[8.5,0.95],[9,0.96]],
+  1205→  1205→    tag:'Anionic / MoO₄²⁻ form',
+  1206→  1206→    intro:'Mo as molybdate behaves as a higher-charge anion at high pH; in very acid soils lower relative availability depending on mineralogy and adsorption.',
+  1207→  1207→    bullets:[
+  1208→  1208→      'In <strong>extreme acid</strong>, sometimes correct pH or apply Mo accordingly.',
+  1209→  1209→      'Interaction with <strong>SO₄²⁻</strong> excess (anionic competition) can appear.',
+  1210→  1210→      'Important for <strong>nitrate reductase</strong> and legumes (fixation).' ] },
+  1211→  1211→  { id:'Cl', lab:'Cl', name:'Chlorine', color:'#2563eb',
+  1212→  1212→    points:[[4,0.18],[4.5,0.25],[5,0.35],[5.5,0.5],[6,0.65],[6.5,0.78],[7,0.88],[7.5,0.92],[8,0.94],[8.5,0.95],[9,0.94]],
+  1213→  1213→    tag:'Very mobile anion',
+  1214→  1214→    intro:'Cl⁻ is a competing solution anion; "curve" illustrates qualitative availability rather than a universal limit — in water quality and fertilization, excess is more common than deficiency.',
+  1215→  1215→    bullets:[
+  1216→  1216→      '<strong>High mobility</strong> with water flow; can accumulate or wash depending on balance.',
+  1217→  1217→      'Varietal sensitivity to Cl⁻ in certain crops.',
+  1218→  1218→      'Integrate with <strong>irrigation water</strong> analysis and nutrient program.' ] },
+  1219→  1219→  { id:'Al', lab:'Al', name:'Aluminum (toxicity)', color:'#a16207',
+  1220→  1220→    points:[[4,0.98],[4.5,0.88],[5,0.42],[5.5,0.08],[6,0.02],[6.5,0.01],[7,0.01],[7.5,0.01],[8,0.01],[8.5,0.01],[9,0.01]],
+  1221→  1221→    tag:'Toxicity · not a nutrient',
+  1222→  1222→    intro:'"Available" here is a risk signal: Al³⁺ is toxic to roots at very low pH. As pH rises it precipitates as hydroxide (not a fertilizer).',
+  1223→  1223→    bullets:[
+  1224→  1224→      'Strongly associated with <strong>pH < ~5.5</strong> and high exchangeable Al.',
+  1225→  1225→      'Precipitates as <strong>Al(OH)₃</strong> on neutralization.',
+  1226→  1226→      'Mitigate with lime/dolomite/gypsum per diagnosis; always validate with tests.' ] },
+  1227→  1227→];
+  1228→  1228→
+  1229→  1229→// ============================================================================
+  1230→  1230→// 14. MINERALIZABLE N — T_min presets
+  1231→  1231→// ============================================================================
+  1232→  1232→
+  1233→  1233→export interface TMinPreset { tmin: number; label: string; title: string; }
+  1234→  1234→
+  1235→  1235→export const TMIN_PRESETS: TMinPreset[] = [
+  1236→  1236→  { tmin: 1, label: 'Conservative · 1%',  title: 'Cold, dry, compacted or low biological activity soil' },
+  1237→  1237→  { tmin: 2, label: 'Medium · 2%',         title: 'Average agricultural condition', },
+  1238→  1238→  { tmin: 3, label: 'High · 3%',           title: 'Warm, moist, aerated, high biological activity soil' },
+  1239→  1239→];
+  1240→  1240→
+  1241→  1241→export const ROOT_REACH_BY_SYSTEM = [
+  1242→  1242→  { system: 'Extensive closed crop',           pct: '80 – 100' },
+  1243→  1243→  { system: 'Vegetable on bed or row',         pct: '50 – 80'  },
+  1244→  1244→  { system: 'Berry on bed',                    pct: '40 – 70'  },
+  1245→  1245→  { system: 'Young avocado',                   pct: '20 – 50'  },
+  1246→  1246→  { system: 'Adult avocado',                   pct: '50 – 80'  },
+  1247→  1247→  { system: 'Fruit tree with wide alleys',     pct: '40 – 70'  },
+  1248→  1248→  { system: 'Fruit tree with active cover',    pct: '60 – 90'  },
+  1249→  1249→];
+  1250→  1250→
+  1251→  1251→// ============================================================================
+  1252→  1252→// 15. SOIL WATER & TEXTURE — USDA triangle
+  1253→  1253→// ============================================================================
+  1254→  1254→
+  1255→  1255→export interface TextureSeries {
+  1256→  1256→  label: string;
+  1257→  1257→  cc: number;   // field capacity (%)
+  1258→  1258→  pmp: number;  // permanent wilting point (%)
+  1259→  1259→  color: string;
+  1260→  1260→}
+  1261→  1261→
+  1262→  1262→export const TEXTURE_SERIES: TextureSeries[] = [
+  1263→  1263→  { label: 'Sandy',        cc: 12, pmp: 5,  color: '#fde68a' },
+  1264→  1264→  { label: 'Sandy loam',   cc: 22, pmp: 9,  color: '#fcd34d' },
+  1265→  1265→  { label: 'Loam',         cc: 28, pmp: 12, color: '#84cc16' },
+  1266→  1266→  { label: 'Silt loam',    cc: 32, pmp: 14, color: '#22c55e' },
+  1267→  1267→  { label: 'Clay loam',    cc: 36, pmp: 18, color: '#0891b2' },
+  1268→  1268→  { label: 'Clay',         cc: 42, pmp: 22, color: '#1e40af' },
+  1269→  1269→];
+  1270→  1270→
+  1271→  1271→export interface UsdaRegion {
+  1272→  1272→  name: string;
+  1273→  1273→  vertices: [number, number][];  // [x, y] in SVG coords (clay, silt, sand)%
+  1274→  1274→  color: string;
+  1275→  1275→}
+  1276→  1276→
+  1277→  1277→// USDA 12-class texture triangle polygons (simplified). Vertices in (clay, silt, sand) %.
+  1278→  1278→export const USDA_REGIONS: { name: string; clay: number[]; silt: number[]; sand: number[]; color: string }[] = [
+  1279→  1279→  // Sand
+  1280→  1280→  { name: 'Sand',            clay: [0,0,0],              silt: [0,0,0],            sand: [100,85,100],   color: '#fde68a' },
+  1281→  1281→  // Loamy sand
+  1282→  1282→  { name: 'Loamy sand',      clay: [0,0,10,10,0],        silt: [0,15,15,0,0],      sand: [100,85,75,90,100], color: '#fcd34d' },
+  1283→  1283→  // Sandy loam
+  1284→  1284→  { name: 'Sandy loam',      clay: [0,0,10,15,20,20,0],  silt: [0,15,30,30,30,0,0],sand: [100,85,60,55,50,80,100], color: '#facc15' },
+  1285→  1285→  // Silt
+  1286→  1286→  { name: 'Silt',            clay: [0,0,10,0],           silt: [70,100,80,80],     sand: [30,0,10,20],   color: '#a3e635' },
+  1287→  1287→  // Silt loam
+  1288→  1288→  { name: 'Silt loam',       clay: [0,0,15,15,0],        silt: [50,80,50,80,50],   sand: [50,20,35,5,50], color: '#84cc16' },
+  1289→  1289→  // Loam
+  1290→  1290→  { name: 'Loam',            clay: [10,10,20,20,10],     silt: [30,45,30,45,30],   sand: [60,45,50,35,60], color: '#65a30d' },
+  1291→  1291→  // Sandy clay loam
+  1292→  1292→  { name: 'Sandy clay loam', clay: [20,20,30,30,20],     silt: [0,20,20,30,30],    sand: [80,60,50,40,50], color: '#ca8a04' },
+  1293→  1293→  // Silty clay loam
+  1294→  1294→  { name: 'Silty clay loam', clay: [30,30,40,40,30],     silt: [50,80,50,60,60],   sand: [20,0,10,0,10], color: '#16a34a' },
+  1295→  1295→  // Clay loam
+  1296→  1296→  { name: 'Clay loam',       clay: [30,30,40,40,30],     silt: [20,50,20,40,40],   sand: [50,20,40,20,30], color: '#15803d' },
+  1297→  1297→  // Sandy clay
+  1298→  1298→  { name: 'Sandy clay',      clay: [30,30,40,40,30],     silt: [0,20,0,20,0],      sand: [70,50,60,40,70], color: '#b45309' },
+  1299→  1299→  // Silty clay
+  1300→  1300→  { name: 'Silty clay',      clay: [40,40,60,60,40],     silt: [40,60,40,60,40],   sand: [20,0,0,0,20],   color: '#166534' },
+  1301→  1301→  // Clay
+  1302→  1302→  { name: 'Clay',            clay: [40,40,60,60,40],     silt: [0,40,0,40,0],      sand: [60,20,40,0,60], color: '#1e40af' },
+  1303→  1303→];
+  1304→  1304→
+  1305→  1305→// ============================================================================
+  1306→  1306→// 16. SOLUBILITY & SALT INDEX
+  1307→  1307→// ============================================================================
+  1308→  1308→
+  1309→  1309→export interface SolubilityRow {
+  1310→  1310→  name: string;
+  1311→  1311→  formula: string;
+  1312→  1312→  solLo: number;
+  1313→  1313→  solHi: number;
+  1314→  1314→  is: number | null;
+  1315→  1315→  noteIs?: string;
+  1316→  1316→  note?: string;
+  1317→  1317→}
+  1318→  1318→
+  1319→  1319→export const SOLUBILITY_ROWS: SolubilityRow[] = [
+  1320→  1320→  { name: 'Ammonium nitrate',        formula: 'NH₄NO₃',     solLo: 1850, solHi: 1950, is: 104.7 },
+  1321→  1321→  { name: 'Magnesium nitrate',       formula: 'Mg(NO₃)₂',   solLo: 1200, solHi: 1300, is: 60.5 },
+  1322→  1322→  { name: 'Calcium nitrate',         formula: 'Ca(NO₃)₂',   solLo: 1150, solHi: 1250, is: 40.7 },
+  1323→  1323→  { name: 'Potassium nitrate',       formula: 'KNO₃',       solLo: 300,  solHi: 330,  is: 73.6 },
+  1324→  1324→  { name: 'Urea',                    formula: 'CH₄N₂O',     solLo: 1000, solHi: 1150, is: 75.4 },
+  1325→  1325→  { name: 'MAP',                     formula: 'NH₄H₂PO₄',   solLo: 350,  solHi: 400,  is: 26.7 },
+  1326→  1326→  { name: 'MKP',                     formula: 'KH₂PO₄',     solLo: 200,  solHi: 240,  is: 8.4 },
+  1327→  1327→  { name: 'Potassium chloride',      formula: 'KCl',        solLo: 320,  solHi: 360,  is: 116.3 },
+  1328→  1328→  { name: 'Ammonium sulfate',        formula: '(NH₄)₂SO₄',  solLo: 720,  solHi: 780,  is: 69.0 },
+  1329→  1329→  { name: 'Magnesium sulfate',       formula: 'MgSO₄',      solLo: 680,  solHi: 740,  is: 44.0 },
+  1330→  1330→  { name: 'Potassium sulfate',       formula: 'K₂SO₄',      solLo: 105,  solHi: 115,  is: 46.0 },
+  1331→  1331→  { name: 'Calcium sulfate (gypsum)',formula: 'CaSO₄',      solLo: 1.5,  solHi: 2.8,  is: 8, noteIs: '~', note: 'Amendment · not soluble in fertigation (reference).' },
+  1332→  1332→  { name: 'Calcium carbonate',       formula: 'CaCO₃',      solLo: 0.01, solHi: 0.03, is: null, noteIs: '—', note: 'Amendment · not soluble in fertigation (reference).' },
+  1333→  1333→];
+  1334→  1334→
+  1335→  1335→export function solubilityClass(mid: number): { label: string; color: string } {
+  1336→  1336→  if (mid > 500) return { label: 'High', color: '#2563eb' };
+  1337→  1337→  if (mid >= 100) return { label: 'Medium', color: '#ca8a04' };
+  1338→  1338→  return { label: 'Low', color: '#dc2626' };
+  1339→  1339→}
+  1340→  1340→
+  1341→  1341→// ============================================================================
+  1342→  1342→// 17. FERTILIZER CARBON FOOTPRINT — emission factors (IPCC / Fertilizers Europe)
+  1343→  1343→// ============================================================================
+  1344→  1344→
+  1345→  1345→export interface CarbonFactorRow {
+  1346→  1346→  id: string;
+  1347→  1347→  name: string;
+  1348→  1348→  formula: string;
+  1349→  1349→  /** kg CO2e per kg product manufactured (Fertilizers Europe 2020 average, cradle-to-gate). */
+  1350→  1350→  mfg: number;
+  1351→  1351→  /** kg N per kg product (for N₂O field emission calc). */
+  1352→  1352→  nContent: number;
+  1353→  1353→}
+  1354→  1354→
+  1355→  1355→export const CARBON_FACTORS: CarbonFactorRow[] = [
+  1356→  1356→  { id: 'urea',              name: 'Urea',                  formula: 'CH₄N₂O',    mfg: 1.58, nContent: 0.466 },
+  1357→  1357→  { id: 'ammonium_nitrate',  name: 'Ammonium Nitrate',      formula: 'NH₄NO₃',    mfg: 2.65, nContent: 0.350 },
+  1358→  1358→  { id: 'can',               name: 'Calcium Ammonium Nitrate', formula: '5Ca(NO₃)₂+NH₄NO₃+H₂O', mfg: 2.95, nContent: 0.270 },
+  1359→  1359→  { id: 'ammonium_sulfate',  name: 'Ammonium Sulfate',      formula: '(NH₄)₂SO₄', mfg: 1.40, nContent: 0.212 },
+  1360→  1360→  { id: 'dap',               name: 'DAP',                   formula: '(NH₄)₂HPO₄', mfg: 2.05, nContent: 0.180 },
+  1361→  1361→  { id: 'map',               name: 'MAP',                   formula: 'NH₄H₂PO₄',  mfg: 1.71, nContent: 0.110 },
+  1362→  1362→  { id: 'potassium_nitrate', name: 'Potassium Nitrate',     formula: 'KNO₃',      mfg: 1.91, nContent: 0.138 },
+  1363→  1363→  { id: 'calcium_nitrate',   name: 'Calcium Nitrate',       formula: 'Ca(NO₃)₂',  mfg: 1.69, nContent: 0.155 },
+  1364→  1364→  { id: 'potassium_chloride',name: 'Potassium Chloride',    formula: 'KCl',       mfg: 0.35, nContent: 0 },
+  1365→  1365→  { id: 'potassium_sulfate', name: 'Potassium Sulfate',     formula: 'K₂SO₄',     mfg: 0.85, nContent: 0 },
+  1366→  1366→  { id: 'magnesium_sulfate', name: 'Magnesium Sulfate',     formula: 'MgSO₄',     mfg: 0.65, nContent: 0 },
+  1367→  1367→];
+  1368→  1368→
+  1369→  1369→// IPCC 2006 Tier 1: 0.01 kg N2O-N per kg N applied, GWP N2O = 298 (AR5 w/o climate feedback)
+  1370→  1370→export const N2O_EF = 0.01;          // kg N2O-N / kg N
+  1371→  1371→export const N2O_GWP = 298;          // CO2e / N2O
+  1372→  1372→export const N2O_MW_RATIO = 44 / 28; // N2O / N
+  1373→  1373→
+  1374→  1374→/** kg CO2e from field N2O per kg product applied */
+  1375→  1375→export function fieldN2oCo2e(nContent: number): number {
+  1376→  1376→  return nContent * N2O_EF * N2O_MW_RATIO * N2O_GWP;
+  1377→  1377→}
+  1378→  1378→
+  1379→  1379→export const PICKUP_KG_CO2E_PER_KM = 0.254;
+  1380→  1380→
+  1381→  1381→export interface CarbonRow {
+  1382→  1382→  id: string;
+  1383→  1383→  fertilizerId: string;
+  1384→  1384→  rateKgPerHa: number;
+  1385→  1385→  originKm: number;       // road km from plant to port/depot
+  1386→  1386→  seaKm: number;          // sea km
+  1387→  1387→  portKm: number;         // road km from port to field
+  1388→  1388→  mode: 'estimated' | 'custom_per_kg' | 'custom_total_mfg';
+  1389→  1389→  customPerKg?: number;
+  1390→  1390→  customTotalMfg?: number;
+  1391→  1391→}
+  1392→  1392→
+  1393→  1393→export interface CarbonResult {
+  1394→  1394→  mfg: number;
+  1395→  1395→  transport: number;
+  1396→  1396→  field: number;
+  1397→  1397→  total: number;
+  1398→  1398→  pickupKm: number;
+  1399→  1399→}
+  1400→  1400→
+  1401→  1401→/** Compute emissions for one fertilizer row (kg CO2e / ha). */
+  1402→  1402→export function computeCarbonRow(row: CarbonRow): CarbonResult {
+  1403→  1403→  const factor = CARBON_FACTORS.find(f => f.id === row.fertilizerId);
+  1404→  1404→  let mfg = 0;
+  1405→  1405→  if (row.mode === 'custom_total_mfg' && row.customTotalMfg != null) {
+  1406→  1406→    mfg = row.customTotalMfg;
+  1407→  1407→  } else if (row.mode === 'custom_per_kg' && row.customPerKg != null) {
+  1408→  1408→    mfg = row.customPerKg * row.rateKgPerHa;
+  1409→  1409→  } else if (factor) {
+  1410→  1410→    mfg = factor.mfg * row.rateKgPerHa;
+  1411→  1411→  }
+  1412→  1412→  // Transport: road ~0.107 kg CO2e/t·km, sea ~0.016 kg CO2e/t·km (DEFRA 2024 averages)
+  1413→  1413→  const roadFactor = 0.000107; // kg CO2e per kg·km
+  1414→  1414→  const seaFactor  = 0.000016; // kg CO2e per kg·km
+  1415→  1415→  const transport = (row.originKm + row.portKm) * roadFactor * row.rateKgPerHa
+  1416→  1416→                  + row.seaKm * seaFactor * row.rateKgPerHa;
+  1417→  1417→  // Field N2O
+  1418→  1418→  const field = factor ? fieldN2oCo2e(factor.nContent) * row.rateKgPerHa : 0;
+  1419→  1419→  const total = mfg + transport + field;
+  1420→  1420→  const pickupKm = total / PICKUP_KG_CO2E_PER_KM;
+  1421→  1421→  return { mfg, transport, field, total, pickupKm };
+  1422→  1422→}
+  1423→  1423→
+  1424→  1424→// ============================================================================
+  1425→  1425→// 18. IRRIGATION SHEET — basic FAO-56
+  1426→  1426→// ============================================================================
+  1427→  1427→
+  1428→  1428→export interface IrrigationResult {
+  1429→  1429→  etc: number;        // mm
+  1430→  1430→  irrigationMm: number;
+  1431→  1431→  rain: number;
+  1432→  1432→  balance: number;    // mm  (positive = surplus, negative = deficit)
+  1433→  1433→  totalVolumeM3: number;
+  1434→  1434→  periodDays: number;
+  1435→  1435→}
+  1436→  1436→
+  1437→  1437→export function computeIrrigation(params: {
+  1438→  1438→  et0: number;        // mm (per period)
+  1439→  1439→  kc: number;
+  1440→  1440→  rain: number;       // mm (per period)
+  1441→  1441→  irrigationM3: number;
+  1442→  1442→  irrigatedAreaHa: number;
+  1443→  1443→  cropAreaHa: number;
+  1444→  1444→  periodDays: number;
+  1445→  1445→}): IrrigationResult {
+  1446→  1446→  const etc = params.kc * params.et0;
+  1447→  1447→  const irrigationMm = params.irrigatedAreaHa > 0
+  1448→  1448→    ? params.irrigationM3 / (params.irrigatedAreaHa * 10)
+  1449→  1449→    : 0;
+  1450→  1450→  const balance = irrigationMm + params.rain - etc;
+  1451→  1451→  const totalVolumeM3 = etc * params.cropAreaHa * 10;
+  1452→  1452→  return {
+  1453→  1453→    etc: Math.round(etc * 100) / 100,
+  1454→  1454→    irrigationMm: Math.round(irrigationMm * 100) / 100,
+  1455→  1455→    rain: params.rain,
+  1456→  1456→    balance: Math.round(balance * 100) / 100,
+  1457→  1457→    totalVolumeM3: Math.round(totalVolumeM3),
+  1458→  1458→    periodDays: params.periodDays,
+  1459→  1459→  };
+  1460→  1460→}
+  1461→  1461→
+  1462→  1462→// ============================================================================
+  1463→  1463→// Shared helpers
+  1464→  1464→// ============================================================================
+  1465→  1465→
+  1466→  1466→export function fmt(n: number | null | undefined, dec = 2): string {
+  1467→  1467→  if (n == null || !Number.isFinite(n)) return '—';
+  1468→  1468→  return n.toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+  1469→  1469→}
+  1470→  1470→
+  1471→  1471→export function parseNum(v: string | number | null | undefined, fallback = 0): number {
+  1472→  1472→  if (typeof v === 'number') return Number.isFinite(v) ? v : fallback;
+  1473→  1473→  if (v == null) return fallback;
+  1474→  1474→  const s = String(v).replace(',', '.').trim();
+  1475→  1475→  const n = parseFloat(s);
+  1476→  1476→  return Number.isFinite(n) ? n : fallback;
+  1477→  1477→}
+  1478→  1478→
+  1479→  1479→export function clamp(x: number, lo: number, hi: number): number {
+  1480→  1480→  return Math.min(hi, Math.max(lo, x));
+  1481→  1481→}
+  1482→  1482→

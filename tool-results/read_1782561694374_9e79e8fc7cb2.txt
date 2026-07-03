@@ -1,0 +1,721 @@
+     1→<!DOCTYPE html>
+     2→<html lang="es">
+     3→<head>
+     4→  <meta charset="UTF-8" />
+     5→  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+     6→  <link rel="stylesheet" href="assets/free-tools-watermark.css" />
+     7→  <script src="assets/free-tools-embed.js"></script>
+     8→  <title>Tabla Periódica (Nutrientes Esenciales)</title>
+     9→  <style>
+    10→    body { margin: 0; padding: 14px 14px 22px; background: #f8fafc; font-family: Inter, system-ui, sans-serif; color: #0f172a; }
+    11→    h1 { margin: 0 0 8px; font-size: 1.2rem; color: #0f172a; }
+    12→    .lead { margin: 0 0 12px; color: #475569; font-size: 13px; line-height: 1.45; }
+    13→    .legend { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    14→    .chip { font-size: 11px; font-weight: 700; border-radius: 999px; padding: 4px 10px; border: 1px solid transparent; }
+    15→    .chip.essential { background: #ecfdf5; border-color: #86efac; color: #14532d; }
+    16→    .chip.beneficial { background: #eff6ff; border-color: #93c5fd; color: #1e3a8a; }
+    17→    .chip.cho { background: #fff7ed; border-color: #fdba74; color: #9a3412; }
+    18→    .chip.other { background: #f1f5f9; border-color: #cbd5e1; color: #64748b; }
+    19→
+    20→    .board-wrap { overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; padding: 12px; }
+    21→    .board {
+    22→      min-width: 1200px;
+    23→      width: max-content;
+    24→      margin: 0 auto;
+    25→      display: grid;
+    26→      grid-template-columns: 44px repeat(18, 56px) 92px;
+    27→      grid-template-rows: 24px repeat(9, 56px);
+    28→      gap: 4px;
+    29→    }
+    30→    .group-label {
+    31→      display: flex; align-items: center; justify-content: center;
+    32→      font-size: 10px; font-weight: 700; color: #334155;
+    33→      background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px;
+    34→    }
+    35→    .period-label {
+    36→      display: flex; align-items: center; justify-content: center;
+    37→      font-size: 10px; font-weight: 700; color: #334155;
+    38→      background: #f8fafc; border: 1px dashed #94a3b8; border-radius: 6px;
+    39→    }
+    40→    .el {
+    41→      border-radius: 8px;
+    42→      border: 1px solid #cbd5e1;
+    43→      padding: 4px;
+    44→      background: #f8fafc;
+    45→      color: #0f172a;
+    46→      cursor: pointer;
+    47→      text-align: left;
+    48→      opacity: 0.42;
+    49→      transition: transform .08s ease, box-shadow .15s ease, opacity .12s ease;
+    50→    }
+    51→    .el:hover { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(15,23,42,.10); }
+    52→    .el .z { display: block; font-size: 10px; color: #64748b; line-height: 1; }
+    53→    .el .s { display: block; font-size: 18px; font-weight: 800; line-height: 1.1; margin-top: 3px; }
+    54→    .el .n { display: block; font-size: 9px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+    55→    .el.essential { background: #ecfdf5; border-color: #86efac; opacity: 1; }
+    56→    .el.beneficial { background: #eff6ff; border-color: #93c5fd; opacity: 1; }
+    57→    .el.cho { background: #fff7ed; border-color: #fdba74; opacity: 1; }
+    58→    .el.selected { outline: 2px solid #2563eb; }
+    59→
+    60→    .ln-label, .ac-label {
+    61→      display: flex; align-items: center; justify-content: center;
+    62→      border-radius: 8px; border: 1px dashed #94a3b8; font-size: 10px; color: #475569;
+    63→      background: #f8fafc;
+    64→    }
+    65→    .ln-label { grid-column: 4; grid-row: 9; }
+    66→    .ac-label { grid-column: 4; grid-row: 10; }
+    67→    .side-block {
+    68→      display: flex; align-items: center; justify-content: center; text-align: center;
+    69→      font-size: 10px; font-weight: 700; color: #475569;
+    70→      background: #f8fafc; border: 1px dashed #94a3b8; border-radius: 8px; padding: 4px;
+    71→      line-height: 1.25;
+    72→    }
+    73→    .sb-s { grid-column: 20; grid-row: 3; }
+    74→    .sb-p { grid-column: 20; grid-row: 4; }
+    75→    .sb-d { grid-column: 20; grid-row: 6; }
+    76→    .sb-f { grid-column: 20; grid-row: 9 / span 2; }
+    77→
+    78→    .panel {
+    79→      margin-top: 12px;
+    80→      background: #fff;
+    81→      border: 1px solid #dbeafe;
+    82→      border-radius: 12px;
+    83→      padding: 12px;
+    84→      box-shadow: 0 2px 8px rgba(30, 64, 175, 0.08);
+    85→    }
+    86→    .panel h2 { margin: 0; font-size: 1rem; color: #1e3a8a; }
+    87→    .meta { margin-top: 4px; font-size: 12px; color: #64748b; }
+    88→    .grid { margin-top: 10px; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; }
+    89→    .card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px; background: #f8fafc; }
+    90→    .card .k { font-size: 11px; font-weight: 700; color: #334155; }
+    91→    .card .v { margin-top: 3px; font-size: 14px; font-weight: 700; color: #0f172a; }
+    92→    .role { margin-top: 10px; font-size: 13px; color: #334155; line-height: 1.45; }
+    93→    .foot { margin-top: 10px; font-size: 11px; color: #64748b; }
+    94→
+    95→    .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+    96→    .tab-btn {
+    97→      border: 1px solid #cbd5e1; background: #fff; color: #334155;
+    98→      border-radius: 999px; padding: 8px 14px; font-size: 13px; font-weight: 700; cursor: pointer;
+    99→    }
+   100→    .tab-btn.active { background: #1e3a8a; border-color: #1e3a8a; color: #fff; }
+   101→    .tab-pane { display: none; }
+   102→    .tab-pane.active { display: block; }
+   103→
+   104→    .mol-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; margin-bottom: 10px; }
+   105→    .mol-row label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 700; color: #334155; flex: 1 1 220px; }
+   106→    .mol-row input[type="text"] {
+   107→      width: 100%; box-sizing: border-box; padding: 10px 12px;
+   108→      border: 1px solid #cbd5e1; border-radius: 8px; font-size: 15px; font-family: ui-monospace, monospace;
+   109→    }
+   110→    .mol-btn {
+   111→      border: 0; border-radius: 8px; padding: 10px 16px; font-weight: 700; font-size: 13px; cursor: pointer;
+   112→      background: #16a34a; color: #fff;
+   113→    }
+   114→    .mol-btn.secondary { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; }
+   115→    .mol-hint { margin: 0 0 10px; font-size: 12px; color: #64748b; line-height: 1.45; }
+   116→    .mol-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+   117→    .mol-chip {
+   118→      border: 1px solid #93c5fd; background: #eff6ff; color: #1e40af;
+   119→      border-radius: 999px; padding: 4px 10px; font-size: 11px; font-weight: 700; cursor: pointer;
+   120→    }
+   121→    .mol-insert-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0 0 10px; }
+   122→    .mol-insert-lbl { font-size: 11px; font-weight: 700; color: #64748b; }
+   123→    .mol-ins {
+   124→      border: 1px solid #cbd5e1; background: #fff; color: #334155;
+   125→      border-radius: 8px; padding: 5px 10px; font-size: 13px; font-weight: 700; cursor: pointer;
+   126→      font-family: ui-monospace, monospace;
+   127→    }
+   128→    .mol-ins:hover { background: #f1f5f9; border-color: #94a3b8; }
+   129→    .mol-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 8px; margin: 12px 0; }
+   130→    .mol-summary .card { border-color: #86efac; background: #f0fdf4; }
+   131→    .mol-err { color: #b91c1c; font-size: 13px; margin: 8px 0 0; font-weight: 600; }
+   132→    .mol-table-wrap { overflow-x: auto; margin-top: 10px; }
+   133→    table.mol-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+   134→    table.mol-table th, table.mol-table td { border: 1px solid #e2e8f0; padding: 8px 10px; text-align: left; }
+   135→    table.mol-table th { background: #f1f5f9; color: #334155; font-size: 11px; text-transform: uppercase; letter-spacing: .02em; }
+   136→    table.mol-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+   137→    table.mol-table tr.is-nutrient td { background: #f0fdf4; }
+   138→    .mol-bar { height: 6px; border-radius: 999px; background: #e2e8f0; margin-top: 4px; overflow: hidden; }
+   139→    .mol-bar > span { display: block; height: 100%; background: #16a34a; border-radius: 999px; }
+   140→    .mol-section-title { margin: 16px 0 8px; font-size: 13px; font-weight: 800; color: #1e3a8a; }
+   141→    .mol-groups { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
+   142→    .mol-group-card {
+   143→      background: #eff6ff; border: 1px solid #93c5fd; border-radius: 10px;
+   144→      padding: 8px 12px; font-size: 12px; color: #1e3a8a;
+   145→    }
+   146→    .mol-group-card strong { display: block; font-size: 16px; color: #0f172a; }
+   147→  </style>
+   148→</head>
+   149→<body>
+   150→  <div class="np-free-tool-head">
+   151→    <h1 class="np-free-tool-title">⚛️ Tabla Periódica (Nutrientes Esenciales)</h1>
+   152→    <div class="np-free-watermark" aria-hidden="true"><img src="assets/N_Hoja_Azul.png" alt=""></div>
+   153→  </div>
+   154→
+   155→  <div class="tabs" role="tablist">
+   156→    <button type="button" class="tab-btn active" data-tab="table" role="tab" aria-selected="true">Tabla periódica</button>
+   157→    <button type="button" class="tab-btn" data-tab="mol" role="tab" aria-selected="false">Peso molecular</button>
+   158→  </div>
+   159→
+   160→  <div id="paneTable" class="tab-pane active" role="tabpanel">
+   161→  <p class="lead">Elementos de interés para nutrición vegetal resaltados. Toca cualquier cuadro para ver ficha rápida (número atómico, peso atómico, valencias, radio atómico y electronegatividad).</p>
+   162→
+   163→  <div class="legend">
+   164→    <span class="chip essential">Nutriente esencial</span>
+   165→    <span class="chip beneficial">Elemento benéfico</span>
+   166→    <span class="chip cho">Estructural (C-H-O)</span>
+   167→    <span class="chip other">Resto de la tabla (opaco)</span>
+   168→  </div>
+   169→
+   170→  <div class="board-wrap">
+   171→    <div id="board" class="board">
+   172→      <div class="side-block sb-s">Bloque s<br>(G1–2 + He)</div>
+   173→      <div class="side-block sb-p">Bloque p<br>(G13–18)</div>
+   174→      <div class="side-block sb-d">Bloque d<br>(G3–12)</div>
+   175→      <div class="side-block sb-f">Bloque f<br>(Lant./Act.)</div>
+   176→      <div class="ln-label">Lantánidos</div>
+   177→      <div class="ac-label">Actínidos</div>
+   178→    </div>
+   179→  </div>
+   180→
+   181→  <div class="panel">
+   182→    <h2 id="selTitle">Selecciona un elemento</h2>
+   183→    <div id="selMeta" class="meta">Pulsa un cuadro de la tabla para ver detalles.</div>
+   184→    <div id="selGrid" class="grid"></div>
+   185→    <div id="selRole" class="role"></div>
+   186→    <button type="button" id="selUseInMol" class="mol-btn" style="margin-top:10px;">+ Usar en calculadora molecular</button>
+   187→    <div class="foot">Nota: algunos datos pueden mostrarse como “—” cuando no se usan comúnmente en agronomía práctica de campo.</div>
+   188→  </div>
+   189→  </div>
+   190→
+   191→  <div id="paneMol" class="tab-pane" role="tabpanel">
+   192→    <p class="lead">Escribe una <strong>fórmula química</strong> (elemento o molécula) y obtén su <strong>peso molecular (g/mol)</strong> y el <strong>% de peso de cada átomo</strong> en la molécula. Para sales dobles, hidratos o mezclas de varias moléculas usa la herramienta <strong>Composición de fertilizantes</strong>.</p>
+   193→    <div class="panel">
+   194→      <h2>Peso molecular y composición elemental</h2>
+   195→      <p class="mol-hint">Desde la pestaña <strong>Tabla periódica</strong>, selecciona un elemento y pulsa <strong>+ Usar en calculadora molecular</strong>. Ejemplos de moléculas:</p>
+   196→      <div class="mol-chips" id="molExamples"></div>
+   197→      <div class="mol-row">
+   198→        <label>Fórmula
+   199→          <input type="text" id="molFormula" placeholder="KNO3, H2SO4, Ca(NO3)2, NH4NO3" autocomplete="off" spellcheck="false" />
+   200→        </label>
+   201→        <button type="button" class="mol-btn" id="molCalcBtn">Calcular</button>
+   202→        <button type="button" class="mol-btn secondary" id="molClearBtn">Limpiar</button>
+   203→      </div>
+   204→      <p id="molError" class="mol-err" hidden></p>
+   205→      <div id="molResults" hidden>
+   206→        <div class="mol-summary" id="molSummary"></div>
+   207→        <p class="mol-section-title">Composición elemental (%)</p>
+   208→        <div class="mol-table-wrap">
+   209→          <table class="mol-table">
+   210→            <thead>
+   211→              <tr>
+   212→                <th>Elemento</th>
+   213→                <th>Átomos</th>
+   214→                <th>Masa parcial (g/mol)</th>
+   215→                <th>% en molécula</th>
+   216→                <th>P. eq. meq (g/eq)</th>
+   217→              </tr>
+   218→            </thead>
+   219→            <tbody id="molTableBody"></tbody>
+   220→          </table>
+   221→        </div>
+   222→        <p class="foot">P. eq. meq = peso atómico ÷ valencia agronómica habitual (meq/L ↔ ppm elemental en NutriPlant). Peso equivalente de la molécula = PM ÷ n cuando se detecta ácido/base típico (H⁺ u OH⁻ intercambiables).</p>
+   223→      </div>
+   224→    </div>
+   225→  </div>
+   226→
+   227→  <script>
+   228→    const ESSENTIAL = new Set(['N','P','K','Ca','Mg','S','Fe','Mn','Zn','Cu','B','Mo','Cl','Ni']);
+   229→    const BENEFICIAL = new Set(['Si','Na','Ti','Al','Co','Se','V']);
+   230→    const CHO = new Set(['C','H','O']);
+   231→
+   232→    const ATOMIC_WEIGHTS = {
+   233→      H:1.008, He:4.003, Li:6.94, Be:9.012, B:10.81, C:12.011, N:14.007, O:15.999, F:18.998, Ne:20.180,
+   234→      Na:22.990, Mg:24.305, Al:26.982, Si:28.085, P:30.974, S:32.06, Cl:35.45, Ar:39.948,
+   235→      K:39.098, Ca:40.078, Sc:44.956, Ti:47.867, V:50.942, Cr:51.996, Mn:54.938, Fe:55.845, Co:58.933, Ni:58.693,
+   236→      Cu:63.546, Zn:65.38, Ga:69.723, Ge:72.630, As:74.922, Se:78.971, Br:79.904, Kr:83.798,
+   237→      Rb:85.468, Sr:87.62, Y:88.906, Zr:91.224, Nb:92.906, Mo:95.95, Tc:98, Ru:101.07, Rh:102.91, Pd:106.42,
+   238→      Ag:107.87, Cd:112.41, In:114.82, Sn:118.71, Sb:121.76, Te:127.60, I:126.90, Xe:131.29,
+   239→      Cs:132.91, Ba:137.33, La:138.91, Ce:140.12, Pr:140.91, Nd:144.24, Pm:145, Sm:150.36, Eu:151.96, Gd:157.25,
+   240→      Tb:158.93, Dy:162.50, Ho:164.93, Er:167.26, Tm:168.93, Yb:173.05, Lu:174.97, Hf:178.49, Ta:180.95, W:183.84,
+   241→      Re:186.21, Os:190.23, Ir:192.22, Pt:195.08, Au:196.97, Hg:200.59, Tl:204.38, Pb:207.2, Bi:208.98, Po:209,
+   242→      At:210, Rn:222, Fr:223, Ra:226, Ac:227, Th:232.04, Pa:231.04, U:238.03, Np:237, Pu:244, Am:243, Cm:247,
+   243→      Bk:247, Cf:251, Es:252, Fm:257, Md:258, No:259, Lr:266, Rf:267, Db:268, Sg:269, Bh:270, Hs:277, Mt:278,
+   244→      Ds:281, Rg:282, Cn:285, Nh:286, Fl:289, Mc:290, Lv:293, Ts:294, Og:294
+   245→    };
+   246→
+   247→    const SUBSCRIPT_MAP = {
+   248→      '₀':'0','₁':'1','₂':'2','₃':'3','₄':'4','₅':'5','₆':'6','₇':'7','₈':'8','₉':'9',
+   249→      '⁰':'0','¹':'1','²':'2','³':'3','⁴':'4','⁵':'5','⁶':'6','⁷':'7','⁸':'8','⁹':'9',
+   250→      '⁺':'+','⁻':'-'
+   251→    };
+   252→
+   253→    const MOL_EXAMPLES = [
+   254→      { label: 'KNO₃', formula: 'KNO3' },
+   255→      { label: 'H₂SO₄', formula: 'H2SO4' },
+   256→      { label: 'Ca(NO₃)₂', formula: 'Ca(NO3)2' },
+   257→      { label: 'NH₄NO₃', formula: 'NH4NO3' },
+   258→      { label: '(NH₄)₂SO₄', formula: '(NH4)2SO4' },
+   259→      { label: 'KH₂PO₄', formula: 'KH2PO4' },
+   260→      { label: 'MgSO₄', formula: 'MgSO4' },
+   261→      { label: 'H₃BO₃', formula: 'H3BO3' },
+   262→      { label: 'ZnSO₄', formula: 'ZnSO4' }
+   263→    ];
+   264→
+   265→    const DEFAULT_VALENCE = {
+   266→      H:1, Li:1, Na:1, K:1, Rb:1, Cs:1, Ag:1, Cu:1, Tl:1, N:1, P:1, Cl:1, F:1, Br:1, I:1,
+   267→      Ca:2, Mg:2, Sr:2, Ba:2, Zn:2, Mn:2, Ni:2, Co:2, Cd:2, Hg:2, Pb:2, Fe:2, Cu:2,
+   268→      Al:3, B:3, Fe:3, Cr:3, As:3, S:2, O:2, C:4, Si:4, Se:2, Mo:6
+   269→    };
+   270→
+   271→    const DETAILS = {
+   272→      H:  { aw: '1.008',   val: '+1',               rad: '53 pm',  en: '2.20', role: 'Elemento estructural (CHO). Presente en agua y compuestos orgánicos.' },
+   273→      C:  { aw: '12.011',  val: '-4, +2, +4',       rad: '67 pm',  en: '2.55', role: 'Elemento estructural principal de biomasa vegetal.' },
+   274→      O:  { aw: '15.999',  val: '-2',               rad: '48 pm',  en: '3.44', role: 'Elemento estructural (agua, compuestos orgánicos y respiración).' },
+   275→      N:  { aw: '14.007',  val: '-3, +3, +5',       rad: '56 pm',  en: '3.04', role: 'Macronutriente esencial: proteínas, clorofila y crecimiento vegetativo.' },
+   276→      P:  { aw: '30.974',  val: '+5, +3',           rad: '98 pm',  en: '2.19', role: 'Macronutriente esencial: energía (ATP), raíces y floración.' },
+   277→      K:  { aw: '39.098',  val: '+1',               rad: '227 pm', en: '0.82', role: 'Macronutriente esencial: regulación osmótica, calidad y transporte.' },
+   278→      Ca: { aw: '40.078',  val: '+2',               rad: '197 pm', en: '1.00', role: 'Macronutriente esencial: pared celular, firmeza y crecimiento apical.' },
+   279→      Mg: { aw: '24.305',  val: '+2',               rad: '145 pm', en: '1.31', role: 'Macronutriente esencial: átomo central de clorofila.' },
+   280→      S:  { aw: '32.06',   val: '-2, +4, +6',       rad: '88 pm',  en: '2.58', role: 'Macronutriente esencial: aminoácidos azufrados y metabolismo.' },
+   281→      Fe: { aw: '55.845',  val: '+2, +3',           rad: '126 pm', en: '1.83', role: 'Micronutriente esencial: síntesis de clorofila y enzimas redox.' },
+   282→      Mn: { aw: '54.938',  val: '+2, +4, +7',       rad: '127 pm', en: '1.55', role: 'Micronutriente esencial: fotosíntesis y activación enzimática.' },
+   283→      Zn: { aw: '65.38',   val: '+2',               rad: '134 pm', en: '1.65', role: 'Micronutriente esencial: regulación hormonal y enzimas.' },
+   284→      Cu: { aw: '63.546',  val: '+1, +2',           rad: '128 pm', en: '1.90', role: 'Micronutriente esencial: enzimas y metabolismo oxidativo.' },
+   285→      B:  { aw: '10.81',   val: '+3',               rad: '85 pm',  en: '2.04', role: 'Micronutriente esencial: pared celular, floración y cuajado.' },
+   286→      Mo: { aw: '95.95',   val: '+6, +4',           rad: '139 pm', en: '2.16', role: 'Micronutriente esencial: metabolismo del nitrógeno.' },
+   287→      Cl: { aw: '35.45',   val: '-1, +1, +5, +7',   rad: '79 pm',  en: '3.16', role: 'Micronutriente esencial en trazas: balance iónico y estomas.' },
+   288→      Ni: { aw: '58.693',  val: '+2',               rad: '124 pm', en: '1.91', role: 'Micronutriente esencial en bajas dosis: ureasa y metabolismo de N.' },
+   289→      Si: { aw: '28.085',  val: '+4',               rad: '111 pm', en: '1.90', role: 'Elemento benéfico: refuerza tejidos y tolerancia a estrés.' },
+   290→      Na: { aw: '22.990',  val: '+1',               rad: '186 pm', en: '0.93', role: 'Benéfico en algunas especies; puede apoyar balance osmótico.' },
+   291→      Ti: { aw: '47.867',  val: '+4, +3',           rad: '147 pm', en: '1.54', role: 'Elemento benéfico reportado en trazas (según especie y manejo).' },
+   292→      Al: { aw: '26.982',  val: '+3',               rad: '143 pm', en: '1.61', role: 'No esencial; en suelos ácidos suele ser tóxico, aunque puede tener efectos benéficos puntuales en algunas especies.' },
+   293→      Co: { aw: '58.933',  val: '+2, +3',           rad: '125 pm', en: '1.88', role: 'Benéfico para fijación biológica de nitrógeno (leguminosas).' },
+   294→      Se: { aw: '78.971',  val: '-2, +4, +6',       rad: '103 pm', en: '2.55', role: 'Elemento benéfico en trazas; exceso puede causar toxicidad.' },
+   295→      V:  { aw: '50.942',  val: '+5, +4, +3',       rad: '134 pm', en: '1.63', role: 'Elemento benéfico reportado en condiciones específicas.' }
+   296→    };
+   297→
+   298→    const ELEMENTS = [
+   299→      { z:1,s:'H', n:'Hidrógeno', p:1, g:1 }, { z:2,s:'He', n:'Helio', p:1, g:18 },
+   300→      { z:3,s:'Li', n:'Litio', p:2, g:1 }, { z:4,s:'Be', n:'Berilio', p:2, g:2 }, { z:5,s:'B', n:'Boro', p:2, g:13 }, { z:6,s:'C', n:'Carbono', p:2, g:14 }, { z:7,s:'N', n:'Nitrógeno', p:2, g:15 }, { z:8,s:'O', n:'Oxígeno', p:2, g:16 }, { z:9,s:'F', n:'Flúor', p:2, g:17 }, { z:10,s:'Ne', n:'Neón', p:2, g:18 },
+   301→      { z:11,s:'Na', n:'Sodio', p:3, g:1 }, { z:12,s:'Mg', n:'Magnesio', p:3, g:2 }, { z:13,s:'Al', n:'Aluminio', p:3, g:13 }, { z:14,s:'Si', n:'Silicio', p:3, g:14 }, { z:15,s:'P', n:'Fósforo', p:3, g:15 }, { z:16,s:'S', n:'Azufre', p:3, g:16 }, { z:17,s:'Cl', n:'Cloro', p:3, g:17 }, { z:18,s:'Ar', n:'Argón', p:3, g:18 },
+   302→      { z:19,s:'K', n:'Potasio', p:4, g:1 }, { z:20,s:'Ca', n:'Calcio', p:4, g:2 }, { z:21,s:'Sc', n:'Escandio', p:4, g:3 }, { z:22,s:'Ti', n:'Titanio', p:4, g:4 }, { z:23,s:'V', n:'Vanadio', p:4, g:5 }, { z:24,s:'Cr', n:'Cromo', p:4, g:6 }, { z:25,s:'Mn', n:'Manganeso', p:4, g:7 }, { z:26,s:'Fe', n:'Hierro', p:4, g:8 }, { z:27,s:'Co', n:'Cobalto', p:4, g:9 }, { z:28,s:'Ni', n:'Níquel', p:4, g:10 }, { z:29,s:'Cu', n:'Cobre', p:4, g:11 }, { z:30,s:'Zn', n:'Zinc', p:4, g:12 }, { z:31,s:'Ga', n:'Galio', p:4, g:13 }, { z:32,s:'Ge', n:'Germanio', p:4, g:14 }, { z:33,s:'As', n:'Arsénico', p:4, g:15 }, { z:34,s:'Se', n:'Selenio', p:4, g:16 }, { z:35,s:'Br', n:'Bromo', p:4, g:17 }, { z:36,s:'Kr', n:'Kriptón', p:4, g:18 },
+   303→      { z:37,s:'Rb', n:'Rubidio', p:5, g:1 }, { z:38,s:'Sr', n:'Estroncio', p:5, g:2 }, { z:39,s:'Y', n:'Itrio', p:5, g:3 }, { z:40,s:'Zr', n:'Zirconio', p:5, g:4 }, { z:41,s:'Nb', n:'Niobio', p:5, g:5 }, { z:42,s:'Mo', n:'Molibdeno', p:5, g:6 }, { z:43,s:'Tc', n:'Tecnecio', p:5, g:7 }, { z:44,s:'Ru', n:'Rutenio', p:5, g:8 }, { z:45,s:'Rh', n:'Rodio', p:5, g:9 }, { z:46,s:'Pd', n:'Paladio', p:5, g:10 }, { z:47,s:'Ag', n:'Plata', p:5, g:11 }, { z:48,s:'Cd', n:'Cadmio', p:5, g:12 }, { z:49,s:'In', n:'Indio', p:5, g:13 }, { z:50,s:'Sn', n:'Estaño', p:5, g:14 }, { z:51,s:'Sb', n:'Antimonio', p:5, g:15 }, { z:52,s:'Te', n:'Telurio', p:5, g:16 }, { z:53,s:'I', n:'Yodo', p:5, g:17 }, { z:54,s:'Xe', n:'Xenón', p:5, g:18 },
+   304→      { z:55,s:'Cs', n:'Cesio', p:6, g:1 }, { z:56,s:'Ba', n:'Bario', p:6, g:2 }, { z:57,s:'La', n:'Lantano', p:6, g:3 }, { z:72,s:'Hf', n:'Hafnio', p:6, g:4 }, { z:73,s:'Ta', n:'Tantalio', p:6, g:5 }, { z:74,s:'W', n:'Wolframio', p:6, g:6 }, { z:75,s:'Re', n:'Renio', p:6, g:7 }, { z:76,s:'Os', n:'Osmio', p:6, g:8 }, { z:77,s:'Ir', n:'Iridio', p:6, g:9 }, { z:78,s:'Pt', n:'Platino', p:6, g:10 }, { z:79,s:'Au', n:'Oro', p:6, g:11 }, { z:80,s:'Hg', n:'Mercurio', p:6, g:12 }, { z:81,s:'Tl', n:'Talio', p:6, g:13 }, { z:82,s:'Pb', n:'Plomo', p:6, g:14 }, { z:83,s:'Bi', n:'Bismuto', p:6, g:15 }, { z:84,s:'Po', n:'Polonio', p:6, g:16 }, { z:85,s:'At', n:'Astato', p:6, g:17 }, { z:86,s:'Rn', n:'Radón', p:6, g:18 },
+   305→      { z:87,s:'Fr', n:'Francio', p:7, g:1 }, { z:88,s:'Ra', n:'Radio', p:7, g:2 }, { z:89,s:'Ac', n:'Actinio', p:7, g:3 }, { z:104,s:'Rf', n:'Rutherfordio', p:7, g:4 }, { z:105,s:'Db', n:'Dubnio', p:7, g:5 }, { z:106,s:'Sg', n:'Seaborgio', p:7, g:6 }, { z:107,s:'Bh', n:'Bohrio', p:7, g:7 }, { z:108,s:'Hs', n:'Hassio', p:7, g:8 }, { z:109,s:'Mt', n:'Meitnerio', p:7, g:9 }, { z:110,s:'Ds', n:'Darmstadtio', p:7, g:10 }, { z:111,s:'Rg', n:'Roentgenio', p:7, g:11 }, { z:112,s:'Cn', n:'Copernicio', p:7, g:12 }, { z:113,s:'Nh', n:'Nihonio', p:7, g:13 }, { z:114,s:'Fl', n:'Flerovio', p:7, g:14 }, { z:115,s:'Mc', n:'Moscovio', p:7, g:15 }, { z:116,s:'Lv', n:'Livermorio', p:7, g:16 }, { z:117,s:'Ts', n:'Tenesino', p:7, g:17 }, { z:118,s:'Og', n:'Oganesón', p:7, g:18 },
+   306→      { z:58,s:'Ce', n:'Cerio', p:8, g:4 }, { z:59,s:'Pr', n:'Praseodimio', p:8, g:5 }, { z:60,s:'Nd', n:'Neodimio', p:8, g:6 }, { z:61,s:'Pm', n:'Prometio', p:8, g:7 }, { z:62,s:'Sm', n:'Samario', p:8, g:8 }, { z:63,s:'Eu', n:'Europio', p:8, g:9 }, { z:64,s:'Gd', n:'Gadolinio', p:8, g:10 }, { z:65,s:'Tb', n:'Terbio', p:8, g:11 }, { z:66,s:'Dy', n:'Disprosio', p:8, g:12 }, { z:67,s:'Ho', n:'Holmio', p:8, g:13 }, { z:68,s:'Er', n:'Erbio', p:8, g:14 }, { z:69,s:'Tm', n:'Tulio', p:8, g:15 }, { z:70,s:'Yb', n:'Iterbio', p:8, g:16 }, { z:71,s:'Lu', n:'Lutecio', p:8, g:17 },
+   307→      { z:90,s:'Th', n:'Torio', p:9, g:4 }, { z:91,s:'Pa', n:'Protactinio', p:9, g:5 }, { z:92,s:'U', n:'Uranio', p:9, g:6 }, { z:93,s:'Np', n:'Neptunio', p:9, g:7 }, { z:94,s:'Pu', n:'Plutonio', p:9, g:8 }, { z:95,s:'Am', n:'Americio', p:9, g:9 }, { z:96,s:'Cm', n:'Curio', p:9, g:10 }, { z:97,s:'Bk', n:'Berkelio', p:9, g:11 }, { z:98,s:'Cf', n:'Californio', p:9, g:12 }, { z:99,s:'Es', n:'Einsteinio', p:9, g:13 }, { z:100,s:'Fm', n:'Fermio', p:9, g:14 }, { z:101,s:'Md', n:'Mendelevio', p:9, g:15 }, { z:102,s:'No', n:'Nobelio', p:9, g:16 }, { z:103,s:'Lr', n:'Lawrencio', p:9, g:17 }
+   308→    ];
+   309→
+   310→    function category(sym) {
+   311→      if (CHO.has(sym)) return 'cho';
+   312→      if (ESSENTIAL.has(sym)) return 'essential';
+   313→      if (BENEFICIAL.has(sym)) return 'beneficial';
+   314→      return 'other';
+   315→    }
+   316→
+   317→    function display(symbol, fallback) {
+   318→      return symbol == null || symbol === '' ? fallback : symbol;
+   319→    }
+   320→
+   321→    const board = document.getElementById('board');
+   322→    const selTitle = document.getElementById('selTitle');
+   323→    const selMeta = document.getElementById('selMeta');
+   324→    const selGrid = document.getElementById('selGrid');
+   325→    const selRole = document.getElementById('selRole');
+   326→    const molFormula = document.getElementById('molFormula');
+   327→    let selectedBtn = null;
+   328→    let lastClickedSymbol = '';
+   329→
+   330→    function fmtNum(n, digits) {
+   331→      if (!Number.isFinite(n)) return '—';
+   332→      return n.toLocaleString('es-MX', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+   333→    }
+   334→
+   335→    function primaryValence(symbol) {
+   336→      const d = DETAILS[symbol];
+   337→      if (d && d.val) {
+   338→        const plus = d.val.match(/\+(\d+)/g);
+   339→        if (plus && plus.length) {
+   340→          const vals = plus.map(function(x) { return Number(x.replace('+', '')); });
+   341→          return Math.min.apply(null, vals);
+   342→        }
+   343→        const minus = d.val.match(/-(\d+)/g);
+   344→        if (minus && minus.length) {
+   345→          const vals = minus.map(function(x) { return Number(x.replace('-', '')); });
+   346→          return Math.min.apply(null, vals);
+   347→        }
+   348→      }
+   349→      return DEFAULT_VALENCE[symbol] || null;
+   350→    }
+   351→
+   352→    function normalizeFormula(raw) {
+   353→      const text = String(raw || '').trim();
+   354→      if (!text) return '';
+   355→      let out = text.split('').map(function(ch) { return SUBSCRIPT_MAP[ch] || ch; }).join('')
+   356→        .replace(/[−]/g, '-').replace(/\s+/g, '')
+   357→        .replace(/\{/g, '(').replace(/\}/g, ')').replace(/\[/g, '(').replace(/\]/g, ')')
+   358→        .replace(/:/g, '·').replace(/\)\(/g, ')*(');
+   359→      // + o * entre bloques (hidrato / sal doble). No toca cargas iónicas sueltas (NH4+ al final).
+   360→      out = out.replace(/([0-9)\]])([\*+])([0-9(A-Z])/g, '$1·$3');
+   361→      return out.replace(/\.+/g, '.');
+   362→    }
+   363→
+   364→    function formatNormalizedDisplay(normalized) {
+   365→      return String(normalized || '').replace(/·/g, ' + ');
+   366→    }
+   367→
+   368→    function parseNumber(str, index) {
+   369→      let i = index;
+   370→      let seenDot = false;
+   371→      let token = '';
+   372→      while (i < str.length) {
+   373→        const ch = str[i];
+   374→        if (ch >= '0' && ch <= '9') { token += ch; i += 1; continue; }
+   375→        if (ch === '.' && !seenDot) { seenDot = true; token += ch; i += 1; continue; }
+   376→        break;
+   377→      }
+   378→      if (!token) return { value: 1, index: i };
+   379→      const val = Number(token);
+   380→      if (!Number.isFinite(val) || val <= 0) throw new Error('Número inválido en fórmula.');
+   381→      return { value: val, index: i };
+   382→    }
+   383→
+   384→    function parseTerms(str, index, stopChar) {
+   385→      const terms = [];
+   386→      let i = index;
+   387→      while (i < str.length) {
+   388→        const ch = str[i];
+   389→        if (stopChar && ch === stopChar) return { terms: terms, index: i + 1 };
+   390→        if (ch === '+' || ch === '-' || ch === '^') { i += 1; continue; }
+   391→        if (ch === '(') {
+   392→          const nested = parseTerms(str, i + 1, ')');
+   393→          const cnt = parseNumber(str, nested.index);
+   394→          terms.push({ type: 'group', terms: nested.terms, count: cnt.value });
+   395→          i = cnt.index;
+   396→          continue;
+   397→        }
+   398→        if (ch >= 'A' && ch <= 'Z') {
+   399→          let symbol = ch;
+   400→          i += 1;
+   401→          if (i < str.length && str[i] >= 'a' && str[i] <= 'z') { symbol += str[i]; i += 1; }
+   402→          if (!Object.prototype.hasOwnProperty.call(ATOMIC_WEIGHTS, symbol)) {
+   403→            throw new Error('Elemento no reconocido: ' + symbol);
+   404→          }
+   405→          const cnt = parseNumber(str, i);
+   406→          terms.push({ type: 'element', symbol: symbol, count: cnt.value });
+   407→          i = cnt.index;
+   408→          continue;
+   409→        }
+   410→        throw new Error('Carácter inválido en fórmula: ' + ch);
+   411→      }
+   412→      if (stopChar) throw new Error('Paréntesis sin cerrar en fórmula.');
+   413→      return { terms: terms, index: i };
+   414→    }
+   415→
+   416→    function collectElements(terms, mult, out) {
+   417→      terms.forEach(function(t) {
+   418→        if (t.type === 'element') {
+   419→          out[t.symbol] = (out[t.symbol] || 0) + (t.count * mult);
+   420→        } else {
+   421→          collectElements(t.terms, mult * t.count, out);
+   422→        }
+   423→      });
+   424→    }
+   425→
+   426→    function countMotifInTerms(terms, mult, motif) {
+   427→      let total = 0;
+   428→      for (let i = 0; i <= terms.length - motif.length; i += 1) {
+   429→        let ok = true;
+   430→        for (let j = 0; j < motif.length; j += 1) {
+   431→          const term = terms[i + j];
+   432→          const m = motif[j];
+   433→          if (!term || term.type !== 'element' || term.symbol !== m.symbol || Math.abs(term.count - m.count) > 1e-9) {
+   434→            ok = false;
+   435→            break;
+   436→          }
+   437→        }
+   438→        if (ok) total += mult;
+   439→      }
+   440→      terms.forEach(function(t) {
+   441→        if (t.type === 'group') total += countMotifInTerms(t.terms, mult * t.count, motif);
+   442→      });
+   443→      return total;
+   444→    }
+   445→
+   446→    function blockUnitMw(terms) {
+   447→      const ac = {};
+   448→      collectElements(terms, 1, ac);
+   449→      let mw = 0;
+   450→      Object.keys(ac).forEach(function(sym) { mw += ac[sym] * ATOMIC_WEIGHTS[sym]; });
+   451→      return mw;
+   452→    }
+   453→
+   454→    function formatBlockLabel(part) {
+   455→      const m = part.match(/^(\d+(?:\.\d+)?)(.*)$/);
+   456→      if (m && m[2]) return m[1] + ' × ' + formatNormalizedDisplay(m[2]);
+   457→      return '1 × ' + formatNormalizedDisplay(part);
+   458→    }
+   459→
+   460→    function blockDisplayName(body) {
+   461→      const b = body.replace(/^\(/, '').replace(/\)$/, '');
+   462→      if (/^Ca\(NO3\)2$/i.test(b) || b === 'Ca(NO3)2') return 'Nitrato de calcio Ca(NO₃)₂';
+   463→      if (/^NH4NO3$/i.test(b)) return 'Nitrato de amonio NH₄NO₃';
+   464→      if (/^H2O$/i.test(b) || b === '(H2O)' || b === 'H2O') return 'Agua H₂O';
+   465→      return formatNormalizedDisplay(body);
+   466→    }
+   467→
+   468→    function parseCompound(rawFormula) {
+   469→      const normalized = normalizeFormula(rawFormula);
+   470→      if (!normalized) throw new Error('Escribe una fórmula.');
+   471→      const parts = normalized.split(/[·•.]/).filter(Boolean);
+   472→      if (!parts.length) throw new Error('Fórmula no válida.');
+   473→      const segments = [];
+   474→      const blocks = [];
+   475→      parts.forEach(function(part) {
+   476→        const m = part.match(/^(\d+(?:\.\d+)?)(.*)$/);
+   477→        let coef = 1;
+   478→        let body = part;
+   479→        if (m && m[2]) { coef = Number(m[1]); body = m[2]; }
+   480→        const parsed = parseTerms(body, 0, null);
+   481→        if (parsed.index !== body.length) throw new Error('Error al parsear la fórmula.');
+   482→        segments.push({ coef: coef, terms: parsed.terms, body: body, raw: part });
+   483→        const unitMw = blockUnitMw(parsed.terms);
+   484→        const mass = unitMw * coef;
+   485→        blocks.push({
+   486→          label: formatBlockLabel(part),
+   487→          name: blockDisplayName(body),
+   488→          coef: coef,
+   489→          unitMw: unitMw,
+   490→          mass: mass
+   491→        });
+   492→      });
+   493→      const atomCounts = {};
+   494→      segments.forEach(function(seg) { collectElements(seg.terms, seg.coef, atomCounts); });
+   495→      let mw = 0;
+   496→      Object.keys(atomCounts).forEach(function(sym) { mw += atomCounts[sym] * ATOMIC_WEIGHTS[sym]; });
+   497→      if (!(mw > 0)) throw new Error('No se pudo calcular el peso molecular.');
+   498→      blocks.forEach(function(blk) { blk.pct = (blk.mass / mw) * 100; });
+   499→
+   500→      const NO3 = [{ symbol: 'N', count: 1 }, { symbol: 'O', count: 3 }];
+   501→      const NH4 = [{ symbol: 'N', count: 1 }, { symbol: 'H', count: 4 }];
+   502→      let no3 = 0;
+   503→      let nh4 = 0;
+   504→      segments.forEach(function(seg) {
+   505→        no3 += countMotifInTerms(seg.terms, seg.coef, NO3);
+   506→        nh4 += countMotifInTerms(seg.terms, seg.coef, NH4);
+   507→      });
+   508→      const caNitrateUnits = segments.reduce(function(sum, seg) {
+   509→        if (/Ca\(NO3\)2/i.test(seg.body)) return sum + seg.coef;
+   510→        return sum;
+   511→      }, 0);
+   512→
+   513→      return {
+   514→        normalized: normalized,
+   515→        atomCounts: atomCounts,
+   516→        mw: mw,
+   517→        blocks: blocks,
+   518→        ions: {
+   519→          no3: no3,
+   520→          nh4: nh4,
+   521→          ca: atomCounts.Ca || 0,
+   522→          caNitrateUnits: caNitrateUnits
+   523→        }
+   524→      };
+   525→    }
+   526→
+   527→    function inferMoleculeEquivalent(atomCounts, mw) {
+   528→      const h = atomCounts.H || 0;
+   529→      const o = atomCounts.O || 0;
+   530→      const p = atomCounts.P || 0;
+   531→      const s = atomCounts.S || 0;
+   532→      const b = atomCounts.B || 0;
+   533→      const cl = atomCounts.Cl || 0;
+   534→      if (h > 0 && s > 0 && Math.abs(h / s - 2) < 0.01) {
+   535→        return { n: h, label: 'Ácido sulfúrico (2 H⁺ por S)' };
+   536→      }
+   537→      if (h > 0 && p > 0 && h % p === 0 && h / p <= 3) {
+   538→        return { n: h, label: 'Ácido fosforoso (H/P)' };
+   539→      }
+   540→      if (h > 0 && b > 0 && h % b === 0) {
+   541→        return { n: h, label: 'Ácido bórico (H/B)' };
+   542→      }
+   543→      if (h > 0 && cl > 0 && h === cl) {
+   544→        return { n: h, label: 'Ácido clorhídrico' };
+   545→      }
+   546→      if (h > 0 && o > 0 && h % 2 === 0 && h / 2 === o && !p && !s && !b) {
+   547→        return { n: h, label: 'Hidróxido (OH⁻)' };
+   548→      }
+   549→      return null;
+   550→    }
+   551→
+   552→    function elementName(symbol) {
+   553→      const hit = ELEMENTS.find(function(el) { return el.s === symbol; });
+   554→      return hit ? hit.n : symbol;
+   555→    }
+   556→
+   557→    function renderMolResults(parsed) {
+   558→      const errEl = document.getElementById('molError');
+   559→      const resEl = document.getElementById('molResults');
+   560→      const summaryEl = document.getElementById('molSummary');
+   561→      const bodyEl = document.getElementById('molTableBody');
+   562→      errEl.hidden = true;
+   563→      errEl.textContent = '';
+   564→      resEl.hidden = false;
+   565→
+   566→      const eqInfo = inferMoleculeEquivalent(parsed.atomCounts, parsed.mw);
+   567→      const eqMol = eqInfo ? parsed.mw / eqInfo.n : null;
+   568→
+   569→      summaryEl.innerHTML = [
+   570→        ['Peso molecular (PM)', fmtNum(parsed.mw, 3) + ' g/mol'],
+   571→        ['Fórmula normalizada', formatNormalizedDisplay(parsed.normalized)],
+   572→        eqMol ? ['Peso equivalente (molécula)', fmtNum(eqMol, 3) + ' g/eq'] : null,
+   573→        eqInfo ? ['Criterio eq. molécula', eqInfo.label] : null
+   574→      ].filter(Boolean).map(function(row) {
+   575→        return '<div class="card"><div class="k">' + row[0] + '</div><div class="v">' + row[1] + '</div></div>';
+   576→      }).join('');
+   577→
+   578→      const symbols = Object.keys(parsed.atomCounts).sort(function(a, b) {
+   579→        return parsed.atomCounts[b] * ATOMIC_WEIGHTS[b] - parsed.atomCounts[a] * ATOMIC_WEIGHTS[a];
+   580→      });
+   581→
+   582→      bodyEl.innerHTML = symbols.map(function(sym) {
+   583→        const atoms = parsed.atomCounts[sym];
+   584→        const partial = atoms * ATOMIC_WEIGHTS[sym];
+   585→        const pct = (partial / parsed.mw) * 100;
+   586→        const val = primaryValence(sym);
+   587→        const eq = val ? ATOMIC_WEIGHTS[sym] / val : null;
+   588→        const isNut = ESSENTIAL.has(sym) || BENEFICIAL.has(sym) || CHO.has(sym);
+   589→        return '<tr class="' + (isNut ? 'is-nutrient' : '') + '">' +
+   590→          '<td><strong>' + sym + '</strong> <span style="color:#64748b;font-weight:400;">' + elementName(sym) + '</span></td>' +
+   591→          '<td class="num">' + fmtNum(atoms, atoms % 1 ? 2 : 0) + '</td>' +
+   592→          '<td class="num">' + fmtNum(partial, 3) + '</td>' +
+   593→          '<td class="num">' + fmtNum(pct, 2) + '%<div class="mol-bar"><span style="width:' + Math.min(100, pct).toFixed(1) + '%"></span></div></td>' +
+   594→          '<td class="num">' + (eq ? fmtNum(eq, 3) : '—') + '</td>' +
+   595→          '</tr>';
+   596→      }).join('');
+   597→    }
+   598→
+   599→    function runMolCalc() {
+   600→      const errEl = document.getElementById('molError');
+   601→      const resEl = document.getElementById('molResults');
+   602→      try {
+   603→        const parsed = parseCompound(molFormula.value);
+   604→        renderMolResults(parsed);
+   605→      } catch (e) {
+   606→        resEl.hidden = true;
+   607→        errEl.hidden = false;
+   608→        errEl.textContent = e.message || 'No se pudo calcular.';
+   609→      }
+   610→    }
+   611→
+   612→    function switchTab(tabId) {
+   613→      document.querySelectorAll('.tab-btn').forEach(function(btn) {
+   614→        const on = btn.getAttribute('data-tab') === tabId;
+   615→        btn.classList.toggle('active', on);
+   616→        btn.setAttribute('aria-selected', on ? 'true' : 'false');
+   617→      });
+   618→      document.getElementById('paneTable').classList.toggle('active', tabId === 'table');
+   619→      document.getElementById('paneMol').classList.toggle('active', tabId === 'mol');
+   620→    }
+   621→
+   622→    document.querySelectorAll('.tab-btn').forEach(function(btn) {
+   623→      btn.addEventListener('click', function() { switchTab(btn.getAttribute('data-tab')); });
+   624→    });
+   625→
+   626→    document.getElementById('molCalcBtn').addEventListener('click', runMolCalc);
+   627→    document.getElementById('molClearBtn').addEventListener('click', function() {
+   628→      molFormula.value = '';
+   629→      document.getElementById('molError').hidden = true;
+   630→      document.getElementById('molResults').hidden = true;
+   631→    });
+   632→    molFormula.addEventListener('keydown', function(e) {
+   633→      if (e.key === 'Enter') { e.preventDefault(); runMolCalc(); }
+   634→    });
+   635→
+   636→    const examplesEl = document.getElementById('molExamples');
+   637→    MOL_EXAMPLES.forEach(function(ex) {
+   638→      const chip = document.createElement('button');
+   639→      chip.type = 'button';
+   640→      chip.className = 'mol-chip';
+   641→      chip.textContent = ex.label;
+   642→      chip.title = (ex.note ? ex.note + ' — ' : '') + ex.formula;
+   643→      chip.addEventListener('click', function() {
+   644→        molFormula.value = ex.formula;
+   645→        switchTab('mol');
+   646→        runMolCalc();
+   647→      });
+   648→      examplesEl.appendChild(chip);
+   649→    });
+   650→
+   651→    window.npPeriodicAppendSymbol = function(symbol) {
+   652→      lastClickedSymbol = symbol;
+   653→      molFormula.value = (molFormula.value || '') + symbol;
+   654→      switchTab('mol');
+   655→      molFormula.focus();
+   656→    };
+   657→
+   658→    // Encabezado superior de grupos 1-18
+   659→    for (let g = 1; g <= 18; g += 1) {
+   660→      const tag = document.createElement('div');
+   661→      tag.className = 'group-label';
+   662→      tag.style.gridColumn = String(g + 1);
+   663→      tag.style.gridRow = '1';
+   664→      tag.textContent = 'G' + g;
+   665→      board.appendChild(tag);
+   666→    }
+   667→
+   668→    // Etiquetas laterales de período
+   669→    const periods = ['P1','P2','P3','P4','P5','P6','P7','Ln','Ac'];
+   670→    periods.forEach(function(lbl, idx) {
+   671→      const tag = document.createElement('div');
+   672→      tag.className = 'period-label';
+   673→      tag.style.gridColumn = '1';
+   674→      tag.style.gridRow = String(idx + 2);
+   675→      tag.textContent = lbl;
+   676→      board.appendChild(tag);
+   677→    });
+   678→
+   679→    ELEMENTS.forEach(function(el) {
+   680→      const btn = document.createElement('button');
+   681→      btn.type = 'button';
+   682→      btn.className = 'el ' + category(el.s);
+   683→      btn.style.gridColumn = String(el.g + 1);
+   684→      btn.style.gridRow = String(el.p + 1);
+   685→      btn.innerHTML = '<span class="z">' + el.z + '</span><span class="s">' + el.s + '</span><span class="n">' + el.n + '</span>';
+   686→      btn.addEventListener('click', function() {
+   687→        if (selectedBtn) selectedBtn.classList.remove('selected');
+   688→        selectedBtn = btn;
+   689→        btn.classList.add('selected');
+   690→        const d = DETAILS[el.s] || {};
+   691→        selTitle.textContent = el.s + ' — ' + el.n;
+   692→        selMeta.textContent = 'Número atómico: ' + el.z + ' • Grupo: ' + el.g + ' • Período: ' + (el.p <= 7 ? el.p : (el.p === 8 ? 'Lantánidos' : 'Actínidos'));
+   693→        selGrid.innerHTML = [
+   694→          ['Peso atómico', display(d.aw, '—')],
+   695→          ['Valencia(s)', display(d.val, '—')],
+   696→          ['Radio atómico', display(d.rad, '—')],
+   697→          ['Electronegatividad', display(d.en, '—')],
+   698→          ['Categoría', category(el.s) === 'cho' ? 'Estructural (C-H-O)' : (category(el.s) === 'essential' ? 'Nutriente esencial' : (category(el.s) === 'beneficial' ? 'Elemento benéfico' : 'Resto de elementos'))]
+   699→        ].map(function(row) {
+   700→          return '<div class="card"><div class="k">' + row[0] + '</div><div class="v">' + row[1] + '</div></div>';
+   701→        }).join('');
+   702→        selRole.textContent = display(d.role, 'Sin ficha agronómica resumida para este elemento en esta vista.');
+   703→        var useBtn = document.getElementById('selUseInMol');
+   704→        if (useBtn) {
+   705→          useBtn.onclick = function() {
+   706→            if (typeof window.npPeriodicAppendSymbol === 'function') window.npPeriodicAppendSymbol(el.s);
+   707→          };
+   708→        }
+   709→      });
+   710→      board.appendChild(btn);
+   711→    });
+   712→
+   713→    // Selección inicial útil para contexto agronómico
+   714→    const first = Array.from(document.querySelectorAll('.el')).find(function(x) {
+   715→      return x.querySelector('.s').textContent === 'N';
+   716→    });
+   717→    if (first) first.click();
+   718→  </script>
+   719→</body>
+   720→</html>
+   721→

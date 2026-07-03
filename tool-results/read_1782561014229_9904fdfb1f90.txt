@@ -1,0 +1,1488 @@
+     1→<!DOCTYPE html>
+     2→<html lang="es">
+     3→<head>
+     4→  <meta charset="UTF-8" />
+     5→  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+     6→  <link rel="stylesheet" href="assets/free-tools-watermark.css" />
+     7→  <script src="assets/free-tools-embed.js"></script>
+     8→  <title>Distribución nutrimental por etapa (%)</title>
+     9→  <style>
+    10→    :root {
+    11→      --bg: #f8fafc;
+    12→      --card: #fff;
+    13→      --border: #e2e8f0;
+    14→      --text: #0f172a;
+    15→      --muted: #64748b;
+    16→      --green-bg: #ecfdf5;
+    17→      --green-border: #86efac;
+    18→      --green-text: #065f46;
+    19→      --blue-bg: #eff6ff;
+    20→      --blue-border: #93c5fd;
+    21→      --amber-bg: #fffbeb;
+    22→      --amber-border: #fcd34d;
+    23→      --ok: #15803d;
+    24→      --warn: #c2410c;
+    25→    }
+    26→    * { box-sizing: border-box; }
+    27→    body {
+    28→      margin: 0;
+    29→      padding: 14px 16px 32px;
+    30→      background: var(--bg);
+    31→      font-family: Inter, system-ui, -apple-system, sans-serif;
+    32→      font-size: 14px;
+    33→      color: var(--text);
+    34→      line-height: 1.5;
+    35→    }
+    36→    .guest-note {
+    37→      text-align: center;
+    38→      font-size: 12px;
+    39→      color: var(--muted);
+    40→      margin: 0 0 16px;
+    41→    }
+    42→    .guest-note strong { color: #475569; }
+    43→
+    44→    .hero {
+    45→      background: var(--card);
+    46→      border: 1px solid var(--border);
+    47→      border-radius: 12px;
+    48→      padding: 18px 20px;
+    49→      margin-bottom: 16px;
+    50→      box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    51→    }
+    52→    .hero h1 {
+    53→      margin: 0 0 10px;
+    54→      font-size: 1.15rem;
+    55→      color: var(--text);
+    56→    }
+    57→    .hero .tagline {
+    58→      margin: 0;
+    59→      font-size: 13px;
+    60→      color: var(--muted);
+    61→      max-width: 52rem;
+    62→    }
+    63→
+    64→    .legend-pills {
+    65→      display: flex;
+    66→      flex-wrap: wrap;
+    67→      gap: 8px;
+    68→      margin-top: 14px;
+    69→    }
+    70→    .pill {
+    71→      display: inline-flex;
+    72→      align-items: center;
+    73→      padding: 6px 12px;
+    74→      border-radius: 999px;
+    75→      font-size: 12px;
+    76→      font-weight: 600;
+    77→    }
+    78→    .pill--nut { background: var(--green-bg); border: 1px solid var(--green-border); color: var(--green-text); }
+    79→    .pill--info { background: var(--blue-bg); border: 1px solid var(--blue-border); color: #1e40af; }
+    80→    .pill--warn { background: var(--amber-bg); border: 1px solid var(--amber-border); color: #92400e; }
+    81→
+    82→    .panel {
+    83→      background: var(--card);
+    84→      border: 1px solid var(--border);
+    85→      border-radius: 12px;
+    86→      padding: 18px;
+    87→      margin-bottom: 16px;
+    88→      box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    89→    }
+    90→    .panel h2 {
+    91→      margin: 0 0 8px;
+    92→      font-size: 1rem;
+    93→      color: #0f172a;
+    94→    }
+    95→    .panel .hint {
+    96→      margin: 0 0 14px;
+    97→      font-size: 12px;
+    98→      color: var(--muted);
+    99→      line-height: 1.45;
+   100→    }
+   101→    .panel .hint strong { color: #334155; }
+   102→
+   103→    .totals-wrap {
+   104→      display: flex;
+   105→      flex-wrap: wrap;
+   106→      gap: 12px;
+   107→      align-items: flex-end;
+   108→      margin-bottom: 12px;
+   109→    }
+   110→    .totals-wrap label {
+   111→      display: flex;
+   112→      flex-direction: column;
+   113→      gap: 4px;
+   114→      font-size: 11px;
+   115→      font-weight: 700;
+   116→      color: #334155;
+   117→      min-width: 72px;
+   118→    }
+   119→    .totals-wrap input {
+   120→      width: 88px;
+   121→      padding: 8px 10px;
+   122→      border: 1px solid #cbd5e1;
+   123→      border-radius: 8px;
+   124→      font-size: 14px;
+   125→    }
+   126→    .totals-wrap .nut-wrap {
+   127→      position: relative;
+   128→      padding: 8px 10px 10px;
+   129→      border-radius: 10px;
+   130→      border: 1px solid var(--green-border);
+   131→      background: var(--green-bg);
+   132→    }
+   133→    .totals-wrap .nut-wrap.optional {
+   134→      border-color: #bfdbfe;
+   135→      background: #eff6ff;
+   136→    }
+   137→    .totals-wrap .nut-wrap .rm-nut {
+   138→      position: absolute;
+   139→      top: 2px;
+   140→      right: 4px;
+   141→      border: 0;
+   142→      background: transparent;
+   143→      color: #94a3b8;
+   144→      cursor: pointer;
+   145→      font-size: 16px;
+   146→      line-height: 1;
+   147→      padding: 2px 4px;
+   148→    }
+   149→    .totals-wrap .nut-wrap .rm-nut:hover { color: #dc2626; }
+   150→
+   151→    .btn-row {
+   152→      display: flex;
+   153→      flex-wrap: wrap;
+   154→      gap: 10px;
+   155→      align-items: center;
+   156→    }
+   157→    .btn {
+   158→      border: 0;
+   159→      padding: 10px 16px;
+   160→      border-radius: 8px;
+   161→      font-weight: 600;
+   162→      font-size: 13px;
+   163→      cursor: pointer;
+   164→    }
+   165→    .btn-primary { background: #16a34a; color: #fff; }
+   166→    .btn-primary:hover { background: #15803d; }
+   167→    .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+   168→    .btn-ghost { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; }
+   169→    .btn-ghost:hover { background: #e2e8f0; }
+   170→    .btn-danger { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; font-size: 12px; padding: 6px 10px; }
+   171→
+   172→    .scroll-x {
+   173→      overflow-x: auto;
+   174→      margin: 0 -4px;
+   175→      padding: 4px;
+   176→    }
+   177→    table.data {
+   178→      width: 100%;
+   179→      border-collapse: collapse;
+   180→      font-size: 13px;
+   181→      min-width: 520px;
+   182→    }
+   183→    table.data th, table.data td {
+   184→      border: 1px solid var(--border);
+   185→      padding: 8px 10px;
+   186→      text-align: right;
+   187→    }
+   188→    table.data th:first-child, table.data td:first-child {
+   189→      text-align: left;
+   190→      min-width: 140px;
+   191→    }
+   192→    table.data thead th {
+   193→      background: #f1f5f9;
+   194→      font-weight: 700;
+   195→      color: #334155;
+   196→    }
+   197→    table.data tbody tr:nth-child(even) { background: #fafafa; }
+   198→    table.data tfoot td {
+   199→      font-weight: 700;
+   200→      background: #f8fafc;
+   201→    }
+   202→    table.data tfoot td.ok { color: var(--ok); }
+   203→    table.data tfoot td.bad { color: var(--warn); }
+   204→    table.data input.pct-in {
+   205→      width: 72px;
+   206→      padding: 6px 8px;
+   207→      border: 1px solid #cbd5e1;
+   208→      border-radius: 6px;
+   209→      text-align: right;
+   210→    }
+   211→    table.data input.stage-in {
+   212→      width: 100%;
+   213→      min-width: 120px;
+   214→      padding: 6px 8px;
+   215→      border: 1px solid #cbd5e1;
+   216→      border-radius: 6px;
+   217→    }
+   218→    table.data .stage-cell { vertical-align: middle; }
+   219→
+   220→    .warn-banner {
+   221→      margin-top: 10px;
+   222→      padding: 10px 12px;
+   223→      border-radius: 8px;
+   224→      font-size: 12px;
+   225→      background: #fffbeb;
+   226→      border: 1px solid #fcd34d;
+   227→      color: #92400e;
+   228→      display: none;
+   229→    }
+   230→    .warn-banner.show { display: block; }
+   231→
+   232→    .chart-seg {
+   233→      display: inline-flex;
+   234→      border: 1px solid #cbd5e1;
+   235→      border-radius: 8px;
+   236→      overflow: hidden;
+   237→      background: #f1f5f9;
+   238→    }
+   239→    .chart-seg button {
+   240→      border: 0;
+   241→      background: transparent;
+   242→      padding: 8px 16px;
+   243→      font-weight: 600;
+   244→      font-size: 13px;
+   245→      cursor: pointer;
+   246→      color: #64748b;
+   247→    }
+   248→    .chart-seg button.is-on {
+   249→      background: #16a34a;
+   250→      color: #fff;
+   251→    }
+   252→    .chart-seg button:not(.is-on):hover {
+   253→      background: #e2e8f0;
+   254→      color: #334155;
+   255→    }
+   256→    .chart-empty {
+   257→      display: block;
+   258→      margin-top: 8px;
+   259→      padding: 20px 16px;
+   260→      text-align: center;
+   261→      font-size: 13px;
+   262→      color: var(--muted);
+   263→      background: #f8fafc;
+   264→      border: 1px dashed #cbd5e1;
+   265→      border-radius: 8px;
+   266→      line-height: 1.45;
+   267→    }
+   268→    .chart-empty[hidden] { display: none !important; }
+   269→
+   270→    .chart-box {
+   271→      position: relative;
+   272→      height: min(420px, 55vh);
+   273→      margin-top: 8px;
+   274→    }
+   275→    .chart-box[hidden] { display: none !important; }
+   276→    .foot-note {
+   277→      margin-top: 16px;
+   278→      font-size: 11px;
+   279→      color: var(--muted);
+   280→      line-height: 1.45;
+   281→    }
+   282→    .preset-bar {
+   283→      display: none;
+   284→      flex-wrap: wrap;
+   285→      align-items: flex-end;
+   286→      gap: 10px;
+   287→      margin-top: 14px;
+   288→      padding: 14px;
+   289→      border-radius: 10px;
+   290→      border: 1px dashed #93c5fd;
+   291→      background: linear-gradient(180deg, #eff6ff 0%, #f8fafc 100%);
+   292→    }
+   293→    .preset-bar.is-visible { display: flex; }
+   294→    .preset-bar label {
+   295→      display: flex;
+   296→      flex-direction: column;
+   297→      gap: 4px;
+   298→      font-size: 11px;
+   299→      font-weight: 700;
+   300→      color: #1e3a8a;
+   301→    }
+   302→    .preset-bar select,
+   303→    .preset-bar input[type="text"] {
+   304→      min-width: 0;
+   305→      padding: 8px 10px;
+   306→      border: 1px solid #cbd5e1;
+   307→      border-radius: 8px;
+   308→      font-size: 13px;
+   309→      font-family: inherit;
+   310→    }
+   311→    .preset-bar select { min-width: 200px; max-width: 100%; cursor: pointer; }
+   312→    .preset-bar input[type="text"] { width: 200px; max-width: 100%; }
+   313→    .preset-bar .preset-actions {
+   314→      display: flex;
+   315→      flex-wrap: wrap;
+   316→      gap: 8px;
+   317→      align-items: center;
+   318→    }
+   319→    .preset-bar .btn-preset-save { background: #2563eb; color: #fff; }
+   320→    .preset-bar .btn-preset-save:hover { background: #1d4ed8; }
+   321→    .preset-bar .btn-preset-del { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+   322→    .preset-bar .preset-hint {
+   323→      width: 100%;
+   324→      flex-basis: 100%;
+   325→      margin: 4px 0 0;
+   326→      font-size: 11px;
+   327→      color: var(--muted);
+   328→      line-height: 1.35;
+   329→    }
+   330→    /* Evita parpadeo al abrir: no mostrar tablas hasta terminar carga local/nube */
+   331→    body.np-booting header.hero,
+   332→    body.np-booting section.panel {
+   333→      visibility: hidden;
+   334→    }
+   335→    body:not(.np-booting) header.hero,
+   336→    body:not(.np-booting) section.panel {
+   337→      visibility: visible;
+   338→    }
+   339→  </style>
+   340→</head>
+   341→<body class="np-booting">
+   342→  <p class="guest-note" id="modeNote" style="display:none;" aria-hidden="true"></p>
+   343→
+   344→  <header class="hero">
+   345→    <div class="np-free-tool-head">
+   346→      <h1 class="np-free-tool-title">📊 Distribución nutrimental por etapa (%)</h1>
+   347→      <div class="np-free-watermark" aria-hidden="true"><img src="assets/N_Hoja_Azul.png" alt=""></div>
+   348→    </div>
+   349→    <p class="tagline">
+   350→      Define la <strong>extracción total</strong> por nutriente (kg/ha) y repártela en <strong>% por etapa fenológica</strong>.
+   351→      La herramienta calcula los <strong>kg/ha por etapa</strong> y muestra una <strong>gráfica</strong> que se actualiza al editar.
+   352→    </p>
+   353→    <div class="legend-pills" aria-hidden="true">
+   354→      <span class="pill pill--nut">Extracción total → kg/ha ciclo</span>
+   355→      <span class="pill pill--info">% por etapa → debe sumar 100% / nutriente</span>
+   356→      <span class="pill pill--warn">Valida en campo; curvas orientativas</span>
+   357→    </div>
+   358→    <div class="preset-bar" id="presetBar" aria-label="Mis curvas guardadas (solo dashboard)">
+   359→      <label for="presetSelect">
+   360→        Mis curvas guardadas
+   361→        <select id="presetSelect">
+   362→          <option value="">— Elegir curva —</option>
+   363→        </select>
+   364→      </label>
+   365→      <label for="presetTitleInp">
+   366→        Título (nuevo)
+   367→        <input type="text" id="presetTitleInp" maxlength="80" placeholder="Ej. Aguacate hass · curvas ejemplo" autocomplete="off" />
+   368→      </label>
+   369→      <div class="preset-actions">
+   370→        <button type="button" class="btn btn-preset-save" id="btnPresetSave">💾 Guardar en mi biblioteca</button>
+   371→        <button type="button" class="btn btn-ghost btn-preset-del" id="btnPresetDelete" disabled>🗑 Eliminar seleccionada</button>
+   372→      </div>
+   373→      <p class="preset-hint" id="presetHint">
+   374→        Tu biblioteca es <strong>por usuario</strong> (no por proyecto): puedes tener varias curvas de distintos cultivos y cargar la que quieras en cualquier proyecto. Si borras un proyecto, estas curvas <strong>no se pierden</strong>. El trabajo del día sigue en autosave del proyecto activo.
+   375→      </p>
+   376→    </div>
+   377→  </header>
+   378→
+   379→  <section class="panel" id="sec-totals">
+   380→    <h2>1. Extracción total (kg/ha)</h2>
+   381→    <p class="hint">
+   382→      Ingresa la extracción total del cultivo por elemento. Representa la demanda acumulada en el ciclo.
+   383→      Puedes <strong>agregar</strong> micronutrientes y secundarios cuando los necesites.
+   384→    </p>
+   385→    <div class="totals-wrap" id="totalsRow"></div>
+   386→    <div class="btn-row">
+   387→      <button type="button" class="btn btn-primary" id="btnAddNut">+ Agregar nutriente</button>
+   388→      <button type="button" class="btn btn-ghost" id="btnResetDefaults" title="Vuelve a N, P, K, Ca, Mg, cinco etapas y % de ejemplo">↺ Restaurar ejemplo</button>
+   389→      <span class="hint" id="nextNutHint" style="margin:0;"></span>
+   390→    </div>
+   391→  </section>
+   392→
+   393→  <section class="panel" id="sec-pct">
+   394→    <h2>2. Distribución por etapa (%)</h2>
+   395→    <p class="hint">
+   396→      Ajusta los <strong>%</strong> por etapa. Puedes cambiar el nombre de etapa (lista o texto libre). La <strong>suma por cada nutriente debe ser 100%</strong>.
+   397→      Hay valores de ejemplo precargados; modifícalos a tu criterio. Usa <strong>+ Agregar etapa</strong> o <strong>Quitar</strong> según tu cultivo.
+   398→    </p>
+   399→    <div class="scroll-x">
+   400→      <table class="data" id="pctTable">
+   401→        <thead id="pctHead"></thead>
+   402→        <tbody id="pctBody"></tbody>
+   403→        <tfoot id="pctFoot"></tfoot>
+   404→      </table>
+   405→    </div>
+   406→    <div class="btn-row" style="margin-top:12px;">
+   407→      <button type="button" class="btn btn-ghost" id="btnAddStage">+ Agregar etapa</button>
+   408→    </div>
+   409→    <div class="warn-banner" id="sumWarn"></div>
+   410→  </section>
+   411→
+   412→  <section class="panel" id="sec-kg">
+   413→    <h2>3. Resultado (kg/ha por etapa)</h2>
+   414→    <p class="hint">kg/ha en cada etapa = extracción total × (% / 100).</p>
+   415→    <div class="scroll-x">
+   416→      <table class="data" id="kgTable">
+   417→        <thead id="kgHead"></thead>
+   418→        <tbody id="kgBody"></tbody>
+   419→      </table>
+   420→    </div>
+   421→  </section>
+   422→
+   423→  <section class="panel" id="sec-chart">
+   424→    <h2>4. Gráfica</h2>
+   425→    <p class="hint">Curvas de kg/ha por etapa y nutriente (eje X = etapas). Se actualiza en tiempo real.</p>
+   426→    <div class="btn-row" style="margin-bottom: 4px;">
+   427→      <span style="font-size: 12px; font-weight: 700; color: #334155;">Vista:</span>
+   428→      <div class="chart-seg" role="group" aria-label="Macronutrientes o micronutrientes en la gráfica">
+   429→        <button type="button" id="btnChartMacro" class="is-on" aria-pressed="true">Macros (N, P, K, Ca, Mg, S)</button>
+   430→        <button type="button" id="btnChartMicro" aria-pressed="false">Micros (Fe, Mn, B, Zn, Cu, Mo)</button>
+   431→      </div>
+   432→      <span class="hint" style="margin: 0;">Los micros usan su propia escala para poder distinguirlos.</span>
+   433→    </div>
+   434→    <p id="chartEmpty" class="chart-empty" hidden></p>
+   435→    <div id="chartWrap" class="chart-box">
+   436→      <canvas id="extChart" aria-label="Gráfica extracción por etapa"></canvas>
+   437→    </div>
+   438→  </section>
+   439→
+   440→  <p class="foot-note">
+   441→    Los cálculos son una guía y deben validarse en campo; la decisión final es responsabilidad del técnico o usuario.
+   442→  </p>
+   443→
+   444→  <datalist id="stagePresets">
+   445→    <option value="Brotación"></option>
+   446→    <option value="Vegetativo"></option>
+   447→    <option value="Floración"></option>
+   448→    <option value="Llenado"></option>
+   449→    <option value="Maduración"></option>
+   450→    <option value="Mes 1"></option>
+   451→    <option value="Mes 2"></option>
+   452→    <option value="Mes 3"></option>
+   453→    <option value="Inicio de ciclo"></option>
+   454→    <option value="Desarrollo"></option>
+   455→    <option value="Cosecha"></option>
+   456→  </datalist>
+   457→
+   458→  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+   459→  <script>
+   460→(function () {
+   461→  const BASE = [
+   462→    { id: 'n', label: 'N', total: 180 },
+   463→    { id: 'p', label: 'P', total: 40 },
+   464→    { id: 'k', label: 'K', total: 220 },
+   465→    { id: 'ca', label: 'Ca', total: 120 },
+   466→    { id: 'mg', label: 'Mg', total: 35 }
+   467→  ];
+   468→  const OPTIONAL_QUEUE = [
+   469→    { id: 's', label: 'S', total: 25 },
+   470→    { id: 'fe', label: 'Fe', total: 3 },
+   471→    { id: 'mn', label: 'Mn', total: 2 },
+   472→    { id: 'b', label: 'B', total: 0.5 },
+   473→    { id: 'zn', label: 'Zn', total: 0.3 },
+   474→    { id: 'cu', label: 'Cu', total: 0.2 },
+   475→    { id: 'mo', label: 'Mo', total: 0.05 }
+   476→  ];
+   477→
+   478→  const DEFAULT_STAGES = ['Brotación', 'Vegetativo', 'Floración', 'Llenado', 'Maduración'];
+   479→  /** Macros / secundario S — micros aparte para escala legible en la gráfica */
+   480→  const MACRO_IDS = { n: true, p: true, k: true, ca: true, mg: true, s: true };
+   481→  const MICRO_IDS = { fe: true, mn: true, b: true, zn: true, cu: true, mo: true };
+   482→  let chartNutGroup = 'macro';
+   483→
+   484→  const DEFAULT_PCT = {
+   485→    n: [10, 30, 20, 30, 10],
+   486→    p: [15, 25, 25, 20, 15],
+   487→    k: [5, 20, 25, 35, 15],
+   488→    ca: [12, 28, 22, 28, 10],
+   489→    mg: [12, 28, 22, 28, 10]
+   490→  };
+   491→
+   492→  const COLORS = [
+   493→    '#2563eb', '#16a34a', '#ea580c', '#7c3aed', '#0891b2',
+   494→    '#ca8a04', '#db2777', '#0d9488', '#4f46e5', '#64748b',
+   495→    '#059669', '#b45309', '#be185d'
+   496→  ];
+   497→
+   498→  let nutrients = BASE.map(function (b) { return { id: b.id, label: b.label, total: b.total, optional: false }; });
+   499→  let optionalQueue = OPTIONAL_QUEUE.slice();
+   500→  let stages = DEFAULT_STAGES.slice();
+   501→  let pct = {};
+   502→  const params = new URLSearchParams(window.location.search);
+   503→  const isDashboardMode = params.get('ctx') === 'dashboard';
+   504→  let isBootstrapping = true;
+   505→  let persistTimer = null;
+   506→  const toolStateVersion = 1;
+   507→  const presetsBucketVersion = 1;
+   508→
+   509→  /** @type {{ id: string, title: string, state: object, savedAt: number }[]} */
+   510→  var presetsList = [];
+   511→  var presetDirtyWired = false;
+   512→
+   513→  function generatePresetId() {
+   514→    return (
+   515→      'pex_' +
+   516→      Date.now().toString(36) +
+   517→      '_' +
+   518→      Math.random().toString(36).slice(2, 10)
+   519→    );
+   520→  }
+   521→
+   522→  function buildPresetsLocalKey(ctx) {
+   523→    return 'np_extraccion_etapa_presets_user_' + ctx.userId;
+   524→  }
+   525→
+   526→  function normalizePresetsBucket(raw) {
+   527→    if (!raw || typeof raw !== 'object') return null;
+   528→    var presetsRaw = Array.isArray(raw.presets) ? raw.presets : [];
+   529→    var cleaned = [];
+   530→    for (var i = 0; i < presetsRaw.length; i++) {
+   531→      var p = presetsRaw[i];
+   532→      if (!p || typeof p.title !== 'string' || typeof p.state !== 'object') continue;
+   533→      var st = normalizeState(p.state);
+   534→      if (!st) continue;
+   535→      cleaned.push({
+   536→        id: typeof p.id === 'string' && p.id ? p.id : generatePresetId(),
+   537→        title: String(p.title || 'Sin título').slice(0, 120),
+   538→        state: st,
+   539→        savedAt: Number(p.savedAt) || Date.now()
+   540→      });
+   541→    }
+   542→    return {
+   543→      version: presetsBucketVersion,
+   544→      updatedAt: Number(raw.updatedAt) || Date.now(),
+   545→      presets: cleaned
+   546→    };
+   547→  }
+   548→
+   549→  function loadPresetsLocalBucket() {
+   550→    try {
+   551→      var ctx = getContext();
+   552→      var raw = localStorage.getItem(buildPresetsLocalKey(ctx));
+   553→      if (!raw) return null;
+   554→      return normalizePresetsBucket(JSON.parse(raw));
+   555→    } catch (_) {
+   556→      return null;
+   557→    }
+   558→  }
+   559→
+   560→  function savePresetsLocalBucket(bucket) {
+   561→    try {
+   562→      var ctx = getContext();
+   563→      localStorage.setItem(buildPresetsLocalKey(ctx), JSON.stringify(bucket));
+   564→    } catch (_) {}
+   565→  }
+   566→
+   567→  async function loadPresetsCloudBucket() {
+   568→    if (!isDashboardMode) return null;
+   569→    try {
+   570→      var host =
+   571→        window.parent && window.parent !== window ? window.parent : window;
+   572→      if (
+   573→        typeof host.nutriplantLoadExtractionPresetsFromCloud !== 'function'
+   574→      )
+   575→        return null;
+   576→      var ctx = getContext();
+   577→      var data = await host.nutriplantLoadExtractionPresetsFromCloud(ctx);
+   578→      return normalizePresetsBucket(data);
+   579→    } catch (_) {
+   580→      return null;
+   581→    }
+   582→  }
+   583→
+   584→  function savePresetsCloudBucket(bucket) {
+   585→    if (!isDashboardMode) return;
+   586→    try {
+   587→      var host =
+   588→        window.parent && window.parent !== window ? window.parent : window;
+   589→      if (
+   590→        typeof host.nutriplantSaveExtractionPresetsToCloud !== 'function'
+   591→      )
+   592→        return;
+   593→      var ctx = getContext();
+   594→      host.nutriplantSaveExtractionPresetsToCloud({
+   595→        userId: ctx.userId,
+   596→        presetsData: bucket
+   597→      });
+   598→    } catch (_) {}
+   599→  }
+   600→
+   601→  async function hydratePresets() {
+   602→    if (!isDashboardMode) return;
+   603→    var loc = loadPresetsLocalBucket();
+   604→    var cld = await loadPresetsCloudBucket();
+   605→    var locTs = loc && loc.updatedAt ? loc.updatedAt : 0;
+   606→    var cldTs = cld && cld.updatedAt ? cld.updatedAt : 0;
+   607→    var pick = null;
+   608→    if (!loc && !cld) pick = null;
+   609→    else if (!cld) pick = loc;
+   610→    else if (!loc) pick = cld;
+   611→    else pick = cldTs >= locTs ? cld : loc;
+   612→    presetsList = pick && pick.presets ? pick.presets.slice() : [];
+   613→    renderPresetSelectUI();
+   614→  }
+   615→
+   616→  function persistFullPresetsBucket() {
+   617→    if (!isDashboardMode) return;
+   618→    var bucket = {
+   619→      version: presetsBucketVersion,
+   620→      updatedAt: Date.now(),
+   621→      presets: presetsList.slice()
+   622→    };
+   623→    savePresetsLocalBucket(bucket);
+   624→    savePresetsCloudBucket(bucket);
+   625→    renderPresetSelectUI();
+   626→  }
+   627→
+   628→  function refreshPresetDeleteButton() {
+   629→    var sel = document.getElementById('presetSelect');
+   630→    var btn = document.getElementById('btnPresetDelete');
+   631→    if (!btn || !sel) return;
+   632→    btn.disabled = !sel.value;
+   633→  }
+   634→
+   635→  function renderPresetSelectUI() {
+   636→    var sel = document.getElementById('presetSelect');
+   637→    if (!sel) return;
+   638→    var current = sel.value;
+   639→    sel.innerHTML = '';
+   640→    var o0 = document.createElement('option');
+   641→    o0.value = '';
+   642→    o0.textContent = '— Elegir curva —';
+   643→    sel.appendChild(o0);
+   644→    presetsList
+   645→      .slice()
+   646→      .sort(function (a, b) {
+   647→        return String(a.title).localeCompare(String(b.title), 'es');
+   648→      })
+   649→      .forEach(function (p) {
+   650→        var opt = document.createElement('option');
+   651→        opt.value = p.id;
+   652→        opt.textContent = p.title;
+   653→        sel.appendChild(opt);
+   654→      });
+   655→    if (
+   656→      presetsList.some(function (p) {
+   657→        return p.id === current;
+   658→      })
+   659→    )
+   660→      sel.value = current;
+   661→    else sel.value = '';
+   662→    refreshPresetDeleteButton();
+   663→  }
+   664→
+   665→  function invalidatePresetChoice() {
+   666→    if (!isDashboardMode) return;
+   667→    var sel = document.getElementById('presetSelect');
+   668→    if (sel) sel.value = '';
+   669→    refreshPresetDeleteButton();
+   670→  }
+   671→
+   672→  function setupPresetBar() {
+   673→    if (!isDashboardMode) return;
+   674→    var bar = document.getElementById('presetBar');
+   675→    if (bar) bar.classList.add('is-visible');
+   676→
+   677→    var sel = document.getElementById('presetSelect');
+   678→    if (sel) {
+   679→      sel.addEventListener('change', function () {
+   680→        refreshPresetDeleteButton();
+   681→        var id = sel.value;
+   682→        if (!id) return;
+   683→        var p = null;
+   684→        for (var i = 0; i < presetsList.length; i++) {
+   685→          if (presetsList[i].id === id) {
+   686→            p = presetsList[i];
+   687→            break;
+   688→          }
+   689→        }
+   690→        if (!p) return;
+   691→        var normalized = normalizeState(p.state);
+   692→        if (!normalized) {
+   693→          alert('No se pudo cargar esa curva (datos incompletos).');
+   694→          invalidatePresetChoice();
+   695→          return;
+   696→        }
+   697→        applyState(normalized);
+   698→        ensurePct();
+   699→        renderAll();
+   700→      });
+   701→    }
+   702→
+   703→    var btnSv = document.getElementById('btnPresetSave');
+   704→    if (btnSv) {
+   705→      btnSv.addEventListener('click', function () {
+   706→        var inpTitle = document.getElementById('presetTitleInp');
+   707→        var title =
+   708→          inpTitle && inpTitle.value
+   709→            ? inpTitle.value.trim()
+   710→            : '';
+   711→        if (!title) {
+   712→          title =
+   713→            'Curva · ' +
+   714→            new Date().toLocaleString('es', {
+   715→              day: '2-digit',
+   716→              month: 'short',
+   717→              year: 'numeric',
+   718→              hour: '2-digit',
+   719→              minute: '2-digit'
+   720→            });
+   721→        }
+   722→        var stInner = snapshotState();
+   723→        var stOk = normalizeState(stInner);
+   724→        if (!stOk) {
+   725→          alert('No es posible guardar: espera que la tabla cargue o revisa valores.');
+   726→          return;
+   727→        }
+   728→        presetsList.push({
+   729→          id: generatePresetId(),
+   730→          title: title.slice(0, 120),
+   731→          state: snapshotState(),
+   732→          savedAt: Date.now()
+   733→        });
+   734→        if (inpTitle) inpTitle.value = '';
+   735→        persistFullPresetsBucket();
+   736→      });
+   737→    }
+   738→
+   739→    var btnDel = document.getElementById('btnPresetDelete');
+   740→    if (btnDel) {
+   741→      btnDel.addEventListener('click', function () {
+   742→        var s = document.getElementById('presetSelect');
+   743→        if (!s || !s.value) return;
+   744→        var idDel = s.value;
+   745→        var titleDel = '';
+   746→        for (var j = 0; j < presetsList.length; j++) {
+   747→          if (presetsList[j].id === idDel) {
+   748→            titleDel = presetsList[j].title;
+   749→            break;
+   750→          }
+   751→        }
+   752→        if (!confirm('¿Eliminar la curva «' + titleDel + '» de tu biblioteca?')) return;
+   753→        presetsList = presetsList.filter(function (x) {
+   754→          return x.id !== idDel;
+   755→        });
+   756→        persistFullPresetsBucket();
+   757→      });
+   758→    }
+   759→  }
+   760→
+   761→  function wirePresetDirtyDetection() {
+   762→    if (!isDashboardMode || presetDirtyWired) return;
+   763→    presetDirtyWired = true;
+   764→    ['sec-totals', 'sec-pct'].forEach(function (id) {
+   765→      var sec = document.getElementById(id);
+   766→      if (!sec) return;
+   767→      sec.addEventListener(
+   768→        'input',
+   769→        function () {
+   770→          invalidatePresetChoice();
+   771→        },
+   772→        true
+   773→      );
+   774→      sec.addEventListener(
+   775→        'change',
+   776→        function () {
+   777→          invalidatePresetChoice();
+   778→        },
+   779→        true
+   780→      );
+   781→    });
+   782→  }
+   783→
+   784→
+   785→  function getContext() {
+   786→    var ls = window.localStorage;
+   787→    var userId = ls.getItem('nutriplant_user_id') || 'guest';
+   788→    var projectId =
+   789→      params.get('pid') ||
+   790→      ls.getItem('nutriplant-current-project') ||
+   791→      ls.getItem('currentProjectId') ||
+   792→      'no-project';
+   793→    return { userId: userId, projectId: projectId };
+   794→  }
+   795→
+   796→  function pickNewestState(localState, cloudState) {
+   797→    if (localState && cloudState) {
+   798→      var localTs = localState.updatedAt || 0;
+   799→      var cloudTs = cloudState.updatedAt || 0;
+   800→      return cloudTs > localTs ? cloudState : localState;
+   801→    }
+   802→    return cloudState || localState || null;
+   803→  }
+   804→
+   805→  async function resolveInitialState() {
+   806→    var localState = loadStateLocal();
+   807→    var cloudState = isDashboardMode ? await loadStateCloud() : null;
+   808→    return {
+   809→      state: pickNewestState(localState, cloudState),
+   810→      localState: localState,
+   811→      cloudState: cloudState
+   812→    };
+   813→  }
+   814→
+   815→  function finishBootReveal() {
+   816→    isBootstrapping = false;
+   817→    requestAnimationFrame(function () {
+   818→      document.body.classList.remove('np-booting');
+   819→    });
+   820→  }
+   821→
+   822→  function buildLocalKey(ctx) {
+   823→    return 'np_extraccion_etapa_' + ctx.userId + '_' + ctx.projectId;
+   824→  }
+   825→
+   826→  function normalizeState(raw) {
+   827→    if (!raw || typeof raw !== 'object') return null;
+   828→    if (!Array.isArray(raw.nutrients) || !Array.isArray(raw.stages) || !raw.pct || typeof raw.pct !== 'object') return null;
+   829→    var nList = raw.nutrients
+   830→      .filter(function (n) { return n && typeof n.id === 'string' && typeof n.label === 'string'; })
+   831→      .map(function (n) {
+   832→        return {
+   833→          id: n.id,
+   834→          label: n.label,
+   835→          total: parseFloat(n.total) || 0,
+   836→          optional: !!n.optional
+   837→        };
+   838→      });
+   839→    if (!nList.length) return null;
+   840→    var st = raw.stages.map(function (s, i) {
+   841→      var txt = String(s || '').trim();
+   842→      return txt || ('Etapa ' + (i + 1));
+   843→    });
+   844→    if (!st.length) return null;
+   845→    var pctMap = {};
+   846→    nList.forEach(function (n) {
+   847→      var arr = Array.isArray(raw.pct[n.id]) ? raw.pct[n.id].slice(0, st.length) : [];
+   848→      while (arr.length < st.length) arr.push(0);
+   849→      pctMap[n.id] = arr.map(function (v) { return round1(parseFloat(v) || 0); });
+   850→    });
+   851→    return {
+   852→      version: raw.version || toolStateVersion,
+   853→      updatedAt: Number(raw.updatedAt) || Date.now(),
+   854→      nutrients: nList,
+   855→      optionalQueue: Array.isArray(raw.optionalQueue) ? raw.optionalQueue : OPTIONAL_QUEUE.filter(function (o) {
+   856→        return !nList.some(function (n) { return n.id === o.id; });
+   857→      }),
+   858→      stages: st,
+   859→      pct: pctMap
+   860→    };
+   861→  }
+   862→
+   863→  function snapshotState() {
+   864→    return {
+   865→      version: toolStateVersion,
+   866→      updatedAt: Date.now(),
+   867→      nutrients: nutrients.map(function (n) {
+   868→        return { id: n.id, label: n.label, total: parseFloat(n.total) || 0, optional: !!n.optional };
+   869→      }),
+   870→      optionalQueue: optionalQueue.slice(),
+   871→      stages: stages.slice(),
+   872→      pct: JSON.parse(JSON.stringify(pct))
+   873→    };
+   874→  }
+   875→
+   876→  function applyState(state) {
+   877→    if (!state) return false;
+   878→    nutrients = state.nutrients.slice();
+   879→    optionalQueue = Array.isArray(state.optionalQueue) ? state.optionalQueue.slice() : [];
+   880→    stages = state.stages.slice();
+   881→    pct = JSON.parse(JSON.stringify(state.pct || {}));
+   882→    ensurePct();
+   883→    return true;
+   884→  }
+   885→
+   886→  function saveStateLocal(state) {
+   887→    try {
+   888→      var ctx = getContext();
+   889→      localStorage.setItem(buildLocalKey(ctx), JSON.stringify(state));
+   890→    } catch (_) {}
+   891→  }
+   892→
+   893→  function loadStateLocal() {
+   894→    try {
+   895→      var ctx = getContext();
+   896→      var raw = localStorage.getItem(buildLocalKey(ctx));
+   897→      if (!raw) return null;
+   898→      return normalizeState(JSON.parse(raw));
+   899→    } catch (_) {
+   900→      return null;
+   901→    }
+   902→  }
+   903→
+   904→  async function loadStateCloud() {
+   905→    if (!isDashboardMode) return null;
+   906→    try {
+   907→      var host = window.parent && window.parent !== window ? window.parent : window;
+   908→      if (typeof host.nutriplantLoadExtractionStageFromCloud !== 'function') return null;
+   909→      var ctx = getContext();
+   910→      var data = await host.nutriplantLoadExtractionStageFromCloud(ctx);
+   911→      return normalizeState(data);
+   912→    } catch (_) {
+   913→      return null;
+   914→    }
+   915→  }
+   916→
+   917→  function saveStateCloud(state) {
+   918→    if (!isDashboardMode) return;
+   919→    try {
+   920→      var host = window.parent && window.parent !== window ? window.parent : window;
+   921→      if (typeof host.nutriplantSaveExtractionStageToCloud !== 'function') return;
+   922→      var ctx = getContext();
+   923→      host.nutriplantSaveExtractionStageToCloud({
+   924→        userId: ctx.userId,
+   925→        projectId: ctx.projectId,
+   926→        state: state
+   927→      });
+   928→    } catch (_) {}
+   929→  }
+   930→
+   931→  function schedulePersist() {
+   932→    if (!isDashboardMode || isBootstrapping) return;
+   933→    if (persistTimer) clearTimeout(persistTimer);
+   934→    persistTimer = setTimeout(function () {
+   935→      var state = snapshotState();
+   936→      saveStateLocal(state);
+   937→      saveStateCloud(state);
+   938→    }, 550);
+   939→  }
+   940→
+   941→  function resetToFactoryDefaults() {
+   942→    if (!window.confirm('¿Restaurar al ejemplo inicial? Se borrarán nutrientes opcionales añadidos y etapas extra; volverán N, P, K, Ca, Mg con totales y % de ejemplo.')) return;
+   943→    nutrients = BASE.map(function (b) { return { id: b.id, label: b.label, total: b.total, optional: false }; });
+   944→    optionalQueue = OPTIONAL_QUEUE.slice();
+   945→    stages = DEFAULT_STAGES.slice();
+   946→    pct = {};
+   947→    BASE.forEach(function (b) {
+   948→      pct[b.id] = DEFAULT_PCT[b.id] ? DEFAULT_PCT[b.id].slice() : equalSplit(DEFAULT_STAGES.length);
+   949→    });
+   950→    ensurePct();
+   951→    invalidatePresetChoice();
+   952→    renderAll();
+   953→  }
+   954→
+   955→  function updateModeNote() {
+   956→    var el = document.getElementById('modeNote');
+   957→    if (!el) return;
+   958→    if (isDashboardMode) {
+   959→      el.style.display = '';
+   960→      el.removeAttribute('aria-hidden');
+   961→      el.innerHTML =
+   962→        '<strong>Modo dashboard:</strong> guardado automático local + proyecto en la nube. ' +
+   963→        'Además puedes guardar <strong>curvas con título</strong> en tu biblioteca personal (kg/ha y %); las ves en todos tus proyectos y no se pierden si borras uno.';
+   964→    } else {
+   965→      el.style.display = 'none';
+   966→      el.setAttribute('aria-hidden', 'true');
+   967→    }
+   968→  }
+   969→  function ensurePct() {
+   970→    nutrients.forEach(function (n) {
+   971→      if (!pct[n.id]) {
+   972→        var eq = equalSplit(stages.length);
+   973→        pct[n.id] = eq;
+   974→      } else if (pct[n.id].length !== stages.length) {
+   975→        resizePctArray(n.id, stages.length);
+   976→      }
+   977→    });
+   978→    Object.keys(pct).forEach(function (k) {
+   979→      if (!nutrients.some(function (n) { return n.id === k; })) delete pct[k];
+   980→    });
+   981→  }
+   982→  function equalSplit(n) {
+   983→    if (n <= 0) return [];
+   984→    var arr = [];
+   985→    var s = 0;
+   986→    var q = 100 / n;
+   987→    for (var i = 0; i < n - 1; i++) {
+   988→      var v = round1(q);
+   989→      arr.push(v);
+   990→      s += v;
+   991→    }
+   992→    arr.push(round1(100 - s));
+   993→    return arr;
+   994→  }
+   995→  function resizePctArray(id, newLen) {
+   996→    var old = pct[id] || [];
+   997→    if (old.length === newLen) return;
+   998→    while (old.length < newLen) {
+   999→      if (!old.length) {
+  1000→        old = equalSplit(newLen);
+  1001→        pct[id] = old;
+  1002→        return;
+  1003→      }
+  1004→      var last = parseFloat(old[old.length - 1]) || 0;
+  1005→      var a = round1(last / 2);
+  1006→      var b = round1(last - a);
+  1007→      old[old.length - 1] = a;
+  1008→      old.push(b);
+  1009→      var diff = 100 - sumPct(id);
+  1010→      if (Math.abs(diff) > 0.05) {
+  1011→        old[old.length - 1] = round1((parseFloat(old[old.length - 1]) || 0) + diff);
+  1012→      }
+  1013→    }
+  1014→    while (old.length > newLen) {
+  1015→      var rm = parseFloat(old[old.length - 1]) || 0;
+  1016→      old.pop();
+  1017→      if (old.length) {
+  1018→        old[old.length - 1] = round1((parseFloat(old[old.length - 1]) || 0) + rm);
+  1019→      }
+  1020→    }
+  1021→    pct[id] = old;
+  1022→  }
+  1023→  function round1(x) { return Math.round(x * 10) / 10; }
+  1024→
+  1025→  /** kg/ha legible: pocos decimales y sin basura de float */
+  1026→  function formatKgHa(v) {
+  1027→    var x = Number(v);
+  1028→    if (!isFinite(x)) return '0';
+  1029→    x = Math.round(x * 1e6) / 1e6;
+  1030→    var a = Math.abs(x);
+  1031→    if (a >= 100) return (Math.round(x * 10) / 10).toFixed(1);
+  1032→    if (a >= 10) return (Math.round(x * 100) / 100).toFixed(2);
+  1033→    if (a >= 1) return (Math.round(x * 100) / 100).toFixed(2);
+  1034→    if (a >= 0.1) return (Math.round(x * 1000) / 1000).toFixed(3);
+  1035→    if (a >= 0.01) return (Math.round(x * 10000) / 10000).toFixed(4);
+  1036→    return (Math.round(x * 1e6) / 1e6).toFixed(6).replace(/\.?0+$/, '') || '0';
+  1037→  }
+  1038→
+  1039→  function sumPct(id) {
+  1040→    return (pct[id] || []).reduce(function (a, b) { return a + (parseFloat(b) || 0); }, 0);
+  1041→  }
+  1042→
+  1043→  function renderTotals() {
+  1044→    var el = document.getElementById('totalsRow');
+  1045→    el.innerHTML = '';
+  1046→    nutrients.forEach(function (n, idx) {
+  1047→      var wrap = document.createElement('div');
+  1048→      wrap.className = 'nut-wrap' + (n.optional ? ' optional' : '');
+  1049→      var lab = document.createElement('label');
+  1050→      lab.textContent = n.label + ' (kg/ha)';
+  1051→      var inp = document.createElement('input');
+  1052→      inp.type = 'number';
+  1053→      inp.step = 'any';
+  1054→      inp.min = '0';
+  1055→      inp.value = n.total;
+  1056→      inp.dataset.nutId = n.id;
+  1057→      inp.addEventListener('input', function () {
+  1058→        n.total = parseFloat(inp.value) || 0;
+  1059→        updateKgAndChart();
+  1060→      });
+  1061→      lab.appendChild(inp);
+  1062→      wrap.appendChild(lab);
+  1063→      if (n.optional) {
+  1064→        var rm = document.createElement('button');
+  1065→        rm.type = 'button';
+  1066→        rm.className = 'rm-nut';
+  1067→        rm.title = 'Quitar nutriente';
+  1068→        rm.innerHTML = '×';
+  1069→        rm.addEventListener('click', function () {
+  1070→          nutrients = nutrients.filter(function (x) { return x.id !== n.id; });
+  1071→          delete pct[n.id];
+  1072→          ensurePct();
+  1073→          invalidatePresetChoice();
+  1074→          renderAll();
+  1075→        });
+  1076→        wrap.appendChild(rm);
+  1077→      }
+  1078→      el.appendChild(wrap);
+  1079→    });
+  1080→    var hint = document.getElementById('nextNutHint');
+  1081→    var btn = document.getElementById('btnAddNut');
+  1082→    if (optionalQueue.length) {
+  1083→      hint.textContent = 'Siguiente: ' + optionalQueue[0].label;
+  1084→      btn.disabled = false;
+  1085→      btn.removeAttribute('title');
+  1086→    } else {
+  1087→      hint.textContent = 'Ya agregaste todos los nutrientes opcionales (S, Fe, Mn, B, Zn, Cu, Mo).';
+  1088→      btn.disabled = true;
+  1089→      btn.title = 'No hay más nutrientes opcionales por agregar. Puedes quitar uno con × para volver a habilitar este botón.';
+  1090→    }
+  1091→  }
+  1092→
+  1093→  function renderPctTable() {
+  1094→    var thead = document.getElementById('pctHead');
+  1095→    var tbody = document.getElementById('pctBody');
+  1096→    var tfoot = document.getElementById('pctFoot');
+  1097→    thead.innerHTML = '';
+  1098→    tbody.innerHTML = '';
+  1099→    tfoot.innerHTML = '';
+  1100→
+  1101→    var trh = document.createElement('tr');
+  1102→    var th0 = document.createElement('th');
+  1103→    th0.textContent = 'Etapa';
+  1104→    trh.appendChild(th0);
+  1105→    nutrients.forEach(function (n) {
+  1106→      var th = document.createElement('th');
+  1107→      th.textContent = n.label + ' %';
+  1108→      trh.appendChild(th);
+  1109→    });
+  1110→    var thA = document.createElement('th');
+  1111→    thA.textContent = '';
+  1112→    trh.appendChild(thA);
+  1113→    thead.appendChild(trh);
+  1114→
+  1115→    stages.forEach(function (st, ri) {
+  1116→      var tr = document.createElement('tr');
+  1117→      var td0 = document.createElement('td');
+  1118→      td0.className = 'stage-cell';
+  1119→      var sin = document.createElement('input');
+  1120→      sin.type = 'text';
+  1121→      sin.className = 'stage-in';
+  1122→      sin.setAttribute('list', 'stagePresets');
+  1123→      sin.value = st;
+  1124→      sin.dataset.stageIndex = String(ri);
+  1125→      sin.addEventListener('change', function () {
+  1126→        stages[ri] = sin.value.trim() || ('Etapa ' + (ri + 1));
+  1127→        updateKgAndChart();
+  1128→      });
+  1129→      sin.addEventListener('input', function () {
+  1130→        stages[ri] = sin.value;
+  1131→        updateKgAndChart();
+  1132→      });
+  1133→      td0.appendChild(sin);
+  1134→      tr.appendChild(td0);
+  1135→
+  1136→      nutrients.forEach(function (n) {
+  1137→        var td = document.createElement('td');
+  1138→        var inp = document.createElement('input');
+  1139→        inp.type = 'number';
+  1140→        inp.step = '0.1';
+  1141→        inp.className = 'pct-in';
+  1142→        inp.value = pct[n.id][ri];
+  1143→        inp.dataset.nutId = n.id;
+  1144→        inp.dataset.rowIndex = String(ri);
+  1145→        inp.addEventListener('input', function () {
+  1146→          pct[n.id][ri] = parseFloat(inp.value) || 0;
+  1147→          updateSums();
+  1148→          updateKgAndChart();
+  1149→        });
+  1150→        td.appendChild(inp);
+  1151→        tr.appendChild(td);
+  1152→      });
+  1153→
+  1154→      var tdAct = document.createElement('td');
+  1155→      if (stages.length > 1) {
+  1156→        var rm = document.createElement('button');
+  1157→        rm.type = 'button';
+  1158→        rm.className = 'btn btn-danger';
+  1159→        rm.textContent = 'Quitar etapa';
+  1160→        rm.addEventListener('click', function () { removeStage(ri); });
+  1161→        tdAct.appendChild(rm);
+  1162→      } else {
+  1163→        tdAct.textContent = '—';
+  1164→      }
+  1165→      tr.appendChild(tdAct);
+  1166→      tbody.appendChild(tr);
+  1167→    });
+  1168→
+  1169→    var trf = document.createElement('tr');
+  1170→    var tdL = document.createElement('td');
+  1171→    tdL.textContent = 'Σ %';
+  1172→    trf.appendChild(tdL);
+  1173→    nutrients.forEach(function (n) {
+  1174→      var td = document.createElement('td');
+  1175→      var s = sumPct(n.id);
+  1176→      td.textContent = round1(s) + '%';
+  1177→      td.className = Math.abs(s - 100) < 0.05 ? 'ok' : 'bad';
+  1178→      trf.appendChild(td);
+  1179→    });
+  1180→    var tdx = document.createElement('td');
+  1181→    trf.appendChild(tdx);
+  1182→    tfoot.appendChild(trf);
+  1183→
+  1184→    var bad = nutrients.some(function (n) { return Math.abs(sumPct(n.id) - 100) >= 0.05; });
+  1185→    var ban = document.getElementById('sumWarn');
+  1186→    if (bad) {
+  1187→      ban.className = 'warn-banner show';
+  1188→      ban.textContent = '⚠ La suma de % por nutriente debe ser 100%. Ajusta los valores o reparte en más etapas.';
+  1189→    } else {
+  1190→      ban.className = 'warn-banner';
+  1191→      ban.textContent = '';
+  1192→    }
+  1193→  }
+  1194→
+  1195→  function removeStage(ri) {
+  1196→    if (stages.length <= 1) return;
+  1197→    nutrients.forEach(function (n) {
+  1198→      var arr = pct[n.id];
+  1199→      var rmv = parseFloat(arr[ri]) || 0;
+  1200→      if (ri > 0) {
+  1201→        arr[ri - 1] = round1((parseFloat(arr[ri - 1]) || 0) + rmv);
+  1202→      } else if (arr.length > 1) {
+  1203→        arr[1] = round1((parseFloat(arr[0]) || 0) + (parseFloat(arr[1]) || 0));
+  1204→      }
+  1205→      arr.splice(ri, 1);
+  1206→    });
+  1207→    stages.splice(ri, 1);
+  1208→    invalidatePresetChoice();
+  1209→    renderAll();
+  1210→  }
+  1211→
+  1212→  function renderKgTable() {
+  1213→    var thead = document.getElementById('kgHead');
+  1214→    var tbody = document.getElementById('kgBody');
+  1215→    thead.innerHTML = '';
+  1216→    tbody.innerHTML = '';
+  1217→    var trh = document.createElement('tr');
+  1218→    var h0 = document.createElement('th');
+  1219→    h0.textContent = 'Etapa';
+  1220→    trh.appendChild(h0);
+  1221→    nutrients.forEach(function (n) {
+  1222→      var th = document.createElement('th');
+  1223→      th.textContent = n.label + ' (kg/ha)';
+  1224→      trh.appendChild(th);
+  1225→    });
+  1226→    thead.appendChild(trh);
+  1227→
+  1228→    stages.forEach(function (st, ri) {
+  1229→      var tr = document.createElement('tr');
+  1230→      var td0 = document.createElement('td');
+  1231→      td0.textContent = st;
+  1232→      tr.appendChild(td0);
+  1233→      nutrients.forEach(function (n) {
+  1234→        var td = document.createElement('td');
+  1235→        var total = parseFloat(n.total) || 0;
+  1236→        var p = (parseFloat(pct[n.id][ri]) || 0) / 100;
+  1237→        var kg = total * p;
+  1238→        td.textContent = formatKgHa(kg);
+  1239→        tr.appendChild(td);
+  1240→      });
+  1241→      tbody.appendChild(tr);
+  1242→    });
+  1243→  }
+  1244→
+  1245→  var chartInst = null;
+  1246→
+  1247→  function nutrientColorIndex(n) {
+  1248→    for (var i = 0; i < nutrients.length; i++) {
+  1249→      if (nutrients[i].id === n.id) return i;
+  1250→    }
+  1251→    return 0;
+  1252→  }
+  1253→
+  1254→  function chartFilteredNutrients() {
+  1255→    return nutrients.filter(function (n) {
+  1256→      return chartNutGroup === 'macro' ? MACRO_IDS[n.id] : MICRO_IDS[n.id];
+  1257→    });
+  1258→  }
+  1259→
+  1260→  function syncChartGroupButtons() {
+  1261→    var m = document.getElementById('btnChartMacro');
+  1262→    var u = document.getElementById('btnChartMicro');
+  1263→    if (!m || !u) return;
+  1264→    var isMacro = chartNutGroup === 'macro';
+  1265→    m.classList.toggle('is-on', isMacro);
+  1266→    u.classList.toggle('is-on', !isMacro);
+  1267→    m.setAttribute('aria-pressed', isMacro ? 'true' : 'false');
+  1268→    u.setAttribute('aria-pressed', !isMacro ? 'true' : 'false');
+  1269→  }
+  1270→
+  1271→  function updateChart() {
+  1272→    var canvas = document.getElementById('extChart');
+  1273→    var emptyEl = document.getElementById('chartEmpty');
+  1274→    var wrapEl = document.getElementById('chartWrap');
+  1275→    var labels = stages.slice();
+  1276→    var filtered = chartFilteredNutrients();
+  1277→
+  1278→    if (typeof Chart === 'undefined') return;
+  1279→
+  1280→    if (!filtered.length) {
+  1281→      if (chartInst) {
+  1282→        chartInst.destroy();
+  1283→        chartInst = null;
+  1284→      }
+  1285→      if (emptyEl) {
+  1286→        emptyEl.textContent = chartNutGroup === 'micro'
+  1287→          ? 'No hay micronutrientes en la lista. Usa «+ Agregar nutriente» para añadir Fe, Mn, B, Zn, Cu o Mo y ver esta vista.'
+  1288→          : 'No hay datos para mostrar en esta vista.';
+  1289→        emptyEl.hidden = false;
+  1290→      }
+  1291→      if (wrapEl) wrapEl.hidden = true;
+  1292→      return;
+  1293→    }
+  1294→
+  1295→    if (emptyEl) emptyEl.hidden = true;
+  1296→    if (wrapEl) wrapEl.hidden = false;
+  1297→
+  1298→    var datasets = filtered.map(function (n) {
+  1299→      var ci = nutrientColorIndex(n);
+  1300→      var data = stages.map(function (_, ri) {
+  1301→        var total = parseFloat(n.total) || 0;
+  1302→        var p = (parseFloat(pct[n.id][ri]) || 0) / 100;
+  1303→        return round1(total * p * 100) / 100;
+  1304→      });
+  1305→      return {
+  1306→        label: n.label,
+  1307→        data: data,
+  1308→        borderColor: COLORS[ci % COLORS.length],
+  1309→        backgroundColor: COLORS[ci % COLORS.length] + '22',
+  1310→        tension: 0.35,
+  1311→        fill: false,
+  1312→        pointRadius: 4,
+  1313→        pointHoverRadius: 6
+  1314→      };
+  1315→    });
+  1316→
+  1317→    if (chartInst) chartInst.destroy();
+  1318→    chartInst = new Chart(canvas, {
+  1319→      type: 'line',
+  1320→      data: { labels: labels, datasets: datasets },
+  1321→      options: {
+  1322→        responsive: true,
+  1323→        maintainAspectRatio: false,
+  1324→        interaction: { mode: 'nearest', intersect: false, axis: 'xy' },
+  1325→        plugins: {
+  1326→          legend: { position: 'bottom', labels: { boxWidth: 12, padding: 16 } },
+  1327→          tooltip: {
+  1328→            mode: 'nearest',
+  1329→            intersect: false,
+  1330→            callbacks: {
+  1331→              label: function (ctx) {
+  1332→                var y = ctx.parsed && typeof ctx.parsed.y === 'number' ? ctx.parsed.y : ctx.raw;
+  1333→                return ctx.dataset.label + ': ' + formatKgHa(y) + ' kg/ha';
+  1334→              }
+  1335→            }
+  1336→          }
+  1337→        },
+  1338→        scales: {
+  1339→          x: {
+  1340→            title: { display: true, text: 'Etapa' },
+  1341→            ticks: { maxRotation: 45, minRotation: 0 }
+  1342→          },
+  1343→          y: {
+  1344→            beginAtZero: true,
+  1345→            title: { display: true, text: 'kg/ha extraídos' },
+  1346→            ticks: {
+  1347→              callback: function (value) {
+  1348→                return formatKgHa(value);
+  1349→              }
+  1350→            }
+  1351→          }
+  1352→        }
+  1353→      }
+  1354→    });
+  1355→  }
+  1356→
+  1357→  function updateSums() {
+  1358→    var tfoot = document.querySelector('#pctFoot tr');
+  1359→    if (!tfoot) return;
+  1360→    var cells = tfoot.querySelectorAll('td');
+  1361→    nutrients.forEach(function (n, i) {
+  1362→      var s = sumPct(n.id);
+  1363→      var td = cells[i + 1];
+  1364→      if (td) {
+  1365→        td.textContent = round1(s) + '%';
+  1366→        td.className = Math.abs(s - 100) < 0.05 ? 'ok' : 'bad';
+  1367→      }
+  1368→    });
+  1369→    var bad = nutrients.some(function (n) { return Math.abs(sumPct(n.id) - 100) >= 0.05; });
+  1370→    var ban = document.getElementById('sumWarn');
+  1371→    if (bad) {
+  1372→      ban.className = 'warn-banner show';
+  1373→      ban.textContent = '⚠ La suma de % por nutriente debe ser 100%. Ajusta los valores o reparte en más etapas.';
+  1374→    } else {
+  1375→      ban.className = 'warn-banner';
+  1376→    }
+  1377→  }
+  1378→
+  1379→  function updateKgAndChart() {
+  1380→    renderKgTable();
+  1381→    updateChart();
+  1382→    schedulePersist();
+  1383→  }
+  1384→
+  1385→  function renderAll() {
+  1386→    ensurePct();
+  1387→    renderTotals();
+  1388→    renderPctTable();
+  1389→    renderKgTable();
+  1390→    updateChart();
+  1391→    schedulePersist();
+  1392→  }
+  1393→
+  1394→  document.getElementById('btnAddNut').addEventListener('click', function () {
+  1395→    if (!optionalQueue.length) return;
+  1396→    var next = optionalQueue.shift();
+  1397→    nutrients.push({ id: next.id, label: next.label, total: next.total, optional: true });
+  1398→    pct[next.id] = equalSplit(stages.length);
+  1399→    invalidatePresetChoice();
+  1400→    renderAll();
+  1401→  });
+  1402→
+  1403→  document.getElementById('btnAddStage').addEventListener('click', function () {
+  1404→    invalidatePresetChoice();
+  1405→    stages.push('Nueva etapa');
+  1406→    nutrients.forEach(function (n) {
+  1407→      var arr = pct[n.id];
+  1408→      if (!arr.length) {
+  1409→        pct[n.id] = equalSplit(stages.length);
+  1410→        return;
+  1411→      }
+  1412→      var last = parseFloat(arr[arr.length - 1]) || 0;
+  1413→      var a = round1(last / 2);
+  1414→      var b = round1(last - a);
+  1415→      arr[arr.length - 1] = a;
+  1416→      arr.push(b);
+  1417→      var s = sumPct(n.id);
+  1418→      if (Math.abs(s - 100) > 0.05) {
+  1419→        var diff = 100 - s;
+  1420→        arr[arr.length - 1] = round1((parseFloat(arr[arr.length - 1]) || 0) + diff);
+  1421→      }
+  1422→    });
+  1423→    renderAll();
+  1424→  });
+  1425→
+  1426→  document.getElementById('btnResetDefaults').addEventListener('click', resetToFactoryDefaults);
+  1427→
+  1428→  document.getElementById('btnChartMacro').addEventListener('click', function () {
+  1429→    if (chartNutGroup === 'macro') return;
+  1430→    chartNutGroup = 'macro';
+  1431→    syncChartGroupButtons();
+  1432→    updateChart();
+  1433→  });
+  1434→  document.getElementById('btnChartMicro').addEventListener('click', function () {
+  1435→    if (chartNutGroup === 'micro') return;
+  1436→    chartNutGroup = 'micro';
+  1437→    syncChartGroupButtons();
+  1438→    updateChart();
+  1439→  });
+  1440→
+  1441→  async function boot() {
+  1442→    document.body.classList.add('np-booting');
+  1443→    isBootstrapping = true;
+  1444→    updateModeNote();
+  1445→    BASE.forEach(function (b) {
+  1446→      pct[b.id] = DEFAULT_PCT[b.id] ? DEFAULT_PCT[b.id].slice() : equalSplit(DEFAULT_STAGES.length);
+  1447→    });
+  1448→    ensurePct();
+  1449→
+  1450→    var resolved = await resolveInitialState();
+  1451→    if (resolved.state) applyState(resolved.state);
+  1452→    renderAll();
+  1453→    if (
+  1454→      resolved.cloudState &&
+  1455→      resolved.localState &&
+  1456→      (resolved.cloudState.updatedAt || 0) > (resolved.localState.updatedAt || 0)
+  1457→    ) {
+  1458→      saveStateLocal(snapshotState());
+  1459→    }
+  1460→
+  1461→    setupPresetBar();
+  1462→    await hydratePresets();
+  1463→    wirePresetDirtyDetection();
+  1464→    finishBootReveal();
+  1465→  }
+  1466→
+  1467→  async function softReloadFromParent() {
+  1468→    if (!isDashboardMode) return;
+  1469→    isBootstrapping = true;
+  1470→    document.body.classList.add('np-booting');
+  1471→    var resolved = await resolveInitialState();
+  1472→    if (resolved.state) applyState(resolved.state);
+  1473→    renderAll();
+  1474→    await hydratePresets();
+  1475→    finishBootReveal();
+  1476→  }
+  1477→
+  1478→  window.addEventListener('message', function (ev) {
+  1479→    if (!ev.data || ev.data.type !== 'np-extraccion-etapa-reload') return;
+  1480→    softReloadFromParent();
+  1481→  });
+  1482→
+  1483→  boot();
+  1484→})();
+  1485→  </script>
+  1486→</body>
+  1487→</html>
+  1488→

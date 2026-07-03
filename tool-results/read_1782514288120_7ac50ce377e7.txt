@@ -1,0 +1,661 @@
+     1→// Decision trees: structured diagnostic flows that walk a user through a
+     2→// problem (e.g. "my crop looks yellow") to a verdict + recommended formulas.
+     3→
+     4→// --- Types ----------------------------------------------------------------
+     5→
+     6→export type Severity = 'info' | 'low' | 'medium' | 'high' | 'critical';
+     7→
+     8→/** A terminal action — the verdict the user reaches at the end of a branch. */
+     9→export interface DecisionAction {
+    10→  /** short verdict / diagnosis */
+    11→  title: string;
+    12→  /** longer explanation of what to do next */
+    13→  description: string;
+    14→  /** severity — drives the UI color/icon */
+    15→  severity: Severity;
+    16→  /** formula codes the user should consult next */
+    17→  relatedFormulas: string[];
+    18→  /** optional free-form tip */
+    19→  tip?: string;
+    20→}
+    21→
+    22→/**
+    23→ * A single node in a decision tree. Either asks a question (with `branches`)
+    24→ * or terminates with an `action`.
+    25→ */
+    26→export interface DecisionNode {
+    27→  /** stable id within the tree */
+    28→  id: string;
+    29→  /** the question to ask, or the verdict if `action` is set */
+    30→  question: string;
+    31→  /** optional helper text shown under the question */
+    32→  hint?: string;
+    33→  /**
+    34→   * Branches: each entry is a possible answer → next node id.
+    35→   * If absent, `action` must be present (this is a leaf).
+    36→   */
+    37→  branches?: { label: string; next: string }[];
+    38→  /** leaf action — present only on terminal nodes */
+    39→  action?: DecisionAction;
+    40→}
+    41→
+    42→export interface DecisionTree {
+    43→  /** stable slug, e.g. "nutrient-deficiency" */
+    44→  id: string;
+    45→  /** display title */
+    46→  title: string;
+    47→  /** one-line description of what this tree diagnoses */
+    48→  description: string;
+    49→  /** icon name (lucide) for the launcher card */
+    50→  icon: string;
+    51→  /** estimated minutes to complete */
+    52→  estimatedMinutes: number;
+    53→  /** id of the entry node */
+    54→  rootId: string;
+    55→  /** all nodes keyed by id */
+    56→  nodes: Record<string, DecisionNode>;
+    57→}
+    58→
+    59→// --- Trees ----------------------------------------------------------------
+    60→
+    61→export const decisionTrees: DecisionTree[] = [
+    62→  // 1. Nutrient deficiency -------------------------------------------------
+    63→  {
+    64→    id: 'nutrient-deficiency',
+    65→    title: 'Nutrient Deficiency Diagnosis',
+    66→    description:
+    67→      'Identify which macro- or micro-nutrient your crop is short on based on visual symptoms and where they appear on the plant.',
+    68→    icon: 'Leaf',
+    69→    estimatedMinutes: 4,
+    70→    rootId: 'where',
+    71→    nodes: {
+    72→      where: {
+    73→        id: 'where',
+    74→        question: 'Where on the plant do the symptoms appear?',
+    75→        hint: 'Mobile nutrients (N, P, K, Mg) show on older leaves first; immobile ones (Fe, Ca, B) show on young growth.',
+    76→        branches: [
+    77→          { label: 'Older / lower leaves', next: 'older_color' },
+    78→          { label: 'Younger / upper leaves', next: 'young_color' },
+    79→          { label: 'Whole plant uniformly', next: 'uniform' },
+    80→        ],
+    81→      },
+    82→      older_color: {
+    83→        id: 'older_color',
+    84→        question: 'What color are the affected older leaves?',
+    85→        branches: [
+    86→          { label: 'Uniform yellow-green', next: 'n_def' },
+    87→          { label: 'Purple / red tint', next: 'p_def' },
+    88→          { label: 'Yellow edges (marginal chlorosis)', next: 'k_def' },
+    89→          { label: 'Interveinal chlorosis', next: 'mg_def' },
+    90→        ],
+    91→      },
+    92→      young_color: {
+    93→        id: 'young_color',
+    94→        question: 'What do the young leaves look like?',
+    95→        branches: [
+    96→          { label: 'Interveinal chlorosis (green veins)', next: 'fe_def' },
+    97→          { label: 'Distorted / hooked tips', next: 'ca_def' },
+    98→          { label: 'Dieback of growing point', next: 'b_def' },
+    99→        ],
+   100→      },
+   101→      uniform: {
+   102→        id: 'uniform',
+   103→        question: 'Is growth stunted overall, with small pale leaves?',
+   104→        branches: [
+   105→          { label: 'Yes — slow, stunted, pale', next: 'n_def' },
+   106→          { label: 'No — discoloration is the main sign', next: 's_def' },
+   107→        ],
+   108→      },
+   109→      n_def: {
+   110→        id: 'n_def',
+   111→        question: '',
+   112→        action: {
+   113→          title: 'Likely Nitrogen (N) deficiency',
+   114→          description:
+   115→            'Nitrogen is mobile, so the plant moves it from old to young leaves — older leaves yellow first. Confirm with a soil test and apply N fertilizer (urea, CAN, or ammonium sulfate) at the recommended rate.',
+   116→          severity: 'medium',
+   117→          relatedFormulas: ['4.1', '4.8a', '4.8c'],
+   118→          tip: 'Split N into 2–3 applications to reduce leaching losses.',
+   119→        },
+   120→      },
+   121→      p_def: {
+   122→        id: 'p_def',
+   123→        question: '',
+   124→        action: {
+   125→          title: 'Likely Phosphorus (P) deficiency',
+   126→          description:
+   127→            'P deficiency causes purple/red discoloration on older leaves and stunts root development. Common in cold or highly weathered acid soils. Apply SSP, TSP, or DAP based on a soil test.',
+   128→          severity: 'medium',
+   129→          relatedFormulas: ['4.1', '4.8b'],
+   130→          tip: 'Band-place P near the seedling — P is immobile in soil.',
+   131→        },
+   132→      },
+   133→      k_def: {
+   134→        id: 'k_def',
+   135→        question: '',
+   136→        action: {
+   137→          title: 'Likely Potassium (K) deficiency',
+   138→          description:
+   139→            'K deficiency shows as yellow/brown scorched leaf margins on older leaves, weak stalks, and poor drought tolerance. Apply muriate of potash (KCl) or sulfate of potash.',
+   140→          severity: 'medium',
+   141→          relatedFormulas: ['4.1'],
+   142→          tip: 'K deficiency often appears during tuber/grain fill — high demand phase.',
+   143→        },
+   144→      },
+   145→      mg_def: {
+   146→        id: 'mg_def',
+   147→        question: '',
+   148→        action: {
+   149→          title: 'Likely Magnesium (Mg) deficiency',
+   150→          description:
+   151→            'Interveinal chlorosis on older leaves is classic Mg deficiency, common in acid sandy soils. Apply dolomitic lime or magnesium sulfate (Epsom salts).',
+   152→          severity: 'low',
+   153→          relatedFormulas: ['4.1'],
+   154→          tip: 'Check soil pH — Mg availability drops sharply below pH 5.5.',
+   155→        },
+   156→      },
+   157→      fe_def: {
+   158→        id: 'fe_def',
+   159→        question: '',
+   160→        action: {
+   161→          title: 'Likely Iron (Fe) deficiency',
+   162→          description:
+   163→            'Interveinal chlorosis on young leaves with green veins is Fe deficiency, common in calcareous or high-pH soils. Apply foliar iron chelate (Fe-EDDHA) for fast correction.',
+   164→          severity: 'medium',
+   165→          relatedFormulas: ['4.1'],
+   166→          tip: 'Soil Fe is abundant but unavailable at high pH — fix pH long-term.',
+   167→        },
+   168→      },
+   169→      ca_def: {
+   170→        id: 'ca_def',
+   171→        question: '',
+   172→        action: {
+   173→          title: 'Likely Calcium (Ca) deficiency',
+   174→          description:
+   175→            'Distorted young growth, hooked leaf tips, or blossom-end rot in fruit points to Ca deficiency. Often a transport problem (water stress) rather than low soil Ca. Maintain steady soil moisture and apply gypsum or lime.',
+   176→          severity: 'high',
+   177→          relatedFormulas: ['4.1', 'IRR-9.3'],
+   178→          tip: 'Foliar Ca sprays help fruit but not leaves — fix the transpiration flow.',
+   179→        },
+   180→      },
+   181→      b_def: {
+   182→        id: 'b_def',
+   183→        question: '',
+   184→        action: {
+   185→          title: 'Likely Boron (B) deficiency',
+   186→          description:
+   187→            'Death of the growing point, hollow stems, or cracked tubers suggests B deficiency. Apply a small boron supplement (borax or solubor) — but B toxicity is easy to cause, so dose carefully.',
+   188→          severity: 'high',
+   189→          relatedFormulas: ['4.1'],
+   190→          tip: 'Never exceed 2–3 kg B/ha on sensitive crops like coffee or legumes.',
+   191→        },
+   192→      },
+   193→      s_def: {
+   194→        id: 's_def',
+   195→        question: '',
+   196→        action: {
+   197→          title: 'Possible Sulfur (S) deficiency',
+   198→          description:
+   199→            'Uniform pale-yellow color across the whole plant (including young leaves) resembles N deficiency but is more uniform — classic S deficiency. Apply ammonium sulfate or gypsum.',
+   200→          severity: 'low',
+   201→          relatedFormulas: ['4.1'],
+   202→          tip: 'S deficiency has increased as air pollution (acid rain) declined.',
+   203→        },
+   204→      },
+   205→    },
+   206→  },
+   207→
+   208→  // 2. Irrigation scheduling ----------------------------------------------
+   209→  {
+   210→    id: 'irrigation-scheduling',
+   211→    title: 'Irrigation Scheduling Assistant',
+   212→    description:
+   213→      'Decide when and how much to irrigate based on soil water, crop ET, system type, and growth stage.',
+   214→    icon: 'Droplets',
+   215→    estimatedMinutes: 5,
+   216→    rootId: 'system',
+   217→    nodes: {
+   218→      system: {
+   219→        id: 'system',
+   220→        question: 'What irrigation system are you using?',
+   221→        hint: 'System type drives application efficiency and the recommended scheduling frequency.',
+   222→        branches: [
+   223→          { label: 'Drip', next: 'drip_stage' },
+   224→          { label: 'Sprinkler', next: 'sprinkler_stage' },
+   225→          { label: 'Surface (furrow/basin)', next: 'surface_check' },
+   226→          { label: 'Rainfed only', next: 'rainfed' },
+   227→        ],
+   228→      },
+   229→      drip_stage: {
+   230→        id: 'drip_stage',
+   231→        question: 'What crop growth stage are you in?',
+   232→        branches: [
+   233→          { label: 'Establishment (0–30 days)', next: 'drip_low' },
+   234→          { label: 'Mid-season (vegetative/flowering)', next: 'drip_peak' },
+   235→          { label: 'Late season (maturation)', next: 'drip_low' },
+   236→        ],
+   237→      },
+   238→      drip_peak: {
+   239→        id: 'drip_peak',
+   240→        question: '',
+   241→        action: {
+   242→          title: 'Irrigate daily during peak demand',
+   243→          description:
+   244→            'For drip at mid-season, calculate daily ETc and irrigate every 1–2 days to keep the root zone near field capacity. Use the irrigation interval formula with RAW and daily ETc.',
+   245→          severity: 'high',
+   246→          relatedFormulas: ['IRR-10.4', 'IRR-9.3', 'IRR-11.9'],
+   247→          tip: 'Aim for DU > 85% — uniform emitters are critical at high frequency.',
+   248→        },
+   249→      },
+   250→      drip_low: {
+   251→        id: 'drip_low',
+   252→        question: '',
+   253→        action: {
+   254→          title: 'Irrigate every 2–3 days at reduced volume',
+   255→          description:
+   256→            'Outside peak demand, calculate ETc and irrigate every 2–3 days. Reduce volume as the crop matures to encourage dry-down before harvest.',
+   257→          severity: 'medium',
+   258→          relatedFormulas: ['IRR-10.4', 'IRR-9.3'],
+   259→        },
+   260→      },
+   261→      sprinkler_stage: {
+   262→        id: 'sprinkler_stage',
+   263→        question: 'Have you checked Christiansen Uniformity (CU) recently?',
+   264→        branches: [
+   265→          { label: 'Yes, CU > 84%', next: 'sprinkler_ok' },
+   266→          { label: 'No / not sure', next: 'sprinkler_audit' },
+   267→        ],
+   268→      },
+   269→      sprinkler_ok: {
+   270→        id: 'sprinkler_ok',
+   271→        question: '',
+   272→        action: {
+   273→          title: 'Schedule using gross irrigation requirement',
+   274→          description:
+   275→            'With CU > 84%, schedule based on net irrigation requirement divided by application efficiency (~75% for sprinkler). Irrigate every 3–7 days depending on soil water holding capacity.',
+   276→          severity: 'info',
+   277→          relatedFormulas: ['6.1', '6.2', 'IRR-8.4'],
+   278→        },
+   279→      },
+   280→      sprinkler_audit: {
+   281→        id: 'sprinkler_audit',
+   282→        question: '',
+   283→        action: {
+   284→          title: 'Run a catch-can uniformity test first',
+   285→          description:
+   286→            'Before fine-tuning the schedule, verify the system is applying water uniformly. CU below 80% wastes water and limits yield — fix nozzle wear, pressure, or spacing before scheduling.',
+   287→          severity: 'high',
+   288→          relatedFormulas: ['IRR-8.1', 'IRR-8.4'],
+   289→          tip: 'Replace worn nozzles every 2–3 seasons — they are the #1 cause of poor CU.',
+   290→        },
+   291→      },
+   292→      surface_check: {
+   293→        id: 'surface_check',
+   294→        question: 'Are you using surge flow or just continuous flow?',
+   295→        branches: [
+   296→          { label: 'Continuous flow', next: 'surface_low' },
+   297→          { label: 'Surge / cutback flow', next: 'surface_ok' },
+   298→        ],
+   299→      },
+   300→      surface_low: {
+   301→        id: 'surface_low',
+   302→        question: '',
+   303→        action: {
+   304→          title: 'Switch to surge flow and lengthen rotation interval',
+   305→          description:
+   306→            'Continuous surface irrigation typically achieves only 40–60% efficiency. Adopt surge flow, laser-level the field, and lengthen the rotation interval so each irrigation is larger and less frequent.',
+   307→          severity: 'high',
+   308→          relatedFormulas: ['6.2', '6.4'],
+   309→          tip: 'Leveling alone can raise surface irrigation efficiency from 45% to 65%.',
+   310→        },
+   311→      },
+   312→      surface_ok: {
+   313→        id: 'surface_ok',
+   314→        question: '',
+   315→        action: {
+   316→          title: 'Schedule based on net requirement / 60% efficiency',
+   317→          description:
+   318→            'With surge flow and leveled basins, schedule using gross irrigation requirement at ~60% efficiency. Irrigate in larger events every 7–14 days.',
+   319→          severity: 'medium',
+   320→          relatedFormulas: ['6.1', '6.2'],
+   321→        },
+   322→      },
+   323→      rainfed: {
+   324→        id: 'rainfed',
+   325→        question: '',
+   326→        action: {
+   327→          title: 'Track rainfall and ETc to detect dry spells',
+   328→          description:
+   329→            'For rainfed crops, monitor cumulative rainfall vs cumulative ETc. When the deficit exceeds the soil water buffer (TAW × root depth), expect stress — consider supplemental irrigation or drought-tolerant varieties.',
+   330→          severity: 'medium',
+   331→          relatedFormulas: ['IRR-10.4', 'IRR-11.9', '69.3'],
+   332→          tip: 'A 2-week dry spell during flowering can cut maize yield by 30–50%.',
+   333→        },
+   334→      },
+   335→    },
+   336→  },
+   337→
+   338→  // 3. Livestock health ---------------------------------------------------
+   339→  {
+   340→    id: 'livestock-health',
+   341→    title: 'Livestock Health Check',
+   342→    description:
+   343→      'Walk through the most common causes of poor performance in cattle and poultry to find the likely lever to pull.',
+   344→    icon: 'PawPrint',
+   345→    estimatedMinutes: 5,
+   346→    rootId: 'species',
+   347→    nodes: {
+   348→      species: {
+   349→        id: 'species',
+   350→        question: 'Which livestock are you checking?',
+   351→        branches: [
+   352→          { label: 'Dairy cattle', next: 'dairy_symptom' },
+   353→          { label: 'Broiler poultry', next: 'broiler_symptom' },
+   354→        ],
+   355→      },
+   356→      dairy_symptom: {
+   357→        id: 'dairy_symptom',
+   358→        question: 'What is the main symptom?',
+   359→        branches: [
+   360→          { label: 'Sudden milk yield drop', next: 'dairy_sudden' },
+   361→          { label: 'Gradual decline over weeks', next: 'dairy_gradual' },
+   362→          { label: 'Heat stress signs (panting, drooling)', next: 'dairy_thi' },
+   363→        ],
+   364→      },
+   365→      dairy_sudden: {
+   366→        id: 'dairy_sudden',
+   367→        question: '',
+   368→        action: {
+   369→          title: 'Check for mastitis (SCS) and water access',
+   370→          description:
+   371→            'A sudden drop in milk yield is most often subclinical mastitis or a water access problem (broken trough, frozen pipe). Run a Somatic Cell Score check and verify water availability immediately.',
+   372→          severity: 'critical',
+   373→          relatedFormulas: ['13.8', '10.9'],
+   374→          tip: 'A cow drinks 4–5 L of water per L of milk — water restriction cuts yield within hours.',
+   375→        },
+   376→      },
+   377→      dairy_gradual: {
+   378→        id: 'dairy_gradual',
+   379→        question: '',
+   380→        action: {
+   381→          title: 'Audit energy balance and persistency',
+   382→          description:
+   383→            'A gradual decline points to negative energy balance (often early lactation) or declining persistency. Calculate ECM and persistency index — persistency below 90%/month needs ration review.',
+   384→          severity: 'high',
+   385→          relatedFormulas: ['10.9', '13.6'],
+   386→          tip: 'Body condition score every 2 weeks — losing >0.5 BCS/month is a red flag.',
+   387→        },
+   388→      },
+   389→      dairy_thi: {
+   390→        id: 'dairy_thi',
+   391→        question: '',
+   392→        action: {
+   393→          title: 'Heat stress — calculate THI and act',
+   394→          description:
+   395→            'Panting and drooling indicate heat stress. Calculate THI from temperature and humidity — above 72, milk yield drops 10–25%. Increase shade, ventilation, and water access; consider feeding at cooler hours.',
+   396→          severity: 'high',
+   397→          relatedFormulas: ['37.1', '10.9'],
+   398→          tip: 'High-producing cows feel heat stress at THI 68, not 72.',
+   399→        },
+   400→      },
+   401→      broiler_symptom: {
+   402→        id: 'broiler_symptom',
+   403→        question: 'What is the main concern with the broiler flock?',
+   404→        branches: [
+   405→          { label: 'Poor feed conversion (high FCR)', next: 'broiler_fcr' },
+   406→          { label: 'High mortality', next: 'broiler_mort' },
+   407→          { label: 'Profitability check', next: 'broiler_profit' },
+   408→        ],
+   409→      },
+   410→      broiler_fcr: {
+   411→        id: 'broiler_fcr',
+   412→        question: '',
+   413→        action: {
+   414→          title: 'Audit feed quality and house environment',
+   415→          description:
+   416→            'Poor FCR is usually feed quality (mold, low energy), temperature stress, or disease. Check feed energy/protein levels, house temperature (target 18–24°C for older birds), and run a performance efficiency index.',
+   417→          severity: 'high',
+   418→          relatedFormulas: ['14.5', '17.2'],
+   419→          tip: 'Every 1°C above target temperature raises FCR by ~0.03.',
+   420→        },
+   421→      },
+   422→      broiler_mort: {
+   423→        id: 'broiler_mort',
+   424→        question: '',
+   425→        action: {
+   426→          title: 'Investigate disease and housing conditions',
+   427→          description:
+   428→            'High mortality needs a vet consult, but check the basics first: ammonia level, litter moisture, ventilation, and water access. Run the performance efficiency index — livability below 95% is concerning.',
+   429→          severity: 'critical',
+   430→          relatedFormulas: ['14.5'],
+   431→          tip: 'Submit fresh carcasses to a diagnostic lab — guessing costs birds.',
+   432→        },
+   433→      },
+   434→      broiler_profit: {
+   435→        id: 'broiler_profit',
+   436→        question: '',
+   437→        action: {
+   438→          title: 'Run a full profitability check',
+   439→          description:
+   440→            'Calculate EBI, break-even yield, and gross margin to see if the flock is covering variable costs. If gross margin is negative, identify whether the lever is FCR, livability, price, or feed cost.',
+   441→          severity: 'medium',
+   442→          relatedFormulas: ['14.5', '63.3', '17.2'],
+   443→          tip: 'EBI > 300 is good, > 400 is excellent; below 250 needs intervention.',
+   444→        },
+   445→      },
+   446→    },
+   447→  },
+   448→
+   449→  // 4. Soil health --------------------------------------------------------
+   450→  {
+   451→    id: 'soil-health',
+   452→    title: 'Soil Health Snapshot',
+   453→    description:
+   454→      'Quick soil health screen: compaction, aeration, organic carbon, and structure — flag the limiting factor.',
+   455→    icon: 'Sprout',
+   456→    estimatedMinutes: 6,
+   457→    rootId: 'symptom',
+   458→    nodes: {
+   459→      symptom: {
+   460→        id: 'symptom',
+   461→        question: 'What is your main soil concern?',
+   462→        hint: 'Pick the most prominent symptom; we can rerun for others.',
+   463→        branches: [
+   464→          { label: 'Hard / compacted', next: 'bd' },
+   465→          { label: 'Poor drainage / waterlogging', next: 'porosity' },
+   466→          { label: 'Low organic matter', next: 'soc' },
+   467→          { label: 'Crusting / erosion', next: 'erosion' },
+   468→        ],
+   469→      },
+   470→      bd: {
+   471→        id: 'bd',
+   472→        question: '',
+   473→        action: {
+   474→          title: 'Measure bulk density to confirm compaction',
+   475→          description:
+   476→            'Take an undisturbed core sample and measure bulk density. BD > 1.6 g/cm³ for clay or > 1.7 g/cm³ for sand means roots struggle. Address with deep ripping, cover crops, and reduced traffic.',
+   477→          severity: 'high',
+   478→          relatedFormulas: ['7.1', '7.3', '41.1'],
+   479→          tip: 'Compaction from machinery traffic is the #1 cause — control traffic lanes.',
+   480→        },
+   481→      },
+   482→      porosity: {
+   483→        id: 'porosity',
+   484→        question: '',
+   485→        action: {
+   486→          title: 'Calculate porosity from bulk density',
+   487→          description:
+   488→            'Porosity below 40% indicates poor aeration and drainage. Calculate porosity from bulk density — if confirmed, address with organic matter additions, deep-rooted cover crops, and drainage installation.',
+   489→          severity: 'high',
+   490→          relatedFormulas: ['7.3', '7.1'],
+   491→          tip: 'Healthy soils are ~50% pore space — half air, half water at field capacity.',
+   492→        },
+   493→      },
+   494→      soc: {
+   495→        id: 'soc',
+   496→        question: '',
+   497→        action: {
+   498→          title: 'Estimate soil carbon stock',
+   499→          description:
+   500→            'Low organic matter (<1.5% SOC) reduces water holding, nutrient supply, and aggregate stability. Calculate soil carbon stock and add organic amendments (compost, manure, cover crops, residue retention).',
+   501→          severity: 'medium',
+   502→          relatedFormulas: ['41.1', '7.1'],
+   503→          tip: 'A 1% increase in SOC adds ~17 mm/ha water holding capacity.',
+   504→        },
+   505→      },
+   506→      erosion: {
+   507→        id: 'erosion',
+   508→        question: '',
+   509→        action: {
+   510→          title: 'Adopt conservation tillage + cover',
+   511→          description:
+   512→            'Crusting and erosion signal unstable aggregates and bare soil. Adopt reduced tillage, keep soil covered year-round (cover crops or mulch), and use contour planting on slopes.',
+   513→          severity: 'high',
+   514→          relatedFormulas: ['69.4', '69.3', '7.1'],
+   515→          tip: 'A 1% slope on bare soil loses 5–15 t/ha/year — cover is the cheapest fix.',
+   516→        },
+   517→      },
+   518→    },
+   519→  },
+   520→
+   521→  // 5. Profitability check ------------------------------------------------
+   522→  {
+   523→    id: 'profitability-check',
+   524→    title: 'Profitability Check',
+   525→    description:
+   526→      'Diagnose whether a crop or livestock enterprise is making money, and identify the lever to pull first.',
+   527→    icon: 'Calculator',
+   528→    estimatedMinutes: 4,
+   529→    rootId: 'enterprise',
+   530→    nodes: {
+   531→      enterprise: {
+   532→        id: 'enterprise',
+   533→        question: 'What enterprise are you evaluating?',
+   534→        branches: [
+   535→          { label: 'Crop enterprise', next: 'crop_question' },
+   536→          { label: 'Livestock enterprise', next: 'livestock_question' },
+   537→        ],
+   538→      },
+   539→      crop_question: {
+   540→        id: 'crop_question',
+   541→        question: 'Is your actual yield above break-even?',
+   542→        branches: [
+   543→          { label: 'Yes, comfortably', next: 'crop_wue' },
+   544→          { label: 'Barely / no', next: 'crop_breakdown' },
+   545→        ],
+   546→      },
+   547→      crop_wue: {
+   548→        id: 'crop_wue',
+   549→        question: '',
+   550→        action: {
+   551→          title: 'Push water and input efficiency next',
+   552→          description:
+   553→            'You are profitable — the next lever is efficiency. Calculate WUE and partial factor productivity of fertilizer to find where you can cut inputs without losing yield.',
+   554→          severity: 'info',
+   555→          relatedFormulas: ['6.4', '4.8c', '17.2'],
+   556→          tip: 'The cheapest input is the one you don\'t need — efficiency = profit.',
+   557→        },
+   558→      },
+   559→      crop_breakdown: {
+   560→        id: 'crop_breakdown',
+   561→        question: '',
+   562→        action: {
+   563→          title: 'Find the gap: yield, price, or cost',
+   564→          description:
+   565→            'Below break-even means one of three things: yield too low, price too low, or costs too high. Calculate break-even yield and gross margin to identify which. Then attack the largest gap first.',
+   566→          severity: 'high',
+   567→          relatedFormulas: ['63.3', '17.2', '6.4'],
+   568→          tip: 'Most crop losses come from costs creeping up — audit the top 3 cost lines annually.',
+   569→        },
+   570→      },
+   571→      livestock_question: {
+   572→        id: 'livestock_question',
+   573→        question: 'Is the gross margin positive?',
+   574→        branches: [
+   575→          { label: 'Yes', next: 'livestock_efficiency' },
+   576→          { label: 'No / barely', next: 'livestock_fix' },
+   577→        ],
+   578→      },
+   579→      livestock_efficiency: {
+   580→        id: 'livestock_efficiency',
+   581→        question: '',
+   582→        action: {
+   583→          title: 'Optimize feed conversion and productivity index',
+   584→          description:
+   585→            'You are profitable — push feed conversion (FCR) and the performance efficiency index (EBI for broilers, persistency for dairy). Small gains here compound across a flock or herd.',
+   586→          severity: 'info',
+   587→          relatedFormulas: ['14.5', '17.2', '13.6'],
+   588→        },
+   589→      },
+   590→      livestock_fix: {
+   591→        id: 'livestock_fix',
+   592→        question: '',
+   593→        action: {
+   594→          title: 'Audit the three biggest cost lines',
+   595→          description:
+   596→            'For livestock, feed is usually 60–70% of variable cost. Calculate break-even yield and gross margin, then audit feed cost, mortality, and productivity. Cut the most expensive inefficiency first.',
+   597→          severity: 'critical',
+   598→          relatedFormulas: ['63.3', '17.2', '14.5'],
+   599→          tip: 'A 0.1 improvement in FCR can swing a broiler flock from loss to profit.',
+   600→        },
+   601→      },
+   602→    },
+   603→  },
+   604→];
+   605→
+   606→// --- Helpers --------------------------------------------------------------
+   607→
+   608→export function getDecisionTree(id: string): DecisionTree | undefined {
+   609→  return decisionTrees.find((t) => t.id === id);
+   610→}
+   611→
+   612→export function getDecisionNode(
+   613→  tree: DecisionTree,
+   614→  nodeId: string
+   615→): DecisionNode | undefined {
+   616→  return tree.nodes[nodeId];
+   617→}
+   618→
+   619→export function isLeaf(node: DecisionNode): boolean {
+   620→  return !!node.action && (!node.branches || node.branches.length === 0);
+   621→}
+   622→
+   623→/** Map severity → tailwind color classes for badges/icons. */
+   624→export const severityStyles: Record<
+   625→  Severity,
+   626→  { text: string; bg: string; border: string; dot: string }
+   627→> = {
+   628→  info: {
+   629→    text: 'text-emerald-700 dark:text-emerald-400',
+   630→    bg: 'bg-emerald-50 dark:bg-emerald-950/40',
+   631→    border: 'border-emerald-200 dark:border-emerald-900',
+   632→    dot: 'bg-emerald-500',
+   633→  },
+   634→  low: {
+   635→    text: 'text-sky-700 dark:text-sky-400',
+   636→    bg: 'bg-sky-50 dark:bg-sky-950/40',
+   637→    border: 'border-sky-200 dark:border-sky-900',
+   638→    dot: 'bg-sky-500',
+   639→  },
+   640→  medium: {
+   641→    text: 'text-amber-700 dark:text-amber-400',
+   642→    bg: 'bg-amber-50 dark:bg-amber-950/40',
+   643→    border: 'border-amber-200 dark:border-amber-900',
+   644→    dot: 'bg-amber-500',
+   645→  },
+   646→  high: {
+   647→    text: 'text-orange-700 dark:text-orange-400',
+   648→    bg: 'bg-orange-50 dark:bg-orange-950/40',
+   649→    border: 'border-orange-200 dark:border-orange-900',
+   650→    dot: 'bg-orange-500',
+   651→  },
+   652→  critical: {
+   653→    text: 'text-rose-700 dark:text-rose-400',
+   654→    bg: 'bg-rose-50 dark:bg-rose-950/40',
+   655→    border: 'border-rose-200 dark:border-rose-900',
+   656→    dot: 'bg-rose-500',
+   657→  },
+   658→};
+   659→
+   660→export default decisionTrees;
+   661→

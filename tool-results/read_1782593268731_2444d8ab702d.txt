@@ -1,0 +1,217 @@
+     1→     1→# NutriPlant PRO — Worklog
+     2→     2→
+     3→     3→---
+     4→     4→Task ID: 1-a
+     5→     5→Agent: general-purpose
+     6→     6→Task: Extract logic from 5 NutriPlant free-tool HTML files
+     7→     7→
+     8→     8→Work Log:
+     9→     9→- Read /tmp/np_tools/measure-units-calculator.js (317 lines, JS)
+    10→    10→- Read /tmp/np_tools/vpd-free.html (754 lines, HTML+JS, with Leaflet map + Open-Meteo API)
+    11→    11→- Read /tmp/np_tools/agua-dureza-free.html (878 lines, 3-section water diagnostic)
+    12→    12→- Read /tmp/np_tools/enmienda-free.html (723 lines, CEC amendment balance)
+    13→    13→- Read /tmp/np_tools/n-mineralizable-mo-free.html (474 lines, mineralizable N estimator)
+    14→    14→- Verified /home/z/my-project/scripts/ directory exists; wrote spec there
+    15→    15→- worklog.md did not previously exist — created it fresh
+    16→    16→
+    17→    17→Stage Summary:
+    18→    18→- Spec produced at /home/z/my-project/scripts/spec-batch-a.md (self-contained, ~600 lines)
+    19→    19→- Covers all 5 tools with: input fields, output fields, formulas (in plain math), constants/lookup tables as TS literals, classification logic, charts, non-obvious UX, and embedded reference tables as JSON
+    20→    20→- Suggested React/TS file layout appended at the end for the next agent
+    21→    21→- Key external dependency flagged: VPD tool requires Leaflet + Open-Meteo API
+    22→    22→- All numeric parsing patterns (comma/dot decimals, clamping, rounding) documented per tool
+    23→    23→
+    24→    24→---
+    25→    25→Task ID: 1-b
+    26→    26→Agent: general-purpose
+    27→    27→Task: Extract logic from 4 NutriPlant free-tool HTML files (hydro solution, granular mix, fertilizer composition, extraccion etapa)
+    28→    28→
+    29→    29→Work Log:
+    30→    30→- Read /home/z/my-project/worklog.md (existing 1-a entry)
+    31→    31→- Read /tmp/np_tools/granular-mix-free.html (479 lines) — granular blend formulation, full BASE_MATERIALS library with 24 entries
+    32→    32→- Read /tmp/np_tools/fertilizer-composition-free.html (798 lines) — chemical-formula parser with hydrates, double salts, motif counting for N-NO3/N-NH4, oxide equivalents
+    33→    33→- Read /tmp/np_tools/extraccion-etapa-free.html (1487 lines) — nutrient extraction per stage with Chart.js, dashboard cloud+local persistence, user-preset library
+    34→    34→- Read /tmp/np_tools/hidro-solucion-free.html (3188 lines, in 6 chunks) — two-tab tool: (1) meq/ppm/CE editor with draggable SVG ternary diagram + barycentric transforms + polygon clip; (2) up to 5 fertilizers with reverse-calc dose-from-target
+    35→    35→- Verified /home/z/my-project/scripts/ directory exists; wrote spec there
+    36→    36→- External scripts referenced by hydro-solucion (assets/fert-formula-engine.js, assets/hydro-fert-aporte-catalog.js) NOT present in workspace — captured their required API surface from call sites; formula engine logic is fully reproducible from Tool 3's inlined parser
+    37→    37→
+    38→    38→Stage Summary:
+    39→    39→- Spec produced at /home/z/my-project/scripts/spec-batch-b.md (~960 lines, self-contained)
+    40→    40→- Covers all 4 tools with: input fields, output fields, formulas (in plain math), constants/lookup tables as TS literals (including full 24-entry BASE_MATERIALS for granular mix, full 18-entry formula catalog + atomic weights for fertilizer composition, full DEFAULT_PCT + OPTIONAL_QUEUE for extraccion etapa, full HYDRO_EQ_WEIGHTS + equilibrium polygons + barycentric transforms for hydro solution)
+    41→    41→- Charts/visualizations documented: SVG ternary diagram (hydro), Chart.js v4.4.1 line chart (extraccion), none (granular, composition)
+    42→    42→- Non-obvious UX documented per tool: bidirectional meq↔ppm↔CE editing with typing-preservation timers, pointer-capture ternary drag with marker separation, 5-row max for fert aporte, reverse-calc dose-from-target, preset library per-user (not per-project), autosave local+cloud with newest-wins, etc.
+    43→    43→- Suggested React/TS file layout appended at the end for the next agent
+    44→    44→- Key external dependencies flagged: Chart.js 4.4.1 (extraccion); assets/fert-formula-engine.js + assets/hydro-fert-aporte-catalog.js (hydro) — both must be reconstructed; formula engine is fully specified via Tool 3's inlined parser
+    45→    45→- All numeric parsing patterns (comma/dot decimals, clamping, rounding) documented per tool
+    46→    46→
+    47→    47→---
+    48→    48→Task ID: 1-c
+    49→    49→Agent: general-purpose
+    50→    50→Task: Extract logic from 5 NutriPlant free-tool HTML files (periodic table, fertilizer compatibility, nutrient interactions, solubility/salt index, lamina riego)
+    51→    51→
+    52→    52→Work Log:
+    53→    53→- Read /home/z/my-project/worklog.md (existing 1-a and 1-b entries)
+    54→    54→- Read /tmp/np_tools/tabla-periodica-nutrientes-free.html (720 lines) — two-tab tool: interactive periodic table (118 elements, 24 with agronomic DETAILS) + molecular-weight calculator with chemical-formula parser (hydrates, double salts, motif counting for NO3/NH4, equivalent-weight inference)
+    55→    55→- Read /tmp/np_tools/fertilizer-compatibility-free.html (766 lines) — 32×32 triangular matrix of C/R/I codes with trait-based inference + 25-entry OVERRIDE map; clickable cells open 12 detail templates (ca_phosphate_mkp, ca_sulfate, ca_acid_phosphoric, ca_acid_sulfuric, metal_sulfate_phosphate, chelate_phosphate, kno3_sulfate_salting, strong_acids, default_c/r/i, same)
+    56→    56→- Read /tmp/np_tools/interacciones-absorcion-movilidad-free.html (2443 lines, in 5 chunks) — 4-tab tool: (1) Mulder SVG diagram of 14 ions with antagonism/synergy edges, (2) 14-ion stacked bars for mass-flow/diffusion/interception %, (3) dichotomous symptom key + 12-element MOBILITY ficha + 16-row NUT_REF_TABLE (Taiz & Zeiger / Epstein dry-matter values), (4) 14 pH-vs-availability sparkline curves
+    57→    57→- Read /tmp/np_tools/solubilidad-indice-salino-free.html (596 lines) — sortable/filterable table of 13 fertilizers (solubility range + IS NaNO3=100 base) + 2 educational tabs with ion-dissociation sphere diagram
+    58→    58→- Read /tmp/np_tools/lamina-riego-free.html (673 lines) — Leaflet map + Open-Meteo climate fetch + 1/7-day water balance; thin wrapper around 4 missing local scripts (np-irrigation-balance-core.js, np-soil-water-bridge.js, np-free-geolocation.js, climate-kc-fao-data.js)
+    59→    59→- Verified /home/z/my-project/scripts/ directory exists; wrote spec there
+    60→    60→- External scripts referenced by lamina-riego (np-irrigation-balance-core.js, np-soil-water-bridge.js, np-free-geolocation.js, climate-kc-fao-data.js) NOT present in workspace — captured their required API surface from call sites; core formulas (ETc=Kc×ETo, irrigationMm=m3/(ha×10), balance=irrig+rain-ETc) reconstructable from FAO-56 standard
+    61→    61→
+    62→    62→Stage Summary:
+    63→    63→- Spec produced at /home/z/my-project/scripts/spec-batch-c.md (~1820 lines, self-contained)
+    64→    64→- Covers all 5 tools with: input fields, output fields, formulas (in plain math), constants/lookup tables as TS literals (including full 118-element ELEMENTS + 24-entry DETAILS + ATOMIC_WEIGHTS for periodic table; full 32-fert FERTILIZERS + TR traits + 25-entry OVERRIDE + 12-template DETAIL_KEYS for compatibility; full 14-ion SPEC + 14-row ARRIVAL + 12-element MOBILITY + 14-curve PH_NUTRIENTS + 16-row NUT_REF_TABLE for interactions; full 13-row ROWS for solubility; full input/output schema + API surface for irrigation)
+    65→    65→- Charts/visualizations documented: CSS-grid periodic table + 2-tab Mol calc (periodic); sticky-header triangular matrix with row/col highlighting (compatibility); SVG Mulder diagram + CSS stacked bars + CSS SCADA symptom flow + SVG pH sparklines (interactions); sortable table with IS-bar + ion-sphere diagram (solubility); Leaflet satellite map + metric cards + summary card (irrigation)
+    66→    66→- Non-obvious UX documented per tool: "+ Usar en calculadora molecular" cross-tab button + auto-select N on load (periodic); cell-click highlights row+col+selected with 5 CSS classes + tooltip-on-truncation + lower-triangular empty cells (compatibility); directional synergy (only from focused ion) + keyboard accessibility + cross-section persistence (interactions); same-column flip sort + new-column default dir by type (solubility); macro-tunnel disables rain + suggest-strip from rootReachPct + cross-tab soil-water bridge via localStorage + legacy 'mm'→'m3' migration + GPS fallback link in embed mode (irrigation)
+    67→    67→- Suggested React/TS file layout appended at the end for the next agent
+    68→    68→- Key external dependencies flagged: Leaflet 1.9.4 + Open-Meteo API + Esri World Imagery + Geolocation API (irrigation); 4 missing local JS files for irrigation must be reconstructed from FAO-56 + sister tool agua-disponible-textura-suelo-free.html
+    69→    69→- All numeric parsing patterns (es-MX locale, comma decimals, fmtNum helper) documented per tool
+    70→    70→
+    71→    71→---
+    72→    72→Task ID: 1-d
+    73→    73→Agent: general-purpose
+    74→    74→Task: Extract logic from 2 NutriPlant free-tool HTML files (soil texture + available water, fertilizer carbon footprint)
+    75→    75→
+    76→    76→Work Log:
+    77→    77→- Read /home/z/my-project/worklog.md (existing 1-a, 1-b, 1-c entries)
+    78→    78→- Read /tmp/np_tools/agua-disponible-textura-suelo-free.html (1990 lines, in 4 chunks) — 2-tab tool: (1) soil-water volume + irrigation-to-CC calculator with SVG stacked bar chart + 40–60% AU objective zone + 3 hero-card scenarios (surplus/near-CC/deficit) + optional wetted-strip split, (2) USDA texture triangle with 26 soiltexture CRAN vertices + 12 polygon regions + barycentric drag + classifyUSDAFrac point-in-polygon + nearest-centroid fallback
+    79→    79→- Read /tmp/np_tools/fertilizer-carbon-free.html (2153 lines, in 5 chunks) — 2-scenario (Programa A/B) fertilizer carbon footprint with per-row supply-chain route (5-step flow strip), 3-mode factor source (estimated/custom_per_kg/custom_total_mfg), origin-efficiency benchmark gauge, pickup-km equivalence (0.254 kg CO₂e/km DESNZ/DEFRA), single-product A/B didactic compare, Fertilizers Europe 2020 calibration table
+    80→    80→- Read /tmp/inline_script_1.js (lines 1-399) — bonus: extracted 30-entry nutrient oxide↔element conversion factor table (CaO↔Ca, K2O↔K, P2O5↔P, MgO↔Mg, N↔NO3/NH4, S↔SO4/SO3, Zn/Fe/Mn/B/Cu/Si/Mo oxide pairs) for the next agent's convenience
+    81→    81→- Verified /home/z/my-project/scripts/ directory exists; wrote spec there
+    82→    82→- External scripts referenced by both tools (assets/np-soil-water-bridge.js, assets/fertilizer-carbon-core.js, assets/emission-factors-by-country.json, assets/np-free-local-persist.js) NOT present in workspace — captured full API surface from call sites; soil-water formulas fully reconstructable; fertilizer-carbon formulas reconstructable from Fertilizers Europe 2020 + IPCC + DESNZ/DEFRA references
+    83→    83→
+    84→    84→Stage Summary:
+    85→    85→- Spec produced at /home/z/my-project/scripts/spec-batch-d.md (~1095 lines, self-contained)
+    86→    86→- Covers both tools with: input fields (id/label/unit/default/range/step), output fields, formulas in plain math, constants/lookup tables as TS literals (including full 6-entry TEXTURE_SERIES + 12-entry TEXTURE_CC_PMP_MAP + 26-entry USDA_PTS_CSS vertices + 12-entry USDA_REGIONS polygons with fill colors + PALETTE; full NpFertilizerCarbon API surface + State/Scenario/Row/CalculationInput/CalculationResult/OriginEfficiencyBenchmark types + LS_KEY + PICKUP_KG_CO2E_PER_KM + FACTOR_MODES + METHODOLOGY_* + 30-entry NUTRIENT_CONVERSIONS appendix)
+    87→    87→- Charts/visualizations documented: SVG horizontal stacked water bar (PMP/band/air + θ amber marker + violet 40–60% AU objective band + bracket), SVG USDA texture triangle (12 colored polygons + 10% gridlines + barycentric drag), 3 small SVG pore concept diagrams (saturation/CC/PMP); supply-chain flow strip (5 cols + 4 arrows + scroll-snap mobile), 2 CSS bar charts (total + stacked breakdown), efficiency gauge (gradient + marker), pickup equivalence cards, top comparison bar, reduction banner (green/amber)
+    88→    88→- Non-obvious UX documented per tool: presetTex dropdown auto-resets after applying; hasSplitArea logic (rootEff<99.5% && areaHa>0) shows franja regada split; 3 hero-card scenarios + separate objective-zone hero card; sum-warn + Normalizar/Ejemplo buttons; ternary pointer-capture drag with rAF throttle + clamped barycentric inverse; NpFreePersist.bind + NpSoilWaterBridge.publish cross-tab; two-scenario with top compare bar always visible; per-row route (active_row_index), selectRow persists previous + loads new; origin-group normalization filters fertilizer list (fixRowFertilizerForOrigin); factor-mode gating disables custom inputs in 'estimated' mode; entry-point conditional on getDestinationEntryConfig; Estimar km button fills transportOriginKm/Sea/Km; Duplicar al otro programa deep-clones scenario; v1→v2 state migration + 'nk_mg'→'potassium_nitrate' fertilizer migration; embedded-mode header hide; legal-notice collapsible
+    89→    89→- Suggested React/TS file layout appended at the end for the next agent (soil-water-texture/ and fertilizer-carbon/ folders with component + hook + data-module breakdown)
+    90→    90→- Key external dependencies flagged: 4 missing files (np-soil-water-bridge.js shared with lamina-riego; fertilizer-carbon-core.js + emission-factors-by-country.json + np-free-local-persist.js). emission-factors-by-country.json is the critical missing piece — must be compiled from Fertilizers Europe 2020 + IPCC 2006/2019 + DESNZ/DEFRA 2024 + fertilizer/destination catalogs
+    91→    91→- All numeric parsing patterns (parseFloat || fallback, toFixed precision, es-locale toLocaleString for km thousands) documented per tool
+    92→    92→
+    93→    93→---
+    94→    94→Task ID: 3-a
+    95→    95→Agent: general-purpose
+    96→    96→Task: Build 6 NutriPlant PRO free-tool React/TypeScript components (Tools 4, 10, 15, 16, 17, 18)
+    97→    97→
+    98→    98→Work Log:
+    99→    99→- Read /home/z/my-project/worklog.md (existing 1-a, 1-b, 1-c, 1-d entries) for prior context
+   100→   100→- Read /home/z/my-project/src/lib/nutri-tools-data.ts in full (~1480 lines) to extract shared constants/types/helpers: SOLUBILITY_ROWS + solubilityClass() (Tool 17), CARBON_FACTORS + computeCarbonRow() + CarbonRow/CarbonResult interfaces + PICKUP_KG_CO2E_PER_KM (Tool 18), computeIrrigation() + IrrigationResult (Tool 16), HYDRO_EQ_WEIGHTS + HYDRO_MEQ_NUTRIENTS + HYDRO_NUTRIENT_LABELS + HYDRO_ANION_POLYGON (Tool 4), STAGE_BASE + STAGE_OPTIONAL + STAGE_DEFAULTS + STAGE_DEFAULT_PCT + STAGE_COLORS (Tool 10), USDA_REGIONS (12-region triangle with clay/silt/sand vertices, Tool 15)
+   101→   101→- Read /home/z/my-project/src/components/agri/nutri-tools/ConversionCalculator.tsx (88 lines) and VpdEstimator.tsx (130 lines) for style reference — emerald/green palette, Card-based layout, h-9 inputs, text-xs muted-foreground captions, responsive grids
+   102→   102→- Read /home/z/my-project/src/components/ui/{card,input,button,label,select}.tsx to confirm export surface (Card/CardContent/CardHeader/CardTitle, Input, Button with size/variant, Label, Select/SelectContent/SelectItem/SelectTrigger/SelectValue)
+   103→   103→- Read AmendmentBalanceCec.tsx and GranularMixFormulation.tsx for state + useMemo patterns and Select usage inside editable tables
+   104→   104→- Built 6 self-contained 'use client' components, one file each, all under /home/z/my-project/src/components/agri/nutri-tools/
+   105→   105→  1. SolubilitySaltIndex.tsx (166 lines, Tool 17) — searchable + sortable table over SOLUBILITY_ROWS; columns: name, formula, solubility range, class (colored dot via solubilityClass), IS value, IS bar (linear-gradient(90deg, #38bdf8, #fbbf24 50%, #ea580c), width = is/MAX_IS × 100, MAX_IS = 116.3); default sort IS desc; click header toggles dir; search filters name/formula/note case-insensitive
+   106→   106→  2. IrrigationBalance.tsx (176 lines, Tool 16) — 6 inputs (ETo, Kc, rain, irrigation m³, irrigated area, crop area), 1/7-day toggle, calls computeIrrigation(); outputs ETc/irrigationMm/rain/balance/totalVolumeM3; balance colored blue (surplus) / orange / red (deficit); FAO-56 Kc reference table (0.4/0.75/1.05/0.85); FAO-56 manual-entry note included
+   107→   107→  3. FertilizerCarbonFootprint.tsx (262 lines, Tool 18) — two scenarios A (blue) and B (orange), each up to 5 rows; per-row: fertilizer Select (CARBON_FACTORS), rate, origin/sea/port-road km; per-row results from computeCarbonRow() shown (mfg/transport/field/total + pickup-km equivalent); scenario totals + stacked breakdown bar (mfg dark blue / transport cyan / field green); top comparison bar shows lower scenario + delta kg CO₂e/ha + %; defaults A=Urea 100 kg/ha, B=Ammonium Nitrate 100 kg/ha
+   108→   108→  4. HydroSolutionDesigner.tsx (232 lines, Tool 4) — editable meq/L + ppm table for the 8 hydro nutrients (HYDRO_MEQ_NUTRIENTS, bidirectional via HYDRO_EQ_WEIGHTS); CE = Σ meq/L ÷ 20; anion/cation % distribution cards with mini stacked bars; SVG anion triangle (240×230 viewBox) using barycentric transform: top=NO₃ at (120,10), left=P at (10,210), right=S at (230,210); HYDRO_ANION_POLYGON drawn as translucent green overlay; 5 preset buttons (Steiner / Hoagland 50% / Tomato / Strawberry / Lettuce) with inline reasonable defaults; Reset clears to 0
+   109→   109→  5. NutrientDistributionByStage.tsx (244 lines, Tool 10) — editable table: rows = STAGE_BASE nutrients (extendable via "+ Nutrient" pulling from STAGE_OPTIONAL queue), columns = STAGE_DEFAULTS stages (extendable via "+ Stage" which splits last stage's % in half); per-nutrient Σ row at footer (green if ±5 of 100, red otherwise); computes kg/ha per cell = total × pct/100; SVG line chart (480×200 viewBox) one polyline per nutrient using STAGE_COLORS, with circle markers, y-gridlines, x-axis stage labels, color legend; "Reset" returns to defaults
+   110→   110→  6. SoilWaterTexture.tsx (271 lines, Tool 15) — clay/silt inputs auto-balance (sand = 100 − clay − silt, clamped if sum > 100); SVG USDA triangle (240×220 viewBox) renders all 12 USDA_REGIONS as translucent polygons (fill = region.color @ 0.45 opacity); marker draggable via click (barycentric inverse with clamping); texture classification via point-in-polygon ray-casting with nearest-centroid fallback; soil-water inputs (CC%, PMP%, depth, bulk density, area, root efficiency %); outputs: soil volume m³, available water m³, irrigation-to-CC mm, active volume with root efficiency, mm over crop area; stacked bar visualizing PMP (red) / available (sky) / air-drain (slate) of volumetric water content
+   111→   111→- Ran `npx tsc --noEmit` against the project; verified zero TypeScript errors in any of the 6 new files (errors elsewhere in repo are pre-existing and unrelated)
+   112→   112→
+   113→   113→Stage Summary (files created):
+   114→   114→- /home/z/my-project/src/components/agri/nutri-tools/SolubilitySaltIndex.tsx (Tool 17, 166 lines)
+   115→   115→- /home/z/my-project/src/components/agri/nutri-tools/IrrigationBalance.tsx (Tool 16, 176 lines)
+   116→   116→- /home/z/my-project/src/components/agri/nutri-tools/FertilizerCarbonFootprint.tsx (Tool 18, 262 lines)
+   117→   117→- /home/z/my-project/src/components/agri/nutri-tools/HydroSolutionDesigner.tsx (Tool 4, 232 lines)
+   118→   118→- /home/z/my-project/src/components/agri/nutri-tools/NutrientDistributionByStage.tsx (Tool 10, 244 lines)
+   119→   119→- /home/z/my-project/src/components/agri/nutri-tools/SoilWaterTexture.tsx (Tool 15, 271 lines)
+   120→   120→- Total: 6 files, ~1351 lines; all self-contained, only depend on React + @/components/ui/* primitives + @/lib/nutri-tools-data
+   121→   121→- No emojis in code or UI; no extra npm dependencies added; consistent with existing emerald/green Card-based style
+   122→   122→
+   123→   123→---
+   124→   124→Task ID: 5-a
+   125→   125→Agent: general-purpose
+   126→   126→Task: Refactor 5 React/TypeScript nutri-tool components to 2-column landscape layout inside the wider (1400px) dialog
+   127→   127→
+   128→   128→Work Log:
+   129→   129→- Read /home/z/my-project/worklog.md for prior context (1-a, 1-b, 1-c, 1-d, 3-a entries)
+   130→   130→- Read all 5 target files in full to understand their current single-column CardContent structure, state, and helper components
+   131→   131→- Refactored JSX return statement in each file to wrap content in `<div className="grid grid-cols-1 lg:grid-cols-2 gap-5">` so inputs stack on the left and results on the right at lg+ breakpoints (and stack vertically on mobile). All `useState`/`useMemo`/handler logic untouched; only JSX layout restructured.
+   132→   132→
+   133→   133→Files modified:
+   134→   134→1. /home/z/my-project/src/components/agri/nutri-tools/MineralizableNEstimator.tsx
+   135→   135→   - Left column: 6 input Fields (OM, DA, depth, root reach, N fraction) + custom T_min field with TMIN_PRESETS pill row
+   136→   136→   - Right column: 4 small ResultCards (Mtotal, Meff, MOkg, Norg) + gradient hero "Mineralizable N (annual)" card
+   137→   137→   - Hero card N value bumped from text-3xl → text-4xl
+   138→   138→   - ResultCard component value bumped from text-lg → text-2xl (smaller metrics still legible at 2-col within right column)
+   139→   139→   - "Master formula" reference panel moved to span both columns at the bottom (above warning)
+   140→   140→   - Warning + `<details>` root-reach reference table moved to span both columns at the bottom (below formula)
+   141→   141→
+   142→   142→2. /home/z/my-project/src/components/agri/nutri-tools/IrrigationBalance.tsx
+   143→   143→   - Left column: period toggle (1 day / 7 days) + 6 input Fields (ETo, Kc, rain, irrigation m³, irrigated area, crop area)
+   144→   144→   - Right column: when result != null → 5 Metric cards (ETc, irrigationMm, rain, balance, totalVolume col-span-2) + surplus/deficit banner + FAO-56 Kc reference 4-grid; else → dashed empty-state placeholder "Enter inputs to see results."
+   145→   145→   - Metric component value bumped from text-lg → text-3xl
+   146→   146→   - Surplus/deficit banner color logic preserved (now reads result.balance directly since result is verified non-null in that branch)
+   147→   147→   - FAO-56 note moved to span both columns at the bottom
+   148→   148→
+   149→   149→3. /home/z/my-project/src/components/agri/nutri-tools/FertilizerComposition.tsx
+   150→   150→   - Left column: formula Input + Calculate button + examples chips + inline error display (when result.ok === false)
+   151→   151→   - Right column: when result.ok && result.comp → MW card + normalized card + elemental/oxide composition grid with NPK tag; else → dashed empty-state placeholder "Enter inputs to see results."
+   152→   152→   - MW value bumped from text-xl → text-3xl
+   153→   153→   - Normalized card kept smaller (break-all monospace text-sm) since it can be a long string
+   154→   154→
+   155→   155→4. /home/z/my-project/src/components/agri/nutri-tools/AmendmentBalanceCec.tsx
+   156→   156→   - Left column: rounded cation input panel (6 cations: K, Ca, Mg, H, Na, Al) with % indicators + CEC Total + 4 soil property Fields (density, depth, pH, root reach) + pH indicator
+   157→   157→   - Right column: when strategy.length === 0 → dashed empty-state placeholder "No amendments needed with the selected inputs."; else → recommended amendment strategy table (Amendment / Dose / Ca / Mg / K / SO₄) with root-reach factor note
+   158→   158→   - CEC Total value bumped to text-2xl (with smaller "meq/100g" unit suffix)
+   159→   159→   - Reset button stays in CardHeader (preserved)
+   160→   160→   - Strategy useMemo (dolomite → gypsum/lime → mgso4 → sop → gypsum-for-Na) untouched
+   161→   161→
+   162→   162→5. /home/z/my-project/src/components/agri/nutri-tools/GranularMixFormulation.tsx
+   163→   163→   - Left column: fertilizer rows (Select + % Input + remove × button) + Add fertilizer button + Blend dose Field + Sum % indicator
+   164→   164→   - Right column: when totals.sumPct === 0 (e.g. after Clear mix leaves a single row with empty pct) → dashed empty-state placeholder "Enter inputs to see results."; else → blend analysis 4-grid (N, P2O5, K2O, etc. with % and kg/ha) + NPK ratio card
+   165→   165→   - Blend analysis per-key value bumped from default (no class) → text-lg
+   166→   166→   - NPK ratio value bumped from text-lg → text-2xl
+   167→   167→   - Clear mix button stays in CardHeader (preserved); clearMix handler unchanged
+   168→   168→
+   169→   169→Verification:
+   170→   170→- Ran `npx tsc --noEmit 2>&1 | grep -E "nutri-tools/(Mineralizable|Irrigation|FertilizerComposition|Amendment|Granular)" | head -30` → empty output (zero type errors introduced across all 5 refactored files)
+   171→   171→
+   172→   172→Stage Summary:
+   173→   173→- 5 files refactored, all under /home/z/my-project/src/components/agri/nutri-tools/
+   174→   174→- All 'use client' directives, useState/useMemo/handler logic, imports, helper sub-components, and computation preserved — only the JSX return statement restructured
+   175→   175→- Each tool now uses the same `grid grid-cols-1 lg:grid-cols-2 gap-5` pattern for a consistent landscape UX at the wider 1400px dialog width
+   176→   176→- Empty-state placeholder (`flex items-center justify-center h-full min-h-[200px] text-sm text-muted-foreground bg-muted/30 rounded-lg border border-dashed`) added to the right column of IrrigationBalance, FertilizerComposition, AmendmentBalanceCec, and GranularMixFormulation; MineralizableNEstimator always computes (no empty state needed)
+   177→   177→- Result number typography enlarged per file: Mineralizable hero (text-4xl) + small ResultCards (text-2xl); Irrigation Metrics (text-3xl); FertilizerComposition MW (text-3xl); AmendmentBalanceCec CEC Total (text-2xl); GranularMixFormulation blend analysis values (text-lg) + NPK ratio (text-2xl)
+   178→   178→- Cross-column-spanning bottom panels added where requested: MineralizableNEstimator has Master formula + warning + root-reach details table; IrrigationBalance has the FAO-56 italic note
+   179→   179→- No new dependencies, no logic changes, no emojis added
+   180→   180→
+   181→   181→---
+   182→   182→Task ID: P2-P3
+   183→   183→Agent: general-purpose
+   184→   184→Task: Build shared data files — glossary.ts (~50 agronomic terms) and crop-presets.ts (10 crops × 4 tool presets)
+   185→   185→
+   186→   186→Work Log:
+   187→   187→- Read /home/z/my-project/worklog.md for prior context (1-a, 1-b, 1-c, 1-d, 3-a, 5-a entries)
+   188→   188→- Read /home/z/my-project/src/lib/nutri-tools-data.ts (1482 lines) in full to understand the existing shared-data style: OXIDE_CONVERSIONS / NUTRIENT_DATA / MEASURE_UNITS pattern (interface + literal array + helper functions, comment banner per section, lowercase first), HYDRO_MEQ_NUTRIENTS = ['N_NO3', 'P', 'S', 'Cl', 'K', 'Ca', 'Mg', 'N_NH4'], STAGE_BASE / STAGE_OPTIONAL / STAGE_DEFAULTS / STAGE_DEFAULT_PCT / STAGE_COLORS structure (id + label + total per nutrient)
+   189→   189→- Read /home/z/my-project/src/lib/crop-packages.ts (existing CropPackage interface, 12 entries) for cross-reference but used new CropPreset interface per task spec — fields, structure, and intent differ enough to warrant a separate file (crop-packages.ts targets single-calculator defaults like plantPopulation/seedRate/etc.; crop-presets.ts targets the 4 hydro/stage/irrigation/amendment nutri-tools)
+   190→   190→- Read /home/z/my-project/src/components/agri/nutri-tools/HydroSolutionDesigner.tsx (233 lines) to confirm hydroSolution preset shape (8 meq/L values keyed by HYDRO_MEQ_NUTRIENTS) matches existing PRESETS array shape — kept `Cl: 0` field explicit since the interface requires it
+   191→   191→- Read /home/z/my-project/src/components/agri/nutri-tools/NutrientDistributionByStage.tsx (244 lines) to confirm nutrientDistribution preset shape (totals Record + stages string[] + pct Record<string, number[]>) matches existing STAGE_BASE + STAGE_DEFAULT_PCT structure — `pct` arrays must align to `stages` length (verified each crop's 5-stage × per-nutrient array)
+   192→   192→- Created /home/z/my-project/src/lib/glossary.ts — 87 entries across 6 categories:
+   193→   193→  - Soil (15): CEC, meq/100g, cmolc/kg, bulk density, field capacity, permanent wilting point, available water, soil texture, clay, silt, sand, pH, organic matter, base saturation, rhizosphere
+   194→   194→  - Water (9): hardness, CaCO₃ equivalent, bicarbonate, carbonate, alkalinity, EC, TDS, acid neutralization, residual
+   195→   195→  - Fertilizer (27): N-P-K, oxide form, elemental form, P₂O₅, K₂O, CaO, MgO, fertilizer grade, solubility, salt index, hygroscopic, blend, amendment, gypsum, lime, dolomite, SOP, MOP, MAP, DAP, MKP, chelate, EDTA, DTPA, EDDHA, fertigation, stock solution, tank A/B
+   196→   196→  - Plant (15): macronutrient, micronutrient, essential element, beneficial element, mobility, antagonism, synergy, Mulder diagram, mass flow, diffusion, root interception, chlorosis, necrosis, interveinal, blossom-end rot
+   197→   197→  - Climate (11): VPD, SVP, humidity deficit, ETo, ETc, Kc, FAO-56, transpiration, dew point, solar radiation, PAR
+   198→   198→  - Units (10): ppm, mg/L, mmol/L, µmol/L, meq/L, dS/m, kPa, W/m², kg/ha, m³/ha
+   199→   199→  - Each entry: term + aliases (1–4 alternates incl. Spanish translations + ASCII form for unicode-subscript terms e.g. "P2O5" alongside "P₂O₅") + short (≤120 chars) + long (1–2 sentences with quantitative context) + category
+   200→   200→  - Exports: `GlossaryEntry` interface, `GlossaryCategory` type, `GLOSSARY` array, `findGlossary(term)` helper (case-insensitive match against term + aliases, returns first hit or null), `GLOSSARY_CATEGORIES` (ordered), `GLOSSARY_CATEGORY_LABELS` (display labels)
+   201→   201→- Created /home/z/my-project/src/lib/crop-presets.ts — 10 crops (🍅 Tomato, 🍓 Strawberry, 🥑 Avocado, 🫐 Blueberry, 🥬 Lettuce, 🫑 Bell pepper, 🥒 Cucumber, 🍊 Citrus, ☕ Coffee, 🌽 Maize) with all 4 tool presets per crop:
+   202→   202→  - hydroSolution: 8 meq/L values + notes string. Tomato uses Steiner-like (12/1/2/3/7/9/3/0); Strawberry lower K + Ca (5/5.5); Avocado high Ca 7 meq/L, chloride-free; Blueberry acid-loving (NH₄⁺ 2 meq/L, Ca low); Lettuce Hoagland-like N-heavy; Bell pepper slightly lower K than tomato; Cucumber high K + Ca; Citrus modest levels (tree crop); Coffee acid-loving with NH₄⁺ fraction (reference values, hydro atypical); Maize marked as reference-only (not a hydro crop)
+   203→   203→  - nutrientDistribution: totals {n, p, k, ca, mg, + optional s, fe, mn, b, zn} + 5 stages + pct per nutrient + notes. Stage names per crop phenology (e.g. Tomato: Establishment/Vegetative/Flowering/Filling/Maturation; Avocado: Vegetative flush/Flowering/Fruit set/Fruit fill/Maturation; Blueberry: Bud break/Bloom/Fruit set/Filling/Maturation; Maize: Establishment/Vegetative/Tasseling-silking/Grain fill/Maturation). Totals based on research extraction rates (Maize 200 kg N/ha, Tomato 280 kg K/ha, etc.)
+   204→   204→  - irrigation: 4 FAO-56 stages (Initial/Development/Mid/Late) with Kc + days. Kc values match the task spec (Tomato 0.6/0.85/1.15/0.8; Strawberry 0.4/0.7/0.85/0.7; Avocado 0.5/0.8/0.85/0.7; Bell pepper 0.6/0.85/1.05/0.85; Cucumber 0.6/0.85/1.0/0.85; Citrus 0.7/0.85/0.9/0.75; Coffee 0.9/0.95/1.05/0.95; Maize 0.3/0.7/1.15/0.5). Blueberry + Lettuce added per FAO-56 Table 12.
+   205→   205→  - amendment: targetPct {k, ca, mg} + notes. Avocado 5/70/15 (high Ca suppresses Phytophthora); Citrus 5/65/12 (per spec); Coffee 5/55/12 (acid-loving, lower Ca); Blueberry 5/50/15 (acid-loving); others 5/65/15 or 5/68/15
+   206→   206→  - Exports: `CropPreset` interface (full type), `CROP_PRESETS` array (10 entries), `getCropPreset(id)` helper (case-insensitive lookup, returns CropPreset | undefined), `CROP_CATEGORY_LABELS` (display labels for fruit/vegetable/berry/cereal/industrial)
+   207→   207→- Ran `npx tsc --noEmit 2>&1 | grep -E "glossary|crop-presets" | head -20` → empty output (zero TypeScript errors introduced by either new file). Broader `npx tsc --noEmit` showed 20 errors, all pre-existing in unrelated files (examples/, scripts/translate_to_arabic.ts, skills/, src/app/page.tsx, src/components/agri/calculators.ts, src/components/agri/formula-card.tsx, src/components/agri/formula-detail-dialog.tsx) — none reference the new files
+   208→   208→
+   209→   209→Stage Summary (files created):
+   210→   210→- /home/z/my-project/src/lib/glossary.ts (~390 lines, 87 entries + 1 interface + 1 type + 1 helper + 2 display constants)
+   211→   211→- /home/z/my-project/src/lib/crop-presets.ts (~430 lines, 10 crops × 4 presets + 1 interface + 1 helper + 1 display constant)
+   212→   212→- Total: 2 files, ~820 lines; both self-contained (no imports beyond TypeScript stdlib), ready for consumption by any of the 18 nutri-tools components and any future tooltip / crop-preset dropdown UI
+   213→   213→- Style consistent with existing /home/z/my-project/src/lib/nutri-tools-data.ts: file banner comment, section header banners per category/crop, exported interfaces named in PascalCase, exported constants in UPPER_SNAKE_CASE, helper functions in camelCase, JSDoc on exported symbols
+   214→   214→- No new npm dependencies added; no React/JSX (pure data + type modules); no emojis in glossary.ts; emojis in crop-presets.ts only as required by the CropPreset.emoji field per the task spec
+   215→   215→- Ready to be wired into: (1) a GlossaryTooltip wrapper component that scans text nodes for `GLOSSARY` term/alias hits and renders popovers, (2) a CropPresetDropdown that maps CROP_PRESETS → Select items and writes the selected preset's fields into HydroSolutionDesigner / NutrientDistributionByStage / IrrigationBalance / AmendmentBalanceCec state via existing setState handlers
+   216→   216→
+   217→   217→

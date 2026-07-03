@@ -1,0 +1,674 @@
+     1→<!DOCTYPE html>
+     2→<html lang="es">
+     3→<head>
+     4→  <meta charset="UTF-8" />
+     5→  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+     6→  <link rel="stylesheet" href="assets/free-tools-watermark.css" />
+     7→  <script src="assets/free-tools-embed.js"></script>
+     8→  <title>Lámina de riego y balance hídrico — NutriPlant PRO</title>
+     9→  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    10→  <style>
+    11→    body { margin: 0; padding: 16px; background: #f8fafc; font-family: Inter, system-ui, sans-serif; }
+    12→    .wrap { position: relative; background: #fff; border-radius: 12px; padding: 16px; }
+    13→    html.embed-login .np-free-tool-head { display: none; }
+    14→    html.embed-login body { padding: 12px 14px 16px; }
+    15→    .title { margin: 0 0 12px; font-size: 22px; color: #0f172a; font-weight: 800; }
+    16→    .intro { margin: 0 0 16px; font-size: 13px; line-height: 1.5; color: #64748b; }
+    17→    #irr-free-map { height: 220px; width: 100%; border-radius: 10px; border: 1px solid #cbd5e1; z-index: 1; }
+    18→    .irr-coord-row {
+    19→      display: grid;
+    20→      grid-template-columns: 1fr 1fr;
+    21→      gap: 10px;
+    22→      margin-bottom: 10px;
+    23→    }
+    24→    @media (max-width: 520px) {
+    25→      .irr-coord-row { grid-template-columns: 1fr; }
+    26→    }
+    27→    .irr-coord-row label {
+    28→      display: block;
+    29→      font-size: 12px;
+    30→      font-weight: 600;
+    31→      color: #444;
+    32→      margin-bottom: 4px;
+    33→    }
+    34→    .irr-coord-row input {
+    35→      width: 100%;
+    36→      padding: 8px 10px;
+    37→      border: 1px solid #d1d5db;
+    38→      border-radius: 8px;
+    39→      font-size: 14px;
+    40→      box-sizing: border-box;
+    41→    }
+    42→    .map-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+    43→    .map-actions button {
+    44→      padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; background: #fff;
+    45→      font-size: 13px; font-weight: 600; cursor: pointer; color: #0f172a;
+    46→    }
+    47→    .map-actions button.primary {
+    48→      background: linear-gradient(180deg, #0ea5e9 0%, #0284c7 100%);
+    49→      color: #fff;
+    50→      border-color: #0369a1;
+    51→    }
+    52→    .map-actions button:disabled { opacity: 0.55; cursor: not-allowed; }
+    53→    .period-btn { padding: 8px 14px; border-radius: 8px; border: 1px solid #cbd5e1; background: #fff; font-weight: 600; cursor: pointer; font-size: 13px; }
+    54→    .period-btn.active { border-color: #0284c7; background: #e0f2fe; color: #0369a1; }
+    55→    .field-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+    56→    .irr-calc-section { margin-bottom: 14px; }
+    57→    .irr-calc-row {
+    58→      display: grid;
+    59→      gap: 12px;
+    60→      margin-bottom: 12px;
+    61→      align-items: start;
+    62→    }
+    63→    .irr-calc-row--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    64→    .irr-calc-row--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    65→    @media (max-width: 720px) {
+    66→      .irr-calc-row--2,
+    67→      .irr-calc-row--3 { grid-template-columns: 1fr; }
+    68→    }
+    69→    .field-box label { display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 6px; }
+    70→    .field-box .field-hint { margin: 6px 0 0; font-size: 11px; line-height: 1.4; color: #64748b; }
+    71→    .field-box .irr-riego-row {
+    72→      display: flex;
+    73→      align-items: stretch;
+    74→      border: 1px solid #cbd5e1;
+    75→      border-radius: 8px;
+    76→      overflow: hidden;
+    77→      background: #fff;
+    78→      max-width: 220px;
+    79→    }
+    80→    .field-box .irr-riego-row input {
+    81→      flex: 1;
+    82→      min-width: 0;
+    83→      border: none !important;
+    84→      border-radius: 0 !important;
+    85→    }
+    86→    .field-box .irr-riego-row select {
+    87→      width: auto;
+    88→      min-width: 4.25rem;
+    89→      flex-shrink: 0;
+    90→      border: none !important;
+    91→      border-left: 1px solid #cbd5e1 !important;
+    92→      border-radius: 0 !important;
+    93→      background: #f8fafc;
+    94→      font-weight: 700;
+    95→      color: #0369a1;
+    96→      padding: 10px 10px;
+    97→    }
+    98→    .field-box .irr-riego-row .irr-unit-badge {
+    99→      display: flex;
+   100→      align-items: center;
+   101→      flex-shrink: 0;
+   102→      border-left: 1px solid #cbd5e1;
+   103→      background: #f8fafc;
+   104→      font-weight: 700;
+   105→      color: #0369a1;
+   106→      padding: 10px 12px;
+   107→      font-size: 14px;
+   108→      white-space: nowrap;
+   109→    }
+   110→    .irr-soil-bridge-section label { display: block; font-size: 13px; font-weight: 600; color: #475569; margin: 0; }
+   111→    .irr-soil-bridge-section .np-soil-bridge-row select {
+   112→      width: auto !important;
+   113→      flex: 1 1 auto;
+   114→      min-width: 0;
+   115→    }
+   116→    .irr-soil-bridge-section .np-soil-bridge-row .np-irr-value-unit {
+   117→      width: auto;
+   118→    }
+   119→    .irr-soil-bridge-section .np-soil-bridge-row .np-irr-value-unit input {
+   120→      width: auto;
+   121→    }
+   122→    .irr-soil-bridge-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; }
+   123→    .irr-btn-soil-bridge {
+   124→      flex-shrink: 0;
+   125→      padding: 7px 12px;
+   126→      font-size: 12px;
+   127→      font-weight: 600;
+   128→      border-radius: 8px;
+   129→      border: 1px solid #7dd3fc;
+   130→      background: #fff;
+   131→      color: #0369a1;
+   132→      cursor: pointer;
+   133→    }
+   134→    .irr-btn-soil-bridge:hover { background: #f0f9ff; }
+   135→    #irr-kc-hint-wrap { margin-top: 4px; }
+   136→    .field-box label.irr-manual-opt {
+   137→      display: flex;
+   138→      align-items: center;
+   139→      gap: 8px;
+   140→      cursor: pointer;
+   141→      transition: color 0.15s ease;
+   142→    }
+   143→    .field-box label.irr-manual-opt.is-on { color: #0369a1; }
+   144→    .field-box label.irr-manual-opt--sub { font-weight: 500; font-size: 12px; margin-top: 8px; }
+   145→    .field-box input[type="checkbox"] { width: auto; margin: 0; flex-shrink: 0; accent-color: #2563eb; }
+   146→    .field-box input, .field-box select {
+   147→      width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; box-sizing: border-box;
+   148→    }
+   149→    .field-box--green { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 12px; }
+   150→    .field-box--green label { color: #166534; }
+   151→    .field-box--green input { border-color: #86efac; }
+   152→    .field-box--green .field-hint { color: #15803d; }
+   153→    .irr-calc-roots { margin-bottom: 0; }
+   154→    .irr-calc-roots .irr-root-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+   155→    .irr-calc-roots .irr-root-row input { width: 110px; flex-shrink: 0; }
+   156→    .irr-calc-roots .irr-root-row button {
+   157→      flex: 0 0 auto;
+   158→      padding: 8px 12px;
+   159→      background: #16a34a;
+   160→      color: #fff;
+   161→      border: none;
+   162→      border-radius: 8px;
+   163→      font-weight: 600;
+   164→      cursor: pointer;
+   165→      font-size: 12px;
+   166→      white-space: nowrap;
+   167→    }
+   168→    #irr-summary {
+   169→      background: linear-gradient(135deg, #f0f9ff 0%, #ecfeff 100%);
+   170→      border: 1px solid #7dd3fc; border-radius: 10px; padding: 16px; margin: 16px 0;
+   171→    }
+   172→    .metric-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+   173→    .metric-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px; }
+   174→  </style>
+   175→</head>
+   176→<body>
+   177→  <div class="wrap">
+   178→    <div class="np-free-tool-head">
+   179→      <h2 class="title np-free-tool-title">🌧️ Lámina de riego y balance hídrico</h2>
+   180→      <div class="np-free-watermark" aria-hidden="true"><img src="assets/N_Hoja_Azul.png" alt=""></div>
+   181→    </div>
+   182→    <p class="intro">
+   183→      Elige un punto en el mapa (como en VPD). NutriPlant consulta <strong>lluvia y ETo</strong> con <strong>información meteorológica con respaldo satelital</strong> y calcula déficit y balance para <strong>1 o 7 días</strong>.
+   184→      Puedes ajustar Kc, riego aplicado y superficies. Estimación rápida — <strong>validar en campo</strong>.
+   185→    </p>
+   186→
+   187→    <div style="background:#fefce8;border:2px solid #eab308;border-radius:12px;padding:20px;margin-bottom:20px;">
+   188→      <h3 style="margin:0 0 8px;color:#854d0e;font-size:17px;font-weight:600;">🗺️ Ubicación del predio</h3>
+   189→      <p style="margin:0 0 14px;font-size:13px;color:#713f12;line-height:1.45;">Mapa, GPS o escribe lat/lng. Luego obtén clima para cargar ETo y lluvia del periodo.</p>
+   190→      <div class="irr-coord-row">
+   191→        <div>
+   192→          <label for="irr-free-lat">Latitud</label>
+   193→          <input id="irr-free-lat" type="number" step="any" placeholder="ej. 19.4326" />
+   194→        </div>
+   195→        <div>
+   196→          <label for="irr-free-lng">Longitud</label>
+   197→          <input id="irr-free-lng" type="number" step="any" placeholder="ej. -99.1332" />
+   198→        </div>
+   199→      </div>
+   200→      <div class="map-actions">
+   201→        <button type="button" id="irr-btn-geo" onclick="irrFreeUseMyLocation()">📍 Mi ubicación</button>
+   202→        <button type="button" class="primary" id="irr-btn-fetch" onclick="irrFreeFetchClimate()">🌧️ Obtener clima y calcular</button>
+   203→      </div>
+   204→      <p id="irr-geo-status" aria-live="polite" style="font-size:12px;color:#64748b;min-height:1.2em;margin:0 0 8px;"></p>
+   205→      <div id="irr-free-map"></div>
+   206→    </div>
+   207→
+   208→    <div style="background:#f0f9ff;border:2px solid #0ea5e9;border-radius:12px;padding:16px;margin-bottom:16px;">
+   209→      <h3 style="margin:0 0 12px;color:#0369a1;font-size:16px;">📋 Calculadora (1 o 7 días)</h3>
+   210→      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px;">
+   211→        <span style="font-size:13px;font-weight:600;color:#64748b;">Periodo:</span>
+   212→        <button type="button" class="period-btn active" data-period="1" onclick="irrFreeSetPeriod(1)">1 día</button>
+   213→        <button type="button" class="period-btn" data-period="7" onclick="irrFreeSetPeriod(7)">7 días</button>
+   214→      </div>
+   215→      <p id="irr-sat-meta" style="display:none;margin:0 0 12px;font-size:12px;color:#0369a1;"></p>
+   216→      <div class="metric-row">
+   217→        <div class="metric-card" id="irr-metric-et0"></div>
+   218→        <div class="metric-card" id="irr-metric-rain"></div>
+   219→      </div>
+   220→
+   221→      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:14px;">
+   222→        <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:#0f172a;">📋 Mis valores de agua (opcional)</p>
+   223→        <p id="irr-manual-block-hint" style="margin:0 0 10px;font-size:12px;line-height:1.45;color:#64748b;">ETo, lluvia y riego corresponden al <strong>periodo seleccionado</strong>. Valores manuales = acumulado de esos mismos días.</p>
+   224→        <div class="field-grid">
+   225→          <div class="field-box">
+   226→            <label class="irr-manual-opt" id="irr-label-manual-et0" for="irr-use-manual-et0">
+   227→              <input type="checkbox" id="irr-use-manual-et0" onchange="irrFreeUpdate()" />
+   228→              <span>Usar mi ETo del periodo (mm)</span>
+   229→            </label>
+   230→            <input type="number" id="irr-et0-manual" min="0" step="0.1" placeholder="Acumulado del periodo" oninput="irrFreeUpdate()" />
+   231→          </div>
+   232→          <div class="field-box">
+   233→            <label class="irr-manual-opt" id="irr-label-manual-rain" for="irr-use-manual-rain">
+   234→              <input type="checkbox" id="irr-use-manual-rain" onchange="irrFreeUpdate()" />
+   235→              <span>Usar mi lluvia (mm)</span>
+   236→            </label>
+   237→            <input type="number" id="irr-rain-manual" min="0" step="0.1" placeholder="Acumulado del periodo" oninput="irrFreeUpdate()" />
+   238→            <label class="irr-manual-opt irr-manual-opt--sub" id="irr-label-macro-tunnel" for="irr-macro-tunnel">
+   239→              <input type="checkbox" id="irr-macro-tunnel" onchange="irrFreeUpdate()" />
+   240→              <span>Macrotúnel (lluvia = 0)</span>
+   241→            </label>
+   242→          </div>
+   243→        </div>
+   244→      </div>
+   245→
+   246→      <div class="irr-calc-section">
+   247→        <div class="irr-calc-row irr-calc-row--2">
+   248→          <div class="field-box">
+   249→            <label>Cultivo (opcional)</label>
+   250→            <input id="irr-crop" type="text" placeholder="Ej. limón, aguacate…" oninput="irrFreeUpdate()" />
+   251→          </div>
+   252→          <div class="field-box">
+   253→            <label>Kc (editable)</label>
+   254→            <input id="irr-kc" type="number" min="0" max="2" step="0.01" placeholder="Sin precargar" oninput="irrFreeUpdate()" />
+   255→            <div id="irr-kc-hint-wrap"></div>
+   256→          </div>
+   257→        </div>
+   258→        <div class="irr-calc-row irr-calc-row--3">
+   259→          <div class="field-box">
+   260→            <label>Riego en franja regada (periodo)</label>
+   261→            <div class="irr-riego-row">
+   262→              <input id="irr-applied" type="number" min="0" step="0.1" placeholder="Volumen en franja" oninput="irrFreeUpdate()" aria-label="Riego aplicado en franja (m³)" />
+   263→              <span class="irr-unit-badge" aria-hidden="true">m³</span>
+   264→              <input type="hidden" id="irr-unit" value="m3" />
+   265→            </div>
+   266→            <p class="field-hint">Volumen total aplicado en la <strong>zona humedecida</strong> (1 o 7 días). Indica <strong>Superficie regada</strong> para el balance; la app calcula la lámina en mm en los resultados.</p>
+   267→          </div>
+   268→          <div class="field-box">
+   269→            <label>Superficie del cultivo (ha)</label>
+   270→            <input id="irr-crop-area" type="number" min="0" step="0.01" value="1" oninput="irrFreeUpdate()" />
+   271→            <p class="field-hint">Área total del cultivo (ETc / m³).</p>
+   272→          </div>
+   273→          <div class="field-box field-box--green">
+   274→            <label>Superficie regada (ha)</label>
+   275→            <input id="irr-area" type="number" min="0" step="0.01" placeholder="Franja humedecida" oninput="irrFreeUpdate()" />
+   276→            <p class="field-hint">Zona humedecida (goteo/macrotúnel). Vacío = misma que cultivo.</p>
+   277→          </div>
+   278→        </div>
+   279→        <div class="field-box irr-soil-bridge-section" style="margin-bottom:12px;">
+   280→          <div class="irr-soil-bridge-head">
+   281→            <label>🪨 Referencia almacén suelo (Agua en suelo y textura)</label>
+   282→            <div id="irr-soil-bridge-btns"></div>
+   283→          </div>
+   284→          <div id="irr-soil-bridge-panel"></div>
+   285→        </div>
+   286→        <div class="field-box field-box--green irr-calc-roots">
+   287→          <label>Raíces en superficie (% del área)</label>
+   288→          <p class="field-hint" style="margin-top:0;margin-bottom:8px;">Fracción del <strong>área del cultivo</strong> con raíces activas. <strong>No es profundidad</strong> — sirve para sugerir franja regada.</p>
+   289→          <div class="irr-root-row">
+   290→            <input id="irr-root-reach" type="number" min="10" max="100" step="1" placeholder="10–100" oninput="irrFreeUpdate()" />
+   291→            <button type="button" onclick="irrFreeSuggestStrip()">Sugerir franja regada</button>
+   292→          </div>
+   293→        </div>
+   294→        <div id="irr-area-note-wrap" style="margin-bottom:16px;">
+   295→          <p
+   296→            id="irr-area-note"
+   297→            style="margin:0;padding:10px 12px;font-size:12px;line-height:1.45;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;"
+   298→          ></p>
+   299→          <div id="irr-area-reach-hint"></div>
+   300→        </div>
+   301→      </div>
+   302→
+   303→      <div id="irr-summary"><p style="margin:0;color:#64748b;font-size:13px;">Pulsa <strong>Obtener clima y calcular</strong> o ingresa ETo/lluvia manualmente.</p></div>
+   304→    </div>
+   305→
+   306→    <div id="irr-note-wrap"></div>
+   307→    <div id="irr-kc-wrap"></div>
+   308→  </div>
+   309→
+   310→  <script>
+   311→    if (location.search.indexOf('embed=login') >= 0 || location.search.indexOf('embed=dashboard') >= 0) {
+   312→      document.documentElement.classList.add('embed-login');
+   313→    }
+   314→  </script>
+   315→  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+   316→  <script src="climate-kc-fao-data.js"></script>
+   317→  <script src="assets/np-free-geolocation.js?v=202606201700"></script>
+   318→  <script src="assets/np-irrigation-balance-core.js?v=202606242300"></script>
+   319→  <script src="assets/np-soil-water-bridge.js?v=202606242400"></script>
+   320→  <script src="assets/np-free-local-persist.js"></script>
+   321→  <script>
+   322→    var irrRolling = null;
+   323→    var irrPeriodDays = 1;
+   324→    var irrMap = null;
+   325→    var irrMarker = null;
+   326→    var irrPersist = null;
+   327→
+   328→    var IRR_PERSIST_IDS = [
+   329→      'irr-free-lat', 'irr-free-lng', 'irr-crop', 'irr-kc', 'irr-applied', 'irr-unit',
+   330→      'irr-crop-area', 'irr-area', 'irr-root-reach', 'irr-et0-manual', 'irr-rain-manual',
+   331→      'irr-use-manual-et0', 'irr-use-manual-rain', 'irr-macro-tunnel',
+   332→      'irr-soil-mode', 'irr-soil-m3'
+   333→    ];
+   334→
+   335→    function irrSetStatus(msg) {
+   336→      var el = document.getElementById('irr-geo-status');
+   337→      if (el) el.textContent = msg || '';
+   338→    }
+   339→
+   340→    function irrReadCoords() {
+   341→      return {
+   342→        lat: parseFloat(document.getElementById('irr-free-lat').value),
+   343→        lng: parseFloat(document.getElementById('irr-free-lng').value)
+   344→      };
+   345→    }
+   346→
+   347→    function irrApplyCoords(lat, lng, move) {
+   348→      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+   349→      document.getElementById('irr-free-lat').value = lat.toFixed(6);
+   350→      document.getElementById('irr-free-lng').value = lng.toFixed(6);
+   351→      if (move && irrMarker && irrMap) {
+   352→        irrMarker.setLatLng([lat, lng]);
+   353→        irrMap.setView([lat, lng], Math.max(irrMap.getZoom(), 10));
+   354→      }
+   355→      IRR_PERSIST_IDS.slice(0, 2).forEach(function (id) {
+   356→        var el = document.getElementById(id);
+   357→        if (el) el.dispatchEvent(new Event('input', { bubbles: true }));
+   358→      });
+   359→    }
+   360→
+   361→    function irrRestoreClimateMeta() {
+   362→      var meta = document.getElementById('irr-sat-meta');
+   363→      if (!meta || !irrRolling || !irrRolling.fetchedAt) return;
+   364→      meta.textContent = 'Referencia satélite · actualizada ' + new Date(irrRolling.fetchedAt).toLocaleString('es-MX');
+   365→      meta.style.display = 'block';
+   366→    }
+   367→
+   368→    function irrFreeGetPersistState() {
+   369→      var o = window.NpFreePersist.collectIds(IRR_PERSIST_IDS);
+   370→      o.periodDays = irrPeriodDays;
+   371→      if (irrRolling) o.rolling = irrRolling;
+   372→      return o;
+   373→    }
+   374→
+   375→    function irrFreeReadSoilStorageFromDom() {
+   376→      var modeEl = document.getElementById('irr-soil-mode');
+   377→      var m3El = document.getElementById('irr-soil-m3');
+   378→      var mode = modeEl && modeEl.value ? modeEl.value : null;
+   379→      var m3 = m3El && m3El.value !== '' ? parseFloat(m3El.value) : null;
+   380→      return {
+   381→        soilStorageMode: mode === 'deficit' || mode === 'surplus' ? mode : null,
+   382→        soilStorageM3: Number.isFinite(m3) && m3 > 0 ? m3 : null
+   383→      };
+   384→    }
+   385→
+   386→    function irrFreeInitSoilPanel() {
+   387→      var panel = document.getElementById('irr-soil-bridge-panel');
+   388→      var SB = window.NpSoilWaterBridge;
+   389→      if (!panel || !SB || typeof SB.buildPanelHtml !== 'function') return;
+   390→      var soil = irrFreeReadSoilStorageFromDom();
+   391→      if (!document.getElementById('irr-soil-mode')) {
+   392→        panel.innerHTML = SB.buildPanelHtml({
+   393→          idPrefix: 'irr',
+   394→          mode: soil.soilStorageMode || '',
+   395→          m3: soil.soilStorageM3
+   396→        });
+   397→      }
+   398→    }
+   399→
+   400→    function irrFreeSuggestSoilFromBridge(target) {
+   401→      var SB = window.NpSoilWaterBridge;
+   402→      if (!SB || typeof SB.applySuggestionToDom !== 'function') return;
+   403→      SB.applySuggestionToDom('irr', target === 'cc' ? 'cc' : 'objective60');
+   404→      irrFreeUpdate();
+   405→      if (irrPersist) irrPersist.saveNow();
+   406→    }
+   407→
+   408→    function irrFreeMigrateLegacyIrrigationUnit() {
+   409→      var NB = window.NpIrrBalance;
+   410→      var appliedEl = document.getElementById('irr-applied');
+   411→      var unitEl = document.getElementById('irr-unit');
+   412→      if (!appliedEl || appliedEl.value === '' || !NB || !NB.migrateIrrigationValueToM3) {
+   413→        if (unitEl) unitEl.value = 'm3';
+   414→        return;
+   415→      }
+   416→      var cropHa = parseFloat(document.getElementById('irr-crop-area').value);
+   417→      if (!Number.isFinite(cropHa) || cropHa <= 0) cropHa = 1;
+   418→      var irrAreaEl = document.getElementById('irr-area');
+   419→      var irrHa =
+   420→        irrAreaEl && irrAreaEl.value !== '' && Number.isFinite(parseFloat(irrAreaEl.value))
+   421→          ? parseFloat(irrAreaEl.value)
+   422→          : cropHa;
+   423→      var legacyUnit = unitEl && unitEl.value === 'mm' ? 'mm' : 'm3';
+   424→      var m3 = NB.migrateIrrigationValueToM3(parseFloat(appliedEl.value), legacyUnit, irrHa, cropHa);
+   425→      if (m3 != null) appliedEl.value = String(m3);
+   426→      if (unitEl) unitEl.value = 'm3';
+   427→    }
+   428→
+   429→    function irrFreeApplyPersistState(d) {
+   430→      if (!d) return;
+   431→      window.NpFreePersist.applyIds(d, IRR_PERSIST_IDS);
+   432→      irrFreeMigrateLegacyIrrigationUnit();
+   433→      if (d.rolling && typeof d.rolling === 'object') {
+   434→        irrRolling = d.rolling;
+   435→        irrRestoreClimateMeta();
+   436→        irrSetStatus('✅ Clima y cálculo restaurados de este navegador.');
+   437→      }
+   438→      if (d.periodDays === 1 || d.periodDays === 7) {
+   439→        irrPeriodDays = d.periodDays;
+   440→        document.querySelectorAll('.period-btn').forEach(function (b) {
+   441→          var on = parseInt(b.getAttribute('data-period'), 10) === irrPeriodDays;
+   442→          b.classList.toggle('active', on);
+   443→        });
+   444→      }
+   445→      var lat = parseFloat(document.getElementById('irr-free-lat').value);
+   446→      var lng = parseFloat(document.getElementById('irr-free-lng').value);
+   447→      if (Number.isFinite(lat) && Number.isFinite(lng)) irrApplyCoords(lat, lng, true);
+   448→      irrFreeInitSoilPanel();
+   449→      irrFreeUpdate();
+   450→    }
+   451→
+   452→    function irrInitMap() {
+   453→      if (typeof L === 'undefined' || irrMap) return;
+   454→      var la = 19.4326, lo = -99.1332;
+   455→      irrMap = L.map('irr-free-map').setView([la, lo], 5);
+   456→      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+   457→        maxZoom: 19,
+   458→        attribution: '© Esri'
+   459→      }).addTo(irrMap);
+   460→      irrMarker = L.marker([la, lo], { draggable: true }).addTo(irrMap);
+   461→      irrMarker.on('dragend', function () {
+   462→        var ll = irrMarker.getLatLng();
+   463→        irrApplyCoords(ll.lat, ll.lng, false);
+   464→      });
+   465→      irrMap.on('click', function (e) {
+   466→        irrMarker.setLatLng(e.latlng);
+   467→        irrApplyCoords(e.latlng.lat, e.latlng.lng, false);
+   468→      });
+   469→      irrApplyCoords(la, lo, false);
+   470→      setTimeout(function () { if (irrMap) irrMap.invalidateSize(); }, 400);
+   471→    }
+   472→
+   473→    function irrFreeUseMyLocation() {
+   474→      var btn = document.getElementById('irr-btn-geo');
+   475→      if (btn) btn.disabled = true;
+   476→      irrSetStatus('📍 Obteniendo ubicación…');
+   477→      var geo = window.NpFreeGeo;
+   478→      if (!geo || typeof geo.requestLocation !== 'function') {
+   479→        irrSetStatus('No se pudo leer GPS. Elige un punto en el mapa.');
+   480→        if (btn) btn.disabled = false;
+   481→        return;
+   482→      }
+   483→      geo.requestLocation({ retry: true }).then(
+   484→        function (pos) {
+   485→          irrApplyCoords(pos.coords.latitude, pos.coords.longitude, true);
+   486→          irrSetStatus('Ubicación aplicada. Ajusta el punto en el mapa si quieres.');
+   487→          if (btn) btn.disabled = false;
+   488→        },
+   489→        function (err) {
+   490→          irrSetStatus(err && err.message ? err.message : 'No se pudo leer GPS. Elige un punto en el mapa.');
+   491→          if (btn) btn.disabled = false;
+   492→        }
+   493→      );
+   494→    }
+   495→
+   496→    async function irrFreeFetchClimate() {
+   497→      var c = irrReadCoords();
+   498→      if (!Number.isFinite(c.lat) || !Number.isFinite(c.lng)) {
+   499→        alert('Indica latitud y longitud o elige un punto en el mapa.');
+   500→        return;
+   501→      }
+   502→      var btn = document.getElementById('irr-btn-fetch');
+   503→      if (btn) btn.disabled = true;
+   504→      irrSetStatus('🌧️ Consultando clima…');
+   505→      try {
+   506→        irrRolling = await window.NpIrrBalance.fetchRollingOpenMeteo(c.lat, c.lng);
+   507→        irrRestoreClimateMeta();
+   508→        irrSetStatus('✅ Clima cargado. Ajusta Kc y riego si hace falta.');
+   509→        irrFreeUpdate();
+   510→        if (irrPersist) irrPersist.saveNow();
+   511→      } catch (e) {
+   512→        console.warn(e);
+   513→        irrSetStatus('⚠️ No se pudo obtener clima. Revisa conexión o coordenadas.');
+   514→        alert('No se pudo obtener el clima en ese punto. Revisa la conexión o las coordenadas.');
+   515→      } finally {
+   516→        if (btn) btn.disabled = false;
+   517→      }
+   518→    }
+   519→
+   520→    function irrFreeSetPeriod(days) {
+   521→      irrPeriodDays = days === 1 ? 1 : 7;
+   522→      document.querySelectorAll('.period-btn').forEach(function (b) {
+   523→        var on = parseInt(b.getAttribute('data-period'), 10) === irrPeriodDays;
+   524→        b.classList.toggle('active', on);
+   525→      });
+   526→      irrFreeUpdate();
+   527→    }
+   528→
+   529→    function irrFreeReadState() {
+   530→      var kcEl = document.getElementById('irr-kc');
+   531→      var kc = kcEl && kcEl.value !== '' ? parseFloat(kcEl.value) : null;
+   532→      var soil = irrFreeReadSoilStorageFromDom();
+   533→      return {
+   534→        cropName: (document.getElementById('irr-crop').value || '').trim(),
+   535→        kc: Number.isFinite(kc) ? kc : null,
+   536→        periodDays: irrPeriodDays,
+   537→        irrigationValue: document.getElementById('irr-applied').value !== '' ? parseFloat(document.getElementById('irr-applied').value) : null,
+   538→        irrigationUnit: 'm3',
+   539→        cropAreaHa: document.getElementById('irr-crop-area').value !== '' ? parseFloat(document.getElementById('irr-crop-area').value) : 1,
+   540→        irrigatedAreaHa: document.getElementById('irr-area').value !== '' ? parseFloat(document.getElementById('irr-area').value) : null,
+   541→        rootReachPct: document.getElementById('irr-root-reach').value !== '' ? parseFloat(document.getElementById('irr-root-reach').value) : null,
+   542→        useManualEt0: document.getElementById('irr-use-manual-et0').checked,
+   543→        manualEt0: document.getElementById('irr-et0-manual').value !== '' ? parseFloat(document.getElementById('irr-et0-manual').value) : null,
+   544→        useManualRain: document.getElementById('irr-use-manual-rain').checked,
+   545→        manualRain: document.getElementById('irr-rain-manual').value !== '' ? parseFloat(document.getElementById('irr-rain-manual').value) : null,
+   546→        macroTunnelNoRain: document.getElementById('irr-macro-tunnel').checked,
+   547→        soilStorageMode: soil.soilStorageMode,
+   548→        soilStorageM3: soil.soilStorageM3
+   549→      };
+   550→    }
+   551→
+   552→    function irrFreeSuggestStrip() {
+   553→      var st = irrFreeReadState();
+   554→      var reach = st.rootReachPct;
+   555→      if (reach == null || reach < 10) { alert('Indica % raíces en superficie (10–100).'); return; }
+   556→      var cropHa = st.cropAreaHa || 1;
+   557→      var suggested = Math.round(cropHa * (reach / 100) * 100) / 100;
+   558→      document.getElementById('irr-area').value = String(suggested);
+   559→      irrFreeUpdate();
+   560→    }
+   561→
+   562→    function irrSyncManualLabelStyles(st) {
+   563→      var et0Lab = document.getElementById('irr-label-manual-et0');
+   564→      var rainLab = document.getElementById('irr-label-manual-rain');
+   565→      var macroLab = document.getElementById('irr-label-macro-tunnel');
+   566→      if (et0Lab) et0Lab.classList.toggle('is-on', !!st.useManualEt0);
+   567→      if (rainLab) rainLab.classList.toggle('is-on', !!st.useManualRain);
+   568→      if (macroLab) macroLab.classList.toggle('is-on', !!st.macroTunnelNoRain);
+   569→    }
+   570→
+   571→    function irrFreeUpdate() {
+   572→      var st = irrFreeReadState();
+   573→      var NB = window.NpIrrBalance;
+   574→      var res = NB.computeResults(st, irrRolling);
+   575→      var periodLabel = res.periodDays === 1 ? '1 día' : '7 días';
+   576→      var sat = NB.getRollingForPeriod(irrRolling, res.periodDays);
+   577→
+   578→      document.getElementById('irr-et0-manual').disabled = !st.useManualEt0;
+   579→      document.getElementById('irr-rain-manual').disabled = st.macroTunnelNoRain || !st.useManualRain;
+   580→      document.getElementById('irr-use-manual-rain').disabled = st.macroTunnelNoRain;
+   581→      irrSyncManualLabelStyles(st);
+   582→
+   583→      document.getElementById('irr-metric-et0').innerHTML =
+   584→        '<div style="font-size:12px;color:#64748b;">ETo activa (' + periodLabel + ')</div>' +
+   585→        '<div style="font-size:18px;font-weight:700;">' + (res.et0 != null ? NB.fmtMm(res.et0) + (res.periodDays === 1 ? ' mm/día' : ' mm') : '—') +
+   586→        NB.sourceBadge(res.et0Source) + '</div>';
+   587→      document.getElementById('irr-metric-rain').innerHTML =
+   588→        '<div style="font-size:12px;color:#64748b;">Lluvia activa (' + periodLabel + ')</div>' +
+   589→        '<div style="font-size:18px;font-weight:700;">' + (res.rain != null ? NB.fmtMm(res.rain) + ' mm' : '—') +
+   590→        NB.sourceBadge(res.rainSource) + '</div>';
+   591→
+   592→      var manualHint = document.getElementById('irr-manual-block-hint');
+   593→      if (manualHint) {
+   594→        manualHint.innerHTML =
+   595→          'ETo, lluvia y riego de esta caja corresponden al <strong>periodo seleccionado (' +
+   596→          periodLabel +
+   597→          ')</strong>. Si usas valores de campo, ingresa el <strong>acumulado de esos mismos días</strong>; la referencia satélite de arriba ya usa ese periodo.';
+   598→      }
+   599→
+   600→      document.getElementById('irr-summary').innerHTML = NB.buildSummaryHtml(res);
+   601→
+   602→      var areaNote = document.getElementById('irr-area-note');
+   603→      if (areaNote && typeof NB.buildAreaCriterionNoteHtml === 'function') {
+   604→        areaNote.innerHTML = NB.buildAreaCriterionNoteHtml(st);
+   605→        areaNote.style.display = 'block';
+   606→      }
+   607→
+   608→      NB.renderFaoKcTable('irr-fao-kc-tbody', document.getElementById('irr-fao-kc-search') && document.getElementById('irr-fao-kc-search').value, st.cropName);
+   609→    }
+   610→
+   611→    document.addEventListener('DOMContentLoaded', function () {
+   612→      irrInitMap();
+   613→      document.getElementById('irr-note-wrap').innerHTML = window.NpIrrBalance.getNoteHtml();
+   614→      document.getElementById('irr-kc-wrap').innerHTML = window.NpIrrBalance.getReferenceTablesHtml({ idPrefix: 'irr' });
+   615→      var reachHint = document.getElementById('irr-area-reach-hint');
+   616→      if (reachHint) reachHint.innerHTML = window.NpIrrBalance.getAreaCriterionScrollHintHtml('irr');
+   617→      var kcHintWrap = document.getElementById('irr-kc-hint-wrap');
+   618→      if (kcHintWrap) kcHintWrap.innerHTML = window.NpIrrBalance.getKcFieldHintHtml('irr');
+   619→      window.NpIrrBalance.renderFaoKcTable('irr-fao-kc-tbody', '', '');
+   620→      var searchEl = document.getElementById('irr-fao-kc-search');
+   621→      if (searchEl) {
+   622→        searchEl.addEventListener('input', function () {
+   623→          window.NpIrrBalance.renderFaoKcTable('irr-fao-kc-tbody', searchEl.value, document.getElementById('irr-crop').value);
+   624→        });
+   625→      }
+   626→      irrFreeInitSoilPanel();
+   627→      var soilBtnsWrap = document.getElementById('irr-soil-bridge-btns');
+   628→      if (soilBtnsWrap && window.NpSoilWaterBridge && typeof window.NpSoilWaterBridge.buildSuggestButtonsHtml === 'function') {
+   629→        soilBtnsWrap.innerHTML = window.NpSoilWaterBridge.buildSuggestButtonsHtml('irr');
+   630→      }
+   631→      var soilPanel = document.getElementById('irr-soil-bridge-panel');
+   632→      if (soilPanel) {
+   633→        soilPanel.addEventListener('input', function (e) {
+   634→          if (e.target && (e.target.id === 'irr-soil-mode' || e.target.id === 'irr-soil-m3')) irrFreeUpdate();
+   635→        });
+   636→        soilPanel.addEventListener('change', function (e) {
+   637→          if (e.target && e.target.id === 'irr-soil-mode') irrFreeUpdate();
+   638→        });
+   639→      }
+   640→      document.addEventListener('click', function (e) {
+   641→        var btn = e.target.closest('.np-soil-bridge-suggest-btn[data-soil-prefix="irr"]');
+   642→        if (!btn) return;
+   643→        e.preventDefault();
+   644→        irrFreeSuggestSoilFromBridge(btn.getAttribute('data-soil-target'));
+   645→      });
+   646→      if (window.NpSoilWaterBridge && window.NpSoilWaterBridge.BRIDGE_KEY) {
+   647→        window.addEventListener('storage', function (e) {
+   648→          if (e.key === window.NpSoilWaterBridge.BRIDGE_KEY) {
+   649→            var msgEl = document.getElementById('irr-soil-suggest-msg');
+   650→            if (msgEl) {
+   651→              msgEl.innerHTML =
+   652→                'Datos de 🪨 suelo actualizados en otra pestaña. Pulsa <strong>Sugerir hasta 60% AU</strong> o <strong>hasta CC</strong> si quieres prellenar.';
+   653→            }
+   654→          }
+   655→        });
+   656→      }
+   657→
+   658→      irrPersist = window.NpFreePersist.bind('lamina_riego', irrFreeGetPersistState, irrFreeApplyPersistState);
+   659→      irrFreeUpdate();
+   660→
+   661→      if (window.NpFreeGeo && window.NpFreeGeo.isEmbedded()) {
+   662→        var st = document.getElementById('irr-geo-status');
+   663→        if (st && st.parentNode) {
+   664→          var link = document.createElement('p');
+   665→          link.style.cssText = 'font-size:11px;color:#64748b;margin:0 0 8px;';
+   666→          link.innerHTML = 'Si el GPS falla aquí: <a href="lamina-riego-free.html" target="_blank" rel="noopener" style="color:#2563eb;">abrir herramienta en página completa</a>.';
+   667→          st.parentNode.insertBefore(link, st.nextSibling);
+   668→        }
+   669→      }
+   670→    });
+   671→  </script>
+   672→</body>
+   673→</html>
+   674→

@@ -2039,34 +2039,655 @@ export const calculators: Record<string, CalcConfig> = {
     },
   },
 
-  // ============= IRRIGATION ENGINEERING (Part XVIII) =============
-  'IRR-1.1': { fields: [{ key: 'area', label: 'Area (A)', unit: 'm²', defaultValue: 0.05, step: 0.01 }, { key: 'velocity', label: 'Velocity (v)', unit: 'm/s', defaultValue: 1.5, step: 0.1 }], compute: (v) => { const q = v.area * v.velocity; return { value: fmt3(q), label: 'm³/s', interpretation: `Flow rate = ${fmt3(q)} m³/s = ${fmt1(q * 3600)} m³/h` }; } },
-  'IRR-1.3': { fields: [{ key: 'velocity', label: 'Velocity (v)', unit: 'm/s', defaultValue: 1.5, step: 0.1 }, { key: 'diameter', label: 'Diameter (D)', unit: 'm', defaultValue: 0.1, step: 0.01 }, { key: 'density', label: 'Density (ρ)', unit: 'kg/m³', defaultValue: 1000, step: 10 }, { key: 'viscosity', label: 'Viscosity (μ)', unit: 'Pa·s', defaultValue: 0.001, step: 0.0001 }], compute: (v) => { const re = (v.density * v.velocity * v.diameter) / v.viscosity; const interp = re < 2300 ? 'Laminar flow' : re < 4000 ? 'Transitional flow' : 'Turbulent flow'; return { value: fmt0(re), label: 'Re', interpretation: interp }; } },
-  'IRR-2.1': { fields: [{ key: 'f', label: 'Friction factor (f)', unit: '', defaultValue: 0.02, step: 0.001 }, { key: 'length', label: 'Length (L)', unit: 'm', defaultValue: 100, step: 10 }, { key: 'diameter', label: 'Diameter (D)', unit: 'm', defaultValue: 0.1, step: 0.01 }, { key: 'velocity', label: 'Velocity (v)', unit: 'm/s', defaultValue: 1.5, step: 0.1 }], compute: (v) => { const g = 9.81; const hf = v.f * (v.length / v.diameter) * (v.velocity * v.velocity) / (2 * g); return { value: fmt2(hf), label: 'm', interpretation: `Friction head loss = ${fmt2(hf)} m over ${v.length} m of pipe` }; } },
+  // ============= PART XVIII: IRRIGATION ENGINEERING =============
+
+  // --- Hydraulics Fundamentals ---
+
+  // IRR-1.1 Continuity Equation (Q = A × V)
+  'IRR-1.1': {
+    fields: [
+      { key: 'D', label: 'Pipe diameter', unit: 'mm', defaultValue: 100, step: 1 },
+      { key: 'V', label: 'Flow velocity', unit: 'm/s', defaultValue: 1.5, step: 0.1 },
+    ],
+    compute: (v) => {
+      const area = Math.PI * Math.pow(v.D / 2000, 2); // m²
+      const Q = area * v.V * 1000; // L/s
+      return { value: fmt2(Q), label: 'L/s', interpretation: `Flow rate ${fmt2(Q)} L/s = ${fmt1(Q * 3.6)} m³/h through ${v.D} mm pipe at ${v.V} m/s.` };
+    },
+  },
+
+  // IRR-1.3 Reynolds Number (Re = V·D/ν)
+  'IRR-1.3': {
+    fields: [
+      { key: 'V', label: 'Flow velocity', unit: 'm/s', defaultValue: 1.5, step: 0.1 },
+      { key: 'D', label: 'Pipe diameter', unit: 'mm', defaultValue: 100, step: 1 },
+      { key: 'nu', label: 'Kinematic viscosity', unit: 'm²/s', defaultValue: 1e-6, step: 1e-7 },
+    ],
+    compute: (v) => {
+      if (v.nu <= 0) return { value: '—', label: 'Re', interpretation: 'Viscosity must be > 0.' };
+      const Re = (v.V * (v.D / 1000)) / v.nu;
+      const interp = Re < 2300 ? 'Laminar flow (Re < 2300) — viscous forces dominate.' : Re < 4000 ? 'Transitional flow (2300 ≤ Re < 4000) — unstable regime.' : 'Turbulent flow (Re ≥ 4000) — inertial forces dominate.';
+      return { value: fmt0(Re), label: 'Re', interpretation: interp };
+    },
+  },
+
+  // IRR-1.5 Euler Hydrostatic Pressure (P = ρgh)
+  'IRR-1.5': {
+    fields: [
+      { key: 'h', label: 'Water depth', unit: 'm', defaultValue: 10, step: 0.5 },
+      { key: 'rho', label: 'Fluid density', unit: 'kg/m³', defaultValue: 1000, step: 10 },
+    ],
+    compute: (v) => {
+      const P = (v.rho * 9.81 * v.h) / 1000; // kPa
+      return { value: fmt2(P), label: 'kPa', interpretation: `Hydrostatic pressure at ${v.h} m depth = ${fmt2(P)} kPa (≈ ${fmt1(P * 0.145)} psi).` };
+    },
+  },
+
+  // IRR-2.1 Darcy-Weisbach Friction Loss
+  'IRR-2.1': {
+    fields: [
+      { key: 'f', label: 'Friction factor (f)', defaultValue: 0.02, step: 0.001 },
+      { key: 'L', label: 'Pipe length', unit: 'm', defaultValue: 100, step: 10 },
+      { key: 'D', label: 'Pipe diameter', unit: 'mm', defaultValue: 100, step: 1 },
+      { key: 'V', label: 'Flow velocity', unit: 'm/s', defaultValue: 1.5, step: 0.1 },
+    ],
+    compute: (v) => {
+      if (v.D <= 0) return { value: '—', label: 'm', interpretation: 'Diameter must be > 0.' };
+      const Dm = v.D / 1000;
+      const g = 9.81;
+      const hf = (v.f * (v.L / Dm) * (v.V * v.V)) / (2 * g);
+      return { value: fmt2(hf), label: 'm', interpretation: `Friction head loss = ${fmt2(hf)} m over ${v.L} m of ${v.D} mm pipe (${fmt2((hf / v.L) * 100)} m per 100 m).` };
+    },
+  },
+
+  // IRR-2.2 Hazen-Williams Head Loss
+  'IRR-2.2': {
+    fields: [
+      { key: 'Q', label: 'Flow rate', unit: 'L/s', defaultValue: 10, step: 0.5 },
+      { key: 'C', label: 'Hazen-Williams C', defaultValue: 140, step: 5 },
+      { key: 'L', label: 'Pipe length', unit: 'm', defaultValue: 100, step: 10 },
+      { key: 'D', label: 'Pipe diameter', unit: 'mm', defaultValue: 100, step: 1 },
+    ],
+    compute: (v) => {
+      if (v.C <= 0 || v.D <= 0) return { value: '—', label: 'm', interpretation: 'C and D must be > 0.' };
+      const Qm = v.Q / 1000;
+      const Dm = v.D / 1000;
+      const hf = (10.67 * v.L * Math.pow(Qm, 1.852)) / (Math.pow(v.C, 1.852) * Math.pow(Dm, 4.87));
+      return { value: fmt2(hf), label: 'm', interpretation: `Hazen-Williams head loss = ${fmt2(hf)} m (C=${v.C}, D=${v.D} mm, Q=${v.Q} L/s).` };
+    },
+  },
+
+  // IRR-2.3 Pipe Velocity (preserved)
   'IRR-2.3': { fields: [{ key: 'flow', label: 'Flow rate (Q)', unit: 'm³/s', defaultValue: 0.01, step: 0.001 }, { key: 'diameter', label: 'Diameter (D)', unit: 'm', defaultValue: 0.1, step: 0.01 }], compute: (v) => { const vel = (4 * v.flow) / (Math.PI * v.diameter * v.diameter); const interp = vel > 2 ? 'High velocity — risk of water hammer' : vel < 0.3 ? 'Low velocity — risk of sediment deposition' : 'Normal velocity range'; return { value: fmt2(vel), label: 'm/s', interpretation: interp }; } },
+
+  // --- Open Channel Flow ---
+
+  // IRR-4.1 Manning's Equation
+  'IRR-4.1': {
+    fields: [
+      { key: 'n', label: "Manning's n", defaultValue: 0.013, step: 0.001 },
+      { key: 'A', label: 'Flow area', unit: 'm²', defaultValue: 1.0, step: 0.1 },
+      { key: 'P', label: 'Wetted perimeter', unit: 'm', defaultValue: 2.0, step: 0.1 },
+      { key: 'S', label: 'Bed slope', unit: 'm/m', defaultValue: 0.001, step: 0.0001 },
+    ],
+    compute: (v) => {
+      if (v.n <= 0 || v.P <= 0 || v.S < 0) return { value: '—', label: 'm³/s', interpretation: 'n, P must be > 0 and S ≥ 0.' };
+      const R = v.A / v.P;
+      const Q = (1 / v.n) * v.A * Math.pow(R, 2 / 3) * Math.sqrt(v.S);
+      return { value: fmt3(Q), label: 'm³/s', interpretation: `Channel capacity = ${fmt3(Q)} m³/s = ${fmt1(Q * 1000)} L/s (R = ${fmt3(R)} m).` };
+    },
+  },
+
+  // IRR-4.2 Chezy Equation
+  'IRR-4.2': {
+    fields: [
+      { key: 'C', label: 'Chezy coefficient', defaultValue: 50, step: 5 },
+      { key: 'A', label: 'Flow area', unit: 'm²', defaultValue: 1.0, step: 0.1 },
+      { key: 'P', label: 'Wetted perimeter', unit: 'm', defaultValue: 2.0, step: 0.1 },
+      { key: 'S', label: 'Bed slope', unit: 'm/m', defaultValue: 0.001, step: 0.0001 },
+    ],
+    compute: (v) => {
+      if (v.P <= 0 || v.S < 0) return { value: '—', label: 'm³/s', interpretation: 'P must be > 0 and S ≥ 0.' };
+      const R = v.A / v.P;
+      const Q = v.C * v.A * Math.sqrt(R * v.S);
+      return { value: fmt3(Q), label: 'm³/s', interpretation: `Chezy flow = ${fmt3(Q)} m³/s (C=${v.C}, R=${fmt3(R)} m).` };
+    },
+  },
+
+  // IRR-4.4 Specific Energy
+  'IRR-4.4': {
+    fields: [
+      { key: 'y', label: 'Flow depth', unit: 'm', defaultValue: 0.5, step: 0.05 },
+      { key: 'V', label: 'Flow velocity', unit: 'm/s', defaultValue: 1.0, step: 0.1 },
+    ],
+    compute: (v) => {
+      if (v.y <= 0) return { value: '—', label: 'm', interpretation: 'Depth must be > 0.' };
+      const g = 9.81;
+      const E = v.y + (v.V * v.V) / (2 * g);
+      const Froude = v.V / Math.sqrt(g * v.y);
+      const interp = Froude < 0.99 ? 'Subcritical (tranquil) flow.' : Froude < 1.01 ? 'Near-critical flow.' : 'Supercritical (rapid) flow.';
+      return { value: fmt3(E), label: 'm', interpretation: `Specific energy = ${fmt3(E)} m (depth ${v.y} m + velocity head ${fmt3((v.V * v.V) / (2 * g))} m). Froude = ${fmt2(Froude)} — ${interp}` };
+    },
+  },
+
+  // IRR-4.5 Normal Depth (trapezoidal channel, Manning)
+  'IRR-4.5': {
+    fields: [
+      { key: 'Q', label: 'Target flow', unit: 'm³/s', defaultValue: 1.0, step: 0.1 },
+      { key: 'n', label: "Manning's n", defaultValue: 0.013, step: 0.001 },
+      { key: 'b', label: 'Bottom width', unit: 'm', defaultValue: 1.0, step: 0.1 },
+      { key: 'S', label: 'Bed slope', unit: 'm/m', defaultValue: 0.001, step: 0.0001 },
+      { key: 'z', label: 'Side slope (H:V)', defaultValue: 1.5, step: 0.1 },
+    ],
+    compute: (v) => {
+      if (v.n <= 0 || v.S <= 0) return { value: '—', label: 'm', interpretation: 'n and S must be > 0.' };
+      const f = (y: number) => {
+        const A = (v.b + v.z * y) * y;
+        const P = v.b + 2 * y * Math.sqrt(1 + v.z * v.z);
+        const R = A / P;
+        return (1 / v.n) * A * Math.pow(R, 2 / 3) * Math.sqrt(v.S);
+      };
+      let lo = 0.001, hi = 20;
+      for (let i = 0; i < 60; i++) {
+        const mid = (lo + hi) / 2;
+        if (f(mid) < v.Q) lo = mid; else hi = mid;
+      }
+      const y = (lo + hi) / 2;
+      const A = (v.b + v.z * y) * y;
+      return { value: fmt3(y), label: 'm', interpretation: `Normal depth = ${fmt3(y)} m for Q=${v.Q} m³/s (A=${fmt3(A)} m², trapezoid b=${v.b} m, z=${v.z}).` };
+    },
+  },
+
+  // --- Pumps ---
+
+  // IRR-3.3 Total Dynamic Head (preserved)
   'IRR-3.3': { fields: [{ key: 'staticSuction', label: 'Static suction (Hs)', unit: 'm', defaultValue: 3, step: 0.5 }, { key: 'staticDischarge', label: 'Static discharge (Hd)', unit: 'm', defaultValue: 15, step: 1 }, { key: 'frictionLoss', label: 'Friction loss (hf)', unit: 'm', defaultValue: 4, step: 0.5 }, { key: 'minorLoss', label: 'Minor loss (hm)', unit: 'm', defaultValue: 1, step: 0.5 }], compute: (v) => { const tdh = v.staticSuction + v.staticDischarge + v.frictionLoss + v.minorLoss; return { value: fmt1(tdh), label: 'm', interpretation: `Pump must deliver against ${fmt1(tdh)} m total head` }; } },
-  'IRR-4.1': { fields: [{ key: 'manningsN', label: "Manning's n", unit: '', defaultValue: 0.013, step: 0.001 }, { key: 'area', label: 'Area (A)', unit: 'm²', defaultValue: 1.0, step: 0.1 }, { key: 'hydraulicRadius', label: 'Hydraulic radius (R)', unit: 'm', defaultValue: 0.5, step: 0.05 }, { key: 'slope', label: 'Slope (S)', unit: 'm/m', defaultValue: 0.001, step: 0.0001 }], compute: (v) => { const q = (1 / v.manningsN) * v.area * Math.pow(v.hydraulicRadius, 2/3) * Math.sqrt(v.slope); return { value: fmt3(q), label: 'm³/s', interpretation: `Channel capacity = ${fmt3(q)} m³/s = ${fmt1(q * 1000)} L/s` }; } },
-  'IRR-5.1': { fields: [{ key: 'flow', label: 'Flow rate (Q)', unit: 'm³/s', defaultValue: 0.05, step: 0.005 }, { key: 'head', label: 'Head (H)', unit: 'm', defaultValue: 20, step: 1 }], compute: (v) => { const power = 1000 * 9.81 * v.flow * v.head; return { value: fmt1(power / 1000), label: 'kW', interpretation: `Hydraulic power = ${fmt1(power / 1000)} kW = ${fmt1(power / 746)} HP` }; } },
-  'IRR-5.2': { fields: [{ key: 'hydraulicPower', label: 'Hydraulic power (Ph)', unit: 'kW', defaultValue: 9.81, step: 0.5 }, { key: 'inputPower', label: 'Input power (Pin)', unit: 'kW', defaultValue: 12, step: 0.5 }], compute: (v) => { const eff = (v.hydraulicPower / v.inputPower) * 100; const interp = eff > 75 ? 'Good efficiency' : eff > 60 ? 'Moderate efficiency' : 'Low efficiency — maintenance needed'; return { value: fmt1(eff), label: '%', interpretation: interp }; } },
+
+  // IRR-5.1 Hydraulic Power (P = ρgQH)
+  'IRR-5.1': {
+    fields: [
+      { key: 'Q', label: 'Flow rate', unit: 'L/s', defaultValue: 50, step: 5 },
+      { key: 'H', label: 'Total head', unit: 'm', defaultValue: 20, step: 1 },
+    ],
+    compute: (v) => {
+      const Qm = v.Q / 1000;
+      const P = 1000 * 9.81 * Qm * v.H;
+      return { value: fmt1(P / 1000), label: 'kW', interpretation: `Hydraulic power = ${fmt0(P)} W = ${fmt1(P / 1000)} kW (= ${fmt1(P / 746)} HP).` };
+    },
+  },
+
+  // IRR-5.2 Pump Efficiency
+  'IRR-5.2': {
+    fields: [
+      { key: 'Pout', label: 'Output (hydraulic) power', unit: 'kW', defaultValue: 9.81, step: 0.5 },
+      { key: 'Pin', label: 'Input (shaft) power', unit: 'kW', defaultValue: 12, step: 0.5 },
+    ],
+    compute: (v) => {
+      if (v.Pin <= 0) return { value: '—', label: '%', interpretation: 'Input power must be > 0.' };
+      const eta = (v.Pout / v.Pin) * 100;
+      const interp = eta > 75 ? 'Good efficiency — well-matched pump and motor.' : eta > 60 ? 'Moderate efficiency — check wear and sizing.' : 'Low efficiency — maintenance or resizing needed.';
+      return { value: fmt1(eta), label: '%', interpretation: interp };
+    },
+  },
+
+  // IRR-5.3 NPSH Available
+  'IRR-5.3': {
+    fields: [
+      { key: 'Patm', label: 'Atmospheric pressure', unit: 'kPa', defaultValue: 101.3, step: 0.5 },
+      { key: 'hs', label: 'Static suction lift', unit: 'm', defaultValue: 3, step: 0.5 },
+      { key: 'hf', label: 'Suction friction loss', unit: 'm', defaultValue: 0.5, step: 0.1 },
+      { key: 'Pv', label: 'Vapor pressure of water', unit: 'kPa', defaultValue: 3.17, step: 0.1 },
+    ],
+    compute: (v) => {
+      const NPSHa = ((v.Patm - v.Pv) * 1000) / (1000 * 9.81) - v.hs - v.hf;
+      const interp = NPSHa > 3 ? 'Adequate NPSH — cavitation unlikely.' : NPSHa > 1 ? 'Marginal NPSH — verify against NPSHr.' : 'Low NPSH — high cavitation risk.';
+      return { value: fmt2(NPSHa), label: 'm', interpretation: `NPSH available = ${fmt2(NPSHa)} m. ${interp}` };
+    },
+  },
+
+  // IRR-5.6 Brake Power
+  'IRR-5.6': {
+    fields: [
+      { key: 'Ph', label: 'Hydraulic power', unit: 'kW', defaultValue: 9.81, step: 0.5 },
+      { key: 'eta', label: 'Pump efficiency', unit: '%', defaultValue: 75, step: 5 },
+    ],
+    compute: (v) => {
+      if (v.eta <= 0) return { value: '—', label: 'kW', interpretation: 'Efficiency must be > 0.' };
+      const Pb = v.Ph / (v.eta / 100);
+      return { value: fmt2(Pb), label: 'kW', interpretation: `Brake power = ${fmt2(Pb)} kW (= ${fmt1(Pb / 0.746)} HP) at ${v.eta}% efficiency.` };
+    },
+  },
+
+  // IRR-5.7 Motor Power Requirement (preserved)
   'IRR-5.7': { fields: [{ key: 'flow', label: 'Flow rate (Q)', unit: 'm³/s', defaultValue: 0.05, step: 0.005 }, { key: 'head', label: 'Head (H)', unit: 'm', defaultValue: 20, step: 1 }, { key: 'efficiency', label: 'Efficiency (η)', unit: 'decimal', defaultValue: 0.75, step: 0.05 }], compute: (v) => { const power = (1000 * 9.81 * v.flow * v.head) / v.efficiency / 1000; return { value: fmt1(power), label: 'kW', interpretation: `Required motor power = ${fmt1(power)} kW = ${fmt1(power / 0.746)} HP` }; } },
-  'IRR-6.3': { fields: [{ key: 'flow', label: 'Pumping rate (Q)', unit: 'm³/day', defaultValue: 500, step: 50 }, { key: 'drawdown', label: 'Drawdown (s)', unit: 'm', defaultValue: 5, step: 0.5 }], compute: (v) => { const sc = v.flow / v.drawdown; const interp = sc > 100 ? 'High-yield well' : sc > 10 ? 'Moderate-yield well' : 'Low-yield well'; return { value: fmt1(sc), label: 'm³/day/m', interpretation: interp }; } },
-  'IRR-7.1': { fields: [{ key: 'k', label: 'Coefficient (k)', unit: '', defaultValue: 0.5, step: 0.05 }, { key: 'pressure', label: 'Pressure (H)', unit: 'm', defaultValue: 10, step: 1 }, { key: 'x', label: 'Exponent (x)', unit: '', defaultValue: 0.5, step: 0.1 }], compute: (v) => { const q = v.k * Math.pow(v.pressure, v.x); const interp = v.x < 0.2 ? 'Pressure-compensating emitter' : v.x > 0.8 ? 'Non-pressure-compensating' : 'Typical turbulent-flow emitter'; return { value: fmt2(q), label: 'L/h', interpretation: interp }; } },
-  'IRR-7.3': { fields: [{ key: 'lowQuarter', label: 'Low-quarter avg (q_lq)', unit: 'L/h', defaultValue: 3.5, step: 0.1 }, { key: 'overall', label: 'Overall avg (q_avg)', unit: 'L/h', defaultValue: 4.0, step: 0.1 }], compute: (v) => { const du = (v.lowQuarter / v.overall) * 100; const interp = du > 90 ? 'Excellent' : du > 80 ? 'Good' : du > 70 ? 'Acceptable' : 'Poor — redesign needed'; return { value: fmt1(du), label: '%', interpretation: interp }; } },
-  'IRR-8.1': { fields: [{ key: 'meanDeviation', label: 'Mean abs deviation', unit: 'mm', defaultValue: 1.5, step: 0.1 }, { key: 'mean', label: 'Mean application (x̄)', unit: 'mm', defaultValue: 12, step: 0.5 }], compute: (v) => { const cu = 100 * (1 - v.meanDeviation / v.mean); const interp = cu > 90 ? 'Excellent' : cu > 80 ? 'Good' : cu > 70 ? 'Acceptable' : 'Poor'; return { value: fmt1(cu), label: '%', interpretation: interp }; } },
-  'IRR-8.4': { fields: [{ key: 'flow', label: 'Sprinkler flow (q)', unit: 'L/min', defaultValue: 30, step: 5 }, { key: 'spacingL', label: 'Spacing along lateral (Sl)', unit: 'm', defaultValue: 12, step: 1 }, { key: 'spacingM', label: 'Spacing between laterals (Sm)', unit: 'm', defaultValue: 18, step: 1 }], compute: (v) => { const rate = (360 * v.flow) / (v.spacingL * v.spacingM); const interp = rate > 15 ? 'High rate — runoff risk' : rate > 5 ? 'Moderate rate' : 'Low rate — good for clay'; return { value: fmt1(rate), label: 'mm/h', interpretation: interp }; } },
-  'IRR-9.3': { fields: [{ key: 'raw', label: 'Readily available water (RAW)', unit: 'mm', defaultValue: 60, step: 5 }, { key: 'etc', label: 'Daily crop ET (ETc)', unit: 'mm/day', defaultValue: 5, step: 0.5 }], compute: (v) => { const ii = v.raw / v.etc; return { value: fmt1(ii), label: 'days', interpretation: `Irrigate every ${fmt1(ii)} days` }; } },
-  'IRR-9.4': { fields: [{ key: 'ecw', label: 'EC irrigation water (ECw)', unit: 'dS/m', defaultValue: 2, step: 0.1 }, { key: 'ece', label: 'EC threshold (ECe)', unit: 'dS/m', defaultValue: 6, step: 0.5 }], compute: (v) => { const lr = v.ecw / (5 * v.ece - v.ecw); const interp = lr > 0.3 ? 'High leaching needed' : lr > 0.1 ? 'Moderate' : 'Low'; return { value: fmt2(lr), label: 'fraction', interpretation: interp }; } },
-  'IRR-10.4': { fields: [{ key: 'kc', label: 'Crop coefficient (Kc)', unit: '', defaultValue: 1.15, step: 0.05 }, { key: 'et0', label: 'Reference ET (ET0)', unit: 'mm/day', defaultValue: 5, step: 0.5 }], compute: (v) => { const etc = v.kc * v.et0; return { value: fmt2(etc), label: 'mm/day', interpretation: `Crop water use = ${fmt2(etc)} mm/day` }; } },
+
+  // IRR-5.9 Pumps in Parallel
+  'IRR-5.9': {
+    fields: [
+      { key: 'n', label: 'Number of pumps', defaultValue: 3, step: 1, min: 1 },
+      { key: 'Qsingle', label: 'Flow per pump', unit: 'L/s', defaultValue: 20, step: 1 },
+    ],
+    compute: (v) => {
+      const Qtot = v.n * v.Qsingle;
+      return { value: fmt1(Qtot), label: 'L/s', interpretation: `${v.n} pumps in parallel deliver ${fmt1(Qtot)} L/s = ${fmt1(Qtot * 3.6)} m³/h at the same head.` };
+    },
+  },
+
+  // --- Wells & Groundwater ---
+
+  // IRR-6.1 Thiem Equation (Confined Aquifer)
+  'IRR-6.1': {
+    fields: [
+      { key: 'T', label: 'Hydraulic conductivity (K)', unit: 'm/day', defaultValue: 5, step: 0.5 },
+      { key: 'b', label: 'Aquifer thickness', unit: 'm', defaultValue: 10, step: 1 },
+      { key: 'H', label: 'Original piezometric head', unit: 'm', defaultValue: 30, step: 1 },
+      { key: 'h', label: 'Pumping water level', unit: 'm', defaultValue: 25, step: 1 },
+      { key: 'R', label: 'Radius of influence', unit: 'm', defaultValue: 250, step: 10 },
+      { key: 'r', label: 'Well radius', unit: 'm', defaultValue: 0.3, step: 0.05 },
+    ],
+    compute: (v) => {
+      if (v.R <= v.r || v.r <= 0) return { value: '—', label: 'm³/day', interpretation: 'R must be > r > 0.' };
+      const Q = (2 * Math.PI * v.T * v.b * (v.H - v.h)) / Math.log(v.R / v.r);
+      return { value: fmt1(Q), label: 'm³/day', interpretation: `Steady well discharge = ${fmt1(Q)} m³/day (confined aquifer, drawdown ${fmt1(v.H - v.h)} m).` };
+    },
+  },
+
+  // IRR-6.2 Dupuit Equation (Unconfined Aquifer)
+  'IRR-6.2': {
+    fields: [
+      { key: 'K', label: 'Hydraulic conductivity', unit: 'm/day', defaultValue: 5, step: 0.5 },
+      { key: 'H', label: 'Original saturated thickness', unit: 'm', defaultValue: 20, step: 1 },
+      { key: 'h', label: 'Pumping water table', unit: 'm', defaultValue: 16, step: 1 },
+      { key: 'R', label: 'Radius of influence', unit: 'm', defaultValue: 200, step: 10 },
+      { key: 'r', label: 'Well radius', unit: 'm', defaultValue: 0.3, step: 0.05 },
+    ],
+    compute: (v) => {
+      if (v.R <= v.r || v.r <= 0) return { value: '—', label: 'm³/day', interpretation: 'R must be > r > 0.' };
+      const Q = (Math.PI * v.K * (v.H * v.H - v.h * v.h)) / Math.log(v.R / v.r);
+      return { value: fmt1(Q), label: 'm³/day', interpretation: `Steady well discharge = ${fmt1(Q)} m³/day (unconfined aquifer, drawdown ${fmt1(v.H - v.h)} m).` };
+    },
+  },
+
+  // IRR-6.3 Specific Capacity
+  'IRR-6.3': {
+    fields: [
+      { key: 'Q', label: 'Pumping rate', unit: 'L/min', defaultValue: 200, step: 10 },
+      { key: 's', label: 'Drawdown', unit: 'm', defaultValue: 5, step: 0.5 },
+    ],
+    compute: (v) => {
+      if (v.s <= 0) return { value: '—', label: 'L/min/m', interpretation: 'Drawdown must be > 0.' };
+      const SC = v.Q / v.s;
+      const interp = SC > 100 ? 'High-yield aquifer.' : SC > 30 ? 'Moderate-yield aquifer.' : 'Low-yield aquifer — limited supply.';
+      return { value: fmt1(SC), label: 'L/min/m', interpretation: `Specific capacity = ${fmt1(SC)} L/min/m. ${interp}` };
+    },
+  },
+
+  // --- Drip Irrigation ---
+
+  // IRR-7.1 Emitter Discharge (q = k · P^x)
+  'IRR-7.1': {
+    fields: [
+      { key: 'k', label: 'Discharge coefficient (k)', defaultValue: 0.5, step: 0.05 },
+      { key: 'P', label: 'Operating pressure', unit: 'kPa', defaultValue: 100, step: 5 },
+      { key: 'x', label: 'Exponent (x)', defaultValue: 0.5, step: 0.05 },
+    ],
+    compute: (v) => {
+      if (v.P < 0) return { value: '—', label: 'L/h', interpretation: 'Pressure must be ≥ 0.' };
+      const q = v.k * Math.pow(v.P, v.x);
+      const interp = v.x < 0.2 ? 'Pressure-compensating emitter (x < 0.2).' : v.x > 0.8 ? 'Non-pressure-compensating / laminar emitter (x > 0.8).' : 'Typical turbulent-flow orifice emitter (0.2 ≤ x ≤ 0.8).';
+      return { value: fmt2(q), label: 'L/h', interpretation: `Emitter discharge = ${fmt2(q)} L/h at ${v.P} kPa. ${interp}` };
+    },
+  },
+
+  // IRR-7.2 Emission Uniformity
+  'IRR-7.2': {
+    fields: [
+      { key: 'CV', label: 'Coefficient of variation', defaultValue: 0.05, step: 0.01 },
+      { key: 'qmin', label: 'Minimum emitter discharge', unit: 'L/h', defaultValue: 3.8, step: 0.1 },
+      { key: 'qavg', label: 'Average emitter discharge', unit: 'L/h', defaultValue: 4.0, step: 0.1 },
+    ],
+    compute: (v) => {
+      if (v.qavg <= 0) return { value: '—', label: '%', interpretation: 'qavg must be > 0.' };
+      const EU = 100 * (1 - 1.27 * v.CV) * (v.qmin / v.qavg);
+      const clamped = Math.max(0, EU);
+      const interp = clamped > 90 ? 'Excellent EU (>90%).' : clamped > 80 ? 'Good EU (80–90%).' : clamped > 70 ? 'Acceptable EU (70–80%).' : 'Poor EU (<70%) — redesign needed.';
+      return { value: fmt1(clamped), label: '%', interpretation: interp };
+    },
+  },
+
+  // IRR-7.3 Distribution Uniformity (low-quarter)
+  'IRR-7.3': {
+    fields: [
+      { key: 'qlow', label: 'Low-quarter average (q_low25)', unit: 'L/h', defaultValue: 3.5, step: 0.1 },
+      { key: 'qavg', label: 'Overall average (q_avg)', unit: 'L/h', defaultValue: 4.0, step: 0.1 },
+    ],
+    compute: (v) => {
+      if (v.qavg <= 0) return { value: '—', label: '%', interpretation: 'qavg must be > 0.' };
+      const DU = 100 * (v.qlow / v.qavg);
+      const interp = DU > 90 ? 'Excellent DU (>90%).' : DU > 80 ? 'Good DU (80–90%).' : DU > 70 ? 'Acceptable DU (70–80%).' : 'Poor DU (<70%) — system needs maintenance.';
+      return { value: fmt1(DU), label: '%', interpretation: interp };
+    },
+  },
+
+  // IRR-7.4 Pressure Variation
+  'IRR-7.4': {
+    fields: [
+      { key: 'Pmax', label: 'Maximum pressure', unit: 'kPa', defaultValue: 120, step: 5 },
+      { key: 'Pmin', label: 'Minimum pressure', unit: 'kPa', defaultValue: 90, step: 5 },
+    ],
+    compute: (v) => {
+      const dP = v.Pmax - v.Pmin;
+      const avg = (v.Pmax + v.Pmin) / 2;
+      const pct = avg > 0 ? (dP / avg) * 100 : 0;
+      const interp = pct < 10 ? 'Excellent — within ±5% pressure tolerance.' : pct < 20 ? 'Acceptable — within ±10% tolerance.' : 'High variation — emitter flow non-uniformity likely.';
+      return { value: fmt1(dP), label: 'kPa', interpretation: `Pressure variation = ${fmt1(dP)} kPa (${fmt1(pct)}% of average). ${interp}` };
+    },
+  },
+
+  // IRR-7.5 Application Efficiency
+  'IRR-7.5': {
+    fields: [
+      { key: 'stored', label: 'Water stored in root zone', unit: 'mm', defaultValue: 45, step: 1 },
+      { key: 'applied', label: 'Water applied', unit: 'mm', defaultValue: 60, step: 1 },
+    ],
+    compute: (v) => {
+      if (v.applied <= 0) return { value: '—', label: '%', interpretation: 'Applied water must be > 0.' };
+      const Ea = (v.stored / v.applied) * 100;
+      const interp = Ea > 85 ? 'High efficiency — excellent drip/micro system.' : Ea > 70 ? 'Good efficiency — typical well-designed system.' : Ea > 50 ? 'Moderate efficiency — check losses.' : 'Low efficiency — significant losses.';
+      return { value: fmt1(Ea), label: '%', interpretation: interp };
+    },
+  },
+
+  // --- Sprinkler Irrigation ---
+
+  // IRR-8.1 Christiansen Uniformity Coefficient
+  'IRR-8.1': {
+    fields: [
+      { key: 'mean', label: 'Mean application (x̄)', unit: 'mm', defaultValue: 12, step: 0.5 },
+      { key: 'sumDev', label: 'Σ |xᵢ − x̄|', unit: 'mm', defaultValue: 18, step: 1 },
+      { key: 'n', label: 'Number of cans', defaultValue: 16, step: 1, min: 1 },
+    ],
+    compute: (v) => {
+      if (v.mean <= 0 || v.n <= 0) return { value: '—', label: '%', interpretation: 'Mean and n must be > 0.' };
+      const CU = 100 * (1 - v.sumDev / (v.n * v.mean));
+      const interp = CU > 90 ? 'Excellent CU (>90%).' : CU > 80 ? 'Good CU (80–90%).' : CU > 70 ? 'Acceptable CU (70–80%).' : 'Poor CU (<70%) — adjust spacing or pressure.';
+      return { value: fmt1(CU), label: '%', interpretation: interp };
+    },
+  },
+
+  // IRR-8.3 Sprinkler Spacing (S = √(Q·3600/I), Q in L/s)
+  'IRR-8.3': {
+    fields: [
+      { key: 'Q', label: 'Sprinkler discharge', unit: 'L/s', defaultValue: 0.5, step: 0.05 },
+      { key: 'I', label: 'Target precipitation rate', unit: 'mm/h', defaultValue: 10, step: 0.5 },
+    ],
+    compute: (v) => {
+      if (v.I <= 0) return { value: '—', label: 'm', interpretation: 'Precipitation rate must be > 0.' };
+      const S = Math.sqrt((v.Q * 3600) / v.I);
+      return { value: fmt2(S), label: 'm', interpretation: `Square spacing ≈ ${fmt2(S)} m per side (Q=${v.Q} L/s = ${fmt0(v.Q * 60)} L/min, I=${v.I} mm/h).` };
+    },
+  },
+
+  // IRR-8.4 Precipitation Rate
+  'IRR-8.4': {
+    fields: [
+      { key: 'Q', label: 'Sprinkler discharge', unit: 'L/min', defaultValue: 30, step: 1 },
+      { key: 'S1', label: 'Spacing along lateral', unit: 'm', defaultValue: 12, step: 0.5 },
+      { key: 'S2', label: 'Spacing between laterals', unit: 'm', defaultValue: 18, step: 0.5 },
+    ],
+    compute: (v) => {
+      if (v.S1 <= 0 || v.S2 <= 0) return { value: '—', label: 'mm/h', interpretation: 'Spacings must be > 0.' };
+      const I = (60 * v.Q) / (v.S1 * v.S2);
+      const interp = I > 15 ? 'High rate — runoff risk on fine soils.' : I > 5 ? 'Moderate rate — suitable for most soils.' : 'Low rate — good for clay and steep slopes.';
+      return { value: fmt1(I), label: 'mm/h', interpretation: interp };
+    },
+  },
+
+  // IRR-8.5 Wind Drift & Evaporation Loss
+  'IRR-8.5': {
+    fields: [
+      { key: 'caught', label: 'Water caught in cans', unit: 'mm', defaultValue: 11, step: 0.5 },
+      { key: 'applied', label: 'Water applied at nozzle', unit: 'mm', defaultValue: 13, step: 0.5 },
+    ],
+    compute: (v) => {
+      if (v.applied <= 0) return { value: '—', label: '%', interpretation: 'Applied water must be > 0.' };
+      const WDEL = (1 - v.caught / v.applied) * 100;
+      const interp = WDEL < 10 ? 'Low loss — calm, humid conditions.' : WDEL < 20 ? 'Moderate loss — typical daytime operation.' : 'High loss — irrigate at night or in calm periods.';
+      return { value: fmt1(WDEL), label: '%', interpretation: `Wind drift & evaporation loss = ${fmt1(WDEL)}%. ${interp}` };
+    },
+  },
+
+  // --- Soil Water & Irrigation Scheduling ---
+
+  // IRR-9.1 Soil Water Deficit
+  'IRR-9.1': {
+    fields: [
+      { key: 'TAW', label: 'Total available water', unit: 'mm', defaultValue: 120, step: 5 },
+      { key: 'current', label: 'Current stored water', unit: 'mm', defaultValue: 60, step: 5 },
+    ],
+    compute: (v) => {
+      const SWD = v.TAW - v.current;
+      const pct = v.TAW > 0 ? (SWD / v.TAW) * 100 : 0;
+      const interp = pct > 60 ? 'Severe deficit — irrigate immediately.' : pct > 40 ? 'Moderate deficit — schedule irrigation soon.' : 'Low deficit — soil near field capacity.';
+      return { value: fmt1(SWD), label: 'mm', interpretation: `Soil water deficit = ${fmt1(SWD)} mm (${fmt0(pct)}% depleted). ${interp}` };
+    },
+  },
+
+  // IRR-9.2 Net Irrigation Requirement
+  'IRR-9.2': {
+    fields: [
+      { key: 'ETc', label: 'Crop evapotranspiration', unit: 'mm', defaultValue: 60, step: 5 },
+      { key: 'Pe', label: 'Effective rainfall', unit: 'mm', defaultValue: 15, step: 5 },
+    ],
+    compute: (v) => {
+      const NIR = Math.max(0, v.ETc - v.Pe);
+      return { value: fmt1(NIR), label: 'mm', interpretation: `Net irrigation requirement = ${fmt1(NIR)} mm (ETc ${v.ETc} − Pe ${v.Pe}).` };
+    },
+  },
+
+  // IRR-9.3 Irrigation Interval
+  'IRR-9.3': {
+    fields: [
+      { key: 'NIR', label: 'Net irrigation depth', unit: 'mm', defaultValue: 50, step: 5 },
+      { key: 'ETc', label: 'Daily crop ET', unit: 'mm/day', defaultValue: 5, step: 0.5 },
+    ],
+    compute: (v) => {
+      if (v.ETc <= 0) return { value: '—', label: 'days', interpretation: 'Daily ET must be > 0.' };
+      const I = v.NIR / v.ETc;
+      return { value: fmt1(I), label: 'days', interpretation: `Irrigate every ${fmt1(I)} days to refill ${v.NIR} mm at ${v.ETc} mm/day use.` };
+    },
+  },
+
+  // IRR-9.4 Leaching Requirement
+  'IRR-9.4': {
+    fields: [
+      { key: 'ECi', label: 'EC of irrigation water', unit: 'dS/m', defaultValue: 2, step: 0.1 },
+      { key: 'ECt', label: 'EC threshold (crop tolerance)', unit: 'dS/m', defaultValue: 6, step: 0.5 },
+    ],
+    compute: (v) => {
+      const denom = 5 * v.ECt - v.ECi;
+      if (denom <= 0) return { value: '—', label: 'fraction', interpretation: 'ECt too low relative to ECi — crop cannot tolerate this water.' };
+      const LR = v.ECi / denom;
+      const pct = LR * 100;
+      const interp = LR > 0.3 ? 'High leaching requirement — improve drainage.' : LR > 0.1 ? 'Moderate leaching needed.' : 'Low leaching requirement.';
+      return { value: fmt2(LR), label: 'fraction', interpretation: `Leaching requirement = ${fmt2(LR)} (${fmt0(pct)}% extra water). ${interp}` };
+    },
+  },
+
+  // IRR-9.9 Total Available Water (FC, PWP in %)
+  'IRR-9.9': {
+    fields: [
+      { key: 'FC', label: 'Field capacity', unit: '%', defaultValue: 30, step: 1 },
+      { key: 'PWP', label: 'Permanent wilting point', unit: '%', defaultValue: 12, step: 1 },
+      { key: 'Zr', label: 'Root depth', unit: 'm', defaultValue: 0.6, step: 0.1 },
+    ],
+    compute: (v) => {
+      const TAW = 10 * (v.FC - v.PWP) * v.Zr;
+      return { value: fmt0(TAW), label: 'mm', interpretation: `Total available water = ${fmt0(TAW)} mm in ${v.Zr} m root zone (FC−PWP = ${v.FC - v.PWP}%).` };
+    },
+  },
+
+  // IRR-9.10 Readily Available Water
+  'IRR-9.10': {
+    fields: [
+      { key: 'p', label: 'Depletion fraction (p)', defaultValue: 0.5, step: 0.05 },
+      { key: 'TAW', label: 'Total available water', unit: 'mm', defaultValue: 108, step: 5 },
+    ],
+    compute: (v) => {
+      const RAW = v.p * v.TAW;
+      const interp = v.p < 0.4 ? 'Sensitive crop — irrigate before half depletion.' : v.p > 0.6 ? 'Tolerant crop — can deplete further before stress.' : 'Average depletion fraction.';
+      return { value: fmt1(RAW), label: 'mm', interpretation: `Readily available water = ${fmt1(RAW)} mm (p=${v.p}). ${interp}` };
+    },
+  },
+
+  // --- Evapotranspiration ---
+
+  // IRR-10.2 Hargreaves ET0
+  'IRR-10.2': {
+    fields: [
+      { key: 'Tmax', label: 'Max temperature', unit: '°C', defaultValue: 32, step: 0.5 },
+      { key: 'Tmin', label: 'Min temperature', unit: '°C', defaultValue: 18, step: 0.5 },
+      { key: 'Ra', label: 'Extraterrestrial radiation', unit: 'MJ/m²/day', defaultValue: 25, step: 0.5 },
+    ],
+    compute: (v) => {
+      if (v.Tmax <= v.Tmin) return { value: '—', label: 'mm/day', interpretation: 'Tmax must exceed Tmin.' };
+      const Tmean = (v.Tmax + v.Tmin) / 2;
+      const Ra_mm = v.Ra * 0.408;
+      const ET0 = 0.0023 * (Tmean + 17.8) * Math.sqrt(v.Tmax - v.Tmin) * Ra_mm;
+      return { value: fmt2(ET0), label: 'mm/day', interpretation: `Hargreaves ET0 = ${fmt2(ET0)} mm/day (Tmean=${fmt1(Tmean)}°C, ΔT=${fmt1(v.Tmax - v.Tmin)}°C).` };
+    },
+  },
+
+  // IRR-10.3 Blaney-Criddle
+  'IRR-10.3': {
+    fields: [
+      { key: 'T', label: 'Mean temperature', unit: '°C', defaultValue: 25, step: 0.5 },
+      { key: 'p', label: 'Daylight hours fraction', unit: 'decimal', defaultValue: 0.29, step: 0.01 },
+    ],
+    compute: (v) => {
+      const ET0 = v.p * (0.46 * v.T + 8);
+      return { value: fmt2(ET0), label: 'mm/day', interpretation: `Blaney-Criddle ET0 = ${fmt2(ET0)} mm/day (T=${v.T}°C, p=${v.p}).` };
+    },
+  },
+
+  // IRR-10.4 Actual Crop ET (ETc = Kc × ET0)
+  'IRR-10.4': {
+    fields: [
+      { key: 'Kc', label: 'Crop coefficient (Kc)', defaultValue: 1.15, step: 0.05 },
+      { key: 'ET0', label: 'Reference ET', unit: 'mm/day', defaultValue: 5, step: 0.5 },
+    ],
+    compute: (v) => {
+      const ETc = v.Kc * v.ET0;
+      return { value: fmt2(ETc), label: 'mm/day', interpretation: `Crop water use = ${fmt2(ETc)} mm/day (Kc=${v.Kc} × ET0=${v.ET0}).` };
+    },
+  },
+
+  // IRR-10.6 Gross Irrigation Requirement (preserved)
   'IRR-10.6': { fields: [{ key: 'nir', label: 'Net irrigation req. (NIR)', unit: 'mm', defaultValue: 50, step: 5 }, { key: 'ea', label: 'Application efficiency (Ea)', unit: 'decimal', defaultValue: 0.75, step: 0.05 }], compute: (v) => { const gir = v.nir / v.ea; return { value: fmt1(gir), label: 'mm', interpretation: `Pump ${fmt1(gir)} mm = ${fmt0(gir * 10)} m³/ha` }; } },
-  'IRR-11.1': { fields: [{ key: 'dryMass', label: 'Dry soil mass (Ms)', unit: 'g', defaultValue: 130, step: 1 }, { key: 'volume', label: 'Total volume (Vt)', unit: 'cm³', defaultValue: 100, step: 1 }], compute: (v) => { const bd = v.dryMass / v.volume; const interp = bd > 1.6 ? 'Compacted' : bd > 1.1 ? 'Normal' : 'Very loose'; return { value: fmt2(bd), label: 'g/cm³', interpretation: interp }; } },
-  'IRR-11.3': { fields: [{ key: 'bd', label: 'Bulk density (ρb)', unit: 'g/cm³', defaultValue: 1.3, step: 0.05 }, { key: 'pd', label: 'Particle density (ρp)', unit: 'g/cm³', defaultValue: 2.65, step: 0.05 }], compute: (v) => { const n = (1 - v.bd / v.pd) * 100; const interp = n < 40 ? 'Low porosity' : n > 55 ? 'High porosity' : 'Healthy range'; return { value: fmt1(n), label: '%', interpretation: interp }; } },
+
+  // --- Soil Physics ---
+
+  // IRR-11.1 Bulk Density (ρb = Ms/Vt)
+  'IRR-11.1': {
+    fields: [
+      { key: 'Ms', label: 'Dry soil mass', unit: 'g', defaultValue: 130, step: 1 },
+      { key: 'Vt', label: 'Total volume', unit: 'cm³', defaultValue: 100, step: 1 },
+    ],
+    compute: (v) => {
+      if (v.Vt <= 0) return { value: '—', label: 'g/cm³', interpretation: 'Volume must be > 0.' };
+      const bd = v.Ms / v.Vt;
+      const interp = bd > 1.6 ? 'Compacted soil — restricts root growth.' : bd > 1.1 ? 'Normal bulk density for mineral soils.' : 'Very loose / high organic matter.';
+      return { value: fmt2(bd), label: 'g/cm³', interpretation: interp };
+    },
+  },
+
+  // IRR-11.3 Soil Porosity (n = 1 − ρb/ρp)
+  'IRR-11.3': {
+    fields: [
+      { key: 'bd', label: 'Bulk density (ρb)', unit: 'g/cm³', defaultValue: 1.3, step: 0.05 },
+      { key: 'pd', label: 'Particle density (ρp)', unit: 'g/cm³', defaultValue: 2.65, step: 0.05 },
+    ],
+    compute: (v) => {
+      if (v.pd <= 0) return { value: '—', label: '%', interpretation: 'Particle density must be > 0.' };
+      const n = (1 - v.bd / v.pd) * 100;
+      const interp = n < 40 ? 'Low porosity — compacted, poor aeration.' : n > 55 ? 'High porosity — well-structured or organic.' : 'Healthy porosity range.';
+      return { value: fmt1(n), label: '%', interpretation: interp };
+    },
+  },
+
+  // IRR-11.5 Hydraulic Conductivity (Darcy, K = QL/(A·Δh))
+  'IRR-11.5': {
+    fields: [
+      { key: 'Q', label: 'Outflow rate', unit: 'cm³/s', defaultValue: 1.0, step: 0.1 },
+      { key: 'L', label: 'Sample length', unit: 'cm', defaultValue: 10, step: 1 },
+      { key: 'A', label: 'Sample cross-section', unit: 'cm²', defaultValue: 20, step: 1 },
+      { key: 'dh', label: 'Head difference (Δh)', unit: 'cm', defaultValue: 50, step: 5 },
+    ],
+    compute: (v) => {
+      if (v.A <= 0 || v.dh <= 0) return { value: '—', label: 'cm/s', interpretation: 'A and Δh must be > 0.' };
+      const K = (v.Q * v.L) / (v.A * v.dh);
+      const interp = K > 1e-3 ? 'Coarse sand / gravel — very rapid permeability.' : K > 1e-5 ? 'Sandy loam — moderate permeability.' : K > 1e-7 ? 'Loam / clay loam — slow.' : 'Clay — very slow permeability.';
+      return { value: fmt3(K), label: 'cm/s', interpretation: `Saturated hydraulic conductivity = ${fmt3(K)} cm/s. ${interp}` };
+    },
+  },
+
+  // IRR-11.8 Available Water Capacity (preserved)
   'IRR-11.8': { fields: [{ key: 'fc', label: 'Field capacity (FC)', unit: '%', defaultValue: 30, step: 1 }, { key: 'pwp', label: 'Permanent wilting point (PWP)', unit: '%', defaultValue: 12, step: 1 }], compute: (v) => { const aw = v.fc - v.pwp; const interp = aw > 20 ? 'High capacity' : aw > 10 ? 'Moderate' : 'Low — drought-prone'; return { value: fmt1(aw), label: '%', interpretation: interp }; } },
+
+  // IRR-11.9 TAW fraction-based (preserved)
   'IRR-11.9': { fields: [{ key: 'fc', label: 'Field capacity (FC)', unit: 'fraction', defaultValue: 0.30, step: 0.01 }, { key: 'pwp', label: 'PWP', unit: 'fraction', defaultValue: 0.12, step: 0.01 }, { key: 'rootDepth', label: 'Root depth (Zr)', unit: 'm', defaultValue: 0.6, step: 0.1 }], compute: (v) => { const taw = 1000 * (v.fc - v.pwp) * v.rootDepth; return { value: fmt0(taw), label: 'mm', interpretation: `Root zone holds ${fmt0(taw)} mm` }; } },
-  'IRR-12.1': { fields: [{ key: 'na', label: 'Sodium (Na⁺)', unit: 'meq/L', defaultValue: 12, step: 0.5 }, { key: 'ca', label: 'Calcium (Ca²⁺)', unit: 'meq/L', defaultValue: 4, step: 0.5 }, { key: 'mg', label: 'Magnesium (Mg²⁺)', unit: 'meq/L', defaultValue: 2, step: 0.5 }], compute: (v) => { const sar = v.na / Math.sqrt((v.ca + v.mg) / 2); const interp = sar > 13 ? 'High sodicity hazard' : sar > 6 ? 'Moderate risk' : 'Safe'; return { value: fmt2(sar), label: '', interpretation: interp }; } },
+
+  // --- Water Quality ---
+
+  // IRR-12.1 Sodium Adsorption Ratio (SAR)
+  'IRR-12.1': {
+    fields: [
+      { key: 'Na', label: 'Sodium (Na⁺)', unit: 'meq/L', defaultValue: 12, step: 0.5 },
+      { key: 'Ca', label: 'Calcium (Ca²⁺)', unit: 'meq/L', defaultValue: 4, step: 0.5 },
+      { key: 'Mg', label: 'Magnesium (Mg²⁺)', unit: 'meq/L', defaultValue: 2, step: 0.5 },
+    ],
+    compute: (v) => {
+      if (v.Ca + v.Mg <= 0) return { value: '—', label: 'SAR', interpretation: 'Ca + Mg must be > 0.' };
+      const SAR = v.Na / Math.sqrt((v.Ca + v.Mg) / 2);
+      const interp = SAR < 10 ? 'Safe — low sodicity hazard.' : SAR < 18 ? 'Marginal — moderate sodicity risk, monitor soil structure.' : 'Unsafe — high sodicity hazard, gypsum amendment likely needed.';
+      return { value: fmt2(SAR), label: 'SAR', interpretation: interp };
+    },
+  },
+
+  // IRR-12.2 Residual Sodium Carbonate (RSC)
+  'IRR-12.2': {
+    fields: [
+      { key: 'HCO3', label: 'Bicarbonate (HCO₃⁻)', unit: 'meq/L', defaultValue: 5, step: 0.5 },
+      { key: 'CO3', label: 'Carbonate (CO₃²⁻)', unit: 'meq/L', defaultValue: 1, step: 0.5 },
+      { key: 'Ca', label: 'Calcium (Ca²⁺)', unit: 'meq/L', defaultValue: 3, step: 0.5 },
+      { key: 'Mg', label: 'Magnesium (Mg²⁺)', unit: 'meq/L', defaultValue: 2, step: 0.5 },
+    ],
+    compute: (v) => {
+      const RSC = (v.CO3 + v.HCO3) - (v.Ca + v.Mg);
+      const interp = RSC < 1.25 ? 'Safe — RSC < 1.25 meq/L, suitable for irrigation.' : RSC < 2.5 ? 'Marginal — RSC 1.25–2.5, use with caution.' : 'Unsafe — RSC ≥ 2.5, likely Ca/Mg precipitation and Na buildup.';
+      return { value: fmt2(RSC), label: 'meq/L', interpretation: interp };
+    },
+  },
+
+  // --- Fertigation (preserved) ---
+
+  // IRR-13.2 Fertigation Concentration (preserved)
   'IRR-13.2': { fields: [{ key: 'mass', label: 'Fertilizer mass (Mf)', unit: 'kg', defaultValue: 5, step: 0.5 }, { key: 'volume', label: 'Water volume (Vw)', unit: 'm³', defaultValue: 1, step: 0.1 }], compute: (v) => { const conc = v.mass / v.volume; return { value: fmt1(conc), label: 'kg/m³', interpretation: `= ${fmt0(conc * 1000)} ppm` }; } },
+
+  // --- Reservoirs & Tanks (preserved) ---
+
+  // IRR-14.1 Reservoir Capacity (preserved)
   'IRR-14.1': { fields: [{ key: 'area', label: 'Surface area (A)', unit: 'm²', defaultValue: 500, step: 50 }, { key: 'depth', label: 'Depth (h)', unit: 'm', defaultValue: 3, step: 0.5 }], compute: (v) => { const vol = v.area * v.depth; return { value: fmt0(vol), label: 'm³', interpretation: `Capacity = ${fmt0(vol)} m³ = ${fmt0(vol / 1000)} ML` }; } },
+
+  // IRR-14.2 Cylindrical Tank Volume (preserved)
   'IRR-14.2': { fields: [{ key: 'radius', label: 'Radius (r)', unit: 'm', defaultValue: 1, step: 0.1 }, { key: 'height', label: 'Height (h)', unit: 'm', defaultValue: 2, step: 0.1 }], compute: (v) => { const vol = Math.PI * v.radius * v.radius * v.height; return { value: fmt0(vol), label: 'm³', interpretation: `Capacity = ${fmt0(vol)} m³ = ${fmt0(vol * 1000)} L` }; } },
+
+  // IRR-14.3 Detention Time (preserved)
   'IRR-14.3': { fields: [{ key: 'volume', label: 'Tank volume (V)', unit: 'm³', defaultValue: 100, step: 10 }, { key: 'flow', label: 'Flow rate (Q)', unit: 'm³/h', defaultValue: 5, step: 0.5 }], compute: (v) => { const td = v.volume / v.flow; return { value: fmt1(td), label: 'hours', interpretation: `Detention time = ${fmt1(td)} hours` }; } },
+
+  // --- Pipe Design (preserved) ---
+
+  // IRR-15.6 Pipe Diameter Sizing (preserved)
   'IRR-15.6': { fields: [{ key: 'flow', label: 'Flow rate (Q)', unit: 'm³/s', defaultValue: 0.02, step: 0.005 }, { key: 'velocity', label: 'Target velocity (v)', unit: 'm/s', defaultValue: 1.5, step: 0.1 }], compute: (v) => { const d = Math.sqrt((4 * v.flow) / (Math.PI * v.velocity)); return { value: fmt3(d), label: 'm', interpretation: `Diameter = ${fmt3(d)} m = ${fmt0(d * 1000)} mm` }; } },
 
   // ============= PART XIX: TRUSTED-REFERENCE FORMULAS (FAO-56, USDA-NRCS, ASABE, IPCC, NRC) =============

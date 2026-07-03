@@ -16,6 +16,7 @@ import { FieldDataCapture } from '@/components/agri/nutri-tools/FieldDataCapture
 import { MultiFieldDashboard } from '@/components/agri/nutri-tools/MultiFieldDashboard';
 import { YieldGapAnalysis } from '@/components/agri/nutri-tools/YieldGapAnalysis';
 import { SustainabilityScorecard } from '@/components/agri/nutri-tools/SustainabilityScorecard';
+import { FieldScoutingLog } from '@/components/agri/nutri-tools/FieldScoutingLog';
 import { OnboardingFlow } from '@/components/onboarding/OnboardingFlow';
 import { TakeTourButton } from '@/components/onboarding/TakeTourButton';
 import { TelegramConnectButton } from '@/components/agri/nutri-tools/TelegramConnectButton';
@@ -177,6 +178,7 @@ export default function Page() {
               <MultiFieldDashboard />
               <YieldGapAnalysis />
               <SustainabilityScorecard />
+              <FieldScoutingLog />
             </div>
           </section>
 

@@ -1,0 +1,767 @@
+     1→<!DOCTYPE html>
+     2→<html lang="es">
+     3→<head>
+     4→  <meta charset="UTF-8" />
+     5→  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+     6→  <link rel="stylesheet" href="assets/free-tools-watermark.css" />
+     7→  <script src="assets/free-tools-embed.js"></script>
+     8→  <title>Compatibilidad de fertilizantes</title>
+     9→  <style>
+    10→    * { box-sizing: border-box; }
+    11→    body {
+    12→      margin: 0;
+    13→      padding: 14px 14px 22px;
+    14→      background: #f8fafc;
+    15→      font-family: Inter, system-ui, -apple-system, sans-serif;
+    16→      color: #0f172a;
+    17→      font-size: 14px;
+    18→    }
+    19→    h1 {
+    20→      margin: 0 0 6px;
+    21→      font-size: 1.15rem;
+    22→      color: #1e3a8a;
+    23→    }
+    24→    .lead {
+    25→      margin: 0 0 10px;
+    26→      color: #475569;
+    27→      font-size: 13px;
+    28→      line-height: 1.45;
+    29→      max-width: 900px;
+    30→    }
+    31→    .legend {
+    32→      display: flex;
+    33→      flex-wrap: wrap;
+    34→      gap: 8px;
+    35→      margin-bottom: 12px;
+    36→      align-items: center;
+    37→    }
+    38→    .chip {
+    39→      font-size: 11px;
+    40→      font-weight: 700;
+    41→      border-radius: 999px;
+    42→      padding: 4px 10px;
+    43→      border: 1px solid transparent;
+    44→    }
+    45→    .chip.c { background: #dcfce7; border-color: #86efac; color: #14532d; }
+    46→    .chip.r { background: #fef9c3; border-color: #facc15; color: #713f12; }
+    47→    .chip.i { background: #fee2e2; border-color: #f87171; color: #7f1d1d; }
+    48→    .hint {
+    49→      font-size: 11px;
+    50→      color: #64748b;
+    51→      margin-bottom: 10px;
+    52→      max-width: 900px;
+    53→      line-height: 1.4;
+    54→    }
+    55→
+    56→    .matrix-wrap {
+    57→      overflow: auto;
+    58→      max-height: min(58vh, 520px);
+    59→      border: 1px solid #e2e8f0;
+    60→      border-radius: 12px;
+    61→      background: #fff;
+    62→      margin-bottom: 12px;
+    63→      box-shadow: 0 1px 4px rgba(15, 23, 42, 0.06);
+    64→    }
+    65→    table.compat {
+    66→      border-collapse: separate;
+    67→      border-spacing: 0;
+    68→      min-width: max-content;
+    69→      --compat-col: 56px;
+    70→    }
+    71→    .compat th, .compat td {
+    72→      border: 1px solid #e2e8f0;
+    73→      padding: 0;
+    74→      text-align: center;
+    75→      vertical-align: middle;
+    76→      font-size: 11px;
+    77→    }
+    78→    /* Celdas C/R/I: tamaño fijo para que ninguna se vea “más pequeña” */
+    79→    .compat tbody td:not(.empty-cell) {
+    80→      width: var(--compat-col);
+    81→      min-width: var(--compat-col);
+    82→      max-width: var(--compat-col);
+    83→      height: 44px;
+    84→      min-height: 44px;
+    85→    }
+    86→    .compat thead th {
+    87→      position: sticky;
+    88→      top: 0;
+    89→      z-index: 3;
+    90→      padding: 0;
+    91→    }
+    92→    /* Columnas: nombre compacto en ~2 renglones (menos alto que la versión vertical) */
+    93→    .compat thead th.col-vlabel {
+    94→      background: linear-gradient(180deg, #fffbeb 0%, #fef3c7 100%);
+    95→      border-bottom: 2px solid #fcd34d;
+    96→      width: var(--compat-col);
+    97→      min-width: var(--compat-col);
+    98→      max-width: var(--compat-col);
+    99→      height: 84px;
+   100→      min-height: 84px;
+   101→      max-height: 84px;
+   102→      vertical-align: middle;
+   103→      padding: 4px 3px 5px;
+   104→      cursor: pointer;
+   105→    }
+   106→    .compat thead th.col-vlabel .vlabel-inner {
+   107→      display: -webkit-box;
+   108→      -webkit-box-orient: vertical;
+   109→      -webkit-line-clamp: 2;
+   110→      line-clamp: 2;
+   111→      overflow: hidden;
+   112→      text-overflow: ellipsis;
+   113→      word-break: break-word;
+   114→      hyphens: auto;
+   115→      white-space: normal;
+   116→      font-size: 7.5px;
+   117→      font-weight: 700;
+   118→      color: #1e293b;
+   119→      line-height: 1.2;
+   120→      text-align: center;
+   121→      max-height: calc(7.5px * 1.2 * 2 + 1px);
+   122→      margin: 0 auto;
+   123→      width: 100%;
+   124→    }
+   125→    .compat thead th.corner {
+   126→      position: sticky;
+   127→      left: 0;
+   128→      z-index: 5;
+   129→      min-width: 200px;
+   130→      width: 200px;
+   131→      max-width: 200px;
+   132→      height: 84px;
+   133→      min-height: 84px;
+   134→      max-height: 84px;
+   135→      background: linear-gradient(135deg, #fffbeb 0%, #fef9c3 100%);
+   136→      border-right: 2px solid #fcd34d;
+   137→      border-bottom: 2px solid #fcd34d;
+   138→      vertical-align: middle;
+   139→      padding: 6px 8px;
+   140→      text-align: left;
+   141→    }
+   142→    .compat thead th.corner .corner-title {
+   143→      display: block;
+   144→      font-size: 10px;
+   145→      font-weight: 800;
+   146→      color: #78350f;
+   147→      line-height: 1.15;
+   148→      margin-bottom: 2px;
+   149→    }
+   150→    .compat thead th.corner .corner-sub {
+   151→      display: -webkit-box;
+   152→      -webkit-box-orient: vertical;
+   153→      -webkit-line-clamp: 2;
+   154→      line-clamp: 2;
+   155→      overflow: hidden;
+   156→      font-size: 7.5px;
+   157→      font-weight: 500;
+   158→      color: #92400e;
+   159→      line-height: 1.2;
+   160→    }
+   161→    .compat td.empty-cell {
+   162→      background: #f8fafc;
+   163→      border-color: #e2e8f0;
+   164→      width: var(--compat-col);
+   165→      min-width: var(--compat-col);
+   166→      max-width: var(--compat-col);
+   167→      height: 44px;
+   168→      min-height: 44px;
+   169→    }
+   170→    .compat tbody th.row-h .row-num {
+   171→      font-weight: 800;
+   172→      color: #64748b;
+   173→      margin-right: 4px;
+   174→    }
+   175→    .compat tbody th.row-h {
+   176→      position: sticky;
+   177→      left: 0;
+   178→      z-index: 2;
+   179→      background: #f8fafc;
+   180→      font-weight: 600;
+   181→      text-align: left;
+   182→      padding: 6px 8px;
+   183→      font-size: 10px;
+   184→      color: #0f172a;
+   185→      border-right: 2px solid #e2e8f0;
+   186→      min-width: 200px;
+   187→      max-width: 260px;
+   188→      width: 200px;
+   189→      white-space: normal;
+   190→      line-height: 1.25;
+   191→      word-break: break-word;
+   192→      hyphens: auto;
+   193→      cursor: help;
+   194→      vertical-align: middle;
+   195→    }
+   196→    .cell-btn {
+   197→      width: 100%;
+   198→      height: 100%;
+   199→      min-height: 44px;
+   200→      min-width: var(--compat-col);
+   201→      border: none;
+   202→      margin: 0;
+   203→      padding: 2px;
+   204→      cursor: pointer;
+   205→      font-weight: 800;
+   206→      font-size: 12px;
+   207→      transition: box-shadow 0.15s ease, transform 0.08s ease;
+   208→    }
+   209→    .cell-btn:hover { filter: brightness(0.97); }
+   210→    .cell-btn:active { transform: scale(0.98); }
+   211→    .cell-btn.l-c { background: #bbf7d0; color: #14532d; }
+   212→    .cell-btn.l-r { background: #fef08a; color: #713f12; }
+   213→    .cell-btn.l-i { background: #fecaca; color: #7f1d1d; }
+   214→    .cell-btn.empty {
+   215→      background: #f1f5f9;
+   216→      cursor: default;
+   217→      color: transparent;
+   218→    }
+   219→    .cell-btn.hl-row { box-shadow: inset 0 0 0 2px #2563eb; }
+   220→    .cell-btn.hl-col { box-shadow: inset 0 0 0 2px #7c3aed; }
+   221→    .cell-btn.hl-both { box-shadow: inset 0 0 0 3px #1d4ed8; }
+   222→    .cell-btn.selected { box-shadow: inset 0 0 0 3px #0f172a; }
+   223→
+   224→    .compat tbody th.row-h.hl-fert {
+   225→      background: #dbeafe;
+   226→      color: #1e40af;
+   227→      border-right-color: #2563eb;
+   228→    }
+   229→    .compat thead th.col-vlabel.hl-fert {
+   230→      background: linear-gradient(180deg, #dbeafe 0%, #bfdbfe 100%);
+   231→      border-bottom-color: #2563eb;
+   232→    }
+   233→    .compat thead th.col-vlabel.hl-fert .vlabel-inner {
+   234→      color: #1e3a8a;
+   235→    }
+   236→
+   237→    .panel {
+   238→      margin-top: 4px;
+   239→      background: #fff;
+   240→      border: 1px solid #dbeafe;
+   241→      border-radius: 12px;
+   242→      padding: 12px 14px;
+   243→      box-shadow: 0 2px 8px rgba(30, 64, 175, 0.08);
+   244→    }
+   245→    .panel h2 {
+   246→      margin: 0 0 6px;
+   247→      font-size: 1rem;
+   248→      color: #1e3a8a;
+   249→    }
+   250→    .badge {
+   251→      display: inline-block;
+   252→      font-size: 12px;
+   253→      font-weight: 800;
+   254→      padding: 4px 10px;
+   255→      border-radius: 8px;
+   256→      margin-bottom: 8px;
+   257→    }
+   258→    .badge.c { background: #dcfce7; color: #14532d; }
+   259→    .badge.r { background: #fef9c3; color: #713f12; }
+   260→    .badge.i { background: #fee2e2; color: #7f1d1d; }
+   261→    .panel .names {
+   262→      font-size: 13px;
+   263→      color: #334155;
+   264→      margin-bottom: 10px;
+   265→      line-height: 1.4;
+   266→    }
+   267→    .sec {
+   268→      margin-top: 10px;
+   269→      padding-top: 10px;
+   270→      border-top: 1px dashed #cbd5e1;
+   271→      font-size: 13px;
+   272→      color: #334155;
+   273→      line-height: 1.5;
+   274→    }
+   275→    .sec strong {
+   276→      display: block;
+   277→      color: #0f172a;
+   278→      font-size: 12px;
+   279→      margin-bottom: 4px;
+   280→    }
+   281→    .sec ul { margin: 4px 0 0 18px; padding: 0; }
+   282→    .foot {
+   283→      margin-top: 12px;
+   284→      font-size: 11px;
+   285→      color: #64748b;
+   286→      line-height: 1.45;
+   287→    }
+   288→  </style>
+   289→</head>
+   290→<body>
+   291→  <div class="np-free-tool-head">
+   292→    <h1 class="np-free-tool-title">🔺 Compatibilidad de fertilizantes</h1>
+   293→    <div class="np-free-watermark" aria-hidden="true"><img src="assets/N_Hoja_Azul.png" alt=""></div>
+   294→  </div>
+   295→  <p class="lead">
+   296→    Referencia alineada con el catálogo de fertilizantes solubles de NutriPlant PRO. Los códigos reflejan riesgo típico en <strong>solución madre concentrada</strong> o mezclas poco diluidas; en tanque de trabajo diluido muchas incompatibilidades bajan de riesgo, pero la separación A/B sigue siendo buena práctica.
+   297→  </p>
+   298→  <div class="legend">
+   299→    <span class="chip c">C — Compatible</span>
+   300→    <span class="chip r">R — Precaución (solubilidad / interacción)</span>
+   301→    <span class="chip i">I — Incompatible (precipitado / obstrucción)</span>
+   302→  </div>
+   303→  <p class="hint">
+   304→    Arriba, cada columna muestra el nombre en <strong>hasta dos líneas</strong> para ahorrar alto. Pulsa un <strong>encabezado de fila o columna</strong> para resaltar, o una <strong>celda</strong> para el detalle del par. Si aún se corta, <strong>pasa el cursor o mantén pulsado</strong> el encabezado para ver el nombre completo.
+   305→  </p>
+   306→
+   307→  <div class="matrix-wrap">
+   308→    <table class="compat" id="compatTable" aria-label="Matriz de compatibilidad"></table>
+   309→  </div>
+   310→
+   311→  <div class="panel" id="detailPanel">
+   312→    <h2 id="detailTitle">Selecciona una celda</h2>
+   313→    <div id="detailBody" class="names">Toca una intersección en la tabla triangular inferior para ver qué ocurre entre esos dos productos y qué hacer en campo.</div>
+   314→    <div class="foot">
+   315→      Nota: herramienta de apoyo; la decisión final corresponde al técnico según agua, pH, temperatura, orden de disolución y concentración real.
+   316→    </div>
+   317→  </div>
+   318→
+   319→  <script src="assets/np-free-local-persist.js"></script>
+   320→  <script>
+   321→(function () {
+   322→  /** Orden y nombres alineados con fertirriego (FERT_SOLUBLES_DB) + urea, nitrato amonio, sulfatos micros y Si */
+   323→  const FERTILIZERS = [
+   324→    { id: 'urea', name: 'Urea' },
+   325→    { id: 'nitrato_amonio', name: 'Nitrato de amonio' },
+   326→    { id: 'fosfonitrato_33_03_00', name: 'Fosfonitrato' },
+   327→    { id: 'sulfato_amonio_soluble', name: 'Sulfato de amonio' },
+   328→    { id: 'nitrato_calcio_granular', name: 'Nitrato de calcio' },
+   329→    { id: 'nitrato_calcio_cristal', name: 'Nitrato de calcio (cristal)' },
+   330→    { id: 'nitrato_magnesio', name: 'Nitrato de magnesio' },
+   331→    { id: 'map', name: 'MAP (fosfato monoamónico)' },
+   332→    { id: 'mkp', name: 'MKP' },
+   333→    { id: 'nks', name: 'NKS' },
+   334→    { id: 'nk_mg', name: 'NK + Mg' },
+   335→    { id: 'sop', name: 'SOP (sulfato de potasio)' },
+   336→    { id: 'kcl_soluble', name: 'KCl (cloruro de potasio)' },
+   337→    { id: 'cacl2_dihidratado', name: 'Cloruro de calcio (dihidratado)' },
+   338→    { id: 'sulfato_magnesio', name: 'Sulfato de magnesio' },
+   339→    { id: 'triple_19_me', name: 'Triple 19 +Me' },
+   340→    { id: 'npk_13_04_25_znb', name: '13-4-25 Zn+B' },
+   341→    { id: 'mix_micros_edta', name: 'Mix micros EDTA' },
+   342→    { id: 'quelato_fe', name: 'Fe EDTA' },
+   343→    { id: 'fe_dtpa', name: 'Fe DTPA' },
+   344→    { id: 'fe_eddha', name: 'Fe EDDHA' },
+   345→    { id: 'quelato_mn', name: 'Mn EDTA' },
+   346→    { id: 'quelato_zn', name: 'Zn EDTA' },
+   347→    { id: 'quelato_cu', name: 'Cu EDTA' },
+   348→    { id: 'acido_borico', name: 'Ácido bórico' },
+   349→    { id: 'molibdato_sodio', name: 'Molibdato de sodio (Mo)' },
+   350→    { id: 'sulfatos_micros', name: 'Sulfatos Fe, Mn, Zn, Cu' },
+   351→    { id: 'silicio', name: 'Fuente de Si (soluble)' },
+   352→    { id: 'acido_fosforico_75', name: 'Ácido fosfórico 75%' },
+   353→    { id: 'acido_fosforico_85', name: 'Ácido fosfórico 85%' },
+   354→    { id: 'acido_nitrico_55', name: 'Ácido nítrico 55%' },
+   355→    { id: 'acido_sulfurico_98', name: 'Ácido sulfúrico 98%' }
+   356→  ];
+   357→
+   358→  const byId = {};
+   359→  FERTILIZERS.forEach((f, idx) => { f._i = idx; byId[f.id] = f; });
+   360→
+   361→  /** Rasgos para reglas (contexto solución concentrada) */
+   362→  const TR = {
+   363→    urea: { urea: true },
+   364→    nitrato_amonio: { nh4: true, no3: true },
+   365→    fosfonitrato_33_03_00: { n: true, p: true, po4: true },
+   366→    sulfato_amonio_soluble: { nh4: true, so4: true },
+   367→    nitrato_calcio_granular: { ca_no3: true, ca: true },
+   368→    nitrato_calcio_cristal: { ca_no3: true, ca: true },
+   369→    nitrato_magnesio: { no3: true, mg: true },
+   370→    map: { nh4: true, po4: true, p_acid: true },
+   371→    mkp: { k: true, po4: true, p_acid: true },
+   372→    nks: { no3: true, k: true, so4: true },
+   373→    nk_mg: { no3: true, k: true, mg: true },
+   374→    sop: { k: true, so4: true },
+   375→    kcl_soluble: { k: true, cl: true },
+   376→    cacl2_dihidratado: { ca: true, cl: true },
+   377→    sulfato_magnesio: { mg: true, so4: true },
+   378→    triple_19_me: { npk: true, po4: true, nh4: true, no3: true, k: true, micro: true },
+   379→    npk_13_04_25_znb: { npk: true, po4: true, nh4: true, no3: true, k: true, so4: true, micro: true },
+   380→    mix_micros_edta: { chelate: true, edta: true, micro: true },
+   381→    quelato_fe: { chelate: true, edta: true, fe: true },
+   382→    fe_dtpa: { chelate: true, dtpa: true, fe: true },
+   383→    fe_eddha: { chelate: true, eddha: true, fe: true },
+   384→    quelato_mn: { chelate: true, edta: true, mn: true },
+   385→    quelato_zn: { chelate: true, edta: true, zn: true },
+   386→    quelato_cu: { chelate: true, edta: true, cu: true },
+   387→    acido_borico: { b: true, weak_acid: true },
+   388→    molibdato_sodio: { mo: true },
+   389→    sulfatos_micros: { metal_sulfate: true, so4: true, micro: true },
+   390→    silicio: { si: true },
+   391→    acido_fosforico_75: { strong_acid: true, h3po4: true, po4: true },
+   392→    acido_fosforico_85: { strong_acid: true, h3po4: true, po4: true },
+   393→    acido_nitrico_55: { strong_acid: true, hno3: true, no3: true },
+   394→    acido_sulfurico_98: { strong_acid: true, h2so4: true, so4: true }
+   395→  };
+   396→
+   397→  function traits(id) {
+   398→    return TR[id] || {};
+   399→  }
+   400→
+   401→  function keyPair(ia, ib) {
+   402→    return ia < ib ? ia + '|' + ib : ib + '|' + ia;
+   403→  }
+   404→
+   405→  /** Excepciones explícitas (sobreescriben inferencia) */
+   406→  const OVERRIDE = {
+   407→    // Pares críticos documentados en tablas clásicas de fertirriego
+   408→    'mkp|nitrato_calcio_granular': 'I',
+   409→    'map|nitrato_calcio_granular': 'I',
+   410→    'map|nitrato_calcio_cristal': 'I',
+   411→    'mkp|nitrato_calcio_cristal': 'I',
+   412→    'sulfato_amonio_soluble|nitrato_calcio_granular': 'I',
+   413→    'sulfato_amonio_soluble|nitrato_calcio_cristal': 'I',
+   414→    'sulfato_magnesio|nitrato_calcio_granular': 'I',
+   415→    'sulfato_magnesio|nitrato_calcio_cristal': 'I',
+   416→    'sop|nitrato_calcio_granular': 'I',
+   417→    'sop|nitrato_calcio_cristal': 'I',
+   418→    'acido_fosforico_75|nitrato_calcio_granular': 'I',
+   419→    'acido_fosforico_75|nitrato_calcio_cristal': 'I',
+   420→    'acido_fosforico_85|nitrato_calcio_granular': 'I',
+   421→    'acido_fosforico_85|nitrato_calcio_cristal': 'I',
+   422→    'acido_sulfurico_98|nitrato_calcio_granular': 'I',
+   423→    'acido_sulfurico_98|nitrato_calcio_cristal': 'I',
+   424→    'nks|sulfato_amonio_soluble': 'R',
+   425→    'sop|nks': 'R',
+   426→    'map|sulfatos_micros': 'I',
+   427→    'mkp|sulfatos_micros': 'I',
+   428→    'mix_micros_edta|map': 'R',
+   429→    'mix_micros_edta|mkp': 'R',
+   430→    'fe_eddha|map': 'R',
+   431→    'fe_eddha|mkp': 'R',
+   432→    'nitrato_magnesio|mix_micros_edta': 'R',
+   433→    'nitrato_magnesio|quelato_fe': 'R'
+   434→  };
+   435→
+   436→  function inferLevel(aid, bid) {
+   437→    if (aid === bid) return 'C';
+   438→    const k = keyPair(aid, bid);
+   439→    if (OVERRIDE[k]) return OVERRIDE[k];
+   440→    const A = traits(aid);
+   441→    const B = traits(bid);
+   442→
+   443→    const ca = A.ca_no3 || B.ca_no3;
+   444→
+   445→    function has(t) { return !!(A[t] || B[t]); }
+   446→    const isMap = aid === 'map' || bid === 'map';
+   447→    const isMkp = aid === 'mkp' || bid === 'mkp';
+   448→
+   449→    // Ca²⁺ (nitrato) vs fosfatos / complejos con P / ácidos fosfóricos
+   450→    if (ca && (has('po4') || has('p_acid') || (has('npk') && (A.po4 || B.po4)))) {
+   451→      if ((A.po4 || B.po4 || A.npk || B.npk) && !has('hno3')) return 'I';
+   452→    }
+   453→    if (ca && (has('h3po4') || (A.strong_acid && A.h3po4) || (B.strong_acid && B.h3po4))) return 'I';
+   454→    if (ca && (has('h2so4') || A.h2so4 || B.h2so4)) return 'I';
+   455→
+   456→    // Ca + sulfatos (yeso): (NH₄)₂SO₄, SOP, MgSO₄, NKS (lleva SO₄), etc.
+   457→    if (ca && has('so4') && (A.so4 || B.so4)) {
+   458→      if ((A.nh4 && A.so4) || (B.nh4 && B.so4)) return 'I';
+   459→      if (aid === 'sop' || bid === 'sop' || aid === 'sulfato_magnesio' || bid === 'sulfato_magnesio') return 'I';
+   460→      if (aid === 'nks' || bid === 'nks') return 'I';
+   461→    }
+   462→
+   463→    // Micro sulfatos + P (MAP/MKP u ortofosfato en NPK)
+   464→    if (has('metal_sulfate') && (has('po4') || isMap || isMkp)) return 'I';
+   465→
+   466→    // Quelatos + fuerte P ortofosfato
+   467→    if ((A.chelate || B.chelate) && (isMap || isMkp || (has('po4') && (A.npk || B.npk)))) return 'R';
+   468→
+   469→    // KNO3-family + sulfato amonio / SOP (salting)
+   470→    if ((aid === 'nks' || bid === 'nks' || aid === 'nk_mg' || bid === 'nk_mg') && (has('nh4') && has('so4'))) return 'R';
+   471→    if ((aid === 'nks' || bid === 'nks') && (aid === 'sop' || bid === 'sop')) return 'R';
+   472→
+   473→    // Ácidos fuertes mezclados entre sí o con bases implícitas
+   474→    if (A.strong_acid && B.strong_acid && aid !== bid) return 'R';
+   475→
+   476→    return 'C';
+   477→  }
+   478→
+   479→  const DETAIL_KEYS = {
+   480→    ca_phosphate_mkp: {
+   481→      title: '🔴 No compatible',
+   482→      que: 'Formación de fosfato de calcio (Ca₃(PO₄)₂) → precipitado poco soluble.',
+   483→      impacto: ['↓ disponibilidad de Ca', '↓ disponibilidad de P', 'riesgo de taponamiento de goteros / líneas'],
+   484→      factor: 'Concentración y pH local en la mezcla.',
+   485→      cond: ['❌ No en la misma solución madre con fosfatos ortofosfato.', '⚠️ Riesgo incluso a pH cercano a neutro si la concentración es alta.'],
+   486→      accion: ['Separar en tanque A / B', 'Inyectar por separado', 'Diluir bien antes de mezclar en línea si el diseño lo permite']
+   487→    },
+   488→    ca_sulfate: {
+   489→      title: '🔴 No compatible',
+   490→      que: 'Formación de yeso (CaSO₄·2H₂O) al mezclar Ca²⁺ con SO₄²⁻ en medio concentrado.',
+   491→      impacto: ['Turbidez', 'precipitado', 'obstrucción'],
+   492→      factor: 'Producto de solubilidad; empeora en solución madre.',
+   493→      cond: ['Especialmente crítico con sulfato de amonio, SOP o sulfato de magnesio frente a nitrato de calcio.'],
+   494→      accion: ['Tanques separados', 'Orden: disolver primero el que menos precipita según tu protocolo', 'Nunca concentrar ambos en el mismo carboy']
+   495→    },
+   496→    ca_acid_phosphoric: {
+   497→      title: '🔴 No compatible',
+   498→      que: 'Reacción ácido–base + fosfato: precipitados de Ca–P y riesgo de calor local.',
+   499→      impacto: ['Precipitados', 'inestabilidad de la mezcla'],
+   500→      factor: 'Concentración del ácido y del calcio.',
+   501→      cond: ['No mezclar ácido fosfórico concentrado con nitrato de calcio en el mismo volumen pequeño.'],
+   502→      accion: ['Ácido en un tanque, calcio en otro', 'Dilución fuerte antes de llegar a línea']
+   503→    },
+   504→    ca_acid_sulfuric: {
+   505→      title: '🔴 No compatible',
+   506→      que: 'Sulfato + calcio → yeso; además calor de dilución del ácido.',
+   507→      impacto: ['Precipitado', 'daño a componentes plásticos si hay calor local'],
+   508→      factor: 'Concentración.',
+   509→      cond: ['Evitar co-disolución concentrada.'],
+   510→      accion: ['Tanques separados', 'Seguridad: siempre ácido al agua, nunca al revés']
+   511→    },
+   512→    metal_sulfate_phosphate: {
+   513→      title: '🔴 No compatible',
+   514→      que: 'Sulfatos de microelementos con MAP/MKP pueden generar fosfatos insolubles de Fe/Zn/Mn/Cu.',
+   515→      impacto: ['Pérdida de micro y P', 'turbidez'],
+   516→      factor: 'pH y concentración.',
+   517→      cond: ['Muy frecuente en solución madre.'],
+   518→      accion: ['Micros quelatados en otro tanque', 'o MAP/MKP separado de sulfatos metálicos']
+   519→    },
+   520→    chelate_phosphate: {
+   521→      title: '🟡 Precaución',
+   522→      que: 'Los ortofosfatos compiten con quelatos (especialmente Fe); puede haber intercambio y pérdida de eficacia.',
+   523→      impacto: ['↓ Fe quelatado disponible', 'interacciones lentas en tanque'],
+   524→      factor: 'Tiempo de contacto y concentración.',
+   525→      cond: ['Más delicado en solución madre concentrada.'],
+   526→      accion: ['Fe quelato en tanque B', 'fosfatos en A', 'mezcla solo ya diluida en línea']
+   527→    },
+   528→    kno3_sulfate_salting: {
+   529→      title: '🟡 Precaución',
+   530→      que: 'Combinaciones K/NO₃ con sulfatos pueden reducir solubilidad conjunta (“salting out”).',
+   531→      impacto: ['Cristalización en frío', 'sedimentos'],
+   532→      factor: 'Temperatura y concentración total de sales.',
+   533→      cond: ['Vigilar especialmente solución madre fría.'],
+   534→      accion: ['Reducir concentración', 'separar tanques', 'agitar / mantener temperatura estable']
+   535→    },
+   536→    strong_acids: {
+   537→      title: '🟡 Precaución',
+   538→      que: 'Mezclar ácidos fuertes entre sí o con sales sin protocolo puede generar calor, salpicaduras y descomposición.',
+   539→      impacto: ['Riesgo físico-químico', 'corrosión'],
+   540→      factor: 'Orden y dilución.',
+   541→      cond: ['Cada ácido suele ir en etapa separada de preparación.'],
+   542→      accion: ['No mezclar concentrados', 'EPP', 'agua primero']
+   543→    },
+   544→    default_c: {
+   545→      title: '🟢 Compatible (típico)',
+   546→      que: 'En condiciones habituales de solución de trabajo diluida no se espera precipitado grave; revisa siempre ficha del fabricante.',
+   547→      impacto: ['—'],
+   548→      factor: 'Concentración final y calidad del agua.',
+   549→      cond: ['Validar en tu instalación.'],
+   550→      accion: ['Prueba de jarra / solución madre pequeña antes de escalar']
+   551→    },
+   552→    default_r: {
+   553→      title: '🟡 Precaución',
+   554→      que: 'Interacción o límite de solubilidad según tabla y experiencia.',
+   555→      impacto: ['Posible turbidez o reducción de eficacia'],
+   556→      factor: 'Concentración, pH, temperatura.',
+   557→      cond: ['Monitorear solución madre.'],
+   558→      accion: ['Diluir más', 'separar tanques', 'consultar técnico']
+   559→    },
+   560→    default_i: {
+   561→      title: '🔴 No compatible',
+   562→      que: 'Riesgo alto de precipitado u obstrucción en condiciones típicas de fertirriego.',
+   563→      impacto: ['Obstrucción', 'pérdida de nutrientes'],
+   564→      factor: 'Concentración.',
+   565→      cond: ['Evitar co-maduración.'],
+   566→      accion: ['Separar A/B', 'inyección separada']
+   567→    },
+   568→    same: {
+   569→      title: '🟢 Mismo producto',
+   570→      que: 'Sin interacción entre dos lotes del mismo fertilizante en esta matriz.',
+   571→      impacto: ['—'],
+   572→      factor: '—',
+   573→      cond: ['—'],
+   574→      accion: ['—']
+   575→    }
+   576→  };
+   577→
+   578→  function detailTemplate(aid, bid, level) {
+   579→    if (aid === bid) return DETAIL_KEYS.same;
+   580→
+   581→    const A = traits(aid);
+   582→    const B = traits(bid);
+   583→    const ca = A.ca_no3 || B.ca_no3;
+   584→    const mapMkp = aid === 'map' || bid === 'map' || aid === 'mkp' || bid === 'mkp';
+   585→
+   586→    if (level === 'I') {
+   587→      if (mapMkp && ca && (A.po4 || B.po4)) return DETAIL_KEYS.ca_phosphate_mkp;
+   588→      if (ca && (A.h3po4 || B.h3po4)) return DETAIL_KEYS.ca_acid_phosphoric;
+   589→      if (ca && (A.h2so4 || B.h2so4)) return DETAIL_KEYS.ca_acid_sulfuric;
+   590→      if (ca && (A.so4 || B.so4)) {
+   591→        if ((A.nh4 && A.so4) || (B.nh4 && B.so4)) return DETAIL_KEYS.ca_sulfate;
+   592→        if (aid === 'sop' || bid === 'sop' || aid === 'sulfato_magnesio' || bid === 'sulfato_magnesio' || aid === 'nks' || bid === 'nks') return DETAIL_KEYS.ca_sulfate;
+   593→      }
+   594→      if ((A.metal_sulfate || B.metal_sulfate) && (A.po4 || B.po4)) return DETAIL_KEYS.metal_sulfate_phosphate;
+   595→      return DETAIL_KEYS.default_i;
+   596→    }
+   597→    if (level === 'R') {
+   598→      if ((A.chelate || B.chelate) && (A.po4 || B.po4)) return DETAIL_KEYS.chelate_phosphate;
+   599→      if ((aid === 'nks' || bid === 'nks' || aid === 'nk_mg' || bid === 'nk_mg') && ((A.nh4 && A.so4) || (B.nh4 && B.so4))) return DETAIL_KEYS.kno3_sulfate_salting;
+   600→      if ((aid === 'sop' || bid === 'sop') && (aid === 'nks' || bid === 'nks')) return DETAIL_KEYS.kno3_sulfate_salting;
+   601→      if (A.strong_acid && B.strong_acid) return DETAIL_KEYS.strong_acids;
+   602→      if ((A.chelate || B.chelate) && (A.mg || B.mg) && (aid === 'nitrato_magnesio' || bid === 'nitrato_magnesio')) return DETAIL_KEYS.chelate_phosphate;
+   603→      return DETAIL_KEYS.default_r;
+   604→    }
+   605→    return DETAIL_KEYS.default_c;
+   606→  }
+   607→
+   608→  function renderDetail(a, b, level) {
+   609→    const fa = byId[a];
+   610→    const fb = byId[b];
+   611→    const tmpl = detailTemplate(a, b, level);
+   612→    const L = level === 'C' ? 'c' : level === 'R' ? 'r' : 'i';
+   613→    const badge = level === 'C' ? '🟢 Compatible' : level === 'R' ? '🟡 Precaución' : '🔴 Incompatible';
+   614→
+   615→    let html = '';
+   616→    html += '<span class="badge ' + L + '">' + badge + '</span>';
+   617→    html += '<div class="names"><strong>' + fa.name + '</strong> + <strong>' + fb.name + '</strong></div>';
+   618→
+   619→    html += '<div class="sec"><strong>Qué pasa</strong>' + tmpl.que + '</div>';
+   620→    html += '<div class="sec"><strong>Impacto</strong><ul>';
+   621→    (tmpl.impacto || []).forEach(function (x) { html += '<li>' + x + '</li>'; });
+   622→    html += '</ul></div>';
+   623→    html += '<div class="sec"><strong>Factor crítico</strong>' + tmpl.factor + '</div>';
+   624→    html += '<div class="sec"><strong>Condición</strong><ul>';
+   625→    (tmpl.cond || []).forEach(function (x) { html += '<li>' + x + '</li>'; });
+   626→    html += '</ul></div>';
+   627→    html += '<div class="sec"><strong>Acción recomendada</strong><ul>';
+   628→    (tmpl.accion || []).forEach(function (x) { html += '<li>' + x + '</li>'; });
+   629→    html += '</ul></div>';
+   630→
+   631→    document.getElementById('detailTitle').textContent = tmpl.title;
+   632→    document.getElementById('detailBody').innerHTML = html;
+   633→  }
+   634→
+   635→  let selectedFert = null;
+   636→  let selectedPair = null;
+   637→
+   638→  function clearHighlights() {
+   639→    document.querySelectorAll('.hl-fert, .hl-row, .hl-col, .hl-both, .selected').forEach(function (el) {
+   640→      el.classList.remove('hl-fert', 'hl-row', 'hl-col', 'hl-both', 'selected');
+   641→    });
+   642→  }
+   643→
+   644→  function highlightFert(k) {
+   645→    clearHighlights();
+   646→    selectedFert = k;
+   647→    selectedPair = null;
+   648→    const rowH = document.querySelector('.compat tbody th.row-h[data-i="' + k + '"]');
+   649→    const colH = document.querySelector('.compat thead th[data-j="' + k + '"]');
+   650→    if (rowH) rowH.classList.add('hl-fert');
+   651→    if (colH) colH.classList.add('hl-fert');
+   652→    for (let i = 0; i < FERTILIZERS.length; i++) {
+   653→      for (let j = 0; j <= i; j++) {
+   654→        const btn = document.querySelector('.cell-btn[data-i="' + i + '"][data-j="' + j + '"]');
+   655→        if (!btn || btn.classList.contains('empty')) continue;
+   656→        if (i === k || j === k) {
+   657→          btn.classList.add(i === k && j === k ? 'hl-both' : i === k ? 'hl-row' : 'hl-col');
+   658→        }
+   659→      }
+   660→    }
+   661→    const f = FERTILIZERS[k];
+   662→    document.getElementById('detailTitle').textContent = 'Fertilizante: ' + f.name;
+   663→    document.getElementById('detailBody').innerHTML =
+   664→      '<div class="names">Resaltada la <strong>fila</strong> y la <strong>columna</strong> de este producto en la parte triangular. ' +
+   665→      'Pulsa una celda donde se cruce con otro para ver el detalle del par.</div>';
+   666→  }
+   667→
+   668→  function buildTable() {
+   669→    const n = FERTILIZERS.length;
+   670→    const table = document.getElementById('compatTable');
+   671→    const esc = function (s) {
+   672→      return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+   673→    };
+   674→    let thead = '<thead><tr><th class="corner" scope="col" title="Eje: filas = primera sustancia; columnas = segunda sustancia en el cruce."><span class="corner-title">Fertilizantes</span><span class="corner-sub">Mismo orden arriba y a la izquierda. Encabezados compactos (2 líneas máx.).</span></th>';
+   675→    for (let j = 0; j < n; j++) {
+   676→      const nm = FERTILIZERS[j].name;
+   677→      thead += '<th scope="col" class="col-vlabel" data-j="' + j + '" title="' + esc(nm) + '"><span class="vlabel-inner">' + esc(nm) + '</span></th>';
+   678→    }
+   679→    thead += '</tr></thead>';
+   680→
+   681→    let tbody = '<tbody>';
+   682→    for (let i = 0; i < n; i++) {
+   683→      tbody += '<tr>';
+   684→      tbody += '<th scope="row" class="row-h" data-i="' + i + '" title="' + esc(FERTILIZERS[i].name) + '"><span class="row-num">' + (i + 1) + '.</span> ' + esc(FERTILIZERS[i].name) + '</th>';
+   685→      for (let j = 0; j < n; j++) {
+   686→        if (j > i) {
+   687→          tbody += '<td class="empty-cell"></td>';
+   688→          continue;
+   689→        }
+   690→        const ai = FERTILIZERS[i].id;
+   691→        const aj = FERTILIZERS[j].id;
+   692→        const lev = inferLevel(ai, aj);
+   693→        const L = lev === 'C' ? 'c' : lev === 'R' ? 'r' : 'i';
+   694→        const sym = lev === 'C' ? 'C' : lev === 'R' ? 'R' : 'I';
+   695→        const tipTxt = FERTILIZERS[i].name + ' ↔ ' + FERTILIZERS[j].name + ' — ' +
+   696→          (sym === 'C' ? 'Compatible' : sym === 'R' ? 'Precaución' : 'Incompatible');
+   697→        tbody += '<td><button type="button" class="cell-btn l-' + L + '" data-i="' + i + '" data-j="' + j + '" data-a="' + ai + '" data-b="' + aj + '" aria-label="' + esc(tipTxt) + '" title="' + esc(tipTxt) + '">' + sym + '</button></td>';
+   698→      }
+   699→      tbody += '</tr>';
+   700→    }
+   701→    tbody += '</tbody>';
+   702→    table.innerHTML = thead + tbody;
+   703→
+   704→    table.querySelectorAll('thead th[data-j]').forEach(function (th) {
+   705→      th.addEventListener('click', function () {
+   706→        highlightFert(parseInt(th.getAttribute('data-j'), 10));
+   707→      });
+   708→    });
+   709→    table.querySelectorAll('tbody th.row-h[data-i]').forEach(function (th) {
+   710→      th.addEventListener('click', function () {
+   711→        highlightFert(parseInt(th.getAttribute('data-i'), 10));
+   712→      });
+   713→    });
+   714→    table.querySelectorAll('.cell-btn[data-a]').forEach(function (btn) {
+   715→      btn.addEventListener('click', function (e) {
+   716→        e.stopPropagation();
+   717→        clearHighlights();
+   718→        const i = parseInt(btn.getAttribute('data-i'), 10);
+   719→        const j = parseInt(btn.getAttribute('data-j'), 10);
+   720→        const a = btn.getAttribute('data-a');
+   721→        const b = btn.getAttribute('data-b');
+   722→        selectedPair = [i, j];
+   723→        selectedFert = null;
+   724→        btn.classList.add('selected');
+   725→        const lev = inferLevel(a, b);
+   726→        renderDetail(a, b, lev);
+   727→        for (let ii = 0; ii < n; ii++) {
+   728→          for (let jj = 0; jj <= ii; jj++) {
+   729→            const b2 = document.querySelector('.cell-btn[data-i="' + ii + '"][data-j="' + jj + '"]');
+   730→            if (!b2) continue;
+   731→            if (ii === i && jj === j) {
+   732→              b2.classList.add('selected', 'hl-both');
+   733→            } else if (ii === i) {
+   734→              b2.classList.add('hl-row');
+   735→            } else if (jj === j) {
+   736→              b2.classList.add('hl-col');
+   737→            }
+   738→          }
+   739→        }
+   740→        const rh = document.querySelector('.row-h[data-i="' + i + '"]');
+   741→        const ch = document.querySelector('thead th[data-j="' + j + '"]');
+   742→        if (rh) rh.classList.add('hl-fert');
+   743→        if (ch) ch.classList.add('hl-fert');
+   744→      });
+   745→    });
+   746→  }
+   747→
+   748→  function restoreCompatUi(d) {
+   749→    if (!d) return;
+   750→    if (d.pair && d.pair.length === 2) {
+   751→      var btn = document.querySelector('.cell-btn[data-i="' + d.pair[0] + '"][data-j="' + d.pair[1] + '"]');
+   752→      if (btn) btn.click();
+   753→    } else if (d.fert != null) highlightFert(d.fert);
+   754→  }
+   755→
+   756→  buildTable();
+   757→  var compatPersist = window.NpFreePersist.bind('fertilizer_compatibility', function () {
+   758→    return { fert: selectedFert, pair: selectedPair };
+   759→  }, restoreCompatUi);
+   760→  document.getElementById('compatTable').addEventListener('click', function () {
+   761→    compatPersist.saveNow();
+   762→  });
+   763→})();
+   764→  </script>
+   765→</body>
+   766→</html>
+   767→

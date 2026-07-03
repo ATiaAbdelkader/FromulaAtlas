@@ -1,0 +1,566 @@
+     1→     1→'use client';
+     2→     2→
+     3→     3→import { useState, useMemo } from 'react';
+     4→     4→import {
+     5→     5→  Dialog,
+     6→     6→  DialogContent,
+     7→     7→  DialogHeader,
+     8→     8→  DialogTitle,
+     9→     9→  DialogDescription,
+    10→    10→} from '@/components/ui/dialog';
+    11→    11→import { Input } from '@/components/ui/input';
+    12→    12→import { Badge } from '@/components/ui/badge';
+    13→    13→import { Button } from '@/components/ui/button';
+    14→    14→import {
+    15→    15→  Search, X, Sparkles, ArrowRight, Info, BookOpen, Lightbulb, HelpCircle,
+    16→    16→  Calculator, FlaskConical, Ruler, Droplets, Waves, Thermometer,
+    17→    17→  Tractor, Package, Atom, BarChart3, Grid3x3, Beaker, Globe2,
+    18→    18→  Sprout, Mountain, CloudRain, TableProperties, Network,
+    19→    19→} from 'lucide-react';
+    20→    20→
+    21→    21→import { ConversionCalculator } from './ConversionCalculator';
+    22→    22→import { NutrientUnitsConverter } from './NutrientUnitsConverter';
+    23→    23→import { MeasureUnitsConverter } from './MeasureUnitsConverter';
+    24→    24→import { HydroSolutionDesigner } from './HydroSolutionDesigner';
+    25→    25→import { WaterHardnessDiagnostic } from './WaterHardnessDiagnostic';
+    26→    26→import { VpdEstimator } from './VpdEstimator';
+    27→    27→import { AmendmentBalanceCec } from './AmendmentBalanceCec';
+    28→    28→import { GranularMixFormulation } from './GranularMixFormulation';
+    29→    29→import { FertilizerComposition } from './FertilizerComposition';
+    30→    30→import { NutrientDistributionByStage } from './NutrientDistributionByStage';
+    31→    31→import { PeriodicTableNutrients } from './PeriodicTableNutrients';
+    32→    32→import { FertilizerCompatibility } from './FertilizerCompatibility';
+    33→    33→import { NutrientInteractions } from './NutrientInteractions';
+    34→    34→import { MineralizableNEstimator } from './MineralizableNEstimator';
+    35→    35→import { SoilWaterTexture } from './SoilWaterTexture';
+    36→    36→import { IrrigationBalance } from './IrrigationBalance';
+    37→    37→import { SolubilitySaltIndex } from './SolubilitySaltIndex';
+    38→    38→import { FertilizerCarbonFootprint } from './FertilizerCarbonFootprint';
+    39→    39→
+    40→    40→type ToolCategory = 'Converters' | 'Solution & Water' | 'Fertilizers' | 'Soil & Irrigation' | 'Reference';
+    41→    41→
+    42→    42→interface ToolMeta {
+    43→    43→  id: string;
+    44→    44→  name: string;
+    45→    45→  description: string;
+    46→    46→  /** Short one-line benefit the user gains from this tool. */
+    47→    47→  benefit: string;
+    48→    48→  /** 2-3 short steps describing how to use the tool. */
+    49→    49→  howToUse: string[];
+    50→    50→  category: ToolCategory;
+    51→    51→  icon: React.ComponentType<{ className?: string }>;
+    52→    52→  Component: React.ComponentType;
+    53→    53→}
+    54→    54→
+    55→    55→const TOOLS: ToolMeta[] = [
+    56→    56→  // Converters
+    57→    57→  {
+    58→    58→    id: 'oxide-conversion',
+    59→    59→    name: 'Oxide ↔ Elemental Converter',
+    60→    60→    description: 'Bidirectional CaO↔Ca, K₂O↔K, P₂O₅↔P, etc. (30+ pairs).',
+    61→    61→    benefit: 'Avoids lab-vs-label confusion when comparing soil tests (oxide form) with fertilizer guarantees (elemental form).',
+    62→    62→    howToUse: [
+    63→    63→      'Type a value into either the oxide or elemental field.',
+    64→    64→      'The opposite field updates instantly with the converted value.',
+    65→    65→      'Use "Clear all" to reset every row at once.',
+    66→    66→    ],
+    67→    67→    category: 'Converters', icon: Calculator, Component: ConversionCalculator,
+    68→    68→  },
+    69→    69→  {
+    70→    70→    id: 'nutrient-units',
+    71→    71→    name: 'Nutrient Units Converter',
+    72→    72→    description: 'ppm ↔ mmol ↔ meq/L for 22 nutrients and ions.',
+    73→    73→    benefit: 'Reconciles hydroponic recipes (meq/L) with lab reports (ppm) and scientific literature (mmol/L) in one click.',
+    74→    74→    howToUse: [
+    75→    75→      'Pick any nutrient row.',
+    76→    76→      'Type into ppm, mmol (or µmol for micros), or meq/L — the other two update live.',
+    77→    77→      'Equivalent weights and valences are pre-loaded, so conversions are exact.',
+    78→    78→    ],
+    79→    79→    category: 'Converters', icon: FlaskConical, Component: NutrientUnitsConverter,
+    80→    80→  },
+    81→    81→  {
+    82→    82→    id: 'measure-units',
+    83→    83→    name: 'Physical Units Converter',
+    84→    84→    description: 'Length, area, volume, mass, temperature, pressure, concentration, ionic.',
+    85→    85→    benefit: 'A single converter for the eight physical magnitudes agronomists juggle daily — no more tab-hopping between unit sites.',
+    86→    86→    howToUse: [
+    87→    87→      'Choose a category (length, area, temperature, ionic, etc.).',
+    88→    88→      'Enter the value, pick the source and target units.',
+    89→    89→      'Result appears instantly; soil↔solution ionic mismatches are flagged.',
+    90→    90→    ],
+    91→    91→    category: 'Converters', icon: Ruler, Component: MeasureUnitsConverter,
+    92→    92→  },
+    93→    93→
+    94→    94→  // Solution & Water
+    95→    95→  {
+    96→    96→    id: 'hydro-solution',
+    97→    97→    name: 'Hydroponic Solution Designer',
+    98→    98→    description: 'Design a nutrient solution via meq/L, ppm, CE, and an anion ternary diagram.',
+    99→    99→    benefit: 'Visualises the ionic balance of a hydroponic formula against the Steiner equilibrium zone — spot K/Ca/Mg imbalance before mixing.',
+   100→   100→    howToUse: [
+   101→   101→      'Edit meq/L for the 8 ions (or use a preset like Steiner / Hoagland).',
+   102→   102→      'CE and ppm update automatically; the ternary diagram shows your anion split.',
+   103→   103→      'Compare your % distribution against the green equilibrium polygon.',
+   104→   104→    ],
+   105→   105→    category: 'Solution & Water', icon: Droplets, Component: HydroSolutionDesigner,
+   106→   106→  },
+   107→   107→  {
+   108→   108→    id: 'water-hardness',
+   109→   109→    name: 'Water Hardness Diagnostic',
+   110→   110→    description: 'Hardness units, Ca+Mg hardness, and acid dose for HCO₃⁻/CO₃²⁻ neutralization.',
+   111→   111→    benefit: 'Tells you exactly how much nitric/sulfuric/phosphoric acid to add per m³ to drop HCO₃⁻ to a safe residual — protecting drip emitters and pH stability.',
+   112→   112→    howToUse: [
+   113→   113→      'Section 1: type any hardness unit; all 5 units + classification update.',
+   114→   114→      'Section 2: enter lab Ca and Mg to compute total hardness as CaCO₃.',
+   115→   115→      'Section 3: enter HCO₃⁻/CO₃²⁻, residual target, water volume, and acid choice — dose appears.',
+   116→   116→    ],
+   117→   117→    category: 'Solution & Water', icon: Waves, Component: WaterHardnessDiagnostic,
+   118→   118→  },
+   119→   119→  {
+   120→   120→    id: 'vpd',
+   121→   121→    name: 'VPD Estimator',
+   122→   122→    description: 'Vapor Pressure Deficit (kPa) and Humidity Deficit (g/m³) from temperature & humidity.',
+   123→   123→    benefit: 'Quantifies the real "thirst" of the air — the number that drives transpiration, Ca transport, and stress in greenhouses.',
+   124→   124→    howToUse: [
+   125→   125→      'Enter air temperature and relative humidity.',
+   126→   126→      'Pick leaf-temperature mode (you measured it) or solar-radiation mode (estimated).',
+   127→   127→      'Read VPD (kPa) + humidity deficit (g/m³) + status (Low / Optimal / High).',
+   128→   128→    ],
+   129→   129→    category: 'Solution & Water', icon: Thermometer, Component: VpdEstimator,
+   130→   130→  },
+   131→   131→
+   132→   132→  // Fertilizers
+   133→   133→  {
+   134→   134→    id: 'amendment-balance',
+   135→   135→    name: 'Amendment Balance by CEC',
+   136→   136→    description: 'Soil cation analysis → amendment doses (gypsum, lime, dolomite, SOP, MgSO₄).',
+   137→   137→    benefit: 'Translates a soil-test cation profile into kg/ha of gypsum/lime/dolomite/SOP — closes the gap between lab report and field application.',
+   138→   138→    howToUse: [
+   139→   139→      'Enter the 6 exchangeable cations (K, Ca, Mg, H, Na, Al) in meq/100g.',
+   140→   140→      'Set bulk density, depth, pH, and root-reach %.',
+   141→   141→      'Read the recommended amendment strategy with doses already adjusted by root-reach factor.',
+   142→   142→    ],
+   143→   143→    category: 'Fertilizers', icon: Tractor, Component: AmendmentBalanceCec,
+   144→   144→  },
+   145→   145→  {
+   146→   146→    id: 'granular-mix',
+   147→   147→    name: 'Granular Mix Formulation',
+   148→   148→    description: 'Build a granular blend from 24 fertilizers → NPK analysis and kg/ha.',
+   149→   149→    benefit: 'Previews the NPK + secondary + micro analysis of a custom blend before you commit tonnes — and computes kg/ha of every nutrient at your application rate.',
+   150→   150→    howToUse: [
+   151→   151→      'Add fertilizers from the 24-product library and enter each one\'s % by tonne.',
+   152→   152→      'Set the blend dose (kg/ha).',
+   153→   153→      'Read the live blend analysis, NPK ratio, and per-nutrient kg/ha.',
+   154→   154→    ],
+   155→   155→    category: 'Fertilizers', icon: Package, Component: GranularMixFormulation,
+   156→   156→  },
+   157→   157→  {
+   158→   158→    id: 'fertilizer-composition',
+   159→   159→    name: 'Fertilizer Composition (%)',
+   160→   160→    description: 'Parse a chemical formula → elemental %, oxide equivalents, MW, N partition.',
+   161→   161→    benefit: 'Type any chemical formula (e.g. Ca(NO₃)₂·4H₂O) and instantly see elemental %, oxide equivalents, N-NO₃/N-NH₄ split, and molecular weight — no lookup tables.',
+   162→   162→    howToUse: [
+   163→   163→      'Type a formula (supports hydrates ·, double salts +, parentheses, unicode subscripts).',
+   164→   164→      'Click Calculate (or press Enter).',
+   165→   165→      'Read elemental %, oxide %, NPK tag, and MW; click any example chip to try one.',
+   166→   166→    ],
+   167→   167→    category: 'Fertilizers', icon: Atom, Component: FertilizerComposition,
+   168→   168→  },
+   169→   169→  {
+   170→   170→    id: 'nutrient-distribution',
+   171→   171→    name: 'Nutrient Distribution by Stage',
+   172→   172→    description: 'Distribute nutrient extraction (kg/ha) across phenological stages with chart.',
+   173→   173→    benefit: 'Matches supply to crop demand week-by-week — prevents both mid-cycle deficiency and end-of-season luxury consumption.',
+   174→   174→    howToUse: [
+   175→   175→      'Set total seasonal extraction (kg/ha) per nutrient.',
+   176→   176→      'Adjust the % split across phenological stages (or use defaults).',
+   177→   177→      'Read kg/ha per stage per nutrient on the chart and table.',
+   178→   178→    ],
+   179→   179→    category: 'Fertilizers', icon: BarChart3, Component: NutrientDistributionByStage,
+   180→   180→  },
+   181→   181→  {
+   182→   182→    id: 'fertilizer-compatibility',
+   183→   183→    name: 'Fertilizer Compatibility Matrix',
+   184→   184→    description: '32×32 lower-triangular matrix of compatibility (C/R/I) for fertigation.',
+   185→   185→    benefit: 'Prevents the #1 fertigation mistake — co-dissolving Ca²⁺ with sulfates or phosphates — by showing exactly which pairs precipitate before you mix the tank.',
+   186→   186→    howToUse: [
+   187→   187→      'Filter the matrix by fertilizer name if needed.',
+   188→   188→      'Click any cell to see the chemistry explanation and recommended action.',
+   189→   189→      'Green C = compatible · Yellow R = caution · Red I = never in the same stock tank.',
+   190→   190→    ],
+   191→   191→    category: 'Fertilizers', icon: Grid3x3, Component: FertilizerCompatibility,
+   192→   192→  },
+   193→   193→  {
+   194→   194→    id: 'solubility-salt-index',
+   195→   195→    name: 'Solubility & Salt Index',
+   196→   196→    description: 'Sortable, filterable table of solubility (g/L) and salt index (NaNO₃=100).',
+   197→   197→    benefit: 'Tells you which fertilizers will dissolve in cold stock tanks and which will burn roots — solubility for tank design, salt index for placement safety.',
+   198→   198→    howToUse: [
+   199→   199→      'Use the search box to filter by name or formula.',
+   200→   200→      'Click any column header to sort (default: salt index descending).',
+   201→   201→      'Coloured dots classify solubility as High / Medium / Low at a glance.',
+   202→   202→    ],
+   203→   203→    category: 'Fertilizers', icon: Beaker, Component: SolubilitySaltIndex,
+   204→   204→  },
+   205→   205→  {
+   206→   206→    id: 'fertilizer-carbon',
+   207→   207→    name: 'Fertilizer Carbon Footprint',
+   208→   208→    description: 'Compare two fertilization programs by manufacturing + transport + N₂O emissions.',
+   209→   209→    benefit: 'Quantifies the kg CO₂e/ha difference between Program A and Program B — turns "sustainable" from a slogan into a number you can defend.',
+   210→   210→    howToUse: [
+   211→   211→      'In each scenario, add up to 5 fertilizers with rate (kg/ha) and transport legs.',
+   212→   212→      'Read per-row emissions split into manufacturing, transport, and field N₂O.',
+   213→   213→      'Compare totals — the bar shows which program is lower and by how many kg CO₂e/ha.',
+   214→   214→    ],
+   215→   215→    category: 'Fertilizers', icon: Globe2, Component: FertilizerCarbonFootprint,
+   216→   216→  },
+   217→   217→
+   218→   218→  // Soil & Irrigation
+   219→   219→  {
+   220→   220→    id: 'n-mineralizable',
+   221→   221→    name: 'Mineralizable N Estimation',
+   222→   222→    description: 'Annual N release (kg N/ha/yr) from soil organic matter with T_min presets.',
+   223→   223→    benefit: 'Estimates how much "free" nitrogen your soil will release this season — so you can subtract it from the fertilizer budget and avoid over-application.',
+   224→   224→    howToUse: [
+   225→   225→      'Enter organic matter %, bulk density, depth, and root-reach %.',
+   226→   226→      'Pick a mineralization rate T_min preset (1 % conservative · 2 % medium · 3 % high).',
+   227→   227→      'Read annual mineralizable N in kg/ha/yr — orientative, validate in field.',
+   228→   228→    ],
+   229→   229→    category: 'Soil & Irrigation', icon: Sprout, Component: MineralizableNEstimator,
+   230→   230→  },
+   231→   231→  {
+   232→   232→    id: 'soil-water-texture',
+   233→   233→    name: 'Soil Water & Texture (USDA)',
+   234→   234→    description: 'USDA texture triangle + available water and irrigation-to-CC calculator.',
+   235→   235→    benefit: 'Classifies your soil texture from clay/silt/sand % and computes how much water is available between permanent wilting point and field capacity.',
+   236→   236→    howToUse: [
+   237→   237→      'Enter any two of clay / silt / sand % — the third auto-balances.',
+   238→   238→      'The USDA triangle highlights your texture class.',
+   239→   239→      'Set CC, PMP, depth, bulk density, area, and root efficiency to get available water (m³) and irrigation sheet to CC (mm).',
+   240→   240→    ],
+   241→   241→    category: 'Soil & Irrigation', icon: Mountain, Component: SoilWaterTexture,
+   242→   242→  },
+   243→   243→  {
+   244→   244→    id: 'irrigation-balance',
+   245→   245→    name: 'Irrigation Sheet & Water Balance',
+   246→   246→    description: 'FAO-56 ETc = Kc × ETo, deficit/surplus, m³ conversions for 1 or 7 day periods.',
+   247→   247→    benefit: 'Replaces guesswork with FAO-56 — knows exactly how much water your crop used (ETc) and whether your irrigation + rain covered it.',
+   248→   248→    howToUse: [
+   249→   249→      'Enter ETo (mm) and Kc for your crop and stage; toggle 1-day or 7-day period.',
+   250→   250→      'Enter rain (mm) and applied irrigation (m³) on the irrigated area.',
+   251→   251→      'Read ETc, irrigation mm, balance (deficit/surplus), and total volume needed (m³).',
+   252→   252→    ],
+   253→   253→    category: 'Soil & Irrigation', icon: CloudRain, Component: IrrigationBalance,
+   254→   254→  },
+   255→   255→
+   256→   256→  // Reference
+   257→   257→  {
+   258→   258→    id: 'periodic-table',
+   259→   259→    name: 'Periodic Table of Plant Nutrients',
+   260→   260→    description: 'Interactive 118-element table with agronomic roles + molecular weight calc.',
+   261→   261→    benefit: 'One screen for "which elements are essential / beneficial / structural" plus a molecular-weight calculator — useful for teaching and for quick MW lookups.',
+   262→   262→    howToUse: [
+   263→   263→      'Click any element to see atomic weight, valence, electronegativity, and agronomic role.',
+   264→   264→      'Switch to the Mol-weight tab and type a formula (e.g. KNO₃) to compute MW and elemental %.',
+   265→   265→      'Use the "Use in molecular calculator" button to push an element into the formula.',
+   266→   266→    ],
+   267→   267→    category: 'Reference', icon: TableProperties, Component: PeriodicTableNutrients,
+   268→   268→  },
+   269→   269→  {
+   270→   270→    id: 'nutrient-interactions',
+   271→   271→    name: 'Nutrient Interactions & Mobility',
+   272→   272→    description: 'Mulder diagram, root-arrival mechanisms, mobility, and pH availability curves.',
+   273→   273→    benefit: 'A 4-in-1 reference that explains why high P locks up Zn, why K⁺ competes with Mg²⁺, and how pH moves each nutrient\'s availability — supports diagnosis, not just data.',
+   274→   274→    howToUse: [
+   275→   275→      'Mulder tab: click any ion to highlight its antagonists (red) and synergists (blue).',
+   276→   276→      'Root-arrival tab: click a row to see how each nutrient reaches the root.',
+   277→   277→      'Mobility tab: click an element pill for symptom location + functions + tip.',
+   278→   278→      'pH tab: click any nutrient to read why availability changes with pH.',
+   279→   279→    ],
+   280→   280→    category: 'Reference', icon: Network, Component: NutrientInteractions,
+   281→   281→  },
+   282→   282→];
+   283→   283→
+   284→   284→const CATEGORIES: ToolCategory[] = ['Converters', 'Solution & Water', 'Fertilizers', 'Soil & Irrigation', 'Reference'];
+   285→   285→
+   286→   286→const CATEGORY_COLORS: Record<ToolCategory, string> = {
+   287→   287→  'Converters':         'bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-900',
+   288→   288→  'Solution & Water':   'bg-cyan-100 dark:bg-cyan-950/40 text-cyan-700 dark:text-cyan-300 border-cyan-300 dark:border-cyan-900',
+   289→   289→  'Fertilizers':        'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-900',
+   290→   290→  'Soil & Irrigation':  'bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-900',
+   291→   291→  'Reference':          'bg-violet-100 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 border-violet-300 dark:border-violet-900',
+   292→   292→};
+   293→   293→
+   294→   294→const CATEGORY_DOT_COLORS: Record<ToolCategory, string> = {
+   295→   295→  'Converters':         '#3b82f6',
+   296→   296→  'Solution & Water':   '#0891b2',
+   297→   297→  'Fertilizers':        '#16a34a',
+   298→   298→  'Soil & Irrigation':  '#d97706',
+   299→   299→  'Reference':          '#7c3aed',
+   300→   300→};
+   301→   301→
+   302→   302→export function FreeToolsSection() {
+   303→   303→  const [search, setSearch] = useState('');
+   304→   304→  const [activeCategory, setActiveCategory] = useState<ToolCategory | 'All'>('All');
+   305→   305→  const [openTool, setOpenTool] = useState<ToolMeta | null>(null);
+   306→   306→  const [showHints, setShowHints] = useState(false);
+   307→   307→
+   308→   308→  const filtered = useMemo(() => {
+   309→   309→    const q = search.toLowerCase().trim();
+   310→   310→    return TOOLS.filter(t => {
+   311→   311→      if (activeCategory !== 'All' && t.category !== activeCategory) return false;
+   312→   312→      if (!q) return true;
+   313→   313→      return (t.name + ' ' + t.description + ' ' + t.benefit + ' ' + t.category).toLowerCase().includes(q);
+   314→   314→    });
+   315→   315→  }, [search, activeCategory]);
+   316→   316→
+   317→   317→  // Group filtered tools by category for the landscape grid
+   318→   318→  const grouped = useMemo(() => {
+   319→   319→    return CATEGORIES.map(c => ({
+   320→   320→      category: c,
+   321→   321→      tools: filtered.filter(t => t.category === c),
+   322→   322→    })).filter(g => g.tools.length > 0);
+   323→   323→  }, [filtered]);
+   324→   324→
+   325→   325→  return (
+   326→   326→    <section className="space-y-5">
+   327→   327→      {/* Hero header */}
+   328→   328→      <div className="rounded-xl p-5 sm:p-6 bg-gradient-to-br from-emerald-700 via-green-700 to-teal-800 text-white">
+   329→   329→        <div className="flex items-center gap-2 mb-2 text-emerald-100 text-xs font-medium uppercase tracking-wide">
+   330→   330→          <Sparkles className="h-3.5 w-3.5" /> 18 Free Agronomic Tools
+   331→   331→        </div>
+   332→   332→        <h2 className="text-xl sm:text-2xl font-bold leading-tight mb-1">NutriPlant PRO Free Tools</h2>
+   333→   333→        <p className="text-sm text-emerald-100/90 max-w-2xl">
+   334→   334→          A native reimplementation of NutriPlant PRO's public free-tools collection —
+   335→   335→          converters, solution & water diagnostics, fertilizer calculators, soil & irrigation
+   336→   336→          tools, and quick-reference matrices. All calculations run client-side; nothing is sent to a server.
+   337→   337→        </p>
+   338→   338→        <div className="flex flex-wrap gap-3 mt-3 text-xs">
+   339→   339→          {CATEGORIES.map(c => {
+   340→   340→            const count = TOOLS.filter(t => t.category === c).length;
+   341→   341→            return (
+   342→   342→              <div key={c} className="bg-white/10 backdrop-blur rounded px-2 py-1 border border-white/20 flex items-center gap-1.5">
+   343→   343→                <span className="w-1.5 h-1.5 rounded-full" style={{ background: CATEGORY_DOT_COLORS[c] }} />
+   344→   344→                <span className="text-emerald-100">{c}</span> <span className="font-bold ml-0.5">{count}</span>
+   345→   345→              </div>
+   346→   346→            );
+   347→   347→          })}
+   348→   348→        </div>
+   349→   349→      </div>
+   350→   350→
+   351→   351→      {/* Introduction panel — What / How / Why */}
+   352→   352→      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+   353→   353→        <IntroCard
+   354→   354→          icon={Info}
+   355→   355→          color="#0891b2"
+   356→   356→          title="What these tools are"
+   357→   357→          body="A curated set of 18 calculators and reference tables covering the day-to-day workflow of agronomists, growers, and consultants: unit conversions, water & nutrient solution diagnostics, fertilizer formulation, soil & irrigation planning, and crop-nutrition reference data."
+   358→   358→        />
+   359→   359→        <IntroCard
+   360→   360→          icon={BookOpen}
+   361→   361→          color="#16a34a"
+   362→   362→          title="How to use them"
+   363→   363→          body="Browse the cards below, filter by category, or search by name. Click any card to open the tool in a dialog — enter your inputs and the result updates live. Each tool's dialog also shows a short benefit and step-by-step usage hint."
+   364→   364→        />
+   365→   365→        <IntroCard
+   366→   366→          icon={Lightbulb}
+   367→   367→          color="#d97706"
+   368→   368→          title="Why use them"
+   369→   369→          body="They replace guesswork with calculation: precise acid doses, exact NPK blends, FAO-56 irrigation sheets, CEC-based amendment plans, and fertilization carbon footprints — turning lab reports and field observations into defensible decisions."
+   370→   370→        />
+   371→   371→      </div>
+   372→   372→
+   373→   373→      {/* Search & filter */}
+   374→   374→      <div className="sticky top-[120px] z-20 bg-background/95 backdrop-blur rounded-lg border border-border p-3">
+   375→   375→        <div className="flex flex-wrap items-center gap-2">
+   376→   376→          <div className="relative flex-1 min-w-[200px]">
+   377→   377→            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+   378→   378→            <Input
+   379→   379→              value={search}
+   380→   380→              onChange={e => setSearch(e.target.value)}
+   381→   381→              placeholder="Search tools by name, description, or benefit..."
+   382→   382→              className="pl-9 pr-8 h-10"
+   383→   383→            />
+   384→   384→            {search && (
+   385→   385→              <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+   386→   386→                <X className="h-4 w-4" />
+   387→   387→              </button>
+   388→   388→            )}
+   389→   389→          </div>
+   390→   390→          <div className="flex flex-wrap gap-1">
+   391→   391→            <CategoryChip active={activeCategory === 'All'} onClick={() => setActiveCategory('All')} label="All" count={TOOLS.length} />
+   392→   392→            {CATEGORIES.map(c => (
+   393→   393→              <CategoryChip
+   394→   394→                key={c}
+   395→   395→                active={activeCategory === c}
+   396→   396→                onClick={() => setActiveCategory(c)}
+   397→   397→                label={c}
+   398→   398→                count={TOOLS.filter(t => t.category === c).length}
+   399→   399→              />
+   400→   400→            ))}
+   401→   401→          </div>
+   402→   402→        </div>
+   403→   403→      </div>
+   404→   404→
+   405→   405→      {/* Tools grouped by category — landscape cards */}
+   406→   406→      <div className="space-y-6">
+   407→   407→        {grouped.map(group => (
+   408→   408→          <div key={group.category} className="space-y-3">
+   409→   409→            <div className="flex items-center gap-2">
+   410→   410→              <div className="w-2 h-6 rounded-sm" style={{ background: CATEGORY_DOT_COLORS[group.category] }} />
+   411→   411→              <h3 className="text-base font-bold tracking-tight">{group.category}</h3>
+   412→   412→              <Badge variant="secondary" className="text-[10px] font-mono">{group.tools.length}</Badge>
+   413→   413→            </div>
+   414→   414→            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+   415→   415→              {group.tools.map(tool => (
+   416→   416→                <LandscapeToolCard key={tool.id} tool={tool} onOpen={() => setOpenTool(tool)} />
+   417→   417→              ))}
+   418→   418→            </div>
+   419→   419→          </div>
+   420→   420→        ))}
+   421→   421→      </div>
+   422→   422→
+   423→   423→      {filtered.length === 0 && (
+   424→   424→        <div className="text-center py-12">
+   425→   425→          <div className="rounded-full bg-muted p-4 inline-flex mb-3">
+   426→   426→            <Search className="h-8 w-8 text-muted-foreground" />
+   427→   427→          </div>
+   428→   428→          <h3 className="text-base font-semibold mb-1">No tools match</h3>
+   429→   429→          <p className="text-sm text-muted-foreground">Try a different search or category.</p>
+   430→   430→        </div>
+   431→   431→      )}
+   432→   432→
+   433→   433→      {/* Tool dialog — near-fullscreen like NutriPlant PRO: header + full-height tool area */}
+   434→   434→      <Dialog open={!!openTool} onOpenChange={open => !open && setOpenTool(null)}>
+   435→   435→        <DialogContent className="!max-w-[1600px] w-[98vw] !max-h-[96vh] h-[96vh] overflow-hidden p-0 gap-0 flex flex-col">
+   436→   436→          {/* Compact header bar — title + collapsible hints toggle */}
+   437→   437→          <DialogHeader className="px-5 py-3 border-b border-border flex-shrink-0">
+   438→   438→            <div className="flex items-center justify-between gap-3">
+   439→   439→              <DialogTitle className="flex items-center gap-2 text-base">
+   440→   440→                {openTool && (
+   441→   441→                  <span
+   442→   442→                    className="flex items-center justify-center h-8 w-8 rounded-lg"
+   443→   443→                    style={{ background: `${CATEGORY_DOT_COLORS[openTool.category]}20`, color: CATEGORY_DOT_COLORS[openTool.category] }}
+   444→   444→                  >
+   445→   445→                    <openTool.icon className="h-4 w-4" />
+   446→   446→                  </span>
+   447→   447→                )}
+   448→   448→                {openTool?.name}
+   449→   449→                {openTool && (
+   450→   450→                  <Badge variant="outline" className={`text-[10px] ml-1 ${CATEGORY_COLORS[openTool.category]}`}>
+   451→   451→                    {openTool.category}
+   452→   452→                  </Badge>
+   453→   453→                )}
+   454→   454→              </DialogTitle>
+   455→   455→              <div className="flex items-center gap-2">
+   456→   456→                <Button
+   457→   457→                  size="sm"
+   458→   458→                  variant="ghost"
+   459→   459→                  className="h-8 gap-1.5 text-xs"
+   460→   460→                  onClick={() => setShowHints(v => !v)}
+   461→   461→                >
+   462→   462→                  <HelpCircle className="h-3.5 w-3.5" />
+   463→   463→                  {showHints ? 'Hide guide' : 'Show guide'}
+   464→   464→                </Button>
+   465→   465→              </div>
+   466→   466→            </div>
+   467→   467→            <DialogDescription className="text-xs mt-1">{openTool?.description}</DialogDescription>
+   468→   468→
+   469→   469→            {/* Collapsible benefit + how-to bar — inline, doesn't steal horizontal space from the tool */}
+   470→   470→            {openTool && showHints && (
+   471→   471→              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
+   472→   472→                <div className="rounded-md px-3 py-2 border border-emerald-200 dark:border-emerald-900 bg-emerald-50/60 dark:bg-emerald-950/20">
+   473→   473→                  <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-emerald-700 dark:text-emerald-300 font-semibold mb-0.5">
+   474→   474→                    <Lightbulb className="h-3 w-3" /> Benefit
+   475→   475→                  </div>
+   476→   476→                  <p className="text-xs leading-snug text-foreground">{openTool.benefit}</p>
+   477→   477→                </div>
+   478→   478→                <div className="rounded-md px-3 py-2 border border-blue-200 dark:border-blue-900 bg-blue-50/60 dark:bg-blue-950/20">
+   479→   479→                  <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-blue-700 dark:text-blue-300 font-semibold mb-0.5">
+   480→   480→                    <HelpCircle className="h-3 w-3" /> How to use
+   481→   481→                  </div>
+   482→   482→                  <ol className="text-xs leading-snug text-foreground list-decimal pl-4 space-y-0.5">
+   483→   483→                    {openTool.howToUse.map((step, i) => <li key={i}>{step}</li>)}
+   484→   484→                  </ol>
+   485→   485→                </div>
+   486→   486→              </div>
+   487→   487→            )}
+   488→   488→          </DialogHeader>
+   489→   489→
+   490→   490→          {/* Full-height tool area — gets 100% of remaining viewport height */}
+   491→   491→          <div className="flex-1 min-h-0 overflow-y-auto p-5">
+   492→   492→            {openTool && <openTool.Component />}
+   493→   493→          </div>
+   494→   494→        </DialogContent>
+   495→   495→      </Dialog>
+   496→   496→    </section>
+   497→   497→  );
+   498→   498→}
+   499→   499→
+   500→   500→/** Landscape (horizontal) tool card — icon on the left, content on the right, action arrow on the far right. */
+   501→   501→function LandscapeToolCard({ tool, onOpen }: { tool: ToolMeta; onOpen: () => void }) {
+   502→   502→  return (
+   503→   503→    <button
+   504→   504→      onClick={onOpen}
+   505→   505→      className="group text-left rounded-xl border border-border bg-card p-4 sm:p-5 hover:border-emerald-400 hover:shadow-md transition-all flex gap-4 items-start"
+   506→   506→    >
+   507→   507→      {/* Icon block — colored by category */}
+   508→   508→      <div
+   509→   509→        className="flex-shrink-0 flex items-center justify-center h-14 w-14 rounded-lg transition-all group-hover:scale-105"
+   510→   510→        style={{ background: `${CATEGORY_DOT_COLORS[tool.category]}20`, color: CATEGORY_DOT_COLORS[tool.category] }}
+   511→   511→      >
+   512→   512→        <tool.icon className="h-7 w-7" />
+   513→   513→      </div>
+   514→   514→
+   515→   515→      {/* Content */}
+   516→   516→      <div className="flex-1 min-w-0 space-y-1.5">
+   517→   517→        <div className="flex items-center gap-2 flex-wrap">
+   518→   518→          <h4 className="text-base font-semibold leading-tight group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
+   519→   519→            {tool.name}
+   520→   520→          </h4>
+   521→   521→          <Badge variant="outline" className={`text-[10px] ${CATEGORY_COLORS[tool.category]}`}>
+   522→   522→            {tool.category}
+   523→   523→          </Badge>
+   524→   524→        </div>
+   525→   525→        <p className="text-sm text-muted-foreground leading-relaxed">
+   526→   526→          {tool.description}
+   527→   527→        </p>
+   528→   528→        <p className="text-xs text-foreground/80 leading-relaxed flex gap-1.5">
+   529→   529→          <Lightbulb className="h-3.5 w-3.5 text-amber-500 flex-shrink-0 mt-0.5" />
+   530→   530→          <span><span className="font-medium text-amber-700 dark:text-amber-400">Benefit:</span> {tool.benefit}</span>
+   531→   531→        </p>
+   532→   532→      </div>
+   533→   533→
+   534→   534→      {/* Action arrow */}
+   535→   535→      <div className="flex-shrink-0 self-center hidden sm:flex items-center justify-center h-8 w-8 rounded-full border border-border text-muted-foreground group-hover:border-emerald-500 group-hover:bg-emerald-500 group-hover:text-white transition-all">
+   536→   536→        <ArrowRight className="h-4 w-4" />
+   537→   537→      </div>
+   538→   538→    </button>
+   539→   539→  );
+   540→   540→}
+   541→   541→
+   542→   542→function IntroCard({ icon: Icon, color, title, body }: { icon: typeof Info; color: string; title: string; body: string }) {
+   543→   543→  return (
+   544→   544→    <div className="rounded-lg border border-border bg-card p-4">
+   545→   545→      <div className="flex items-center gap-2 mb-2">
+   546→   546→        <div className="flex items-center justify-center h-8 w-8 rounded-lg" style={{ background: color + '20', color }}>
+   547→   547→          <Icon className="h-4 w-4" />
+   548→   548→        </div>
+   549→   549→        <h3 className="text-sm font-semibold" style={{ color }}>{title}</h3>
+   550→   550→      </div>
+   551→   551→      <p className="text-xs text-muted-foreground leading-relaxed">{body}</p>
+   552→   552→    </div>
+   553→   553→  );
+   554→   554→}
+   555→   555→
+   556→   556→function CategoryChip({ active, onClick, label, count }: { active: boolean; onClick: () => void; label: string; count: number }) {
+   557→   557→  return (
+   558→   558→    <button
+   559→   559→      onClick={onClick}
+   560→   560→      className={`text-xs px-3 py-1.5 rounded-md border transition-all ${active ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-background border-border text-muted-foreground hover:border-emerald-300 hover:text-foreground'}`}
+   561→   561→    >
+   562→   562→      {label} <span className="ml-1 opacity-70 font-mono">({count})</span>
+   563→   563→    </button>
+   564→   564→  );
+   565→   565→}
+   566→   566→

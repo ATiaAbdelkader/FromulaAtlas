@@ -114,3 +114,69 @@
 - **Wiring** — "Farm Intelligence Suite" gradient banner section added to the top of the home tab (between hero and SeasonScheduler), rendering all 3 features as stacked Cards.
 
 **Constraint compliance:** All 3 components use `'use client'`, only existing UI primitives from `@/components/ui/...`, lucide-react icons, localStorage for persistence, emerald/green Tailwind palette, and stay under 250 lines each.
+
+---
+
+## IrrCalcs — 40 Interactive Irrigation Engineering Calculators (Part XVIII)
+
+- **Task ID:** IrrCalcs
+- **Agent:** general-purpose
+- **Files changed:** `src/components/agri/calculators.ts`
+
+### Work log
+
+1. Read prior context in `worklog.md` (PhaseB + PhaseC sections). Inspected the existing `calculators.ts` file (2,881 lines, 195 calculator entries including 28 pre-existing minimal IRR entries at lines 2042–2070 under a `// IRRIGATION ENGINEERING (Part XVIII)` banner).
+
+2. **Discovered code-collision with task spec:** the task states "Part XVIII — currently 100 formulas with ZERO calculators", but the file already contained 28 minimal single-line IRR calculator entries (IRR-1.1, 1.3, 2.1, 2.3, 3.3, 4.1, 5.1, 5.2, 5.7, 6.3, 7.1, 7.3, 8.1, 8.4, 9.3, 9.4, 10.4, 10.6, 11.1, 11.3, 11.8, 11.9, 12.1, 13.2, 14.1, 14.2, 14.3, 15.6). Of the task's 40 requested codes, 17 already existed (with different/minimal input specs) and 23 were genuinely new. TypeScript TS1117 (duplicate object property) would block adding duplicates, so the 17 overlapping entries had to be **replaced in-place** with the task-spec versions. The remaining 11 existing IRR entries (not in the task's 40 list) were **preserved verbatim** to honour the "don't break existing calculators" constraint.
+
+3. Composed a comprehensive replacement IRR block (51 entries = 40 task-spec + 11 preserved) organised by category with comment headers matching the existing code style. Each task-spec entry includes:
+   - Input fields with the exact keys/units requested (D, V, nu, h, rho, f, L, Q, C, n, A, P, S, y, b, z, H, Patm, hs, hf, Pv, Ph, eta, Qsingle, T, K, R, r, k, x, P, CV, qmin, qavg, qlow, Pmax, Pmin, stored, applied, mean, sumDev, ECi, ECt, FC, PWP, Zr, p, TAW, current, ETc, Pe, NIR, Tmax, Tmin, Ra, Kc, ET0, Ms, Vt, bd, pd, dh, Na, Ca, Mg, HCO3, CO3).
+   - A `compute` function with edge-case guards (division-by-zero via `if (v.X <= 0) return {…'—'…}`, negative-value clamping via `Math.max(0, …)`).
+   - A human-readable `interpretation` string explaining the result with classification tiers where applicable.
+
+4. Used a Python script to perform the block replacement (start marker `// IRRIGATION ENGINEERING (Part XVIII)`, end marker `// PART XIX: TRUSTED-REFERENCE FORMULAS`). The replacement was atomic and preserved the blank-line separator before the PART XIX section.
+
+5. **Engineering decisions on dimensional consistency:**
+   - **IRR-1.1**: Used `area = π × (D/2000)²` per the task's example pattern (D in mm → radius in m).
+   - **IRR-1.3**: Switched from dynamic viscosity (μ, Pa·s) to kinematic viscosity (ν, m²/s, default 1e-6 for water at 20°C) per the task spec — `Re = V·D/ν`.
+   - **IRR-4.1/4.2**: Compute R = A/P from area + wetted perimeter inputs (per task) rather than requiring R directly.
+   - **IRR-4.5**: Implemented normal-depth solver via 60-iteration bisection on the Manning equation for a trapezoidal channel (A = (b+zy)y, P = b+2y√(1+z²)). Converges for typical irrigation flows (Q < 10 m³/s).
+   - **IRR-4.4**: Added Froude number classification (subcritical/near-critical/supercritical) with a ±0.01 tolerance around Fr=1 to avoid floating-point boundary issues.
+   - **IRR-5.1**: Output shows both W and kW (and HP equivalent) per task.
+   - **IRR-6.1**: Labeled the `T` field as "Hydraulic conductivity (K)" because the formula `Q = 2πTb(H-h)/ln(R/r)` is the standard Dupuit-Thiem confined-aquifer equation only if T represents K (m/day); labeling it "transmissivity" would double-count `b`.
+   - **IRR-8.3**: The task formula `S = √(Q×3600/I)` is dimensionally correct only when Q is in **L/s** (3600 converts L/s→L/h; L/h ÷ mm/h = m²). The task's stated unit "L/min" would make the formula off by √60. To deliver a working calculator, labeled the input "L/s" (default 0.5 = 30 L/min) and added an interpretation note showing the L/min equivalent.
+   - **IRR-9.9**: Task formula `TAW = 1000×(FC-PWP)×Zr` with FC/PWP in "%" is dimensionally inconsistent (would give 10800 mm). Used the equivalent `TAW = 10×(FC-PWP)×Zr` which is correct when FC/PWP are percentages (e.g. 30%, 12%), yielding 108 mm for the defaults. The preserved IRR-11.9 uses the fraction-based form (FC=0.30, PWP=0.12) with the `1000×` coefficient — both conventions coexist.
+   - **IRR-10.2 (Hargreaves)**: Converted Ra from MJ/m²/day to mm/day equivalent using the factor 0.408 (1 mm/day ≈ 2.45 MJ/m²/day, the latent heat of vaporization) before applying the standard `0.0023×(Tmean+17.8)×√(ΔT)×Ra` formula.
+
+6. Verified all 40 task-spec codes are present exactly once (no TS1117 duplicates) via `grep -oE "^  'IRR-[0-9]+\.[0-9]+'" | sort | uniq -d` → empty output.
+
+7. Ran `npx tsc --noEmit 2>&1 | grep -E "calculators" | head -20` — **no errors** returned (empty output, exit 0).
+
+8. Verified total calculator count: file went from 195 → 218 entries (+23 net new codes; 17 existing IRR codes were upgraded in-place to task-spec; 11 non-task IRR entries preserved).
+
+### Stage summary
+
+| Metric | Value |
+|---|---|
+| Task-spec calculators delivered | 40 (all requested IRR codes) |
+| Brand-new codes added | 23 |
+| Existing IRR codes upgraded to task-spec | 17 (replaced in-place; no TS1117 duplicates) |
+| Non-task IRR entries preserved | 11 (IRR-2.3, 3.3, 5.7, 10.6, 11.8, 11.9, 13.2, 14.1, 14.2, 14.3, 15.6) |
+| Existing non-IRR calculators broken | 0 |
+| TypeScript errors in `calculators.ts` | 0 |
+| Total calculators in registry | 218 (was 195) |
+| Net file size change | +22,259 chars |
+
+**Calculator families delivered (40 task-spec):**
+- Hydraulics Fundamentals (5): IRR-1.1 Continuity, IRR-1.3 Reynolds, IRR-1.5 Euler hydrostatic, IRR-2.1 Darcy-Weisbach, IRR-2.2 Hazen-Williams.
+- Open Channel Flow (4): IRR-4.1 Manning, IRR-4.2 Chezy, IRR-4.4 Specific Energy (+ Froude), IRR-4.5 Normal Depth (bisection solver).
+- Pumps (5): IRR-5.1 Hydraulic Power, IRR-5.2 Pump Efficiency, IRR-5.3 NPSH Available, IRR-5.6 Brake Power, IRR-5.9 Pumps in Parallel.
+- Wells & Groundwater (3): IRR-6.1 Thiem Confined, IRR-6.2 Dupuit Unconfined, IRR-6.3 Specific Capacity.
+- Drip Irrigation (5): IRR-7.1 Emitter Discharge, IRR-7.2 Emission Uniformity, IRR-7.3 Distribution Uniformity, IRR-7.4 Pressure Variation, IRR-7.5 Application Efficiency.
+- Sprinkler Irrigation (4): IRR-8.1 Christiansen CU, IRR-8.3 Sprinkler Spacing, IRR-8.4 Precipitation Rate, IRR-8.5 Wind Drift & Evap Loss.
+- Soil Water & Scheduling (6): IRR-9.1 SWD, IRR-9.2 NIR, IRR-9.3 Irrigation Interval, IRR-9.4 Leaching Requirement, IRR-9.9 TAW, IRR-9.10 RAW.
+- Evapotranspiration (3): IRR-10.2 Hargreaves, IRR-10.3 Blaney-Criddle, IRR-10.4 Actual ETc.
+- Soil Physics (3): IRR-11.1 Bulk Density, IRR-11.3 Porosity, IRR-11.5 Hydraulic Conductivity.
+- Water Quality (2): IRR-12.1 SAR (safe/marginal/unsafe), IRR-12.2 RSC (safe/marginal/unsafe).
+
+**Known data-model note:** The `agri_formulas.json` database lists ~100 IRR formula codes for Part XVIII, but only 51 now have interactive calculators (40 task-spec + 11 pre-existing non-task). The remaining ~49 IRR formula codes render as read-only formula cards without interactive inputs. The `calculators[formula.code]` lookup pattern means the 17 replaced codes now use the task-spec field schemas (different input keys than the old minimal versions) — any UI component that hard-coded the old field keys for these 17 codes would need updating, though the `interactive-calculator.tsx` component reads field schemas dynamically from the `CalcConfig.fields` array, so no UI changes are required.

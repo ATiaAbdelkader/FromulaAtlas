@@ -1,0 +1,42 @@
+{
+  "name": "Atlas of Agri-Formulas & Metrics",
+  "short_name": "Agri Atlas",
+  "description": "A practical reference for crop & animal production. Browse 179+ agricultural formulas, indices, and decision rules with worked examples.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#059669",
+  "categories": ["education", "productivity", "utilities", "agriculture"],
+  "lang": "en",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Browse formulas",
+      "short_name": "Formulas",
+      "description": "Open the formula library",
+      "url": "/?tab=formulas"
+    },
+    {
+      "name": "Tools",
+      "short_name": "Tools",
+      "description": "Open guided workflows and tools",
+      "url": "/?tab=tools"
+    }
+  ]
+}
