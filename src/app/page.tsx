@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
-import { Search, Sprout, Layers, BookOpen, Calculator, X, Leaf, Filter, Home, Wrench, Bug, TrendingUp, Droplets, Settings, Calendar, Satellite, ShoppingCart } from 'lucide-react';
+import { Search, Sprout, Layers, BookOpen, Calculator, X, Leaf, Filter, Home, Wrench, Bug, TrendingUp, Droplets, Settings, Calendar, Satellite, ShoppingCart, Users } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -23,6 +23,7 @@ import { IrrigationSystemDesigner } from '@/components/agri/nutri-tools/Irrigati
 import { AgriPlannerSuite } from '@/components/agri/nutri-tools/AgriPlannerSuite';
 import { NdviFieldMaps } from '@/components/agri/nutri-tools/NdviFieldMaps';
 import { Marketplace } from '@/components/agri/nutri-tools/Marketplace';
+import { FarmerCommunity } from '@/components/agri/nutri-tools/FarmerCommunity';
 import { BookmarkedFormulas } from '@/components/agri/bookmarked-formulas';
 import { getBookmarks, toggleBookmark } from '@/lib/formula-bookmarks';
 import { OnboardingFlow } from '@/components/onboarding/OnboardingFlow';
@@ -196,6 +197,17 @@ export default function Page() {
               defaultOpen={false}
             >
               <div className="p-4"><Marketplace /></div>
+            </CollapsibleSection>
+
+            <CollapsibleSection
+              title="Farmer Community & Knowledge Exchange"
+              description="Share experiences · Ask questions · Benchmark your farm · Success stories"
+              icon={Users}
+              color="#3b82f6"
+              storageKey="collapse_community"
+              defaultOpen={false}
+            >
+              <div className="p-4"><FarmerCommunity /></div>
             </CollapsibleSection>
 
             <CollapsibleSection
