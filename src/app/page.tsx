@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
-import { Search, Sprout, Layers, BookOpen, Calculator, X, Leaf, Filter, Home, Wrench, Bug, TrendingUp, Droplets, Settings, Calendar, Satellite, ShoppingCart, Users, DollarSign, RefreshCw, Beef, FlaskConical, CloudRain, FileText, Trophy } from 'lucide-react';
+import { Search, Sprout, Layers, BookOpen, Calculator, X, Leaf, Filter, Home, Wrench, Bug, TrendingUp, Droplets, Settings, Calendar, Satellite, ShoppingCart, Users, DollarSign, RefreshCw, Beef, FlaskConical, CloudRain, FileText, Trophy, Tractor, Sparkles } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -47,7 +47,7 @@ import type { Workflow } from '@/lib/workflows';
 import { useTranslation } from '@/lib/language-store';
 import { cn } from '@/lib/utils';
 
-type TabId = 'home' | 'formulas' | 'tools';
+type TabId = 'home' | 'formulas' | 'tools' | 'farm' | 'insights';
 
 export default function Page() {
   const [activeTab, setActiveTab] = useState<TabId>('home');
@@ -161,21 +161,23 @@ export default function Page() {
         {/* Tab bar */}
         <div className="border-t border-border bg-muted/30">
           <div className="max-w-[1600px] mx-auto px-4 sm:px-6">
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 overflow-x-auto">
               <TabButton active={activeTab === 'home'} onClick={() => setActiveTab('home')} icon={Home} label="Home" />
               <TabButton active={activeTab === 'formulas'} onClick={() => setActiveTab('formulas')} icon={BookOpen} label="Formulas" badge={allFormulas.length} />
               <TabButton active={activeTab === 'tools'} onClick={() => setActiveTab('tools')} icon={Wrench} label="Tools" />
+              <TabButton active={activeTab === 'farm'} onClick={() => setActiveTab('farm')} icon={Tractor} label="Farm" />
+              <TabButton active={activeTab === 'insights'} onClick={() => setActiveTab('insights')} icon={Sparkles} label="Insights" />
             </div>
           </div>
         </div>
       </header>
 
-      {/* HOME TAB */}
+      {/* HOME TAB — clean landing page */}
       {activeTab === 'home' && (
-        <main className="flex-1 max-w-[1200px] mx-auto w-full p-4 sm:p-6">
-          <section className="bg-gradient-to-br from-emerald-700 via-green-700 to-teal-800 text-white rounded-xl p-6 mb-6">
-            <div className="flex items-center gap-2 mb-2 text-emerald-100 text-sm font-medium uppercase tracking-wide"><Leaf className="h-4 w-4" />Calculations · Indices · Decision Rules</div>
-            <h2 className="text-xl sm:text-2xl font-bold leading-tight mb-2">The complete reference for crop &amp; animal production</h2>
+        <main className="flex-1 max-w-[1200px] mx-auto w-full p-4 sm:p-6 space-y-6">
+          <section className="bg-gradient-to-br from-emerald-700 via-green-700 to-teal-800 text-white rounded-xl p-6">
+            <div className="flex items-center gap-2 mb-2 text-emerald-100 text-sm font-medium uppercase tracking-wide"><Leaf className="h-4 w-4" />Your AI-powered agronomy platform</div>
+            <h2 className="text-xl sm:text-2xl font-bold leading-tight mb-2">Formula Atlas — from soil to sky</h2>
             <div className="flex flex-wrap gap-3 mt-4">
               <StatBadge icon={Layers} label="Parts" value={handbook.meta.total_parts} />
               <StatBadge icon={BookOpen} label={t.sections} value={handbook.meta.total_chapters} />
@@ -184,208 +186,95 @@ export default function Page() {
             </div>
           </section>
 
-          {/* Collapsible feature sections */}
-          <section className="mb-6 space-y-3">
-            <CollapsibleSection
-              title="NDVI Satellite Field Maps"
-              description="Vegetation health heatmap · Stress zone detection · AI recommendations · PDF export"
-              icon={Satellite}
-              color="#6366f1"
-              storageKey="collapse_ndvi"
-              defaultOpen={false}
-            >
-              <div className="p-4"><NdviFieldMaps /></div>
-            </CollapsibleSection>
+          {/* Quick navigation cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <QuickNav icon={Tractor} label="Farm" desc="Fields, crops, soil, livestock, irrigation" color="#16a34a" onClick={() => setActiveTab('farm')} />
+            <QuickNav icon={Sparkles} label="Insights" desc="NDVI, weather, financial, marketplace, community" color="#6366f1" onClick={() => setActiveTab('insights')} />
+            <QuickNav icon={Wrench} label="Tools" desc="18 free agronomic calculators" color="#0891b2" onClick={() => setActiveTab('tools')} />
+            <QuickNav icon={BookOpen} label="Formulas" desc="332 formulas with interactive calculators" color="#f59e0b" onClick={() => setActiveTab('formulas')} />
+          </div>
 
-            <CollapsibleSection
-              title="Marketplace — Buy Fertilizers & Supplies"
-              description="Price comparison from 3 suppliers · Shopping cart · Order export"
-              icon={ShoppingCart}
-              color="#f59e0b"
-              storageKey="collapse_marketplace"
-              defaultOpen={false}
-            >
-              <div className="p-4"><Marketplace /></div>
-            </CollapsibleSection>
+          <SeasonScheduler />
 
-            <CollapsibleSection
-              title="Farmer Community & Knowledge Exchange"
-              description="Share experiences · Ask questions · Benchmark your farm · Success stories"
-              icon={Users}
-              color="#3b82f6"
-              storageKey="collapse_community"
-              defaultOpen={false}
-            >
-              <div className="p-4"><FarmerCommunity /></div>
-            </CollapsibleSection>
-
-            <CollapsibleSection
-              title="Financial Dashboard"
-              description="Costs · Revenue · Gross margin · Break-even · ROI · What-if scenario analysis"
-              icon={DollarSign}
-              color="#f59e0b"
-              storageKey="collapse_financial"
-              defaultOpen={false}
-            >
-              <div className="p-4"><FinancialDashboard /></div>
-            </CollapsibleSection>
-
-            <CollapsibleSection
-              title="Crop Rotation Planner"
-              description="Multi-year rotation · N credit tracking · Disease breaks · Cover crops · Soil health score"
-              icon={RefreshCw}
-              color="#16a34a"
-              storageKey="collapse_rotation"
-              defaultOpen={false}
-            >
-              <div className="p-4"><CropRotationPlanner /></div>
-            </CollapsibleSection>
-
-            <CollapsibleSection
-              title="Livestock Management"
-              description="Feed rations (NRC 2021) · Pasture capacity · Manure NPK value · Rotational grazing"
-              icon={Beef}
-              color="#f59e0b"
-              storageKey="collapse_livestock"
-              defaultOpen={false}
-            >
-              <div className="p-4"><LivestockIntegration /></div>
-            </CollapsibleSection>
-
-            <CollapsibleSection
-              title="Soil Test History Tracker"
-              description="Multi-year soil test tracking · Trend charts · Amendment recommendations · PDF export"
-              icon={FlaskConical}
-              color="#8b5cf6"
-              storageKey="collapse_soil_history"
-              defaultOpen={false}
-            >
-              <div className="p-4"><SoilTestHistoryTracker /></div>
-            </CollapsibleSection>
-
-            <CollapsibleSection
-              title="Weather Radar + Frost Maps"
-              description="Live 7-day forecast · Frost risk · Heat warnings · Spray windows · Microclimate"
-              icon={CloudRain}
-              color="#0ea5e9"
-              storageKey="collapse_weather_radar"
-              defaultOpen={false}
-            >
-              <div className="p-4"><WeatherRadar /></div>
-            </CollapsibleSection>
-
-            <CollapsibleSection
-              title="Professional Report Generator"
-              description="Branded multi-page PDF · Combines all data · Cover page · AI recommendations"
-              icon={FileText}
-              color="#0ea5e9"
-              storageKey="collapse_report"
-              defaultOpen={false}
-            >
-              <div className="p-4"><ReportGenerator /></div>
-            </CollapsibleSection>
-
-            <CollapsibleSection
-              title="Smart Agriculture Suite"
-              description="Disease detection · crop recommendation · fertilizer guidance"
-              icon={Bug}
-              color="#65a30d"
-              storageKey="collapse_agriplanner"
-              defaultOpen={false}
-            >
-              <div className="p-4"><AgriPlannerSuite /></div>
-            </CollapsibleSection>
-
-            <CollapsibleSection
-              title="Multi-Field Dashboard"
-              description="Track every field, crop stage and irrigation demand in one place"
-              icon={Layers}
-              color="#16a34a"
-              storageKey="collapse_multifield"
-              defaultOpen={false}
-            >
-              <div className="p-4"><MultiFieldDashboard /></div>
-            </CollapsibleSection>
-
-            <CollapsibleSection
-              title="Yield Gap Analysis"
-              description="Benchmark actual vs potential yield by crop and climate zone"
-              icon={TrendingUp}
-              color="#0891b2"
-              storageKey="collapse_yieldgap"
-              defaultOpen={false}
-            >
-              <div className="p-4"><YieldGapAnalysis /></div>
-            </CollapsibleSection>
-
-            <CollapsibleSection
-              title="Sustainability Scorecard"
-              description="5 traffic-light metrics — NUE, water, carbon, soil, pesticides"
-              icon={Leaf}
-              color="#16a34a"
-              storageKey="collapse_sustainability"
-              defaultOpen={false}
-            >
-              <div className="p-4"><SustainabilityScorecard /></div>
-            </CollapsibleSection>
-
-            <CollapsibleSection
-              title="Irrigation Program Generator"
-              description="Decadal (10-day) irrigation schedule from the BRL/COM memento"
-              icon={Droplets}
-              color="#0ea5e9"
-              storageKey="collapse_irrigation"
-              defaultOpen={false}
-            >
-              <div className="p-4"><IrrigationProgramGenerator /></div>
-            </CollapsibleSection>
-
-            <CollapsibleSection
-              title="Irrigation System Designer"
-              description="Multi-zone sprinkler / drip / bubbler designer with pump sizing"
-              icon={Settings}
-              color="#6366f1"
-              storageKey="collapse_system_design"
-              defaultOpen={false}
-            >
-              <div className="p-4"><IrrigationSystemDesigner /></div>
-            </CollapsibleSection>
-
-            <CollapsibleSection
-              title="Field Scouting Log"
-              description="Voice + photo field observations with severity tagging"
-              icon={Sprout}
-              color="#84cc16"
-              storageKey="collapse_scouting"
-              defaultOpen={false}
-            >
-              <div className="p-4"><FieldScoutingLog /></div>
-            </CollapsibleSection>
-
-            <CollapsibleSection
-              title="Seasonal Irrigation Planner"
-              description="Season-by-season irrigation focus, risks and recommendations"
-              icon={Calendar}
-              color="#f59e0b"
-              storageKey="collapse_seasonal"
-              defaultOpen={false}
-            >
-              <div className="p-4"><SeasonScheduler /></div>
-            </CollapsibleSection>
-
-            <CollapsibleSection
-              title="Achievements & Leaderboard"
-              description="Badges · Levels · Points · Global ranking · Progress tracking"
-              icon={Trophy}
-              color="#7c3aed"
-              storageKey="collapse_gamification"
-              defaultOpen={false}
-            >
-              <div className="p-4"><GamificationPanel /></div>
-            </CollapsibleSection>
-          </section>
+          <CollapsibleSection
+            title="Achievements & Leaderboard"
+            description="Badges · Levels · Points · Global ranking · Progress tracking"
+            icon={Trophy}
+            color="#7c3aed"
+            storageKey="collapse_gamification"
+            defaultOpen={false}
+          >
+            <div className="p-4"><GamificationPanel /></div>
+          </CollapsibleSection>
 
           <UseCasesSection onLaunch={(wf) => { setActiveWorkflow(wf); setWorkflowOpen(true); }} />
+        </main>
+      )}
+
+      {/* FARM TAB — fields, crops, soil, livestock, irrigation */}
+      {activeTab === 'farm' && (
+        <main className="flex-1 max-w-[1200px] mx-auto w-full p-4 sm:p-6 space-y-6">
+          <div className="rounded-xl p-4 bg-gradient-to-r from-emerald-600 to-green-700 text-white">
+            <div className="flex items-center gap-2"><Tractor className="h-5 w-5" /><h2 className="text-lg font-bold">Farm Management</h2></div>
+            <p className="text-xs text-emerald-100 mt-1">Fields · Crops · Soil · Livestock · Irrigation — 9 tools</p>
+          </div>
+
+          {/* Sub-category: Fields & Crops */}
+          <div className="space-y-3">
+            <SubHeader emoji="🌱" label="Fields & Crops" />
+            <CollapsibleSection title="Multi-Field Dashboard" description="Track every field, crop stage and irrigation demand in one place" icon={Layers} color="#16a34a" storageKey="collapse_multifield" defaultOpen={false}><div className="p-4"><MultiFieldDashboard /></div></CollapsibleSection>
+            <CollapsibleSection title="Crop Rotation Planner" description="Multi-year rotation · N credit tracking · Disease breaks · Cover crops · Soil health score" icon={RefreshCw} color="#16a34a" storageKey="collapse_rotation" defaultOpen={false}><div className="p-4"><CropRotationPlanner /></div></CollapsibleSection>
+            <CollapsibleSection title="Yield Gap Analysis" description="Benchmark actual vs potential yield by crop and climate zone" icon={TrendingUp} color="#0891b2" storageKey="collapse_yieldgap" defaultOpen={false}><div className="p-4"><YieldGapAnalysis /></div></CollapsibleSection>
+            <CollapsibleSection title="Field Scouting Log" description="Voice + photo field observations with severity tagging" icon={Sprout} color="#84cc16" storageKey="collapse_scouting" defaultOpen={false}><div className="p-4"><FieldScoutingLog /></div></CollapsibleSection>
+          </div>
+
+          {/* Sub-category: Soil & Livestock */}
+          <div className="space-y-3">
+            <SubHeader emoji="🧪" label="Soil & Livestock" />
+            <CollapsibleSection title="Soil Test History Tracker" description="Multi-year soil test tracking · Trend charts · Amendment recommendations · PDF export" icon={FlaskConical} color="#8b5cf6" storageKey="collapse_soil_history" defaultOpen={false}><div className="p-4"><SoilTestHistoryTracker /></div></CollapsibleSection>
+            <CollapsibleSection title="Livestock Management" description="Feed rations (NRC 2021) · Pasture capacity · Manure NPK value · Rotational grazing" icon={Beef} color="#f59e0b" storageKey="collapse_livestock" defaultOpen={false}><div className="p-4"><LivestockIntegration /></div></CollapsibleSection>
+          </div>
+
+          {/* Sub-category: Irrigation */}
+          <div className="space-y-3">
+            <SubHeader emoji="💧" label="Irrigation" />
+            <CollapsibleSection title="Irrigation Program Generator" description="Decadal (10-day) irrigation schedule from the BRL/COM memento" icon={Droplets} color="#0ea5e9" storageKey="collapse_irrigation" defaultOpen={false}><div className="p-4"><IrrigationProgramGenerator /></div></CollapsibleSection>
+            <CollapsibleSection title="Irrigation System Designer" description="Multi-zone sprinkler / drip / bubbler designer with pump sizing" icon={Settings} color="#6366f1" storageKey="collapse_system_design" defaultOpen={false}><div className="p-4"><IrrigationSystemDesigner /></div></CollapsibleSection>
+            <CollapsibleSection title="Seasonal Irrigation Planner" description="Season-by-season irrigation focus, risks and recommendations" icon={Calendar} color="#f59e0b" storageKey="collapse_seasonal" defaultOpen={false}><div className="p-4"><SeasonScheduler /></div></CollapsibleSection>
+          </div>
+        </main>
+      )}
+
+      {/* INSIGHTS TAB — intelligence, business, community */}
+      {activeTab === 'insights' && (
+        <main className="flex-1 max-w-[1200px] mx-auto w-full p-4 sm:p-6 space-y-6">
+          <div className="rounded-xl p-4 bg-gradient-to-r from-indigo-600 to-violet-700 text-white">
+            <div className="flex items-center gap-2"><Sparkles className="h-5 w-5" /><h2 className="text-lg font-bold">Intelligence & Insights</h2></div>
+            <p className="text-xs text-indigo-100 mt-1">Satellite · Weather · AI · Financial · Marketplace · Community — 8 tools</p>
+          </div>
+
+          {/* Sub-category: Intelligence */}
+          <div className="space-y-3">
+            <SubHeader emoji="🛰️" label="Intelligence & AI" />
+            <CollapsibleSection title="NDVI Satellite Field Maps" description="Vegetation health heatmap · Stress zone detection · AI recommendations · PDF export" icon={Satellite} color="#6366f1" storageKey="collapse_ndvi" defaultOpen={false}><div className="p-4"><NdviFieldMaps /></div></CollapsibleSection>
+            <CollapsibleSection title="Weather Radar + Frost Maps" description="Live 7-day forecast · Frost risk · Heat warnings · Spray windows · Microclimate" icon={CloudRain} color="#0ea5e9" storageKey="collapse_weather_radar" defaultOpen={false}><div className="p-4"><WeatherRadar /></div></CollapsibleSection>
+            <CollapsibleSection title="Smart Agriculture Suite" description="Disease detection · crop recommendation · fertilizer guidance" icon={Bug} color="#65a30d" storageKey="collapse_agriplanner" defaultOpen={false}><div className="p-4"><AgriPlannerSuite /></div></CollapsibleSection>
+          </div>
+
+          {/* Sub-category: Business */}
+          <div className="space-y-3">
+            <SubHeader emoji="💰" label="Business & Marketplace" />
+            <CollapsibleSection title="Financial Dashboard" description="Costs · Revenue · Gross margin · Break-even · ROI · What-if scenario analysis" icon={DollarSign} color="#f59e0b" storageKey="collapse_financial" defaultOpen={false}><div className="p-4"><FinancialDashboard /></div></CollapsibleSection>
+            <CollapsibleSection title="Marketplace — Buy Fertilizers & Supplies" description="Price comparison from 3 suppliers · Shopping cart · Order export" icon={ShoppingCart} color="#f59e0b" storageKey="collapse_marketplace" defaultOpen={false}><div className="p-4"><Marketplace /></div></CollapsibleSection>
+            <CollapsibleSection title="Sustainability Scorecard" description="5 traffic-light metrics — NUE, water, carbon, soil, pesticides" icon={Leaf} color="#16a34a" storageKey="collapse_sustainability" defaultOpen={false}><div className="p-4"><SustainabilityScorecard /></div></CollapsibleSection>
+          </div>
+
+          {/* Sub-category: Community & Reports */}
+          <div className="space-y-3">
+            <SubHeader emoji="👥" label="Community & Reports" />
+            <CollapsibleSection title="Farmer Community & Knowledge Exchange" description="Share experiences · Ask questions · Benchmark your farm · Success stories" icon={Users} color="#3b82f6" storageKey="collapse_community" defaultOpen={false}><div className="p-4"><FarmerCommunity /></div></CollapsibleSection>
+            <CollapsibleSection title="Professional Report Generator" description="Branded multi-page PDF · Combines all data · Cover page · AI recommendations" icon={FileText} color="#0ea5e9" storageKey="collapse_report" defaultOpen={false}><div className="p-4"><ReportGenerator /></div></CollapsibleSection>
+          </div>
         </main>
       )}
 
@@ -494,6 +383,30 @@ function StatBadge({ icon: Icon, label, value }: { icon: typeof Layers; label: s
     <div className="bg-white/10 backdrop-blur rounded-lg px-3 py-2 border border-white/20">
       <div className="flex items-center gap-1.5 text-emerald-100 text-[10px] uppercase tracking-wide font-medium"><Icon className="h-3 w-3" />{label}</div>
       <div className="text-xl font-bold mt-0.5">{value}</div>
+    </div>
+  );
+}
+
+function QuickNav({ icon: Icon, label, desc, color, onClick }: { icon: typeof Home; label: string; desc: string; color: string; onClick: () => void }) {
+  return (
+    <button onClick={onClick} className="group flex items-center gap-3 p-4 rounded-xl border-2 border-border bg-card hover:border-emerald-400 hover:shadow-md hover:-translate-y-0.5 transition-all text-left">
+      <div className="flex items-center justify-center h-10 w-10 rounded-lg flex-shrink-0" style={{ background: `${color}20`, color }}>
+        <Icon className="h-5 w-5" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="text-sm font-semibold group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">{label}</div>
+        <div className="text-[11px] text-muted-foreground leading-tight mt-0.5">{desc}</div>
+      </div>
+    </button>
+  );
+}
+
+function SubHeader({ emoji, label }: { emoji: string; label: string }) {
+  return (
+    <div className="flex items-center gap-2 pt-2">
+      <span className="text-lg">{emoji}</span>
+      <span className="text-sm font-bold text-muted-foreground uppercase tracking-wide">{label}</span>
+      <div className="flex-1 h-px bg-border" />
     </div>
   );
 }
