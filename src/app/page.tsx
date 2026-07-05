@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
-import { Search, Sprout, Layers, BookOpen, Calculator, X, Leaf, Filter, Home, Wrench, Bug, TrendingUp, Droplets, Settings, Calendar, Satellite, ShoppingCart, Users } from 'lucide-react';
+import { Search, Sprout, Layers, BookOpen, Calculator, X, Leaf, Filter, Home, Wrench, Bug, TrendingUp, Droplets, Settings, Calendar, Satellite, ShoppingCart, Users, DollarSign } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,6 +24,7 @@ import { AgriPlannerSuite } from '@/components/agri/nutri-tools/AgriPlannerSuite
 import { NdviFieldMaps } from '@/components/agri/nutri-tools/NdviFieldMaps';
 import { Marketplace } from '@/components/agri/nutri-tools/Marketplace';
 import { FarmerCommunity } from '@/components/agri/nutri-tools/FarmerCommunity';
+import { FinancialDashboard } from '@/components/agri/nutri-tools/FinancialDashboard';
 import { BookmarkedFormulas } from '@/components/agri/bookmarked-formulas';
 import { getBookmarks, toggleBookmark } from '@/lib/formula-bookmarks';
 import { OnboardingFlow } from '@/components/onboarding/OnboardingFlow';
@@ -208,6 +209,17 @@ export default function Page() {
               defaultOpen={false}
             >
               <div className="p-4"><FarmerCommunity /></div>
+            </CollapsibleSection>
+
+            <CollapsibleSection
+              title="Financial Dashboard"
+              description="Costs · Revenue · Gross margin · Break-even · ROI · What-if scenario analysis"
+              icon={DollarSign}
+              color="#f59e0b"
+              storageKey="collapse_financial"
+              defaultOpen={false}
+            >
+              <div className="p-4"><FinancialDashboard /></div>
             </CollapsibleSection>
 
             <CollapsibleSection
