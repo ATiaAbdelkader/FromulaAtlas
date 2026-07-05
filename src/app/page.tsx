@@ -1,7 +1,7 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { Search, Sprout, Layers, BookOpen, Calculator, X, Leaf, Filter, Home, Wrench, Brain } from 'lucide-react';
+import { useMemo, useState, useEffect } from 'react';
+import { Search, Sprout, Layers, BookOpen, Calculator, X, Leaf, Filter, Home, Wrench, Bug, TrendingUp, Droplets, Settings, Calendar } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +17,12 @@ import { MultiFieldDashboard } from '@/components/agri/nutri-tools/MultiFieldDas
 import { YieldGapAnalysis } from '@/components/agri/nutri-tools/YieldGapAnalysis';
 import { SustainabilityScorecard } from '@/components/agri/nutri-tools/SustainabilityScorecard';
 import { FieldScoutingLog } from '@/components/agri/nutri-tools/FieldScoutingLog';
+import { CollapsibleSection } from '@/components/agri/nutri-tools/CollapsibleSection';
+import { IrrigationProgramGenerator } from '@/components/agri/nutri-tools/IrrigationProgramGenerator';
+import { IrrigationSystemDesigner } from '@/components/agri/nutri-tools/IrrigationSystemDesigner';
+import { AgriPlannerSuite } from '@/components/agri/nutri-tools/AgriPlannerSuite';
+import { BookmarkedFormulas } from '@/components/agri/bookmarked-formulas';
+import { getBookmarks, toggleBookmark } from '@/lib/formula-bookmarks';
 import { OnboardingFlow } from '@/components/onboarding/OnboardingFlow';
 import { TakeTourButton } from '@/components/onboarding/TakeTourButton';
 import { TelegramConnectButton } from '@/components/agri/nutri-tools/TelegramConnectButton';
@@ -44,6 +50,9 @@ export default function Page() {
   const [activeWorkflow, setActiveWorkflow] = useState<Workflow | null>(null);
   const [workflowOpen, setWorkflowOpen] = useState(false);
   const { t, isRTL } = useTranslation();
+  const [bookmarks, setBookmarks] = useState<string[]>([]);
+
+  useEffect(() => { setBookmarks(getBookmarks()); }, []);
 
   const filteredFormulas = useMemo(() => {
     let result = allFormulas;
@@ -54,7 +63,7 @@ export default function Page() {
       const q = searchQuery.toLowerCase().trim();
       const terms = q.split(/\s+/).filter(Boolean);
       result = result.filter(f => {
-        const haystack = `${f.code} ${f.name} ${f.name_ar || ''} ${f.formula} ${f.variables} ${f.purpose} ${f.example} ${f.pitfall} ${f.chapter} ${f.part}`.toLowerCase();
+        const haystack = `${f.code} ${f.name} ${(f as any).name_ar || ''} ${f.formula} ${f.variables} ${f.purpose} ${f.example} ${f.pitfall} ${f.chapter} ${f.part}`.toLowerCase();
         return terms.every(t => haystack.includes(t));
       });
     }
@@ -163,26 +172,97 @@ export default function Page() {
             </div>
           </section>
 
-          {/* Farm Intelligence Suite — 3 elevation features */}
-          <section className="mb-6">
-            <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-700 text-white rounded-xl p-4 mb-4 flex items-center gap-3">
-              <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-white/15 backdrop-blur flex-shrink-0">
-                <Brain className="h-5 w-5" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold leading-tight">Farm Intelligence Suite</h3>
-                <p className="text-xs text-emerald-50/90">Multi-field tracking · Yield-gap benchmarking · Sustainability scorecard</p>
-              </div>
-            </div>
-            <div className="space-y-4">
-              <MultiFieldDashboard />
-              <YieldGapAnalysis />
-              <SustainabilityScorecard />
-              <FieldScoutingLog />
-            </div>
+          {/* Collapsible feature sections */}
+          <section className="mb-6 space-y-3">
+            <CollapsibleSection
+              title="Smart Agriculture Suite"
+              description="Disease detection · crop recommendation · fertilizer guidance"
+              icon={Bug}
+              color="#65a30d"
+              storageKey="collapse_agriplanner"
+              defaultOpen={false}
+            >
+              <div className="p-4"><AgriPlannerSuite /></div>
+            </CollapsibleSection>
+
+            <CollapsibleSection
+              title="Multi-Field Dashboard"
+              description="Track every field, crop stage and irrigation demand in one place"
+              icon={Layers}
+              color="#16a34a"
+              storageKey="collapse_multifield"
+              defaultOpen={false}
+            >
+              <div className="p-4"><MultiFieldDashboard /></div>
+            </CollapsibleSection>
+
+            <CollapsibleSection
+              title="Yield Gap Analysis"
+              description="Benchmark actual vs potential yield by crop and climate zone"
+              icon={TrendingUp}
+              color="#0891b2"
+              storageKey="collapse_yieldgap"
+              defaultOpen={false}
+            >
+              <div className="p-4"><YieldGapAnalysis /></div>
+            </CollapsibleSection>
+
+            <CollapsibleSection
+              title="Sustainability Scorecard"
+              description="5 traffic-light metrics — NUE, water, carbon, soil, pesticides"
+              icon={Leaf}
+              color="#16a34a"
+              storageKey="collapse_sustainability"
+              defaultOpen={false}
+            >
+              <div className="p-4"><SustainabilityScorecard /></div>
+            </CollapsibleSection>
+
+            <CollapsibleSection
+              title="Irrigation Program Generator"
+              description="Decadal (10-day) irrigation schedule from the BRL/COM memento"
+              icon={Droplets}
+              color="#0ea5e9"
+              storageKey="collapse_irrigation"
+              defaultOpen={false}
+            >
+              <div className="p-4"><IrrigationProgramGenerator /></div>
+            </CollapsibleSection>
+
+            <CollapsibleSection
+              title="Irrigation System Designer"
+              description="Multi-zone sprinkler / drip / bubbler designer with pump sizing"
+              icon={Settings}
+              color="#6366f1"
+              storageKey="collapse_system_design"
+              defaultOpen={false}
+            >
+              <div className="p-4"><IrrigationSystemDesigner /></div>
+            </CollapsibleSection>
+
+            <CollapsibleSection
+              title="Field Scouting Log"
+              description="Voice + photo field observations with severity tagging"
+              icon={Sprout}
+              color="#84cc16"
+              storageKey="collapse_scouting"
+              defaultOpen={false}
+            >
+              <div className="p-4"><FieldScoutingLog /></div>
+            </CollapsibleSection>
+
+            <CollapsibleSection
+              title="Seasonal Irrigation Planner"
+              description="Season-by-season irrigation focus, risks and recommendations"
+              icon={Calendar}
+              color="#f59e0b"
+              storageKey="collapse_seasonal"
+              defaultOpen={false}
+            >
+              <div className="p-4"><SeasonScheduler /></div>
+            </CollapsibleSection>
           </section>
 
-          <SeasonScheduler />
           <UseCasesSection onLaunch={(wf) => { setActiveWorkflow(wf); setWorkflowOpen(true); }} />
         </main>
       )}
@@ -192,6 +272,12 @@ export default function Page() {
         <div className="flex-1 max-w-[1600px] mx-auto w-full flex">
           <aside className="hidden lg:block w-[300px] flex-shrink-0 border-r border-border bg-background sticky top-[160px] h-[calc(100vh-160px)] overflow-hidden">{sidebarContent}</aside>
           <main className="flex-1 min-w-0 p-4 sm:p-6">
+            <BookmarkedFormulas
+              bookmarks={bookmarks}
+              formulas={allFormulas}
+              onSelect={handleSelectFormula}
+              onRemove={(code) => { toggleBookmark(code); setBookmarks(prev => prev.filter(c => c !== code)); }}
+            />
             <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
               <div className="flex items-center gap-2 flex-wrap min-w-0">
                 <h2 className="text-lg font-semibold">{selectedChapter !== null && currentChapterInfo ? `Section ${currentChapterInfo.number}: ${currentChapterInfo.title}` : selectedPart ? selectedPart : t.allFormulas}</h2>

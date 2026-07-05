@@ -1,12 +1,14 @@
 'use client';
 
+import { useState } from 'react';
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { AlertTriangle, Beaker, BookOpen, Calculator } from 'lucide-react';
+import { AlertTriangle, Beaker, BookOpen, Calculator, Star } from 'lucide-react';
 import type { Formula } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { calculators } from './calculators';
 import { useLanguageStore } from '@/lib/language-store';
+import { toggleBookmark, getBookmarks } from '@/lib/formula-bookmarks';
 
 interface FormulaCardProps {
   formula: Formula;
@@ -44,8 +46,15 @@ export function FormulaCard({ formula, onSelect }: FormulaCardProps) {
   const color = getPartColor(formula.part);
   const calcAvailable = hasCalculator(formula.code);
   const language = useLanguageStore(s => s.language);
-  const displayName = (language === 'ar' && formula.name_ar) ? formula.name_ar : formula.name;
-  const displayPurpose = (language === 'ar' && formula.purpose_ar) ? formula.purpose_ar : formula.purpose;
+  const displayName = (language === 'ar' && (formula as any).name_ar) ? (formula as any).name_ar : formula.name;
+  const displayPurpose = (language === 'ar' && (formula as any).purpose_ar) ? (formula as any).purpose_ar : formula.purpose;
+  const [bookmarked, setBookmarked] = useState<boolean>(() => getBookmarks().includes(formula.code));
+
+  const handleBookmark = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const next = toggleBookmark(formula.code);
+    setBookmarked(next.includes(formula.code));
+  };
 
   return (
     <Card
@@ -68,9 +77,25 @@ export function FormulaCard({ formula, onSelect }: FormulaCardProps) {
               </Badge>
             )}
           </div>
-          <span className="text-xs text-muted-foreground font-medium whitespace-nowrap">
-            Sec. {formula.chapter_number}
-          </span>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={handleBookmark}
+              aria-label={bookmarked ? 'Remove bookmark' : 'Add bookmark'}
+              title={bookmarked ? 'Remove bookmark' : 'Add bookmark'}
+              className={cn(
+                'p-1 rounded transition-colors',
+                bookmarked
+                  ? 'text-amber-500 hover:text-amber-600'
+                  : 'text-muted-foreground/50 hover:text-amber-500 opacity-0 group-hover:opacity-100',
+              )}
+            >
+              <Star className="h-3.5 w-3.5" fill={bookmarked ? 'currentColor' : 'none'} />
+            </button>
+            <span className="text-xs text-muted-foreground font-medium whitespace-nowrap">
+              Sec. {formula.chapter_number}
+            </span>
+          </div>
         </div>
         <h3 className="text-base font-semibold leading-tight tracking-tight">
           {displayName}
