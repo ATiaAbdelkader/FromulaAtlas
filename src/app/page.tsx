@@ -36,6 +36,7 @@ import { OnboardingFlow } from '@/components/onboarding/OnboardingFlow';
 import { TakeTourButton } from '@/components/onboarding/TakeTourButton';
 import { TelegramConnectButton } from '@/components/agri/nutri-tools/TelegramConnectButton';
 import { NotificationCenter } from '@/components/agri/nutri-tools/NotificationCenter';
+import { ApiDocsButton } from '@/components/agri/nutri-tools/ApiDocsButton';
 import { WorkflowRunner } from '@/components/agri/workflow-runner';
 import { SeasonScheduler } from '@/components/agri/season-scheduler';
 import { LanguageToggle } from '@/components/language-toggle';
@@ -130,6 +131,7 @@ export default function Page() {
             </div>
             <div className="flex items-center gap-1">
               <TakeTourButton />
+              <ApiDocsButton />
               <TelegramConnectButton />
               <LanguageToggle />
               {activeTab === 'formulas' && (
