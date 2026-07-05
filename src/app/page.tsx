@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
-import { Search, Sprout, Layers, BookOpen, Calculator, X, Leaf, Filter, Home, Wrench, Bug, TrendingUp, Droplets, Settings, Calendar, Satellite, ShoppingCart, Users, DollarSign, RefreshCw, Beef } from 'lucide-react';
+import { Search, Sprout, Layers, BookOpen, Calculator, X, Leaf, Filter, Home, Wrench, Bug, TrendingUp, Droplets, Settings, Calendar, Satellite, ShoppingCart, Users, DollarSign, RefreshCw, Beef, FlaskConical } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -27,6 +27,7 @@ import { FarmerCommunity } from '@/components/agri/nutri-tools/FarmerCommunity';
 import { FinancialDashboard } from '@/components/agri/nutri-tools/FinancialDashboard';
 import { CropRotationPlanner } from '@/components/agri/nutri-tools/CropRotationPlanner';
 import { LivestockIntegration } from '@/components/agri/nutri-tools/LivestockIntegration';
+import { SoilTestHistoryTracker } from '@/components/agri/nutri-tools/SoilTestHistoryTracker';
 import { BookmarkedFormulas } from '@/components/agri/bookmarked-formulas';
 import { getBookmarks, toggleBookmark } from '@/lib/formula-bookmarks';
 import { OnboardingFlow } from '@/components/onboarding/OnboardingFlow';
@@ -244,6 +245,17 @@ export default function Page() {
               defaultOpen={false}
             >
               <div className="p-4"><LivestockIntegration /></div>
+            </CollapsibleSection>
+
+            <CollapsibleSection
+              title="Soil Test History Tracker"
+              description="Multi-year soil test tracking · Trend charts · Amendment recommendations · PDF export"
+              icon={FlaskConical}
+              color="#8b5cf6"
+              storageKey="collapse_soil_history"
+              defaultOpen={false}
+            >
+              <div className="p-4"><SoilTestHistoryTracker /></div>
             </CollapsibleSection>
 
             <CollapsibleSection
