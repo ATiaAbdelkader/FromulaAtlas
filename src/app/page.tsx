@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
-import { Search, Sprout, Layers, BookOpen, Calculator, X, Leaf, Filter, Home, Wrench, Bug, TrendingUp, Droplets, Settings, Calendar, Satellite, ShoppingCart, Users, DollarSign } from 'lucide-react';
+import { Search, Sprout, Layers, BookOpen, Calculator, X, Leaf, Filter, Home, Wrench, Bug, TrendingUp, Droplets, Settings, Calendar, Satellite, ShoppingCart, Users, DollarSign, RefreshCw } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +25,7 @@ import { NdviFieldMaps } from '@/components/agri/nutri-tools/NdviFieldMaps';
 import { Marketplace } from '@/components/agri/nutri-tools/Marketplace';
 import { FarmerCommunity } from '@/components/agri/nutri-tools/FarmerCommunity';
 import { FinancialDashboard } from '@/components/agri/nutri-tools/FinancialDashboard';
+import { CropRotationPlanner } from '@/components/agri/nutri-tools/CropRotationPlanner';
 import { BookmarkedFormulas } from '@/components/agri/bookmarked-formulas';
 import { getBookmarks, toggleBookmark } from '@/lib/formula-bookmarks';
 import { OnboardingFlow } from '@/components/onboarding/OnboardingFlow';
@@ -220,6 +221,17 @@ export default function Page() {
               defaultOpen={false}
             >
               <div className="p-4"><FinancialDashboard /></div>
+            </CollapsibleSection>
+
+            <CollapsibleSection
+              title="Crop Rotation Planner"
+              description="Multi-year rotation · N credit tracking · Disease breaks · Cover crops · Soil health score"
+              icon={RefreshCw}
+              color="#16a34a"
+              storageKey="collapse_rotation"
+              defaultOpen={false}
+            >
+              <div className="p-4"><CropRotationPlanner /></div>
             </CollapsibleSection>
 
             <CollapsibleSection
