@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
-import { Search, Sprout, Layers, BookOpen, Calculator, X, Leaf, Filter, Home, Wrench, Bug, TrendingUp, Droplets, Settings, Calendar, Satellite, ShoppingCart, Users, DollarSign, RefreshCw, Beef, FlaskConical, CloudRain, FileText } from 'lucide-react';
+import { Search, Sprout, Layers, BookOpen, Calculator, X, Leaf, Filter, Home, Wrench, Bug, TrendingUp, Droplets, Settings, Calendar, Satellite, ShoppingCart, Users, DollarSign, RefreshCw, Beef, FlaskConical, CloudRain, FileText, Trophy } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -30,6 +30,7 @@ import { LivestockIntegration } from '@/components/agri/nutri-tools/LivestockInt
 import { SoilTestHistoryTracker } from '@/components/agri/nutri-tools/SoilTestHistoryTracker';
 import { WeatherRadar } from '@/components/agri/nutri-tools/WeatherRadar';
 import { ReportGenerator } from '@/components/agri/nutri-tools/ReportGenerator';
+import { GamificationPanel } from '@/components/agri/nutri-tools/GamificationPanel';
 import { BookmarkedFormulas } from '@/components/agri/bookmarked-formulas';
 import { getBookmarks, toggleBookmark } from '@/lib/formula-bookmarks';
 import { OnboardingFlow } from '@/components/onboarding/OnboardingFlow';
@@ -370,6 +371,17 @@ export default function Page() {
               defaultOpen={false}
             >
               <div className="p-4"><SeasonScheduler /></div>
+            </CollapsibleSection>
+
+            <CollapsibleSection
+              title="Achievements & Leaderboard"
+              description="Badges · Levels · Points · Global ranking · Progress tracking"
+              icon={Trophy}
+              color="#7c3aed"
+              storageKey="collapse_gamification"
+              defaultOpen={false}
+            >
+              <div className="p-4"><GamificationPanel /></div>
             </CollapsibleSection>
           </section>
 
