@@ -14,10 +14,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Atlas of Agri-Formulas & Metrics",
-  description: "A practical reference for crop & animal production. Browse 179+ agricultural formulas, indices, and decision rules with worked examples.",
+  title: "Formula Atlas — Your AI-powered agronomy platform",
+  description: "332 agronomic formulas, 218 interactive calculators, AI agronomist, satellite NDVI maps, irrigation programs, marketplace, community, and predictive alerts.",
   keywords: ["agriculture", "agronomy", "formulas", "metrics", "crop", "livestock", "sustainability", "farm economics"],
-  authors: [{ name: "Atlas of Agri-Formulas & Metrics" }],
+  authors: [{ name: "Formula Atlas" }],
 };
 
 export default function RootLayout({

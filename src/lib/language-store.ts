@@ -24,8 +24,8 @@ export const useLanguageStore = create<LanguageState>()(
 
 export const uiStrings: Record<Language, Record<string, string>> = {
   en: {
-    appName: 'Atlas of Agri-Formulas & Metrics',
-    appSubtitle: 'A Practical Reference for Crop & Animal Production',
+    appName: 'Formula Atlas',
+    appSubtitle: 'Your AI-powered agronomy platform',
     searchPlaceholder: 'Search by name, code, formula, keyword... (press / to focus)',
     allFormulas: 'All Formulas',
     sections: 'Sections',

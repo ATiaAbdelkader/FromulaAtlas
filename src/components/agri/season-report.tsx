@@ -408,7 +408,7 @@ function renderSeasonReportHtml(data: SeasonReportData): string {
 
   ${weatherBlock}
 
-  <footer>Atlas of Agri-Formulas &amp; Metrics — Season Report — ${esc(formatDate(generatedAt))}</footer>
+  <footer>Formula Atlas — Season Report — ${esc(formatDate(generatedAt))}</footer>
 </body>
 </html>`;
 }

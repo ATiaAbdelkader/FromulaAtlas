@@ -1,14 +1,19 @@
 {
-  "name": "Atlas of Agri-Formulas & Metrics",
-  "short_name": "Agri Atlas",
-  "description": "A practical reference for crop & animal production. Browse 179+ agricultural formulas, indices, and decision rules with worked examples.",
+  "name": "Formula Atlas — Your AI-powered agronomy platform",
+  "short_name": "Formula Atlas",
+  "description": "332 agronomic formulas, 218 interactive calculators, AI agronomist, satellite NDVI maps, irrigation programs, marketplace, community, and predictive alerts.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#ffffff",
   "theme_color": "#059669",
-  "categories": ["education", "productivity", "utilities", "agriculture"],
+  "categories": [
+    "education",
+    "productivity",
+    "utilities",
+    "agriculture"
+  ],
   "lang": "en",
   "dir": "ltr",
   "icons": [

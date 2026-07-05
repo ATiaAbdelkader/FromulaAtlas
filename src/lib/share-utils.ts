@@ -62,7 +62,7 @@ export function printFormulaCard(formula: Formula): void {
   ${formula.purpose ? `<div class="section"><div class="section-title">Purpose</div><div class="text">${formula.purpose}</div></div>` : ''}
   ${formula.example ? `<div class="section"><div class="section-title">Worked Example</div><div class="text">${formula.example}</div></div>` : ''}
   ${formula.pitfall ? `<div class="section"><div class="section-title">Common Pitfall</div><div class="pitfall">${formula.pitfall}</div></div>` : ''}
-  </div><div class="footer">Atlas of Agri-Formulas &amp; Metrics · Field Reference Card · Printed ${new Date().toLocaleDateString()}</div></div>
+  </div><div class="footer">Formula Atlas · Field Reference Card · Printed ${new Date().toLocaleDateString()}</div></div>
   <script>window.onload=function(){window.print();setTimeout(function(){window.close()},500)}</script></body></html>`);
   w.document.close();
 }

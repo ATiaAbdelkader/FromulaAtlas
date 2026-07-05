@@ -1,6 +1,6 @@
 'use client';
 
-// Global keyboard shortcuts for the Atlas of Agri-Formulas & Metrics.
+// Global keyboard shortcuts for the Formula Atlas.
 //
 // Usage:
 //   const { ShortcutHelp } = useKeyboardShortcuts({
