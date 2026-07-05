@@ -1,7 +1,7 @@
 'use client';
 
-import { useMemo, useState, useEffect } from 'react';
-import { Search, Sprout, Layers, BookOpen, Calculator, X, Leaf, Filter, Home, Wrench, Bug, TrendingUp, Droplets, Settings, Calendar, Satellite, ShoppingCart, Users, DollarSign, RefreshCw, Beef, FlaskConical, CloudRain, FileText, Trophy, Tractor, Sparkles } from 'lucide-react';
+import { useMemo, useState, useEffect, useRef } from 'react';
+import { Search, Sprout, Layers, BookOpen, Calculator, X, Leaf, Filter, Home, Wrench, Bug, TrendingUp, Droplets, Settings, Calendar, Satellite, ShoppingCart, Users, DollarSign, RefreshCw, Beef, FlaskConical, CloudRain, FileText, Trophy, Tractor, Sparkles, Download, CheckCircle2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -62,8 +62,31 @@ export default function Page() {
   const [workflowOpen, setWorkflowOpen] = useState(false);
   const { t, isRTL } = useTranslation();
   const [bookmarks, setBookmarks] = useState<string[]>([]);
+  const [installPromptEvent, setInstallPromptEvent] = useState<any>(null);
+  const [isInstalled, setIsInstalled] = useState(false);
 
   useEffect(() => { setBookmarks(getBookmarks()); }, []);
+
+  // PWA install prompt listener
+  useEffect(() => {
+    const handler = (e: any) => {
+      e.preventDefault();
+      setInstallPromptEvent(e);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    window.addEventListener('appinstalled', () => { setIsInstalled(true); setInstallPromptEvent(null); });
+    // Check if already installed (standalone mode)
+    if (window.matchMedia('(display-mode: standalone)').matches) setIsInstalled(true);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const handleInstall = async () => {
+    if (!installPromptEvent) return;
+    installPromptEvent.prompt();
+    const { outcome } = await installPromptEvent.userChoice;
+    if (outcome === 'accepted') setIsInstalled(true);
+    setInstallPromptEvent(null);
+  };
 
   const filteredFormulas = useMemo(() => {
     let result = allFormulas;
@@ -134,6 +157,18 @@ export default function Page() {
               <TakeTourButton />
               <ApiDocsButton />
               <TelegramConnectButton />
+              {installPromptEvent && !isInstalled && (
+                <Button size="sm" onClick={handleInstall} className="gap-1.5 text-xs h-9 bg-emerald-600 hover:bg-emerald-700" title="Install Formula Atlas as an app">
+                  <Download className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Install App</span>
+                </Button>
+              )}
+              {isInstalled && (
+                <span className="hidden sm:flex items-center gap-1 text-xs text-emerald-600 px-2" title="App installed">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  <span className="hidden lg:inline">Installed</span>
+                </span>
+              )}
               <LanguageToggle />
               {activeTab === 'formulas' && (
                 <div className="lg:hidden">
