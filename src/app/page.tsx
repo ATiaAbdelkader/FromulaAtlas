@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
-import { Search, Sprout, Layers, BookOpen, Calculator, X, Leaf, Filter, Home, Wrench, Bug, TrendingUp, Droplets, Settings, Calendar } from 'lucide-react';
+import { Search, Sprout, Layers, BookOpen, Calculator, X, Leaf, Filter, Home, Wrench, Bug, TrendingUp, Droplets, Settings, Calendar, Satellite } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -21,6 +21,7 @@ import { CollapsibleSection } from '@/components/agri/nutri-tools/CollapsibleSec
 import { IrrigationProgramGenerator } from '@/components/agri/nutri-tools/IrrigationProgramGenerator';
 import { IrrigationSystemDesigner } from '@/components/agri/nutri-tools/IrrigationSystemDesigner';
 import { AgriPlannerSuite } from '@/components/agri/nutri-tools/AgriPlannerSuite';
+import { NdviFieldMaps } from '@/components/agri/nutri-tools/NdviFieldMaps';
 import { BookmarkedFormulas } from '@/components/agri/bookmarked-formulas';
 import { getBookmarks, toggleBookmark } from '@/lib/formula-bookmarks';
 import { OnboardingFlow } from '@/components/onboarding/OnboardingFlow';
@@ -174,6 +175,17 @@ export default function Page() {
 
           {/* Collapsible feature sections */}
           <section className="mb-6 space-y-3">
+            <CollapsibleSection
+              title="NDVI Satellite Field Maps"
+              description="Vegetation health heatmap · Stress zone detection · AI recommendations · PDF export"
+              icon={Satellite}
+              color="#6366f1"
+              storageKey="collapse_ndvi"
+              defaultOpen={false}
+            >
+              <div className="p-4"><NdviFieldMaps /></div>
+            </CollapsibleSection>
+
             <CollapsibleSection
               title="Smart Agriculture Suite"
               description="Disease detection · crop recommendation · fertilizer guidance"
