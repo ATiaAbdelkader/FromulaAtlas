@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
-import { Search, Sprout, Layers, BookOpen, Calculator, X, Leaf, Filter, Home, Wrench, Bug, TrendingUp, Droplets, Settings, Calendar, Satellite, ShoppingCart, Users, DollarSign, RefreshCw } from 'lucide-react';
+import { Search, Sprout, Layers, BookOpen, Calculator, X, Leaf, Filter, Home, Wrench, Bug, TrendingUp, Droplets, Settings, Calendar, Satellite, ShoppingCart, Users, DollarSign, RefreshCw, Beef } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -26,6 +26,7 @@ import { Marketplace } from '@/components/agri/nutri-tools/Marketplace';
 import { FarmerCommunity } from '@/components/agri/nutri-tools/FarmerCommunity';
 import { FinancialDashboard } from '@/components/agri/nutri-tools/FinancialDashboard';
 import { CropRotationPlanner } from '@/components/agri/nutri-tools/CropRotationPlanner';
+import { LivestockIntegration } from '@/components/agri/nutri-tools/LivestockIntegration';
 import { BookmarkedFormulas } from '@/components/agri/bookmarked-formulas';
 import { getBookmarks, toggleBookmark } from '@/lib/formula-bookmarks';
 import { OnboardingFlow } from '@/components/onboarding/OnboardingFlow';
@@ -232,6 +233,17 @@ export default function Page() {
               defaultOpen={false}
             >
               <div className="p-4"><CropRotationPlanner /></div>
+            </CollapsibleSection>
+
+            <CollapsibleSection
+              title="Livestock Management"
+              description="Feed rations (NRC 2021) · Pasture capacity · Manure NPK value · Rotational grazing"
+              icon={Beef}
+              color="#f59e0b"
+              storageKey="collapse_livestock"
+              defaultOpen={false}
+            >
+              <div className="p-4"><LivestockIntegration /></div>
             </CollapsibleSection>
 
             <CollapsibleSection
