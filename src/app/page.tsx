@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
-import { Search, Sprout, Layers, BookOpen, Calculator, X, Leaf, Filter, Home, Wrench, Bug, TrendingUp, Droplets, Settings, Calendar, Satellite, ShoppingCart, Users, DollarSign, RefreshCw, Beef, FlaskConical } from 'lucide-react';
+import { Search, Sprout, Layers, BookOpen, Calculator, X, Leaf, Filter, Home, Wrench, Bug, TrendingUp, Droplets, Settings, Calendar, Satellite, ShoppingCart, Users, DollarSign, RefreshCw, Beef, FlaskConical, CloudRain } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -28,6 +28,7 @@ import { FinancialDashboard } from '@/components/agri/nutri-tools/FinancialDashb
 import { CropRotationPlanner } from '@/components/agri/nutri-tools/CropRotationPlanner';
 import { LivestockIntegration } from '@/components/agri/nutri-tools/LivestockIntegration';
 import { SoilTestHistoryTracker } from '@/components/agri/nutri-tools/SoilTestHistoryTracker';
+import { WeatherRadar } from '@/components/agri/nutri-tools/WeatherRadar';
 import { BookmarkedFormulas } from '@/components/agri/bookmarked-formulas';
 import { getBookmarks, toggleBookmark } from '@/lib/formula-bookmarks';
 import { OnboardingFlow } from '@/components/onboarding/OnboardingFlow';
@@ -256,6 +257,17 @@ export default function Page() {
               defaultOpen={false}
             >
               <div className="p-4"><SoilTestHistoryTracker /></div>
+            </CollapsibleSection>
+
+            <CollapsibleSection
+              title="Weather Radar + Frost Maps"
+              description="Live 7-day forecast · Frost risk · Heat warnings · Spray windows · Microclimate"
+              icon={CloudRain}
+              color="#0ea5e9"
+              storageKey="collapse_weather_radar"
+              defaultOpen={false}
+            >
+              <div className="p-4"><WeatherRadar /></div>
             </CollapsibleSection>
 
             <CollapsibleSection
