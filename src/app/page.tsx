@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState, useEffect, useRef } from 'react';
-import { Search, Sprout, Layers, BookOpen, Calculator, X, Leaf, Filter, Home, Wrench, Bug, TrendingUp, Droplets, Settings, Calendar, Satellite, ShoppingCart, Users, DollarSign, RefreshCw, Beef, FlaskConical, CloudRain, FileText, Trophy, Tractor, Sparkles, Download, CheckCircle2, MapPin, Shapes, Compass } from 'lucide-react';
+import { Search, Sprout, Layers, BookOpen, Calculator, X, Leaf, Filter, Home, Wrench, Bug, TrendingUp, Droplets, Settings, Calendar, Satellite, ShoppingCart, Users, DollarSign, RefreshCw, Beef, FlaskConical, CloudRain, FileText, Trophy, Tractor, Sparkles, Download, CheckCircle2, MapPin, Shapes, Compass, Sun } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -34,6 +34,8 @@ import { GamificationPanel } from '@/components/agri/nutri-tools/GamificationPan
 import { CoordinateConverter } from '@/components/agri/nutri-tools/CoordinateConverter';
 import { FieldBoundaryImporter } from '@/components/agri/nutri-tools/FieldBoundaryImporter';
 import { DistanceBearingCalculator } from '@/components/agri/nutri-tools/DistanceBearingCalculator';
+import { EvapotranspirationTracker } from '@/components/agri/nutri-tools/EvapotranspirationTracker';
+import { ServiceIntegrations } from '@/components/agri/nutri-tools/ServiceIntegrations';
 import { BookmarkedFormulas } from '@/components/agri/bookmarked-formulas';
 import { getBookmarks, toggleBookmark } from '@/lib/formula-bookmarks';
 import { OnboardingFlow } from '@/components/onboarding/OnboardingFlow';
@@ -282,6 +284,7 @@ export default function Page() {
             <CollapsibleSection title="Irrigation Program Generator" description="Decadal (10-day) irrigation schedule from the BRL/COM memento" icon={Droplets} color="#0ea5e9" storageKey="collapse_irrigation" defaultOpen={false}><div className="p-4"><IrrigationProgramGenerator /></div></CollapsibleSection>
             <CollapsibleSection title="Irrigation System Designer" description="Multi-zone sprinkler / drip / bubbler designer with pump sizing" icon={Settings} color="#6366f1" storageKey="collapse_system_design" defaultOpen={false}><div className="p-4"><IrrigationSystemDesigner /></div></CollapsibleSection>
             <CollapsibleSection title="Seasonal Irrigation Planner" description="Season-by-season irrigation focus, risks and recommendations" icon={Calendar} color="#f59e0b" storageKey="collapse_seasonal" defaultOpen={false}><div className="p-4"><SeasonScheduler /></div></CollapsibleSection>
+            <CollapsibleSection title="Evapotranspiration Tracker" description="Live ET₀ (Open-Meteo) · FAO-56 Kc × ETc · 7-day irrigation plan · ERA5 history — no API key needed" icon={Sun} color="#0891b2" storageKey="collapse_et_tracker" defaultOpen={false}><div className="p-4"><EvapotranspirationTracker /></div></CollapsibleSection>
           </div>
         </main>
       )}
@@ -315,6 +318,12 @@ export default function Page() {
             <SubHeader emoji="👥" label="Community & Reports" />
             <CollapsibleSection title="Farmer Community & Knowledge Exchange" description="Share experiences · Ask questions · Benchmark your farm · Success stories" icon={Users} color="#3b82f6" storageKey="collapse_community" defaultOpen={false}><div className="p-4"><FarmerCommunity /></div></CollapsibleSection>
             <CollapsibleSection title="Professional Report Generator" description="Branded multi-page PDF · Combines all data · Cover page · AI recommendations" icon={FileText} color="#0ea5e9" storageKey="collapse_report" defaultOpen={false}><div className="p-4"><ReportGenerator /></div></CollapsibleSection>
+          </div>
+
+          {/* Sub-category: Settings & Integrations */}
+          <div className="space-y-3">
+            <SubHeader emoji="🔌" label="Settings & Integrations" />
+            <CollapsibleSection title="Service Integrations" description="Plug in free-tier services — Clerk auth, Neon Postgres, OneSignal push, MapTiler maps, Gemini AI" icon={Settings} color="#64748b" storageKey="collapse_integrations" defaultOpen={false}><div className="p-4"><ServiceIntegrations /></div></CollapsibleSection>
           </div>
         </main>
       )}
