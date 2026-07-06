@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState, useEffect, useRef } from 'react';
-import { Search, Sprout, Layers, BookOpen, Calculator, X, Leaf, Filter, Home, Wrench, Bug, TrendingUp, Droplets, Settings, Calendar, Satellite, ShoppingCart, Users, DollarSign, RefreshCw, Beef, FlaskConical, CloudRain, FileText, Trophy, Tractor, Sparkles, Download, CheckCircle2, MapPin, Shapes } from 'lucide-react';
+import { Search, Sprout, Layers, BookOpen, Calculator, X, Leaf, Filter, Home, Wrench, Bug, TrendingUp, Droplets, Settings, Calendar, Satellite, ShoppingCart, Users, DollarSign, RefreshCw, Beef, FlaskConical, CloudRain, FileText, Trophy, Tractor, Sparkles, Download, CheckCircle2, MapPin, Shapes, Compass } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -33,6 +33,7 @@ import { ReportGenerator } from '@/components/agri/nutri-tools/ReportGenerator';
 import { GamificationPanel } from '@/components/agri/nutri-tools/GamificationPanel';
 import { CoordinateConverter } from '@/components/agri/nutri-tools/CoordinateConverter';
 import { FieldBoundaryImporter } from '@/components/agri/nutri-tools/FieldBoundaryImporter';
+import { DistanceBearingCalculator } from '@/components/agri/nutri-tools/DistanceBearingCalculator';
 import { BookmarkedFormulas } from '@/components/agri/bookmarked-formulas';
 import { getBookmarks, toggleBookmark } from '@/lib/formula-bookmarks';
 import { OnboardingFlow } from '@/components/onboarding/OnboardingFlow';
@@ -262,6 +263,7 @@ export default function Page() {
             <CollapsibleSection title="Multi-Field Dashboard" description="Track every field, crop stage and irrigation demand in one place" icon={Layers} color="#16a34a" storageKey="collapse_multifield" defaultOpen={false}><div className="p-4"><MultiFieldDashboard /></div></CollapsibleSection>
             <CollapsibleSection title="Coordinate Converter" description="DMS ↔ Decimal · UTM ↔ Lat/Lng · Batch CSV conversion (WGS84)" icon={MapPin} color="#6366f1" storageKey="collapse_coords" defaultOpen={false}><div className="p-4"><CoordinateConverter /></div></CollapsibleSection>
             <CollapsibleSection title="Field Boundary Importer" description="Import GeoJSON · KML · WKT · CSV · Area/perimeter/centroid · Convert & export · SVG preview" icon={Shapes} color="#10b981" storageKey="collapse_boundary" defaultOpen={false}><div className="p-4"><FieldBoundaryImporter /></div></CollapsibleSection>
+            <CollapsibleSection title="Distance & Bearing Calculator" description="Vincenty geodesic distance · Initial/final bearing · Destination projection · Batch CSV · Field-to-field" icon={Compass} color="#0891b2" storageKey="collapse_distance" defaultOpen={false}><div className="p-4"><DistanceBearingCalculator /></div></CollapsibleSection>
             <CollapsibleSection title="Crop Rotation Planner" description="Multi-year rotation · N credit tracking · Disease breaks · Cover crops · Soil health score" icon={RefreshCw} color="#16a34a" storageKey="collapse_rotation" defaultOpen={false}><div className="p-4"><CropRotationPlanner /></div></CollapsibleSection>
             <CollapsibleSection title="Yield Gap Analysis" description="Benchmark actual vs potential yield by crop and climate zone" icon={TrendingUp} color="#0891b2" storageKey="collapse_yieldgap" defaultOpen={false}><div className="p-4"><YieldGapAnalysis /></div></CollapsibleSection>
             <CollapsibleSection title="Field Scouting Log" description="Voice + photo field observations with severity tagging" icon={Sprout} color="#84cc16" storageKey="collapse_scouting" defaultOpen={false}><div className="p-4"><FieldScoutingLog /></div></CollapsibleSection>
