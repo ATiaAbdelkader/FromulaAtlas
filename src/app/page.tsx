@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState, useEffect, useRef } from 'react';
-import { Search, Sprout, Layers, BookOpen, Calculator, X, Leaf, Filter, Home, Wrench, Bug, TrendingUp, Droplets, Settings, Calendar, Satellite, ShoppingCart, Users, DollarSign, RefreshCw, Beef, FlaskConical, CloudRain, FileText, Trophy, Tractor, Sparkles, Download, CheckCircle2, MapPin, Shapes, Compass, Sun, Mountain } from 'lucide-react';
+import { Search, Sprout, Layers, BookOpen, Calculator, X, Leaf, Filter, Home, Wrench, Bug, TrendingUp, Droplets, Settings, Calendar, Satellite, ShoppingCart, Users, DollarSign, RefreshCw, Beef, FlaskConical, CloudRain, FileText, Trophy, Tractor, Sparkles, Download, CheckCircle2, MapPin, Shapes, Compass, Sun, Mountain, FlaskConical as Flask, CalendarDays } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -37,6 +37,9 @@ import { DistanceBearingCalculator } from '@/components/agri/nutri-tools/Distanc
 import { ElevationSlopeAnalyzer } from '@/components/agri/nutri-tools/ElevationSlopeAnalyzer';
 import { EvapotranspirationTracker } from '@/components/agri/nutri-tools/EvapotranspirationTracker';
 import { ServiceIntegrations } from '@/components/agri/nutri-tools/ServiceIntegrations';
+import { FertilizationGenerator } from '@/components/agri/nutri-tools/FertilizationGenerator';
+import { LaborCalendar } from '@/components/agri/nutri-tools/LaborCalendar';
+import { SeasonPlanGenerator } from '@/components/agri/nutri-tools/SeasonPlanGenerator';
 import { BookmarkedFormulas } from '@/components/agri/bookmarked-formulas';
 import { getBookmarks, toggleBookmark } from '@/lib/formula-bookmarks';
 import { OnboardingFlow } from '@/components/onboarding/OnboardingFlow';
@@ -269,6 +272,9 @@ export default function Page() {
             <CollapsibleSection title="Distance & Bearing Calculator" description="Vincenty geodesic distance · Initial/final bearing · Destination projection · Batch CSV · Field-to-field" icon={Compass} color="#0891b2" storageKey="collapse_distance" defaultOpen={false}><div className="p-4"><DistanceBearingCalculator /></div></CollapsibleSection>
             <CollapsibleSection title="Elevation & Slope Analyzer" description="Open-Meteo elevation API · Point / Path profile / Slope grid · Aspect · Hillshade · Frost risk — no key" icon={Mountain} color="#78716c" storageKey="collapse_elevation" defaultOpen={false}><div className="p-4"><ElevationSlopeAnalyzer /></div></CollapsibleSection>
             <CollapsibleSection title="Crop Rotation Planner" description="Multi-year rotation · N credit tracking · Disease breaks · Cover crops · Soil health score" icon={RefreshCw} color="#16a34a" storageKey="collapse_rotation" defaultOpen={false}><div className="p-4"><CropRotationPlanner /></div></CollapsibleSection>
+            <CollapsibleSection title="Season Plan Generator" description="AI-powered week-by-week crop plan · Kc + NPK + irrigation + fertigation + warnings" icon={Sparkles} color="#7c3aed" storageKey="collapse_season_plan" defaultOpen={false}><div className="p-4"><SeasonPlanGeneratorWrapper /></div></CollapsibleSection>
+            <CollapsibleSection title="Fertilization Generator" description="Per-crop lifecycle fertilization schedule · NPK + micros · Application methods + sources · 20 crops · PDF export" icon={Flask} color="#16a34a" storageKey="collapse_fertilization" defaultOpen={false}><div className="p-4"><FertilizationGenerator /></div></CollapsibleSection>
+            <CollapsibleSection title="Labor Calendar" description="Phenology-driven field operations · Person-days/ha · Peak week detection · Skill levels · 20 crops · PDF export" icon={CalendarDays} color="#0891b2" storageKey="collapse_labor_cal" defaultOpen={false}><div className="p-4"><LaborCalendar /></div></CollapsibleSection>
             <CollapsibleSection title="Yield Gap Analysis" description="Benchmark actual vs potential yield by crop and climate zone" icon={TrendingUp} color="#0891b2" storageKey="collapse_yieldgap" defaultOpen={false}><div className="p-4"><YieldGapAnalysis /></div></CollapsibleSection>
             <CollapsibleSection title="Field Scouting Log" description="Voice + photo field observations with severity tagging" icon={Sprout} color="#84cc16" storageKey="collapse_scouting" defaultOpen={false}><div className="p-4"><FieldScoutingLog /></div></CollapsibleSection>
           </div>
@@ -450,6 +456,36 @@ function QuickNav({ icon: Icon, label, desc, color, onClick }: { icon: typeof Ho
         <div className="text-[11px] text-muted-foreground leading-tight mt-0.5">{desc}</div>
       </div>
     </button>
+  );
+}
+
+/**
+ * Wrapper for the Season Plan Generator modal — exposes a button inside a
+ * CollapsibleSection so users can find it without going through the
+ * FreeToolsSection's "Pro feature" card.
+ */
+function SeasonPlanGeneratorWrapper() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="space-y-3">
+      <div className="rounded-lg border-2 border-emerald-200 dark:border-emerald-900 bg-gradient-to-br from-emerald-50/60 to-green-50/40 dark:from-emerald-950/20 dark:to-green-950/10 p-4">
+        <div className="flex items-start gap-3">
+          <div className="shrink-0 w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center">
+            <Sparkles className="h-5 w-5" />
+          </div>
+          <div className="flex-1">
+            <h4 className="text-sm font-semibold text-emerald-900 dark:text-emerald-100">AI Season Plan Generator</h4>
+            <p className="text-[11px] text-emerald-700 dark:text-emerald-300 mt-0.5">
+              Generates a complete week-by-week crop plan from your inputs — Kc curve, NPK dose per week, irrigation schedule, fertigation recipe, growth-stage notes, and warnings (frost/heat/water stress). Powered by the LLM via the <code className="text-[10px]">/api/season-plan</code> route.
+            </p>
+            <Button size="sm" onClick={() => setOpen(true)} className="mt-2 gap-1.5">
+              <Sparkles className="h-3.5 w-3.5" /> Open Season Plan Generator
+            </Button>
+          </div>
+        </div>
+      </div>
+      <SeasonPlanGenerator open={open} onOpenChange={setOpen} />
+    </div>
   );
 }
 
