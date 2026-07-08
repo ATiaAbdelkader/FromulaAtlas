@@ -1,0 +1,674 @@
+=== SHEETS (20) ===
+
+============================================================
+SHEET: Zone 1 SP | Rows: 65 | Cols: 26
+============================================================
+  R  0:  |  |  |  |  |  |  | SPRINKLER ZONE 1 |  |  |  |  |  |  | 
+  R  1: Type of irrigation i |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+  R  2: using adjustable noz |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+  R  3:  |  |  |  |  | 45 degree |  |  | 90 degree |  |  | 120 degree |  |  | 180 degree
+  R  4:  |  |  |  |  | no. | GPM | T.GPM | no. | GPM | T.GPM | no. | GPM | T.GPM | no.
+  R  5:  | 4A (" 4 foot radius" |  |  | 1 | 0 | 0.13 | 0 | 1 | 0.28 | 0.28 | 1 | 0.34 | 0.34 | 1
+  R  6:  | 6A (" 6 foot radius" |  |  | = | 0 | 0.18 | 0 | 1 | 0.37 | 0.37 | 1 | 0.44 | 0.44 | 1
+  R  7:  | 8A (" 8 foot radius" |  |  | = | 0 | 0.15 | 0 | 1 | 0.29 | 0.29 | 1 | 0.39 | 0.39 | 1
+  R  8:  | 10A (" 10 foot radiu |  |  | = | 0 | 0.25 | 0 | 1 | 0.49 | 0.49 | 1 | 0.65 | 0.65 | 0
+  R  9:  | 12A (" 12 foot radiu |  |  | = | 0 | 0.32 | 0 | 0 | 0.63 | 0 | 0 | 0.84 | 0 | 0
+  R 10:  | 15A (" 15 foot radiu |  |  | = | 0 | 0.47 | 0 | 0 | 0.93 | 0 | 0 | 1.24 | 0 | 0
+  R 11:  | 17A (" 17 foot radiu |  |  | = | 0 | 0.6 | 0 | 0 | 1.2 | 0 | 0 | 1.6 | 0 | 0
+  R 12:  | Total Angle Flow |  |  |  | 0 |  |  | 1.43 |  |  | 1.8199999999999998 |  |  | 1.63
+  R 13:  | Total Nozzel Flow  |  |  |  | 37.849999999999994 |  |  |  |  |  |  |  |  | 
+  R 14:  |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+  R 15: Sizing Valve |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+  R 16:  |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+  R 17: Type of vlave will b |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+  R 18: Maximum Zone Flow in |  |  |  |  |  |  | 37.849999999999994 | GPM |  |  |  |  | 1.965259498885372 | in
+  R 19:  |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+  R 20:  | Pressure loss | 0.75 |  |  |  |  | 1 |  |  |  |  | 1.5 |  | 
+  R 21:  | GPm | Globe |  | Angle |  |  | Globe |  | Angle |  |  | Globe |  | Angle
+  R 22:  | 0.1 | 0 |  | 0 |  |  | 0 |  | 0 |  |  | 0 |  | 0
+  R 23:  | 0.5 | 0 |  | 0 |  |  | 0 |  | 0 |  |  | 0 |  | 0
+  R 24:  | 1 | 0 |  | 0 |  |  | 1.1 |  | 0 |  |  | 0 |  | 0
+  R 25:  | 5 | 0 |  | 0 |  |  | 1.9 |  | 0 |  |  | 0 |  | 0
+  R 26:  | 10 | 0 |  | 0 |  |  | 1.9 |  | 0 |  |  | 0 |  | 0
+  R 27:  | 15 | 0 |  | 0 |  |  | 1.6 |  | 0 |  |  | 0 |  | 0
+  R 28:  | 20 | 0 |  | 0 |  |  | 3.3 |  | 0 |  |  | 0 |  | 0
+  R 29:  | 25 | 0 |  | 0 |  |  | 5 |  | 0 |  |  | 0 |  | 0
+
+============================================================
+SHEET: Zone 2 SP | Rows: 65 | Cols: 26
+============================================================
+  R  0:  |  |  |  |  |  |  | SPRINKLER ZONE 2 |  |  |  |  |  |  | 
+  R  1: Type of irrigation i |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+  R  2: using adjustable noz |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+  R  3:  |  |  |  |  | 45 degree |  |  | 90 degree |  |  | 120 degree |  |  | 180 degree
+  R  4:  |  |  |  |  | no. | GPM | T.GPM | no. | GPM | T.GPM | no. | GPM | T.GPM | no.
+  R  5:  | 4A (" 4 foot radius" |  |  | = | 0 | 0.13 | 0 | 1 | 0.28 | 0.28 | 1 | 0.34 | 0.34 | 1
+  R  6:  | 6A (" 6 foot radius" |  |  | = | 0 | 0.18 | 0 | 1 | 0.37 | 0.37 | 1 | 0.44 | 0.44 | 1
+  R  7:  | 8A (" 8 foot radius" |  |  | = | 0 | 0.15 | 0 | 1 | 0.29 | 0.29 | 1 | 0.39 | 0.39 | 1
+  R  8:  | 10A (" 10 foot radiu |  |  | = | 0 | 0.25 | 0 | 1 | 0.49 | 0.49 | 1 | 0.65 | 0.65 | 0
+  R  9:  | 12A (" 12 foot radiu |  |  | = | 0 | 0.32 | 0 | 0 | 0.63 | 0 | 0 | 0.84 | 0 | 0
+  R 10:  | 15A (" 15 foot radiu |  |  | = | 0 | 0.47 | 0 | 0 | 0.93 | 0 | 0 | 1.24 | 0 | 0
+  R 11:  | 17A (" 17 foot radiu |  |  | = | 0 | 0.6 | 0 | 0 | 1.2 | 0 | 0 | 1.6 | 0 | 0
+  R 12:  | Total Angle Flow |  |  |  | 0 |  |  | 1.43 |  |  | 1.8199999999999998 |  |  | 1.63
+  R 13:  | Total Nozzel Flow  |  |  |  | 249.05 |  |  |  |  |  |  |  |  | 
+  R 14:  |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+  R 15: Sizing Valve |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+  R 16:  |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+  R 17: Type of vlave will b |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+  R 18: Maximum Zone Flow in |  |  |  |  |  |  | 249.05 | GPM |  |  |  |  | 5.041157139598254 | in
+  R 19:  |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+  R 20:  | Pressure loss | 0.75 |  |  |  |  | 1 |  |  |  |  | 1.5 |  | 
+  R 21:  | GPm | Globe |  | Angle |  |  | Globe |  | Angle |  |  | Globe |  | Angle
+  R 22:  | 0.1 | 0 |  | 0 |  |  | 0 |  | 0 |  |  | 0 |  | 0
+  R 23:  | 0.5 | 0 |  | 0 |  |  | 0 |  | 0 |  |  | 0 |  | 0
+  R 24:  | 1 | 0 |  | 0 |  |  | 1.1 |  | 0 |  |  | 0 |  | 0
+  R 25:  | 5 | 0 |  | 0 |  |  | 1.9 |  | 0 |  |  | 0 |  | 0
+  R 26:  | 10 | 0 |  | 0 |  |  | 1.9 |  | 0 |  |  | 0 |  | 0
+  R 27:  | 15 | 0 |  | 0 |  |  | 1.6 |  | 0 |  |  | 0 |  | 0
+  R 28:  | 20 | 0 |  | 0 |  |  | 3.3 |  | 0 |  |  | 0 |  | 0
+  R 29:  | 25 | 0 |  | 0 |  |  | 0 |  | 0 |  |  | 0 |  | 0
+
+============================================================
+SHEET: Zone 3 SP | Rows: 65 | Cols: 26
+============================================================
+  R  0:  |  |  |  |  |  |  | SPRINKLER ZONE 3 |  |  |  |  |  |  | 
+  R  1: Type of irrigation i |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+  R  2: using adjustable noz |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+  R  3:  |  |  |  |  | 45 degree |  |  | 90 degree |  |  | 120 degree |  |  | 180 degree
+  R  4:  |  |  |  |  | no. | GPM | T.GPM | no. | GPM | T.GPM | no. | GPM | T.GPM | no.
+  R  5:  | 4A (" 4 foot radius" |  |  | = | 0 | 0.13 | 0 | 1 | 0.28 | 0.28 | 1 | 0.34 | 0.34 | 1
+  R  6:  | 6A (" 6 foot radius" |  |  | = | 0 | 0.18 | 0 | 1 | 0.37 | 0.37 | 1 | 0.44 | 0.44 | 1
+  R  7:  | 8A (" 8 foot radius" |  |  | = | 0 | 0.15 | 0 | 1 | 0.29 | 0.29 | 1 | 0.39 | 0.39 | 1
+  R  8:  | 10A (" 10 foot radiu |  |  | = | 0 | 0.25 | 0 | 1 | 0.49 | 0.49 | 1 | 0.65 | 0.65 | 0
+  R  9:  | 12A (" 12 foot radiu |  |  | = | 0 | 0.32 | 0 | 0 | 0.63 | 0 | 0 | 0.84 | 0 | 0
+  R 10:  | 15A (" 15 foot radiu |  |  | = | 0 | 0.47 | 0 | 0 | 0.93 | 0 | 0 | 1.24 | 0 | 0
+  R 11:  | 17A (" 17 foot radiu |  |  | = | 0 | 0.6 | 0 | 0 | 1.2 | 0 | 0 | 1.6 | 0 | 0
+  R 12:  | Total Angle Flow |  |  |  | 0 |  |  | 1.43 |  |  | 1.8199999999999998 |  |  | 1.63
+  R 13:  | Total Nozzel Flow  |  |  |  | 33.05 |  |  |  |  |  |  |  |  | 
+  R 14:  |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+  R 15: Sizing Valve |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+  R 16:  |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+  R 17: Type of vlave will b |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+  R 18: Maximum Zone Flow in |  |  |  |  |  |  | 33.05 | GPM |  |  |  |  | 1.8364228760260628 | in
+  R 19:  |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+  R 20:  | Pressure loss | 0.75 |  |  |  |  | 1 |  |  |  |  | 1.5 |  | 
+  R 21:  | GPm | Globe |  | Angle |  |  | Globe |  | Angle |  |  | Globe |  | Angle
+  R 22:  | 0.1 | 0 |  | 0 |  |  | 0 |  | 0 |  |  | 0 |  | 0
+  R 23:  | 0.5 | 0 |  | 0 |  |  | 0 |  | 0 |  |  | 0 |  | 0
+  R 24:  | 1 | 0 |  | 0 |  |  | 1.1 |  | 0 |  |  | 0 |  | 0
+  R 25:  | 5 | 0 |  | 0 |  |  | 1.9 |  | 0 |  |  | 0 |  | 0
+  R 26:  | 10 | 0 |  | 0 |  |  | 1.9 |  | 0 |  |  | 0 |  | 0
+  R 27:  | 15 | 0 |  | 0 |  |  | 1.6 |  | 0 |  |  | 0 |  | 0
+  R 28:  | 20 | 0 |  | 0 |  |  | 3.3 |  | 0 |  |  | 0 |  | 0
+  R 29:  | 25 | 0 |  | 0 |  |  | 5 |  | 0 |  |  | 0 |  | 0
+
+============================================================
+SHEET: Zone 4 SP | Rows: 65 | Cols: 26
+============================================================
+  R  0:  |  |  |  |  |  |  | SPRINKLER ZONE 4 |  |  |  |  |  |  | 
+  R  1: Type of irrigation i |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+  R  2: using adjustable noz |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+  R  3:  |  |  |  |  | 45 degree |  |  | 90 degree |  |  | 120 degree |  |  | 180 degree
+  R  4:  |  |  |  |  | no. | GPM | T.GPM | no. | GPM | T.GPM | no. | GPM | T.GPM | no.
+  R  5:  | 4A (" 4 foot radius" |  |  | = | 0 | 0.13 | 0 | 1 | 0.28 | 0.28 | 1 | 0.34 | 0.34 | 1
+  R  6:  | 6A (" 6 foot radius" |  |  | = | 0 | 0.18 | 0 | 1 | 0.37 | 0.37 | 1 | 0.44 | 0.44 | 1
+  R  7:  | 8A (" 8 foot radius" |  |  | = | 0 | 0.15 | 0 | 1 | 0.29 | 0.29 | 1 | 0.39 | 0.39 | 1
+  R  8:  | 10A (" 10 foot radiu |  |  | = | 0 | 0.25 | 0 | 1 | 0.49 | 0.49 | 1 | 0.65 | 0.65 | 0
+  R  9:  | 12A (" 12 foot radiu |  |  | = | 0 | 0.32 | 0 | 0 | 0.63 | 0 | 0 | 0.84 | 0 | 0
+  R 10:  | 15A (" 15 foot radiu |  |  | = | 0 | 0.47 | 0 | 0 | 0.93 | 0 | 0 | 1.24 | 0 | 0
+  R 11:  | 17A (" 17 foot radiu |  |  | = | 0 | 0.6 | 0 | 0 | 1.2 | 0 | 0 | 1.6 | 0 | 0
+  R 12:  | Total Angle Flow |  |  |  | 0 |  |  | 1.43 |  |  | 1.8199999999999998 |  |  | 1.63
+  R 13:  | Total Nozzel Flow  |  |  |  | 33.05 |  |  |  |  |  |  |  |  | 
+  R 14:  |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+  R 15: Sizing Valve |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+  R 16:  |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+  R 17: Type of vlave will b |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+  R 18: Maximum Zone Flow in |  |  |  |  |  |  | 33.05 | GPM |  |  |  |  | 1.8364228760260628 | in
+  R 19:  |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+  R 20:  | Pressure loss | 0.75 |  |  |  |  | 1 |  |  |  |  | 1.5 |  | 
+  R 21:  | GPm | Globe |  | Angle |  |  | Globe |  | Angle |  |  | Globe |  | Angle
+  R 22:  | 0.1 | 0 |  | 0 |  |  | 0 |  | 0 |  |  | 0 |  | 0
+  R 23:  | 0.5 | 0 |  | 0 |  |  | 0 |  | 0 |  |  | 0 |  | 0
+  R 24:  | 1 | 0 |  | 0 |  |  | 1.1 |  | 1 |  |  | 0 |  | 0
+  R 25:  | 5 | 0 |  | 0 |  |  | 1.9 |  | 1 |  |  | 0 |  | 0
+  R 26:  | 10 | 0 |  | 0 |  |  | 1.9 |  | 1 |  |  | 0 |  | 0
+  R 27:  | 15 | 0 |  | 0 |  |  | 1.6 |  | 1 |  |  | 0 |  | 0
+  R 28:  | 20 | 0 |  | 0 |  |  | 3.3 |  | 2 |  |  | 3 |  | 3
+  R 29:  | 25 | 0 |  | 0 |  |  | 0 |  | 0 |  |  | 0 |  | 0
+
+============================================================
+SHEET: Zone 5 SP | Rows: 65 | Cols: 26
+============================================================
+  R  0:  |  |  |  |  |  |  | SPRINKLER ZONE 5 |  |  |  |  |  |  | 
+  R  1: Type of irrigation i |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+  R  2: using adjustable noz |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+  R  3:  |  |  |  |  | 45 degree |  |  | 90 degree |  |  | 120 degree |  |  | 180 degree
+  R  4:  |  |  |  |  | no. | GPM | T.GPM | no. | GPM | T.GPM | no. | GPM | T.GPM | no.
+  R  5:  | 4A (" 4 foot radius" |  |  | = | 1 | 0.13 | 0.13 | 1 | 0.28 | 0.28 | 1 | 0.34 | 0.34 | 1
+  R  6:  | 6A (" 6 foot radius" |  |  | = | 1 | 0.18 | 0.18 | 1 | 0.37 | 0.37 | 1 | 0.44 | 0.44 | 1
+  R  7:  | 8A (" 8 foot radius" |  |  | = | 1 | 0.15 | 0.15 | 1 | 0.29 | 0.29 | 1 | 0.39 | 0.39 | 1
+  R  8:  | 10A (" 10 foot radiu |  |  | = | 1 | 0.25 | 0.25 | 1 | 0.49 | 0.49 | 1 | 0.65 | 0.65 | 11
+  R  9:  | 12A (" 12 foot radiu |  |  | = | 1 | 0.32 | 0.32 | 1 | 0.63 | 0.63 | 1 | 0.84 | 0.84 | 1
+  R 10:  | 15A (" 15 foot radiu |  |  | = | 1 | 0.47 | 0.47 | 1 | 0.93 | 0.93 | 1 | 1.24 | 1.24 | 1
+  R 11:  | 17A (" 17 foot radiu |  |  | = | 1 | 0.6 | 0.6 | 1 | 1.2 | 1.2 | 1 | 1.6 | 1.6 | 1
+  R 12:  | Total Angle Flow |  |  |  | 2.1 |  |  | 4.19 |  |  | 5.5 |  |  | 17.93
+  R 13:  | Total Nozzel Flow  |  |  |  | 69.4 |  |  |  |  |  |  |  |  | 
+  R 14:  |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+  R 15: Sizing Valve |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+  R 16:  |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+  R 17: Type of vlave will b |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+  R 18: Maximum Zone Flow in |  |  |  |  |  |  | 69.4 | GPM |  |  |  |  | 2.661133715742451 | in
+  R 19:  |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+  R 20:  | Pressure loss | 0.75 |  |  |  |  | 1 |  |  |  |  | 1.5 |  | 
+  R 21:  | GPm | Globe |  | Angle |  |  | Globe |  | Angle |  |  | Globe |  | Angle
+  R 22:  | 0.1 | 0 |  | 0 |  |  | 0 |  | 0 |  |  | 0 |  | 0
+  R 23:  | 0.5 | 0 |  | 0 |  |  | 0 |  | 0 |  |  | 0 |  | 0
+  R 24:  | 1 | 0 |  | 0 |  |  | 1.1 |  | 0 |  |  | 0 |  | 0
+  R 25:  | 5 | 0 |  | 0 |  |  | 1.9 |  | 0 |  |  | 0 |  | 0
+  R 26:  | 10 | 0 |  | 0 |  |  | 1.9 |  | 0 |  |  | 0 |  | 0
+  R 27:  | 15 | 0 |  | 0 |  |  | 1.6 |  | 0 |  |  | 0 |  | 0
+  R 28:  | 20 | 0 |  | 0 |  |  | 3.3 |  | 0 |  |  | 0 |  | 0
+  R 29:  | 25 | 0 |  | 0 |  |  | 0 |  | 0 |  |  | 0 |  | 0
+
+============================================================
+SHEET: Sprinkler Conclusion | Rows: 92 | Cols: 7
+============================================================
+  R  0: From Perevious Calcu |  |  |  |  |  | 
+  R  1:  |  |  |  |  |  | 
+  R  2: Zone 1 |  |  |  |  |  | 
+  R  3:  |  |  |  |  |  | 
+  R  4: Zone 1 Total Area  |  |  |  |  | 400 | m2
+  R  5: Zone 1 Total GPM Req |  |  |  |  | 37.849999999999994 | GPM
+  R  6: Valve Model will be  |  |  |  |  | SRV Valve | 
+  R  7: Minimum Pipe Size Wi |  |  |  |  | 2 | Inch
+  R  8:  |  |  |  |  |  | 
+  R  9: Zone 2 |  |  |  |  |  | 
+  R 10:  |  |  |  |  |  | 
+  R 11: Zone 2 Total Area  |  |  |  |  | 2100 | m2
+  R 12: Zone 2 Total GPM Req |  |  |  |  | 249.05 | GPM
+  R 13: Valve Model will be  |  |  |  |  | PGV Jar-Top Valve | 
+  R 14: Minimum Pipe Size Wi |  |  |  |  | 3 | Inch
+  R 15:  |  |  |  |  |  | 
+  R 16: Zone 3 |  |  |  |  |  | 
+  R 17:  |  |  |  |  |  | 
+  R 18: Zone 3 Total Area  |  |  |  |  | 600 | m2
+  R 19: Zone 3 Total GPM Req |  |  |  |  | 33.05 | GPM
+  R 20: Valve Model will be  |  |  |  |  | SRV Valve | 
+  R 21: Minimum Pipe Size Wi |  |  |  |  | 2 | Inch
+  R 22:  |  |  |  |  |  | 
+  R 23: Zone 4 |  |  |  |  |  | 
+  R 24:  |  |  |  |  |  | 
+  R 25: Zone 4 Total Area  |  |  |  |  | 300 | m2
+  R 26: Zone 4 Total GPM Req |  |  |  |  | 33.05 | GPM
+  R 27: Valve Model will be  |  |  |  |  | PGV Valve | 
+  R 28: Minimum Pipe Size Wi |  |  |  |  | 2 | Inch
+  R 29:  |  |  |  |  |  | 
+
+============================================================
+SHEET: ZONE 1 DRIP. | Rows: 55 | Cols: 9
+============================================================
+  R  0: Drip Line Calculatio |  |  |  |  |  |  |  | 
+  R  1: Dipe line changed ac |  |  |  |  |  |  |  | 
+  R  2:  |  |  |  |  |  |  |  | 
+  R  3: Type of drip line wi |  |  |  |  |  |  |  | 
+  R  4:  |  |  |  |  |  |  |  | 
+  R  5: Flow Per Emitter  |  |  |  | 1 | GPH |  |  | 
+  R  6:  |  |  |  |  |  |  |  | 
+  R  7: Maximum Distance Bet |  |  |  |  |  |  |  | 
+  R  8:  |  |  |  |  |  |  |  | 
+  R  9: distance between emi |  |  |  | 24 | Inch |  |  | 
+  R 10: Drip line Total Leng |  |  |  | 30.5 | Meter |  |  | 
+  R 11:  |  |  |  | 1201 | Inch |  |  | 
+  R 12: No. of Emitter Per L |  |  |  | 50 | Emitter |  |  | 
+  R 13: Total Flow For The L |  |  |  |  |  |  |  | 
+  R 14:  |  |  | 50 | x | 1 | = | 50 | GPH
+  R 15:  |  |  |  |  |  |  | 0.83 | GPM
+  R 16: Average water Requir |  |  |  |  |  |  |  | 
+  R 17:  |  |  |  |  |  |  |  | 
+  R 18: Weather type |  |  |  |  |  |  |  | 
+  R 19:  |  |  |  |  |  |  |  | 
+  R 20:  |  |  |  |  |  |  |  | 
+  R 21:  | Plant  |  | NO./area | Weather  | Required |  |  | 
+  R 22:  | Mature Canopy Dia. |  |  |  | Gallon |  |  | 
+  R 23:  | Small Shrubs  |  | 30 | 0.3 | 9 |  |  | 
+  R 24:  | 3ft/91 cm  |  |  |  |  |  |  | 
+  R 25:  | Large Shrubs  |  | 20 | 0.7 | 14 |  |  | 
+  R 26:  | 5ft/1.52 cm  |  |  |  |  |  |  | 
+  R 27:  | Small Tree |  | 0 | 2.7 | 0 |  |  | 
+  R 28:  | 10 ft/3.05 cm  |  |  |  |  |  |  | 
+  R 29:  | Large Tree |  | 0 | 10.9 | 0 |  |  | 
+
+============================================================
+SHEET: ZONE 2 DRIP.  | Rows: 55 | Cols: 9
+============================================================
+  R  0: Drip Line Calculatio |  |  |  |  |  |  |  | 
+  R  1: Dipe line changed ac |  |  |  |  |  |  |  | 
+  R  2:  |  |  |  |  |  |  |  | 
+  R  3: Type of drip line wi |  |  |  |  |  |  |  | 
+  R  4:  |  |  |  |  |  |  |  | 
+  R  5: Flow Per Emitter  |  |  |  | 1 | GPH |  |  | 
+  R  6:  |  |  |  |  |  |  |  | 
+  R  7: Maximum Distance Bet |  |  |  |  |  |  |  | 
+  R  8:  |  |  |  |  |  |  |  | 
+  R  9: distance between emi |  |  |  | 12 | Inch |  |  | 
+  R 10: Drip line Total Leng |  |  |  | 30.5 | Meter |  |  | 
+  R 11:  |  |  |  | 1201 | Inch |  |  | 
+  R 12: No. of Emitter Per L |  |  |  | 100 | Emitter |  |  | 
+  R 13: Total Flow For The L |  |  |  |  |  |  |  | 
+  R 14:  |  |  | 100 | x | 1 | = | 100 | GPH
+  R 15:  |  |  |  |  |  |  | 1.67 | GPM
+  R 16: Average water Requir |  |  |  |  |  |  |  | 
+  R 17:  |  |  |  |  |  |  |  | 
+  R 18: Weather type |  |  |  |  |  |  |  | 
+  R 19:  |  |  |  |  |  |  |  | 
+  R 20:  |  |  |  |  |  |  |  | 
+  R 21:  | Plant  |  | NO./area | Weather  | Required |  |  | 
+  R 22:  | Mature Canopy Dia. |  |  |  | Gallon |  |  | 
+  R 23:  | Small Shrubs  |  | 30 | 0.3 | 9 |  |  | 
+  R 24:  | 3ft/91 cm  |  |  |  |  |  |  | 
+  R 25:  | Large Shrubs  |  | 20 | 0.7 | 14 |  |  | 
+  R 26:  | 5ft/1.52 cm  |  |  |  |  |  |  | 
+  R 27:  | Small Tree |  | 0 | 2.7 | 0 |  |  | 
+  R 28:  | 10 ft/3.05 cm  |  |  |  |  |  |  | 
+  R 29:  | Large Tree |  | 0 | 10.9 | 0 |  |  | 
+
+============================================================
+SHEET: ZONE 3 DRIP.   | Rows: 55 | Cols: 9
+============================================================
+  R  0: Drip Line Calculatio |  |  |  |  |  |  |  | 
+  R  1: Dipe line changed ac |  |  |  |  |  |  |  | 
+  R  2:  |  |  |  |  |  |  |  | 
+  R  3: Type of drip line wi |  |  |  |  |  |  |  | 
+  R  4:  |  |  |  |  |  |  |  | 
+  R  5: Flow Per Emitter  |  |  |  | 0.4 | GPH |  |  | 
+  R  6:  |  |  |  |  |  |  |  | 
+  R  7: Maximum Distance Bet |  |  |  |  |  |  |  | 
+  R  8:  |  |  |  |  |  |  |  | 
+  R  9: distance between emi |  |  |  | 12 | Inch |  |  | 
+  R 10: Drip line Total Leng |  |  |  | 30.5 | Meter |  |  | 
+  R 11:  |  |  |  | 1201 | Inch |  |  | 
+  R 12: No. of Emitter Per L |  |  |  | 100 | Emitter |  |  | 
+  R 13: Total Flow For The L |  |  |  |  |  |  |  | 
+  R 14:  |  |  | 100 | x | 0.4 | = | 40 | GPH
+  R 15:  |  |  |  |  |  |  | 0.67 | GPM
+  R 16: Average water Requir |  |  |  |  |  |  |  | 
+  R 17:  |  |  |  |  |  |  |  | 
+  R 18: Weather type |  |  |  |  |  |  |  | 
+  R 19:  |  |  |  |  |  |  |  | 
+  R 20:  |  |  |  |  |  |  |  | 
+  R 21:  | Plant  |  | NO./area | Weather  | Required |  |  | 
+  R 22:  | Mature Canopy Dia. |  |  |  | Gallon |  |  | 
+  R 23:  | Small Shrubs  |  | 30 | 0.3 | 9 |  |  | 
+  R 24:  | 3ft/91 cm  |  |  |  |  |  |  | 
+  R 25:  | Large Shrubs  |  | 20 | 0.7 | 14 |  |  | 
+  R 26:  | 5ft/1.52 cm  |  |  |  |  |  |  | 
+  R 27:  | Small Tree |  | 0 | 2.7 | 0 |  |  | 
+  R 28:  | 10 ft/3.05 cm  |  |  |  |  |  |  | 
+  R 29:  | Large Tree |  | 0 | 10.9 | 0 |  |  | 
+
+============================================================
+SHEET: ZONE 4 DRIP. | Rows: 55 | Cols: 9
+============================================================
+  R  0: Drip Line Calculatio |  |  |  |  |  |  |  | 
+  R  1: Dipe line changed ac |  |  |  |  |  |  |  | 
+  R  2:  |  |  |  |  |  |  |  | 
+  R  3: Type of drip line wi |  |  |  |  |  |  |  | 
+  R  4:  |  |  |  |  |  |  |  | 
+  R  5: Flow Per Emitter  |  |  |  | 0.6 | GPH |  |  | 
+  R  6:  |  |  |  |  |  |  |  | 
+  R  7: Maximum Distance Bet |  |  |  |  |  |  |  | 
+  R  8:  |  |  |  |  |  |  |  | 
+  R  9: distance between emi |  |  |  | 24 | Inch |  |  | 
+  R 10: Drip line Total Leng |  |  |  | 30.5 | Meter |  |  | 
+  R 11:  |  |  |  | 1201 | Inch |  |  | 
+  R 12: No. of Emitter Per L |  |  |  | 50 | Emitter |  |  | 
+  R 13: Total Flow For The L |  |  |  |  |  |  |  | 
+  R 14:  |  |  | 50 | x | 0.6 | = | 30 | GPH
+  R 15:  |  |  |  |  |  |  | 0.5 | GPM
+  R 16: Average water Requir |  |  |  |  |  |  |  | 
+  R 17:  |  |  |  |  |  |  |  | 
+  R 18: Weather type |  |  |  |  |  |  |  | 
+  R 19:  |  |  |  |  |  |  |  | 
+  R 20:  |  |  |  |  |  |  |  | 
+  R 21:  | Plant  |  | NO./area | Weather  | Required |  |  | 
+  R 22:  | Mature Canopy Dia. |  |  |  | Gallon |  |  | 
+  R 23:  | Small Shrubs  |  | 30 | 0.3 | 9 |  |  | 
+  R 24:  | 3ft/91 cm  |  |  |  |  |  |  | 
+  R 25:  | Large Shrubs  |  | 20 | 0.7 | 14 |  |  | 
+  R 26:  | 5ft/1.52 cm  |  |  |  |  |  |  | 
+  R 27:  | Small Tree |  | 0 | 2.7 | 0 |  |  | 
+  R 28:  | 10 ft/3.05 cm  |  |  |  |  |  |  | 
+  R 29:  | Large Tree |  | 0 | 10.9 | 0 |  |  | 
+
+============================================================
+SHEET: ZONE 5 DRIP.  | Rows: 55 | Cols: 9
+============================================================
+  R  0: Drip Line Calculatio |  |  |  |  |  |  |  | 
+  R  1: Dipe line changed ac |  |  |  |  |  |  |  | 
+  R  2:  |  |  |  |  |  |  |  | 
+  R  3: Type of drip line wi |  |  |  |  |  |  |  | 
+  R  4:  |  |  |  |  |  |  |  | 
+  R  5: Flow Per Emitter  |  |  |  | 0.6 | GPH |  |  | 
+  R  6:  |  |  |  |  |  |  |  | 
+  R  7: Maximum Distance Bet |  |  |  |  |  |  |  | 
+  R  8:  |  |  |  |  |  |  |  | 
+  R  9: distance between emi |  |  |  | 24 | Inch |  |  | 
+  R 10: Drip line Total Leng |  |  |  | 30.5 | Meter |  |  | 
+  R 11:  |  |  |  | 1201 | Inch |  |  | 
+  R 12: No. of Emitter Per L |  |  |  | 50 | Emitter |  |  | 
+  R 13: Total Flow For The L |  |  |  |  |  |  |  | 
+  R 14:  |  |  | 50 | x | 0.6 | = | 30 | GPH
+  R 15:  |  |  |  |  |  |  | 0.5 | GPM
+  R 16: Average water Requir |  |  |  |  |  |  |  | 
+  R 17:  |  |  |  |  |  |  |  | 
+  R 18: Weather type |  |  |  |  |  |  |  | 
+  R 19:  |  |  |  |  |  |  |  | 
+  R 20:  |  |  |  |  |  |  |  | 
+  R 21:  | Plant  |  | NO./area | Weather  | 0.25 |  |  | 
+  R 22:  | Mature Canopy Dia. |  |  |  | Gallon |  |  | 
+  R 23:  | Small Shrubs  |  | 30 | 0.3 | 9 |  |  | 
+  R 24:  | 3ft/91 cm  |  |  |  |  |  |  | 
+  R 25:  | Large Shrubs  |  | 20 | 0.7 | 14 |  |  | 
+  R 26:  | 5ft/1.52 cm  |  |  |  |  |  |  | 
+  R 27:  | Small Tree |  | 0 | 2.7 | 0 |  |  | 
+  R 28:  | 10 ft/3.05 cm  |  |  |  |  |  |  | 
+  R 29:  | Large Tree |  | 0 | 10.9 | 0 |  |  | 
+
+============================================================
+SHEET: Drip line Conclusion | Rows: 42 | Cols: 7
+============================================================
+  R  0: From Perevious Calcu |  |  |  |  |  | 
+  R  1:  |  |  |  |  |  | 
+  R  2: Zone 1 |  |  |  |  |  | 
+  R  3: Zone 1 Total GPM Req |  |  |  |  | 0.83 | GPM
+  R  4: Valve Model will be  |  |  |  |  | PCZ-101 | 
+  R  5: Operating time  |  |  |  |  | 28 | Min/Day
+  R  6: Drip line lengthn in |  |  |  |  | 100 | Ft
+  R  7: No. of Emitter in li |  |  |  |  | 50 | Emitter
+  R  8: Distance Between Emi |  |  |  |  | 24    X   24 | Inch
+  R  9:  |  |  |  |  |  | 
+  R 10: Zone 2 |  |  |  |  |  | 
+  R 11: Zone 2 Total GPM Req |  |  |  |  | 1.67 | GPM
+  R 12: Valve Model will be  |  |  |  |  | ACZ-0.75 | 
+  R 13: Operating time  |  |  |  |  | 14 | Min/Day
+  R 14: Drip line lengthn in |  |  |  |  | 100 | Ft
+  R 15: No. of Emitter in li |  |  |  |  | 100 | Emitter
+  R 16: Distance Between Emi |  |  |  |  | 12    X   12 | Inch
+  R 17:  |  |  |  |  |  | 
+  R 18: Zone 3 |  |  |  |  |  | 
+  R 19: Zone 3 Total GPM Req |  |  |  |  | 0.67 | GPM
+  R 20: Valve Model will be  |  |  |  |  | ACZ-0.75 | 
+  R 21: Operating time  |  |  |  |  | 35 | Min/Day
+  R 22: Drip line lengthn in |  |  |  |  | 100 | Ft
+  R 23: No. of Emitter in li |  |  |  |  | 100 | Emitter
+  R 24: Distance Between Emi |  |  |  |  | 12    X   12 | Inch
+  R 25:  |  |  |  |  |  | 
+  R 26:  |  |  |  |  |  | 
+  R 27: Zone 4 |  |  |  |  |  | 
+  R 28: Zone 4 Total GPM Req |  |  |  |  | 0.5 | GPM
+  R 29: Valve Model will be  |  |  |  |  | PCZ-101 | 
+
+============================================================
+SHEET: ZONE 1 BUbbler | Rows: 36 | Cols: 8
+============================================================
+  R  0: Bubblers Calculation |  |  |  |  |  |  | 
+  R  1: Bubbler changed acco |  |  |  |  |  |  | 
+  R  2:  |  |  |  |  |  |  | 
+  R  3: Water Requiredment f |  |  |  |  |  |  | 
+  R  4:  |  |  |  |  |  |  | 
+  R  5:  | Plant  |  | NO | Water Required /Plan | Required |  | 
+  R  6:  | Mature Canopy Dia. |  |  |  | Gallon |  | 
+  R  7:  | Small Tree |  | 2 | 8 | 16 |  | 0.5 GPM
+  R  8:  |  |  |  |  |  |  | better
+  R  9:  | Large Tree |  | 2 | 32 | 64 |  | 2.0 GPM
+  R 10:  | Palm Tree |  |  |  |  |  | better
+  R 11:  | Evergreen and Ordina |  | 2 | 16 | 32 |  | 1.0 GPM
+  R 12:  |  |  |  |  |  |  | better
+  R 13:  | Total Gallon |  |  |  | 112 |  | 
+  R 14:  |  |  |  |  |  |  | 
+  R 15:  |  |  |  |  |  |  | 
+  R 16:  |  |  |  |  |  |  | 
+  R 17:  |  |  |  |  |  |  | 
+  R 18:  |  |  |  |  |  |  | 
+  R 19:  |  |  |  |  |  |  | 
+  R 20: Bubbler Type Used fo |  |  |  |  |  |  | 
+  R 21: Bubbler Flow GPM |  |  |  |  | 0.5 |  | 
+  R 22: Bubbler Type Used fo |  |  |  |  |  |  | 
+  R 23: Bubbler Flow GPM |  |  |  |  | 2 |  | 
+  R 24: Bubbler Type Used fo |  |  |  |  |  |  | 
+  R 25: Bubbler Flow GPM |  |  |  |  | 1 |  | 
+  R 26:  |  |  |  |  |  |  | 
+  R 27: Total flow in GPM  |  |  |  |  | 7 |  | 
+  R 28:  |  |  |  |  |  |  | 
+  R 29:  | Operating Time  |  | Total Required Gallo |  |  |  | 
+
+============================================================
+SHEET: ZONE 2 BUbbler  | Rows: 36 | Cols: 8
+============================================================
+  R  0: Bubblers Calculation |  |  |  |  |  |  | 
+  R  1: Bubbler changed acco |  |  |  |  |  |  | 
+  R  2:  |  |  |  |  |  |  | 
+  R  3: Water Requiredment f |  |  |  |  |  |  | 
+  R  4:  |  |  |  |  |  |  | 
+  R  5:  | Plant  |  | NO | Water Required /Plan | Required |  | 
+  R  6:  | Mature Canopy Dia. |  |  |  | Gallon |  | 
+  R  7:  | Small Tree |  | 5 | 8 | 40 |  | 0.5 GPM
+  R  8:  |  |  |  |  |  |  | better
+  R  9:  | Large Tree |  | 5 | 32 | 160 |  | 2.0 GPM
+  R 10:  | Palm Tree |  |  |  |  |  | better
+  R 11:  | Evergreen and Ordina |  | 5 | 16 | 80 |  | 1.0 GPM
+  R 12:  |  |  |  |  |  |  | better
+  R 13:  | Total Gallon |  |  |  | 280 |  | 
+  R 14:  |  |  |  |  |  |  | 
+  R 15:  |  |  |  |  |  |  | 
+  R 16:  |  |  |  |  |  |  | 
+  R 17:  |  |  |  |  |  |  | 
+  R 18:  |  |  |  |  |  |  | 
+  R 19:  |  |  |  |  |  |  | 
+  R 20: Bubbler Type Used fo |  |  |  |  |  |  | 
+  R 21: Bubbler Flow GPM |  |  |  |  | 2 |  | 
+  R 22: Bubbler Type Used fo |  |  |  |  |  |  | 
+  R 23: Bubbler Flow GPM |  |  |  |  | 1 |  | 
+  R 24: Bubbler Type Used fo |  |  |  |  |  |  | 
+  R 25: Bubbler Flow GPM |  |  |  |  | 2 |  | 
+  R 26:  |  |  |  |  |  |  | 
+  R 27: Total flow in GPM  |  |  |  |  |  | 25 | 
+  R 28:  |  |  |  |  |  |  | 
+  R 29:  | Operating Time  |  | Total Required Gallo |  |  |  | 
+
+============================================================
+SHEET: ZONE 3 BUbbler   | Rows: 36 | Cols: 8
+============================================================
+  R  0: Bubblers Calculation |  |  |  |  |  |  | 
+  R  1: Bubbler changed acco |  |  |  |  |  |  | 
+  R  2:  |  |  |  |  |  |  | 
+  R  3: Water Requiredment f |  |  |  |  |  |  | 
+  R  4:  |  |  |  |  |  |  | 
+  R  5:  | Plant  |  | NO | Water Required /Plan | Required |  | 
+  R  6:  | Mature Canopy Dia. |  |  |  | Gallon |  | 
+  R  7:  | Small Tree |  | 5 | 8 | 40 |  | 0.5 GPM
+  R  8:  |  |  |  |  |  |  | better
+  R  9:  | Large Tree |  | 5 | 32 | 160 |  | 2.0 GPM
+  R 10:  | Palm Tree |  |  |  |  |  | better
+  R 11:  | Evergreen and Ordina |  | 5 | 16 | 80 |  | 1.0 GPM
+  R 12:  |  |  |  |  |  |  | better
+  R 13:  | Total Gallon |  |  |  | 280 |  | 
+  R 14:  |  |  |  |  |  |  | 
+  R 15:  |  |  |  |  |  |  | 
+  R 16:  |  |  |  |  |  |  | 
+  R 17:  |  |  |  |  |  |  | 
+  R 18:  |  |  |  |  |  |  | 
+  R 19:  |  |  |  |  |  |  | 
+  R 20: Bubbler Type Used fo |  |  |  |  |  |  | 
+  R 21: Bubbler Flow GPM |  |  |  |  | 1 |  | 
+  R 22: Bubbler Type Used fo |  |  |  |  |  |  | 
+  R 23: Bubbler Flow GPM |  |  |  |  | 1 |  | 
+  R 24: Bubbler Type Used fo |  |  |  |  |  |  | 
+  R 25: Bubbler Flow GPM |  |  |  |  | 2 |  | 
+  R 26:  |  |  |  |  |  |  | 
+  R 27: Total flow in GPM  |  |  |  |  |  | 20 | 
+  R 28:  |  |  |  |  |  |  | 
+  R 29:  | Operating Time  |  | Total Required Gallo |  |  |  | 
+
+============================================================
+SHEET: ZONE 4 BUbbler  | Rows: 36 | Cols: 8
+============================================================
+  R  0: Bubblers Calculation |  |  |  |  |  |  | 
+  R  1: Bubbler changed acco |  |  |  |  |  |  | 
+  R  2:  |  |  |  |  |  |  | 
+  R  3: Water Requiredment f |  |  |  |  |  |  | 
+  R  4:  |  |  |  |  |  |  | 
+  R  5:  | Plant  |  | NO | Water Required /Plan | Required |  | 
+  R  6:  | Mature Canopy Dia. |  |  |  | Gallon |  | 
+  R  7:  | Small Tree |  | 5 | 8 | 40 |  | 0.5 GPM
+  R  8:  |  |  |  |  |  |  | better
+  R  9:  | Large Tree |  | 5 | 32 | 160 |  | 2.0 GPM
+  R 10:  | Palm Tree |  |  |  |  |  | better
+  R 11:  | Evergreen and Ordina |  | 5 | 16 | 80 |  | 1.0 GPM
+  R 12:  |  |  |  |  |  |  | better
+  R 13:  | Total Gallon |  |  |  | 280 |  | 
+  R 14:  |  |  |  |  |  |  | 
+  R 15:  |  |  |  |  |  |  | 
+  R 16:  |  |  |  |  |  |  | 
+  R 17:  |  |  |  |  |  |  | 
+  R 18:  |  |  |  |  |  |  | 
+  R 19:  |  |  |  |  |  |  | 
+  R 20: Bubbler Type Used fo |  |  |  |  |  |  | 
+  R 21: Bubbler Flow GPM |  |  |  |  | 0.25 |  | 
+  R 22: Bubbler Type Used fo |  |  |  |  |  |  | 
+  R 23: Bubbler Flow GPM |  |  |  |  | 1 |  | 
+  R 24: Bubbler Type Used fo |  |  |  |  |  |  | 
+  R 25: Bubbler Flow GPM |  |  |  |  | 2 |  | 
+  R 26:  |  |  |  |  |  |  | 
+  R 27: Total flow in GPM  |  |  |  |  |  | 16.25 | 
+  R 28:  |  |  |  |  |  |  | 
+  R 29:  | Operating Time  |  | Total Required Gallo |  |  |  | 
+
+============================================================
+SHEET: ZONE 5 BUbbler    | Rows: 36 | Cols: 8
+============================================================
+  R  0: Bubblers Calculation |  |  |  |  |  |  | 
+  R  1: Bubbler changed acco |  |  |  |  |  |  | 
+  R  2:  |  |  |  |  |  |  | 
+  R  3: Water Requiredment f |  |  |  |  |  |  | 
+  R  4:  |  |  |  |  |  |  | 
+  R  5:  | Plant  |  | NO | Water Required /Plan | Required |  | 
+  R  6:  | Mature Canopy Dia. |  |  |  | Gallon |  | 
+  R  7:  | Small Tree |  | 5 | 8 | 40 |  | 0.5 GPM
+  R  8:  |  |  |  |  |  |  | better
+  R  9:  | Large Tree |  | 5 | 32 | 160 |  | 2.0 GPM
+  R 10:  | Palm Tree |  |  |  |  |  | better
+  R 11:  | Evergreen and Ordina |  | 5 | 16 | 80 |  | 1.0 GPM
+  R 12:  |  |  |  |  |  |  | better
+  R 13:  | Total Gallon |  |  |  | 280 |  | 
+  R 14:  |  |  |  |  |  |  | 
+  R 15:  |  |  |  |  |  |  | 
+  R 16:  |  |  |  |  |  |  | 
+  R 17:  |  |  |  |  |  |  | 
+  R 18:  |  |  |  |  |  |  | 
+  R 19:  |  |  |  |  |  |  | 
+  R 20: Bubbler Type Used fo |  |  |  |  |  |  | 
+  R 21: Bubbler Flow GPM |  |  |  |  | 0.5 |  | 
+  R 22: Bubbler Type Used fo |  |  |  |  |  |  | 
+  R 23: Bubbler Flow GPM |  |  |  |  | 0.25 |  | 
+  R 24: Bubbler Type Used fo |  |  |  |  |  |  | 
+  R 25: Bubbler Flow GPM |  |  |  |  | 2 |  | 
+  R 26:  |  |  |  |  |  |  | 
+  R 27: Total flow in GPM  |  |  |  |  |  | 13.75 | 
+  R 28:  |  |  |  |  |  |  | 
+  R 29:  | Operating Time  |  | Total Required Gallo |  |  |  | 
+
+============================================================
+SHEET: Bubbler Conclusion | Rows: 38 | Cols: 7
+============================================================
+  R  0: From Perevious Calcu |  |  |  |  |  | 
+  R  1:  |  |  |  |  |  | 
+  R  2: Zone 1 |  |  |  |  |  | 
+  R  3: Zone 1 Total GPM Req |  |  |  |  | 7 | GPM
+  R  4: Operating time  |  |  |  |  | 16 | Min/Day
+  R  5:  |  |  |  |  | 0.8451542547285166 | 
+  R  6: Minimum Delivery Pip |  |  |  |  | 1 | Inch
+  R  7: Valve to be used  |  |  |  |  | PCZ-101 | 
+  R  8:  |  |  |  |  |  | 
+  R  9:  |  |  |  |  |  | 
+  R 10: Zone 2 |  |  |  |  |  | 
+  R 11: Zone 2 Total GPM Req |  |  |  |  | 25 | GPM
+  R 12: Operating time  |  |  |  |  | 12 | Min/Day
+  R 13:  |  |  |  |  | 1.5971914124998499 | 
+  R 14: Minimum Delivery Pip |  |  |  |  | 2 | Inch
+  R 15: Valve to be used  |  |  |  |  | ICZ-151 | 
+  R 16:  |  |  |  |  |  | 
+  R 17:  |  |  |  |  |  | 
+  R 18: Zone 3 |  |  |  |  |  | 
+  R 19: Zone 3 Total GPM Req |  |  |  |  | 20 | GPM
+  R 20: Operating time  |  |  |  |  | 14 | Min/Day
+  R 21:  |  |  |  |  | 1.4285714285714286 | 
+  R 22: Minimum Delivery Pip |  |  |  |  | 1.5 | Inch
+  R 23: Valve to be used  |  |  |  |  | ICZ-101 | 
+  R 24:  |  |  |  |  |  | 
+  R 25: Zone 4 |  |  |  |  |  | 
+  R 26: Zone 4 Total GPM Req |  |  |  |  | 16.25 | GPM
+  R 27: Operating time  |  |  |  |  | 18 | Min/Day
+  R 28:  |  |  |  |  | 1.2876968840942817 | 
+  R 29: Minimum Delivery Pip |  |  |  |  | 1.5 | Inch
+
+============================================================
+SHEET: Time Schedule | Rows: 72 | Cols: 15
+============================================================
+  R  0: Schedule of Irrigati |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+  R  1:  |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+  R  2:  | Station |  | Valves |  | Flow |  | Operating Time |  | Total Station Flow | Start Time |  | Shut Time |  | Operating Time in Mi
+  R  3:  |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+  R  4:  | A1 |  |  |  | 37.849999999999994 |  | 28 |  | 37.849999999999994 | 0.9166666666666666 |  | 0.9361111111111111 |  | 00:28
+  R  5:  |  |  |  |  | 0 |  | 0 |  |  |  |  |  |  | 
+  R  6:  |  |  |  |  | 0 |  | 0 |  |  |  |  |  |  | 
+  R  7:  |  |  |  |  | 0 |  | 0 |  |  |  |  |  |  | 
+  R  8:  |  |  |  |  | 0 |  | 0 |  |  |  |  |  |  | 
+  R  9:  | A2 |  |  |  | 33.05 |  | 45 |  | 33.05 | 0.9361111111111111 |  | 0.9673611111111111 |  | 00:45
+  R 10:  |  |  |  |  | 0 |  | 0 |  |  |  |  |  |  | 
+  R 11:  |  |  |  |  | 0 |  | 0 |  |  |  |  |  |  | 
+  R 12:  |  |  |  |  | 0 |  | 0 |  |  |  |  |  |  | 
+  R 13:  |  |  |  |  | 0 |  | 0 |  |  |  |  |  |  | 
+  R 14:  | A3 |  |  |  | 37.849999999999994 |  | 28 |  | 37.849999999999994 | 0.9673611111111111 |  | 0.9868055555555556 |  | 00:28
+  R 15:  |  |  |  |  | 0 |  | 0 |  |  |  |  |  |  | 
+  R 16:  |  |  |  |  | 0 |  | 0 |  |  |  |  |  |  | 
+  R 17:  |  |  |  |  | 0 |  | 0 |  |  |  |  |  |  | 
+  R 18:  |  |  |  |  | 0 |  | 0 |  |  |  |  |  |  | 
+  R 19:  | A4 |  |  |  | 7 |  | 16 |  | 20.75 | 0.9868055555555556 |  | 1.0013888888888889 |  | 00:21
+  R 20:  |  |  |  |  | 0 |  | 0 |  |  |  |  |  |  | 
+  R 21:  |  |  |  |  | 13.75 |  | 21 |  |  |  |  |  |  | 
+  R 22:  |  |  |  |  | 0 |  | 0 |  |  |  |  |  |  | 
+  R 23:  |  |  |  |  | 0 |  | 0 |  |  |  |  |  |  | 
+  R 24:  | A5 |  |  |  | 33.05 |  | 23 |  | 33.05 | 1.0013888888888889 |  | 1.0173611111111112 |  | 00:23
+  R 25:  |  |  |  |  | 0 |  | 0 |  |  |  |  |  |  | 
+  R 26:  |  |  |  |  | 0 |  | 0 |  |  |  |  |  |  | 
+  R 27:  |  |  |  |  | 0 |  | 0 |  |  |  |  |  |  | 
+  R 28:  |  |  |  |  | 0 |  | 0 |  |  |  |  |  |  | 
+  R 29:  | A6 |  |  |  | 0 |  | 0 |  | 10.17 | 1.0173611111111112 |  | 1.0416666666666667 |  | 00:35
+
+============================================================
+SHEET: Pump Calculation  | Rows: 23 | Cols: 8
+============================================================
+  R  0: From Schedule of Ope |  |  |  |  |  |  | 
+  R  1:  |  |  |  |  |  |  | 
+  R  2: - | Maximum Station Flow |  |  | = | 38 | GPM | 
+  R  3: - | Maximum Operating Ti |  |  | = | 0.125 | Hours | 
+  R  4: - | Maximum Distance Fro |  |  |  |  |  | 
+  R  5:  |  To farest Point |  |  | = | 60 | Meter | 
+  R  6: - | Static head  |  |  | = | 1.5 | Meter | 
+  R  7:  |  |  |  |  |  |  | 
+  R  8: - | Pump Pressure  = 1.2 |  |  |  |  |  | 
+  R  9:  |  | & farest irr. Point  |  |  |  |  | 
+  R 10:  |  | = |  1.2 *  ( 1.5   +    |  |  |  | 
+  R 11:  |  |  |  | = | 34.68 | Meter | 
+  R 12:  |  |  |  | = | 50 | PSI | 
+  R 13:  |  |  |  |  |  |  | 
+  R 14: - | No. of Duty Pumps  |  |  | = | 3 | Pump | 
+  R 15: - | No. of Standby Pumps |  |  | = | 1 | Pump | 
+  R 16:  |  |  |  |  |  |  | 
+  R 17:  | Pump Selection |  |  |  |  |  | 
+  R 18:  |  | Pump Flow |  |  | 13 | GPM | 
+  R 19:  |  | Pump Pressure  |  |  | 50 | PSI | 
+  R 20:  |  | Pump Power Supply |  |  | 0.6 | HP | 
+  R 21:  |  | Maximum Operating Ti |  |  | 0.125 | Hours | 
+  R 22:  |  | No. of Pumps  |  | 3 | Duty | 1 | Standby
