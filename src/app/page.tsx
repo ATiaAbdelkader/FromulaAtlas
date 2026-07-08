@@ -12,6 +12,7 @@ import { SidebarNav } from '@/components/agri/sidebar-nav';
 import { UseCasesSection } from '@/components/agri/use-cases-section';
 import { FreeToolsSection } from '@/components/agri/nutri-tools/FreeToolsSection';
 import { AgronomistAssistant } from '@/components/agri/nutri-tools/AgronomistAssistant';
+import { AgriAgentChat } from '@/components/agri/nutri-tools/AgriAgentChat';
 import { FieldDataCapture } from '@/components/agri/nutri-tools/FieldDataCapture';
 import { MultiFieldDashboard } from '@/components/agri/nutri-tools/MultiFieldDashboard';
 import { YieldGapAnalysis } from '@/components/agri/nutri-tools/YieldGapAnalysis';
@@ -313,6 +314,7 @@ export default function Page() {
             <CollapsibleSection title="NDVI Satellite Field Maps" description="Vegetation health heatmap · Stress zone detection · AI recommendations · PDF export" icon={Satellite} color="#6366f1" storageKey="collapse_ndvi" defaultOpen={false}><div className="p-4"><NdviFieldMaps /></div></CollapsibleSection>
             <CollapsibleSection title="Weather Radar + Frost Maps" description="Live 7-day forecast · Frost risk · Heat warnings · Spray windows · Microclimate" icon={CloudRain} color="#0ea5e9" storageKey="collapse_weather_radar" defaultOpen={false}><div className="p-4"><WeatherRadar /></div></CollapsibleSection>
             <CollapsibleSection title="Smart Agriculture Suite" description="Disease detection · crop recommendation · fertilizer guidance" icon={Bug} color="#65a30d" storageKey="collapse_agriplanner" defaultOpen={false}><div className="p-4"><AgriPlannerSuite /></div></CollapsibleSection>
+            <CollapsibleSection title="AI Specialists (Multi-Agent Chat)" description="10 specialized AI agents — Agronomist · Crop Scout · Irrigation Engineer · Soil Scientist · Operations Manager · Financial Analyst · Sustainability Officer · Grant Writer · GIS Analyst · Livestock Vet" icon={Sparkles} color="#6366f1" storageKey="collapse_agent_chat" defaultOpen={false}><div className="p-4"><AgriAgentChat /></div></CollapsibleSection>
           </div>
 
           {/* Sub-category: Business */}
