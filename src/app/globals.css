@@ -120,3 +120,8 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Mobile safe-area support for bottom nav */
+.safe-area-pb {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}

@@ -13,6 +13,9 @@ import { UseCasesSection } from '@/components/agri/use-cases-section';
 import { FreeToolsSection } from '@/components/agri/nutri-tools/FreeToolsSection';
 import { AgronomistAssistant } from '@/components/agri/nutri-tools/AgronomistAssistant';
 import { AgriAgentChat } from '@/components/agri/nutri-tools/AgriAgentChat';
+import { CommandPalette, CommandPaletteTrigger } from '@/components/ui/command-palette';
+import { HomeDashboard } from '@/components/agri/home-dashboard';
+import { recordToolUse, type ToolEntry } from '@/lib/tool-registry';
 import { FieldDataCapture } from '@/components/agri/nutri-tools/FieldDataCapture';
 import { MultiFieldDashboard } from '@/components/agri/nutri-tools/MultiFieldDashboard';
 import { YieldGapAnalysis } from '@/components/agri/nutri-tools/YieldGapAnalysis';
@@ -63,6 +66,7 @@ type TabId = 'home' | 'formulas' | 'tools' | 'farm' | 'insights';
 export default function Page() {
   const [activeTab, setActiveTab] = useState<TabId>('home');
   const [searchQuery, setSearchQuery] = useState('');
+  const [paletteOpen, setPaletteOpen] = useState(false);
   const [selectedPart, setSelectedPart] = useState<string | null>(null);
   const [selectedChapter, setSelectedChapter] = useState<number | null>(null);
   const [onlyWithCalculators, setOnlyWithCalculators] = useState(false);
@@ -149,6 +153,15 @@ export default function Page() {
     />
   );
 
+  /** Open a tool by switching tab + auto-opening its CollapsibleSection. */
+  const openTool = (tab: TabId, storageKey?: string) => {
+    if (storageKey) {
+      try { localStorage.setItem(storageKey, 'true'); } catch { /* ignore */ }
+    }
+    setActiveTab(tab);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Header */}
@@ -194,6 +207,11 @@ export default function Page() {
             </div>
           </div>
 
+          {/* Command palette trigger — visible on all tabs */}
+          <div className="hidden sm:block">
+            <CommandPaletteTrigger onClick={() => setPaletteOpen(true)} />
+          </div>
+
           {/* Search bar — only on formulas tab */}
           {activeTab === 'formulas' && (
             <div className="relative">
@@ -218,27 +236,14 @@ export default function Page() {
         </div>
       </header>
 
-      {/* HOME TAB — clean landing page */}
+      {/* HOME TAB — personalized dashboard */}
       {activeTab === 'home' && (
-        <main className="flex-1 max-w-[1200px] mx-auto w-full p-4 sm:p-6 space-y-6">
-          <section className="bg-gradient-to-br from-emerald-700 via-green-700 to-teal-800 text-white rounded-xl p-6">
-            <div className="flex items-center gap-2 mb-2 text-emerald-100 text-sm font-medium uppercase tracking-wide"><Leaf className="h-4 w-4" />Your AI-powered agronomy platform</div>
-            <h2 className="text-xl sm:text-2xl font-bold leading-tight mb-2">Formula Atlas — from soil to sky</h2>
-            <div className="flex flex-wrap gap-3 mt-4">
-              <StatBadge icon={Layers} label="Parts" value={handbook.meta.total_parts} />
-              <StatBadge icon={BookOpen} label={t.sections} value={handbook.meta.total_chapters} />
-              <StatBadge icon={Calculator} label={t.formulas} value={handbook.meta.total_formulas} />
-              <StatBadge icon={Sprout} label="Calculators" value={allFormulas.filter(f => hasCalculator(f.code)).length} />
-            </div>
-          </section>
-
-          {/* Quick navigation cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            <QuickNav icon={Tractor} label="Farm" desc="Fields, crops, soil, livestock, irrigation" color="#16a34a" onClick={() => setActiveTab('farm')} />
-            <QuickNav icon={Sparkles} label="Insights" desc="NDVI, weather, financial, marketplace, community" color="#6366f1" onClick={() => setActiveTab('insights')} />
-            <QuickNav icon={Wrench} label="Tools" desc="18 free agronomic calculators" color="#0891b2" onClick={() => setActiveTab('tools')} />
-            <QuickNav icon={BookOpen} label="Formulas" desc="332 formulas with interactive calculators" color="#f59e0b" onClick={() => setActiveTab('formulas')} />
-          </div>
+        <main className="flex-1 max-w-[1200px] mx-auto w-full p-4 sm:p-6 space-y-6 pb-20 sm:pb-6">
+          <HomeDashboard
+            onNavigate={(tab) => setActiveTab(tab)}
+            onOpenTool={(tab, storageKey) => openTool(tab, storageKey)}
+            onOpenSearch={() => setPaletteOpen(true)}
+          />
 
           <SeasonScheduler />
 
@@ -424,6 +429,16 @@ export default function Page() {
       {/* Predictive Alerts — floating bell button, available on all tabs */}
       <NotificationCenter />
 
+      {/* Command Palette — Cmd+K global search, available on all tabs */}
+      <CommandPalette
+        open={paletteOpen}
+        onOpenChange={setPaletteOpen}
+        onSelect={(entry) => openTool(entry.tab, entry.storageKey)}
+      />
+
+      {/* Mobile bottom tab bar — thumb-friendly navigation on phones */}
+      <MobileBottomNav activeTab={activeTab} onTabChange={(tab) => setActiveTab(tab)} onSearch={() => setPaletteOpen(true)} />
+
       {/* Onboarding flow — auto-shows on first visit, replayable via header Tour button */}
       <OnboardingFlow />
     </div>
@@ -446,6 +461,60 @@ function StatBadge({ icon: Icon, label, value }: { icon: typeof Layers; label: s
       <div className="flex items-center gap-1.5 text-emerald-100 text-[10px] uppercase tracking-wide font-medium"><Icon className="h-3 w-3" />{label}</div>
       <div className="text-xl font-bold mt-0.5">{value}</div>
     </div>
+  );
+}
+
+/**
+ * Mobile bottom tab bar — thumb-friendly navigation for phones.
+ * Hidden on sm+ screens (the header tab bar takes over).
+ * Includes a center search button (⌘K) for one-thumb access.
+ */
+function MobileBottomNav({ activeTab, onTabChange, onSearch }: {
+  activeTab: TabId;
+  onTabChange: (tab: TabId) => void;
+  onSearch: () => void;
+}) {
+  const tabs: { id: TabId; icon: typeof Home; label: string }[] = [
+    { id: 'home', icon: Home, label: 'Home' },
+    { id: 'farm', icon: Tractor, label: 'Farm' },
+    { id: 'insights', icon: Sparkles, label: 'Insights' },
+    { id: 'formulas', icon: BookOpen, label: 'Formulas' },
+  ];
+  return (
+    <nav className="sm:hidden fixed bottom-0 inset-x-0 z-40 border-t bg-background/95 backdrop-blur-md safe-area-pb">
+      <div className="grid grid-cols-5 items-center h-14">
+        {tabs.slice(0, 2).map(t => (
+          <MobileTabButton key={t.id} active={activeTab === t.id} icon={t.icon} label={t.label} onClick={() => onTabChange(t.id)} />
+        ))}
+        {/* Center search button */}
+        <button
+          onClick={onSearch}
+          className="flex flex-col items-center justify-center -mt-4 mx-auto w-12 h-12 rounded-full bg-gradient-to-br from-emerald-600 to-green-700 text-white shadow-lg active:scale-95 transition-transform"
+          title="Search (⌘K)"
+        >
+          <Search className="h-5 w-5" />
+        </button>
+        {tabs.slice(2).map(t => (
+          <MobileTabButton key={t.id} active={activeTab === t.id} icon={t.icon} label={t.label} onClick={() => onTabChange(t.id)} />
+        ))}
+      </div>
+    </nav>
+  );
+}
+
+function MobileTabButton({ active, icon: Icon, label, onClick }: {
+  active: boolean; icon: typeof Home; label: string; onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex flex-col items-center justify-center gap-0.5 h-full text-[9px] font-medium transition-colors ${
+        active ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'
+      }`}
+    >
+      <Icon className={`h-5 w-5 ${active ? 'scale-110' : ''} transition-transform`} />
+      <span>{label}</span>
+    </button>
   );
 }
 
