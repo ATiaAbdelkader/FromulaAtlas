@@ -18,6 +18,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -832,9 +833,14 @@ function CalendarTab({ system }: { system: IrrigationSystem }) {
             </div>
           ))}
           {events.length === 0 && (
-            <div className="text-[10px] text-muted-foreground text-center py-4">
-              No events scheduled. Add schedules in the Schedules tab.
-            </div>
+            <EmptyState
+              icon={CalendarIcon}
+              title="No events scheduled"
+              description="Add schedules in the Schedules tab — pick a crop, set a time, and your 7-day calendar will fill in automatically."
+              color="#0ea5e9"
+              variant="compact"
+              action={{ label: "Go to Schedules", onClick: () => {/* user switches tabs manually */} }}
+            />
           )}
         </div>
       </div>

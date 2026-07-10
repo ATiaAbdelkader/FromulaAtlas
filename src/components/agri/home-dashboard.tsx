@@ -29,6 +29,8 @@ import {
   getRecentTools, recordToolUse,
   type ToolEntry,
 } from '@/lib/tool-registry';
+import { WeatherAlertBanner } from '@/components/agri/weather-alert-banner';
+import { FarmStats } from '@/components/agri/farm-stats';
 
 const FARM_PROFILE_KEY = 'farm_profile_v1';
 const LAST_LOC_KEY = 'et_tracker_last_loc_v1';
@@ -123,6 +125,15 @@ export function HomeDashboard({ onNavigate, onOpenTool, onOpenSearch }: HomeDash
             <Sparkles className="h-3.5 w-3.5" /> Search tools (⌘K)
           </Button>
         </div>
+      </section>
+
+      {/* Weather alert banner — proactive warnings */}
+      <WeatherAlertBanner forecast={forecast} />
+
+      {/* Farm stats — aggregate counts */}
+      <section>
+        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Your Farm at a Glance</div>
+        <FarmStats />
       </section>
 
       {/* =================================================================== */}
