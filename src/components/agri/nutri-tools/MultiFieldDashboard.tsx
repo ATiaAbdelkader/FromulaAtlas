@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -115,14 +116,13 @@ export function MultiFieldDashboard() {
       </CardHeader>
       <CardContent className="space-y-4">
         {fields.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-center border-2 border-dashed rounded-lg">
-            <Sprout className="h-10 w-10 text-emerald-500 mb-2" />
-            <p className="text-sm font-medium">No fields yet</p>
-            <p className="text-xs text-muted-foreground mb-3">Add your first field to start tracking.</p>
-            <Button size="sm" onClick={openAdd} className="gap-1.5 bg-emerald-600 hover:bg-emerald-700">
-              <Plus className="h-4 w-4" /> Add field
-            </Button>
-          </div>
+          <EmptyState
+            icon={Sprout}
+            title="No fields yet"
+            description="Add your first field to start tracking irrigation, fertilization, and scouting. You'll see it here with crop stage, water demand, and progress."
+            color="#16a34a"
+            action={{ label: "Add your first field", onClick: openAdd }}
+          />
         ) : (
           <>
             <div className="rounded-lg border bg-muted/30 p-3">

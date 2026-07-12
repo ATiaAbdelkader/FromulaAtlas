@@ -14,6 +14,7 @@
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -197,10 +198,14 @@ export function EvapotranspirationTracker() {
             {loading ? 'Fetching…' : 'Refresh forecast'}
           </Button>
           {error && (
-            <div className="rounded-md border border-rose-200 dark:border-rose-900 bg-rose-50/50 dark:bg-rose-950/20 p-2 text-xs text-rose-700 dark:text-rose-300 flex items-start gap-1.5">
-              <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-              <span className="font-mono">{error}</span>
-            </div>
+            <EmptyState
+              icon={AlertTriangle}
+              title="Couldn't fetch weather data"
+              description={error}
+              color="#dc2626"
+              variant="compact"
+              action={{ label: "Retry", onClick: fetchAll }}
+            />
           )}
         </CardContent>
       </Card>

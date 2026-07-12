@@ -22,6 +22,7 @@ import {
   Sprout, Clock, Sparkles, Tractor, BookOpen, Wrench,
   ArrowRight, Zap, Calendar,
 } from 'lucide-react';
+import { CROP_LIFECYCLES } from '@/lib/crop-lifecycle';
 import {
   getForecast, wmoDescription, type ForecastResult,
 } from '@/lib/open-meteo';
@@ -31,6 +32,8 @@ import {
 } from '@/lib/tool-registry';
 import { WeatherAlertBanner } from '@/components/agri/weather-alert-banner';
 import { FarmStats } from '@/components/agri/farm-stats';
+import { TodayTasks } from '@/components/agri/today-tasks';
+import { FarmProfileWizard, needsFarmProfileSetup } from '@/components/agri/farm-profile-wizard';
 
 const FARM_PROFILE_KEY = 'farm_profile_v1';
 const LAST_LOC_KEY = 'et_tracker_last_loc_v1';
@@ -39,6 +42,11 @@ interface FarmProfile {
   name?: string;
   area?: number;
   mainCrops?: string;
+  crop?: string;
+  plantingDate?: string;
+  lat?: string;
+  lng?: string;
+  setupCompleted?: boolean;
 }
 
 interface HomeDashboardProps {
@@ -56,6 +64,7 @@ export function HomeDashboard({ onNavigate, onOpenTool, onOpenSearch }: HomeDash
   const [weatherLoading, setWeatherLoading] = useState(false);
   const [weatherError, setWeatherError] = useState<string | null>(null);
   const [recent, setRecent] = useState<ToolEntry[]>([]);
+  const [wizardOpen, setWizardOpen] = useState(false);
 
   // Load farm profile + recent tools from localStorage on mount
   useEffect(() => {
@@ -64,6 +73,10 @@ export function HomeDashboard({ onNavigate, onOpenTool, onOpenSearch }: HomeDash
       if (saved) setProfile(JSON.parse(saved));
     } catch { /* ignore */ }
     setRecent(getRecentTools());
+    // Auto-open the wizard on first visit (when no profile exists)
+    if (needsFarmProfileSetup()) {
+      setTimeout(() => setWizardOpen(true), 1500);  // slight delay so the dashboard renders first
+    }
   }, []);
 
   // Fetch weather using saved location from ET Tracker
@@ -278,6 +291,72 @@ export function HomeDashboard({ onNavigate, onOpenTool, onOpenSearch }: HomeDash
       </section>
 
       {/* =================================================================== */}
+      {/* Today's Tasks + Weather details side-by-side on large screens */}
+      {/* =================================================================== */}
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        <TodayTasks onOpenTool={onOpenTool} />
+
+        {/* Farm profile summary / edit */}
+        <div className="rounded-xl border bg-card p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              <Sprout className="h-3 w-3" /> Farm Profile
+            </div>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setWizardOpen(true)}
+              className="text-[10px] h-6 gap-1"
+            >
+              {profile.name ? 'Edit' : 'Set up'}
+            </Button>
+          </div>
+          {profile.name || profile.crop ? (
+            <div className="space-y-1.5 text-xs">
+              {profile.name && (
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground w-16">Farm:</span>
+                  <strong>{profile.name}</strong>
+                </div>
+              )}
+              {profile.crop && (
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground w-16">Crop:</span>
+                  <strong>{CROP_LIFECYCLES.find(c => c.id === profile.crop)?.emoji} {CROP_LIFECYCLES.find(c => c.id === profile.crop)?.name}</strong>
+                </div>
+              )}
+              {profile.plantingDate && (
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground w-16">Planted:</span>
+                  <strong className="font-mono">{profile.plantingDate}</strong>
+                </div>
+              )}
+              {profile.area !== undefined && (
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground w-16">Area:</span>
+                  <strong>{profile.area} ha</strong>
+                </div>
+              )}
+              {profile.lat && profile.lng && (
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground w-16">Location:</span>
+                  <strong className="font-mono text-[10px]">{profile.lat}, {profile.lng}</strong>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="text-center py-4">
+              <Sprout className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
+              <p className="text-xs text-muted-foreground mb-2">No farm profile yet.</p>
+              <Button size="sm" onClick={() => setWizardOpen(true)} className="gap-1.5 text-xs">
+                <Sparkles className="h-3.5 w-3.5" /> Set up your farm
+              </Button>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* =================================================================== */}
       {/* Recent tools */}
       {/* =================================================================== */}
       {recent.length > 0 && (
@@ -329,6 +408,19 @@ export function HomeDashboard({ onNavigate, onOpenTool, onOpenSearch }: HomeDash
           <NavCard icon={BookOpen} label="Formulas" desc="332 formulas with calculators" color="#f59e0b" onClick={() => onNavigate('formulas')} />
         </div>
       </section>
+
+      {/* Farm Profile Wizard — auto-opens on first visit, re-openable via Edit button */}
+      <FarmProfileWizard
+        open={wizardOpen}
+        onOpenChange={setWizardOpen}
+        onSaved={() => {
+          // Reload the profile from localStorage
+          try {
+            const saved = localStorage.getItem(FARM_PROFILE_KEY);
+            if (saved) setProfile(JSON.parse(saved));
+          } catch { /* ignore */ }
+        }}
+      />
     </div>
   );
 }
