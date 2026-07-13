@@ -15,6 +15,7 @@ import { AgronomistAssistant } from '@/components/agri/nutri-tools/AgronomistAss
 import { AgriAgentChat } from '@/components/agri/nutri-tools/AgriAgentChat';
 import { CommandPalette, CommandPaletteTrigger } from '@/components/ui/command-palette';
 import { HomeDashboard } from '@/components/agri/home-dashboard';
+import { AboutPage } from '@/components/agri/about-page';
 import { recordToolUse, type ToolEntry } from '@/lib/tool-registry';
 import { FieldDataCapture } from '@/components/agri/nutri-tools/FieldDataCapture';
 import { MultiFieldDashboard } from '@/components/agri/nutri-tools/MultiFieldDashboard';
@@ -61,7 +62,7 @@ import type { Workflow } from '@/lib/workflows';
 import { useTranslation } from '@/lib/language-store';
 import { cn } from '@/lib/utils';
 
-type TabId = 'home' | 'formulas' | 'tools' | 'farm' | 'insights';
+type TabId = 'home' | 'formulas' | 'tools' | 'farm' | 'insights' | 'about';
 
 export default function Page() {
   const [activeTab, setActiveTab] = useState<TabId>('home');
@@ -231,6 +232,7 @@ export default function Page() {
               <TabButton active={activeTab === 'tools'} onClick={() => setActiveTab('tools')} icon={Wrench} label="Tools" />
               <TabButton active={activeTab === 'farm'} onClick={() => setActiveTab('farm')} icon={Tractor} label="Farm" />
               <TabButton active={activeTab === 'insights'} onClick={() => setActiveTab('insights')} icon={Sparkles} label="Insights" />
+              <TabButton active={activeTab === 'about'} onClick={() => setActiveTab('about')} icon={Users} label="About" />
             </div>
           </div>
         </div>
@@ -406,6 +408,11 @@ export default function Page() {
           </div>
           <UseCasesSection onLaunch={(wf) => { setActiveWorkflow(wf); setWorkflowOpen(true); }} />
         </main>
+      )}
+
+      {/* ABOUT TAB — founder profile + mission */}
+      {activeTab === 'about' && (
+        <AboutPage />
       )}
 
       {/* Footer */}
