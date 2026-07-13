@@ -1,0 +1,36 @@
+# Files/directories to exclude from Vercel deployment uploads
+# Reduces build time + deployment size
+
+# Test scripts
+scripts/
+
+# Skills (internal AI tooling, not needed at runtime)
+skills/
+
+# Examples
+examples/
+
+# Uploads (user-provided reference files)
+upload/
+
+# Tool results (temporary)
+tool-results/
+
+# Logs
+*.log
+dev.log
+server.log
+
+# Local development databases
+prisma/dev.db
+prisma/dev.db-journal
+
+# Documentation (not needed at runtime)
+*.md
+!README.md
+!LICENSE
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
