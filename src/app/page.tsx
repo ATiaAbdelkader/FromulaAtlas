@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useMemo, useState, useEffect, useRef } from 'react';
 import { Search, Sprout, Layers, BookOpen, Calculator, X, Leaf, Filter, Home, Wrench, Bug, TrendingUp, Droplets, Settings, Calendar, Satellite, ShoppingCart, Users, DollarSign, RefreshCw, Beef, FlaskConical, CloudRain, FileText, Trophy, Tractor, Sparkles, Download, CheckCircle2, MapPin, Shapes, Compass, Sun, Mountain, FlaskConical as Flask, CalendarDays, Clock } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -419,7 +420,11 @@ export default function Page() {
       <footer className="mt-auto border-t border-border bg-card">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <div className="flex items-center gap-2 text-sm text-muted-foreground"><Sprout className="h-4 w-4 text-emerald-600" /><span>{t.appName} · {handbook.meta.version}</span></div>
-          <div className="text-xs text-muted-foreground">{handbook.meta.total_formulas} formulas · {handbook.meta.total_parts} parts · {handbook.meta.total_chapters} sections</div>
+          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+            <Link href="/landing" className="hover:text-foreground transition-colors">Landing Page</Link>
+            <Link href="/about" className="hover:text-foreground transition-colors">About</Link>
+            <span>{handbook.meta.total_formulas} formulas · {handbook.meta.total_parts} parts · {handbook.meta.total_chapters} sections</span>
+          </div>
         </div>
       </footer>
 
