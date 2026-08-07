@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useMemo, useState, useEffect, useRef } from 'react';
-import { Search, Sprout, Layers, BookOpen, Calculator, X, Leaf, Filter, Home, Wrench, Bug, TrendingUp, Droplets, Settings, Calendar, Satellite, ShoppingCart, Users, DollarSign, RefreshCw, Beef, FlaskConical, CloudRain, FileText, Trophy, Tractor, Sparkles, Download, CheckCircle2, MapPin, Shapes, Compass, Sun, Mountain, FlaskConical as Flask, CalendarDays, Clock, Warehouse, Recycle, Wind, Flame, Snowflake, Gauge, Shield } from 'lucide-react';
+import { Search, Sprout, Layers, BookOpen, Calculator, X, Leaf, Filter, Home, Wrench, Bug, TrendingUp, Droplets, Settings, Calendar, Satellite, ShoppingCart, Users, DollarSign, RefreshCw, Beef, FlaskConical, CloudRain, FileText, Trophy, Tractor, Sparkles, Download, CheckCircle2, MapPin, Shapes, Compass, Sun, Mountain, FlaskConical as Flask, CalendarDays, Clock, Warehouse, Recycle, Wind, Flame, Snowflake, Gauge, Shield, Moon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -64,6 +64,15 @@ import { CompanionPlantingGuide } from '@/components/agri/nutri-tools/CompanionP
 import { SilageFermentationPredictor } from '@/components/agri/nutri-tools/SilageFermentationPredictor';
 import { FrostProtectionCalculator } from '@/components/agri/nutri-tools/FrostProtectionCalculator';
 import { BufferStripDesigner } from '@/components/agri/nutri-tools/BufferStripDesigner';
+import { HailDamageEstimator } from '@/components/agri/nutri-tools/HailDamageEstimator';
+import { PestThresholdCalculator } from '@/components/agri/nutri-tools/PestThresholdCalculator';
+import { YieldMonitorCalibrator } from '@/components/agri/nutri-tools/YieldMonitorCalibrator';
+import { ManureManagementPlanner } from '@/components/agri/nutri-tools/ManureManagementPlanner';
+import { MachineryCostCalculator } from '@/components/agri/nutri-tools/MachineryCostCalculator';
+import { MoonPhaseCalendar } from '@/components/agri/nutri-tools/MoonPhaseCalendar';
+import { SeedRateCalculator } from '@/components/agri/nutri-tools/SeedRateCalculator';
+import { GrainBinInventoryTracker } from '@/components/agri/nutri-tools/GrainBinInventoryTracker';
+import { PollinatorHabitatPlanner } from '@/components/agri/nutri-tools/PollinatorHabitatPlanner';
 import { BookmarkedFormulas } from '@/components/agri/bookmarked-formulas';
 import { getBookmarks, toggleBookmark } from '@/lib/formula-bookmarks';
 import { OnboardingFlow } from '@/components/onboarding/OnboardingFlow';
@@ -309,6 +318,10 @@ export default function Page() {
             <CollapsibleSection title="Drought Stress Index" description="ET₀ deficit + soil water depletion + crop stage → stress score + irrigation urgency" icon={Flame} color="#f97316" storageKey="collapse_drought" defaultOpen={false}><div className="p-4"><DroughtStressIndex /></div></CollapsibleSection>
             <CollapsibleSection title="Frost Protection Calculator" description="Radiative vs advective frost · Sprinkler / wind machine / smudge pot sizing" icon={Snowflake} color="#3b82f6" storageKey="collapse_frost" defaultOpen={false}><div className="p-4"><FrostProtectionCalculator /></div></CollapsibleSection>
             <CollapsibleSection title="Companion Planting Guide" description="20 crops · 100+ pairings · synergy (✓) · antagonism (✗) · search any crop" icon={Sprout} color="#84cc16" storageKey="collapse_companion" defaultOpen={false}><div className="p-4"><CompanionPlantingGuide /></div></CollapsibleSection>
+            <CollapsibleSection title="Hail Damage Estimator" description="Crop stage × hail size × defoliation → yield loss % · insurance claim guidance" icon={CloudRain} color="#64748b" storageKey="collapse_hail" defaultOpen={false}><div className="p-4"><HailDamageEstimator /></div></CollapsibleSection>
+            <CollapsibleSection title="Pest Threshold Calculator" description="EIL · action threshold · sequential sampling — 5 pest types" icon={Bug} color="#dc2626" storageKey="collapse_pest_threshold" defaultOpen={false}><div className="p-4"><PestThresholdCalculator /></div></CollapsibleSection>
+            <CollapsibleSection title="Seed Rate Calculator" description="Target population × TGW × germination × field loss → kg seed/ha · 6 crops" icon={Sprout} color="#16a34a" storageKey="collapse_seedrate" defaultOpen={false}><div className="p-4"><SeedRateCalculator /></div></CollapsibleSection>
+            <CollapsibleSection title="Moon Phase Planting Calendar" description="Biodynamic calendar · 29.5-day lunar cycle · 30-day forecast" icon={Moon} color="#6366f1" storageKey="collapse_moon" defaultOpen={false}><div className="p-4"><MoonPhaseCalendar /></div></CollapsibleSection>
           </div>
 
           {/* Sub-category: Soil & Livestock */}
@@ -319,7 +332,10 @@ export default function Page() {
             <CollapsibleSection title="Compost Mixer Calculator" description="C:N ratio · Moisture adjustment · 10 common feedstocks · Target 30:1" icon={Recycle} color="#16a34a" storageKey="collapse_compost" defaultOpen={false}><div className="p-4"><CompostMixerCalculator /></div></CollapsibleSection>
             <CollapsibleSection title="Cover Crop Selector" description="12 species · 9 goals · drought tolerance · ranked recommendations" icon={Sprout} color="#84cc16" storageKey="collapse_covercrop" defaultOpen={false}><div className="p-4"><CoverCropSelector /></div></CollapsibleSection>
             <CollapsibleSection title="Greenhouse Climate Designer" description="Heating load · Ventilation rate · CO₂ enrichment sizing · 4 glazing types" icon={Home} color="#10b981" storageKey="collapse_greenhouse" defaultOpen={false}><div className="p-4"><GreenhouseClimateDesigner /></div></CollapsibleSection>
-            <CollapsibleSection title="Pump Efficiency Calculator" description="Hydraulic power · motor kW · daily energy cost · $/m³ · efficiency rating" icon={Gauge} color="#6366f1" storageKey="collapse_pump" defaultOpen={false}><div className="p-4"><PumpEfficiencyCalculator /></div></CollapsibleSection>
+            <CollapsibleSection title="Grain Bin Inventory Tracker" description="Volume × density × price → stored grain value · multi-bin" icon={Warehouse} color="#f59e0b" storageKey="collapse_grainbin" defaultOpen={false}><div className="p-4"><GrainBinInventoryTracker /></div></CollapsibleSection>
+            <CollapsibleSection title="Manure Management Planner" description="N-P-K value · application timing · buffer zone compliance · 6 manure types" icon={Droplets} color="#8b5cf6" storageKey="collapse_manure" defaultOpen={false}><div className="p-4"><ManureManagementPlanner /></div></CollapsibleSection>
+            <CollapsibleSection title="Machinery Cost Calculator" description="Ownership + operating cost → $/ha + $/hr · buy vs custom hire" icon={Tractor} color="#f59e0b" storageKey="collapse_machinery" defaultOpen={false}><div className="p-4"><MachineryCostCalculator /></div></CollapsibleSection>
+            <CollapsibleSection title="Yield Monitor Calibrator" description="Moisture correction · flow calibration · test weight assessment" icon={Gauge} color="#6366f1" storageKey="collapse_yieldmon" defaultOpen={false}><div className="p-4"><YieldMonitorCalibrator /></div></CollapsibleSection>
             <CollapsibleSection title="Livestock Management" description="Feed rations (NRC 2021) · Pasture capacity · Manure NPK value · Rotational grazing" icon={Beef} color="#f59e0b" storageKey="collapse_livestock" defaultOpen={false}><div className="p-4"><LivestockIntegration /></div></CollapsibleSection>
             <CollapsibleSection title="Feed Ration Balancer (NRC 2021)" description="DMI · CP · TDN · Ca · P balancing — 8 ingredients · 4 animal types" icon={Beef} color="#8b5cf6" storageKey="collapse_ration" defaultOpen={false}><div className="p-4"><FeedRationBalancer /></div></CollapsibleSection>
             <CollapsibleSection title="Silage Fermentation Predictor" description="Moisture · sugar · packing density · chop length → fermentation quality score" icon={Beef} color="#f59e0b" storageKey="collapse_silage" defaultOpen={false}><div className="p-4"><SilageFermentationPredictor /></div></CollapsibleSection>
@@ -364,6 +380,7 @@ export default function Page() {
             <CollapsibleSection title="Sustainability Scorecard" description="5 traffic-light metrics — NUE, water, carbon, soil, pesticides" icon={Leaf} color="#16a34a" storageKey="collapse_sustainability" defaultOpen={false}><div className="p-4"><SustainabilityScorecard /></div></CollapsibleSection>
             <CollapsibleSection title="RUSLE Erosion Calculator" description="A = R × K × LS × C × P — universal soil loss equation · 14 regions · 12 soil types" icon={Mountain} color="#78716c" storageKey="collapse_rusle" defaultOpen={false}><div className="p-4"><RUSLEErosionCalculator /></div></CollapsibleSection>
             <CollapsibleSection title="Buffer Strip Designer" description="Width × vegetation → sediment / N / P trapping efficiency · NRCS standards" icon={Shield} color="#14b8a6" storageKey="collapse_buffer" defaultOpen={false}><div className="p-4"><BufferStripDesigner /></div></CollapsibleSection>
+            <CollapsibleSection title="Pollinator Habitat Planner" description="10 species · bloom season + pollinator type + goal filtering" icon={Bug} color="#eab308" storageKey="collapse_pollinator" defaultOpen={false}><div className="p-4"><PollinatorHabitatPlanner /></div></CollapsibleSection>
             <CollapsibleSection title="Carbon Credit Estimator" description="IPCC Tier 2 · 6 practices · $/ha revenue · 20% permanence buffer · 10-yr commitment" icon={Leaf} color="#10b981" storageKey="collapse_carbon" defaultOpen={false}><div className="p-4"><CarbonCreditCalculator /></div></CollapsibleSection>
           </div>
 
