@@ -1,7 +1,7 @@
 import data from '@/data/agri_formulas.json';
 import type { Handbook, Formula } from './types';
 
-export const handbook: Handbook = data as Handbook;
+export const handbook: Handbook = data as unknown as Handbook;
 
 export const allFormulas: Formula[] = handbook.all_formulas;
 
