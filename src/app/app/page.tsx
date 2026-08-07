@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useMemo, useState, useEffect, useRef } from 'react';
-import { Search, Sprout, Layers, BookOpen, Calculator, X, Leaf, Filter, Home, Wrench, Bug, TrendingUp, Droplets, Settings, Calendar, Satellite, ShoppingCart, Users, DollarSign, RefreshCw, Beef, FlaskConical, CloudRain, FileText, Trophy, Tractor, Sparkles, Download, CheckCircle2, MapPin, Shapes, Compass, Sun, Mountain, FlaskConical as Flask, CalendarDays, Clock, Warehouse, Recycle } from 'lucide-react';
+import { Search, Sprout, Layers, BookOpen, Calculator, X, Leaf, Filter, Home, Wrench, Bug, TrendingUp, Droplets, Settings, Calendar, Satellite, ShoppingCart, Users, DollarSign, RefreshCw, Beef, FlaskConical, CloudRain, FileText, Trophy, Tractor, Sparkles, Download, CheckCircle2, MapPin, Shapes, Compass, Sun, Mountain, FlaskConical as Flask, CalendarDays, Clock, Warehouse, Recycle, Wind } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -52,6 +52,11 @@ import { CompostMixerCalculator } from '@/components/agri/nutri-tools/CompostMix
 import { PesticideDoseCalculator } from '@/components/agri/nutri-tools/PesticideDoseCalculator';
 import { RUSLEErosionCalculator } from '@/components/agri/nutri-tools/RUSLEErosionCalculator';
 import { CarbonCreditCalculator } from '@/components/agri/nutri-tools/CarbonCreditCalculator';
+import { GreenhouseClimateDesigner } from '@/components/agri/nutri-tools/GreenhouseClimateDesigner';
+import { DiseaseForecastDashboard } from '@/components/agri/nutri-tools/DiseaseForecastDashboard';
+import { FeedRationBalancer } from '@/components/agri/nutri-tools/FeedRationBalancer';
+import { CoverCropSelector } from '@/components/agri/nutri-tools/CoverCropSelector';
+import { SprayDriftAssessor } from '@/components/agri/nutri-tools/SprayDriftAssessor';
 import { BookmarkedFormulas } from '@/components/agri/bookmarked-formulas';
 import { getBookmarks, toggleBookmark } from '@/lib/formula-bookmarks';
 import { OnboardingFlow } from '@/components/onboarding/OnboardingFlow';
@@ -293,6 +298,7 @@ export default function Page() {
             <CollapsibleSection title="Yield Gap Analysis" description="Benchmark actual vs potential yield by crop and climate zone" icon={TrendingUp} color="#0891b2" storageKey="collapse_yieldgap" defaultOpen={false}><div className="p-4"><YieldGapAnalysis /></div></CollapsibleSection>
             <CollapsibleSection title="Field Scouting Log" description="Voice + photo field observations with severity tagging" icon={Sprout} color="#84cc16" storageKey="collapse_scouting" defaultOpen={false}><div className="p-4"><FieldScoutingLog /></div></CollapsibleSection>
             <CollapsibleSection title="Pesticide Dose + PHI Calculator" description="AI rate → product rate · Tank mix · Rainfast · Pre-harvest interval countdown · 5 herbicides" icon={FlaskConical} color="#dc2626" storageKey="collapse_pesticide" defaultOpen={false}><div className="p-4"><PesticideDoseCalculator /></div></CollapsibleSection>
+            <CollapsibleSection title="Spray Drift Risk Assessor" description="Wind · Delta-T · Droplet size · Boom height → drift score + buffer distance" icon={Wind} color="#0ea5e9" storageKey="collapse_drift" defaultOpen={false}><div className="p-4"><SprayDriftAssessor /></div></CollapsibleSection>
           </div>
 
           {/* Sub-category: Soil & Livestock */}
@@ -301,7 +307,10 @@ export default function Page() {
             <CollapsibleSection title="Soil Test History Tracker" description="Multi-year soil test tracking · Trend charts · Amendment recommendations · PDF export" icon={FlaskConical} color="#8b5cf6" storageKey="collapse_soil_history" defaultOpen={false}><div className="p-4"><SoilTestHistoryTracker /></div></CollapsibleSection>
             <CollapsibleSection title="Post-Harvest Storage Calculator" description="EMC (Henderson) · Safe storage days · Drying time + cost · Bin aeration fan sizing — 7 crops" icon={Warehouse} color="#f59e0b" storageKey="collapse_postharvest" defaultOpen={false}><div className="p-4"><PostHarvestStorageCalculator /></div></CollapsibleSection>
             <CollapsibleSection title="Compost Mixer Calculator" description="C:N ratio · Moisture adjustment · 10 common feedstocks · Target 30:1" icon={Recycle} color="#16a34a" storageKey="collapse_compost" defaultOpen={false}><div className="p-4"><CompostMixerCalculator /></div></CollapsibleSection>
+            <CollapsibleSection title="Cover Crop Selector" description="12 species · 9 goals · drought tolerance · ranked recommendations" icon={Sprout} color="#84cc16" storageKey="collapse_covercrop" defaultOpen={false}><div className="p-4"><CoverCropSelector /></div></CollapsibleSection>
+            <CollapsibleSection title="Greenhouse Climate Designer" description="Heating load · Ventilation rate · CO₂ enrichment sizing · 4 glazing types" icon={Home} color="#10b981" storageKey="collapse_greenhouse" defaultOpen={false}><div className="p-4"><GreenhouseClimateDesigner /></div></CollapsibleSection>
             <CollapsibleSection title="Livestock Management" description="Feed rations (NRC 2021) · Pasture capacity · Manure NPK value · Rotational grazing" icon={Beef} color="#f59e0b" storageKey="collapse_livestock" defaultOpen={false}><div className="p-4"><LivestockIntegration /></div></CollapsibleSection>
+            <CollapsibleSection title="Feed Ration Balancer (NRC 2021)" description="DMI · CP · TDN · Ca · P balancing — 8 ingredients · 4 animal types" icon={Beef} color="#8b5cf6" storageKey="collapse_ration" defaultOpen={false}><div className="p-4"><FeedRationBalancer /></div></CollapsibleSection>
           </div>
 
           {/* Sub-category: Irrigation */}
@@ -330,6 +339,7 @@ export default function Page() {
             <CollapsibleSection title="NDVI Satellite Field Maps" description="Vegetation health heatmap · Stress zone detection · AI recommendations · PDF export" icon={Satellite} color="#6366f1" storageKey="collapse_ndvi" defaultOpen={false}><div className="p-4"><NdviFieldMaps /></div></CollapsibleSection>
             <CollapsibleSection title="Weather Radar + Frost Maps" description="Live 7-day forecast · Frost risk · Heat warnings · Spray windows · Microclimate" icon={CloudRain} color="#0ea5e9" storageKey="collapse_weather_radar" defaultOpen={false}><div className="p-4"><WeatherRadar /></div></CollapsibleSection>
             <CollapsibleSection title="Smart Agriculture Suite" description="Disease detection · crop recommendation · fertilizer guidance" icon={Bug} color="#65a30d" storageKey="collapse_agriplanner" defaultOpen={false}><div className="p-4"><AgriPlannerSuite /></div></CollapsibleSection>
+            <CollapsibleSection title="Disease Forecast Dashboard" description="5 disease models (Blitecast · TOMCAST · Mills · FHB · Downy mildew) · weather-based spray timing" icon={Bug} color="#dc2626" storageKey="collapse_disease" defaultOpen={false}><div className="p-4"><DiseaseForecastDashboard /></div></CollapsibleSection>
             <CollapsibleSection title="AI Specialists (Multi-Agent Chat)" description="10 specialized AI agents — Agronomist · Crop Scout · Irrigation Engineer · Soil Scientist · Operations Manager · Financial Analyst · Sustainability Officer · Grant Writer · GIS Analyst · Livestock Vet" icon={Sparkles} color="#6366f1" storageKey="collapse_agent_chat" defaultOpen={false}><div className="p-4"><AgriAgentChat /></div></CollapsibleSection>
           </div>
 
