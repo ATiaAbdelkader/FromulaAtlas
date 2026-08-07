@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useMemo, useState, useEffect, useRef } from 'react';
-import { Search, Sprout, Layers, BookOpen, Calculator, X, Leaf, Filter, Home, Wrench, Bug, TrendingUp, Droplets, Settings, Calendar, Satellite, ShoppingCart, Users, DollarSign, RefreshCw, Beef, FlaskConical, CloudRain, FileText, Trophy, Tractor, Sparkles, Download, CheckCircle2, MapPin, Shapes, Compass, Sun, Mountain, FlaskConical as Flask, CalendarDays, Clock } from 'lucide-react';
+import { Search, Sprout, Layers, BookOpen, Calculator, X, Leaf, Filter, Home, Wrench, Bug, TrendingUp, Droplets, Settings, Calendar, Satellite, ShoppingCart, Users, DollarSign, RefreshCw, Beef, FlaskConical, CloudRain, FileText, Trophy, Tractor, Sparkles, Download, CheckCircle2, MapPin, Shapes, Compass, Sun, Mountain, FlaskConical as Flask, CalendarDays, Clock, Warehouse, Recycle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -47,6 +47,11 @@ import { FertilizationGenerator } from '@/components/agri/nutri-tools/Fertilizat
 import { LaborCalendar } from '@/components/agri/nutri-tools/LaborCalendar';
 import { SeasonPlanGenerator } from '@/components/agri/nutri-tools/SeasonPlanGenerator';
 import { IrrigationScheduler } from '@/components/agri/nutri-tools/IrrigationScheduler';
+import { PostHarvestStorageCalculator } from '@/components/agri/nutri-tools/PostHarvestStorageCalculator';
+import { CompostMixerCalculator } from '@/components/agri/nutri-tools/CompostMixerCalculator';
+import { PesticideDoseCalculator } from '@/components/agri/nutri-tools/PesticideDoseCalculator';
+import { RUSLEErosionCalculator } from '@/components/agri/nutri-tools/RUSLEErosionCalculator';
+import { CarbonCreditCalculator } from '@/components/agri/nutri-tools/CarbonCreditCalculator';
 import { BookmarkedFormulas } from '@/components/agri/bookmarked-formulas';
 import { getBookmarks, toggleBookmark } from '@/lib/formula-bookmarks';
 import { OnboardingFlow } from '@/components/onboarding/OnboardingFlow';
@@ -287,12 +292,15 @@ export default function Page() {
             <CollapsibleSection title="Labor Calendar" description="Phenology-driven field operations · Person-days/ha · Peak week detection · Skill levels · 20 crops · PDF export" icon={CalendarDays} color="#0891b2" storageKey="collapse_labor_cal" defaultOpen={false}><div className="p-4"><LaborCalendar /></div></CollapsibleSection>
             <CollapsibleSection title="Yield Gap Analysis" description="Benchmark actual vs potential yield by crop and climate zone" icon={TrendingUp} color="#0891b2" storageKey="collapse_yieldgap" defaultOpen={false}><div className="p-4"><YieldGapAnalysis /></div></CollapsibleSection>
             <CollapsibleSection title="Field Scouting Log" description="Voice + photo field observations with severity tagging" icon={Sprout} color="#84cc16" storageKey="collapse_scouting" defaultOpen={false}><div className="p-4"><FieldScoutingLog /></div></CollapsibleSection>
+            <CollapsibleSection title="Pesticide Dose + PHI Calculator" description="AI rate → product rate · Tank mix · Rainfast · Pre-harvest interval countdown · 5 herbicides" icon={FlaskConical} color="#dc2626" storageKey="collapse_pesticide" defaultOpen={false}><div className="p-4"><PesticideDoseCalculator /></div></CollapsibleSection>
           </div>
 
           {/* Sub-category: Soil & Livestock */}
           <div className="space-y-3">
             <SubHeader emoji="🧪" label="Soil & Livestock" />
             <CollapsibleSection title="Soil Test History Tracker" description="Multi-year soil test tracking · Trend charts · Amendment recommendations · PDF export" icon={FlaskConical} color="#8b5cf6" storageKey="collapse_soil_history" defaultOpen={false}><div className="p-4"><SoilTestHistoryTracker /></div></CollapsibleSection>
+            <CollapsibleSection title="Post-Harvest Storage Calculator" description="EMC (Henderson) · Safe storage days · Drying time + cost · Bin aeration fan sizing — 7 crops" icon={Warehouse} color="#f59e0b" storageKey="collapse_postharvest" defaultOpen={false}><div className="p-4"><PostHarvestStorageCalculator /></div></CollapsibleSection>
+            <CollapsibleSection title="Compost Mixer Calculator" description="C:N ratio · Moisture adjustment · 10 common feedstocks · Target 30:1" icon={Recycle} color="#16a34a" storageKey="collapse_compost" defaultOpen={false}><div className="p-4"><CompostMixerCalculator /></div></CollapsibleSection>
             <CollapsibleSection title="Livestock Management" description="Feed rations (NRC 2021) · Pasture capacity · Manure NPK value · Rotational grazing" icon={Beef} color="#f59e0b" storageKey="collapse_livestock" defaultOpen={false}><div className="p-4"><LivestockIntegration /></div></CollapsibleSection>
           </div>
 
@@ -331,6 +339,8 @@ export default function Page() {
             <CollapsibleSection title="Financial Dashboard" description="Costs · Revenue · Gross margin · Break-even · ROI · What-if scenario analysis" icon={DollarSign} color="#f59e0b" storageKey="collapse_financial" defaultOpen={false}><div className="p-4"><FinancialDashboard /></div></CollapsibleSection>
             <CollapsibleSection title="Marketplace — Buy Fertilizers & Supplies" description="Price comparison from 3 suppliers · Shopping cart · Order export" icon={ShoppingCart} color="#f59e0b" storageKey="collapse_marketplace" defaultOpen={false}><div className="p-4"><Marketplace /></div></CollapsibleSection>
             <CollapsibleSection title="Sustainability Scorecard" description="5 traffic-light metrics — NUE, water, carbon, soil, pesticides" icon={Leaf} color="#16a34a" storageKey="collapse_sustainability" defaultOpen={false}><div className="p-4"><SustainabilityScorecard /></div></CollapsibleSection>
+            <CollapsibleSection title="RUSLE Erosion Calculator" description="A = R × K × LS × C × P — universal soil loss equation · 14 regions · 12 soil types" icon={Mountain} color="#78716c" storageKey="collapse_rusle" defaultOpen={false}><div className="p-4"><RUSLEErosionCalculator /></div></CollapsibleSection>
+            <CollapsibleSection title="Carbon Credit Estimator" description="IPCC Tier 2 · 6 practices · $/ha revenue · 20% permanence buffer · 10-yr commitment" icon={Leaf} color="#10b981" storageKey="collapse_carbon" defaultOpen={false}><div className="p-4"><CarbonCreditCalculator /></div></CollapsibleSection>
           </div>
 
           {/* Sub-category: Community & Reports */}
