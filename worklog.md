@@ -286,6 +286,56 @@
     - **Result:** empty-active **108 → 53**, all in the fertilizer/biostimulant tail (REGULATEURS 38, CARENCES 7, ENGRAIS 2, STOCKAGE 1) plus genuinely ambiguous PPP rows (CERATRAP protein-bait attractant, LAMARDOR, SABITHANE, TRICHLOPYRACID). Quality: **full 1211 / 1,264 (95.8 %), brand-only 40, low 13, known-only 546+**.
     - Re-ran the parser (~7 min) — the JSON is regenerated from the PDF, wiping an earlier usage-based post-processing that had written false positives (LUFOX→lufénuron etc.). Export `algeria-phyto-data.ts` regenerated deterministically (52 ids / 336 refs).
 
+12. **Follow-up session (2026-08-08) — full completion (1,264/1,264) via `ROW_FIXES`.**
+    - 5 mis-anchored homologations were identified by cross-checking hom digits against the printed pages: CERATRAP was anchored to `20 13 530` but prints `13 53 042` (p28); AVANHUMUS `35 14 540` → `14 54 072` (p118); FITASIO `20 15 551` → `15 55 106` (p141); MAXIM `25 15 550` → `15 55 071` (p168); MEGAPLUS `20 15 551` → `15 55 123` (p168). All 5 were verified against page dumps.
+    - Added `ROW_FIXES` (54 entries keyed `(hom, page)`, applied after the strip sweep; supports `hom`/`brand`/`active`/`concentration`/`formulation`). FITASIO repurposed its fabricated `20 15 551` row (no removal needed); LAMARDOR/SABITHANE were no longer left empty — SABITHANE resolved to `myclobutanil 325 g/L EC`, LAMARDOR to `tebuconazole 250 g/L FS` via the fixes.
+    - **Parser re-run result: full 1,264 / 1,264 (100 %), brand-only 0, low 0, empty-active 0, empty-brand 0.** JSON metadata bumped to `pdfplumber char reconstruction (v4, completed)`.
+    - **Encoding repair:** the old committed JSON carried ~1,000 rows of double-encoded mojibake (`Ã©` for `é`, etc.) from an earlier export path; full regeneration produced clean UTF-8. Verified via a repair-table comparison — zero semantic regressions vs. the old file.
+    - `INPV_HOMOLOGATIONS` in `src/lib/algeria-phyto-data.ts` extended: LAMDOCK (`14 54 006`, lambda-cyhalothrine), RIDOMIL (`15 55 273`, metalaxyl-m), SABITHANE (`08 46 182`, myclobutanil), LAMARDOR (`11 51 022`, tebuconazole).
+    - Committed as `63522e7` and pushed to `origin/main` (range `f86cf90..63522e7`).
+
+---
+
+## PhaseE — E-Phy (France/Anses) catalogue integration
+
+- **Task ID:** PhytoEPhy
+- **Date:** 2026-08-08
+- **Files changed:**
+  - `scripts/build_ephy_index.py` (new — builds the two public E-Phy index JSONs from Anses CSV exports)
+  - `public/data/ephy-ppp-index.json` (new — **14,054 products**, 3,826 KB raw / 444 KB gzip)
+  - `public/data/ephy-mfsc-index.json` (new — **1,265 products**, 532 KB raw / 73 KB gzip)
+  - `src/lib/ephy-index.ts` (new — fetch/norm/active-summary helpers for the E-Phy indexes)
+  - `src/components/agri/active-matter-selector/EphyIndexBrowser.tsx` (new — fourth tab: E-Phy browser)
+  - `src/components/agri/active-matter-selector/ActiveMatterSelector.tsx` (4th tab wired in)
+
+### Work log
+
+1. **Source CSVs:** `produits_utf8.csv` — 15,132 rows (`PPP` 13,550 · `MFSC` 1,078 · `ADJUVANT` 304 · `PRODUIT-MIXTE` 187 · `MELANGE` 13); `etat`: `RETIRE` 12,444 / `AUTORISE` 2,688. Schemas confirmed: `produits` (19 cols + trailing empty), `mfsc_et_mixte_composition`, `substance_active`, `produits_usages`, `mfsc_et_mixte_usage`.
+2. **Build script** reads `EPHY_DATA_DIR` (or default `%TEMP%\opencode\ephy\xu`), parses actives with the regex `^(.*?)\s*\([^)]*\)\s*([\d.,]+)\s*(\S+)$`, and emits:
+   - `ephy-ppp-index.json`: PPP + ADJUVANT + PRODUIT-MIXTE + MELANGE (14,054) → `{amm, name, alt[], titulaire, etat, premiereAutorisation, actives[], fonctions[], formulations[]}`. `alt` kept (only 1,361 records / 28 KB).
+   - `ephy-mfsc-index.json`: 1,078 MFSC rows + 187 composition-only orphans → `{amm, name, alt[], titulaire, etat, premiereAutorisation, composition, classe, revendication}`.
+3. **`src/lib/ephy-index.ts`:** `EphyPppProduct`/`EphyMfscProduct`/`EphyActive` interfaces, `normEphy = normPhyto` (accent-insensitive), `ephyActiveSummary` (rejoin name+conc), lazy single-flight `fetchEphyPppIndex`/`fetchEphyMfscIndex`.
+4. **`EphyIndexBrowser.tsx`** (4th tab `🇫🇷 E-Phy`): PPP/MFSC sub-tabs; search (brand / substance / AMM / titulaire); `etat` select (AUTORISE / RETIRÉ / all); `fonction` (PPP) and `classe` (MFSC) filters with live counts; pagination (40/page); `EtatBadge` (green AUTORISE / red RETIRÉ); amber disclaimer that French authorization ≠ INPV registration; product detail line (titulaire · first authorization · actives).
+5. **Wiring:** `ActiveMatterSelector` TabsList now `grid-cols-4`; `<TabsContent value="ephy"><EphyIndexBrowser/></TabsContent>` added after the INPV tab.
+6. **Verification:** `npx tsc --noEmit` filtered to the touched files → 0 errors. `npm run build` → ✓ (8/8 routes, Turbopack). JSON files confirmed valid UTF-8 (byte-level check). `line-clamp-2` is Tailwind v4 core (no plugin needed).
+
+### Stage summary
+
+| Metric | Value |
+|---|---|
+| PPP/adjuvant/mix products | 14,054 (3,826 KB raw / 444 KB gzip) |
+| MFSC + composition orphans | 1,265 (532 KB raw / 73 KB gzip) |
+| Data files | `public/data/ephy-ppp-index.json`, `public/data/ephy-mfsc-index.json` (runtime-fetched) |
+| Shared lib | `src/lib/ephy-index.ts` |
+| New UI | `EphyIndexBrowser.tsx` (4th tab) |
+| TypeScript errors (new files) | 0 |
+| `npm run build` | ✓ 8/8 routes |
+
+**Known limits / next steps:**
+- E-Phy data is a snapshot of the Anses export; authorization status (`AUTORISE`/`RETIRÉ`) is France-only and must not be presented as Algerian registration.
+- PPP index excludes pre-2015 AMMs (the Anses `produits_utf8` dump covers the current catalogue).
+- Future ideas: match curated Algerian actives against E-Phy actives to surface French product references on the Catalogue / Recommendation cards (mirrors the INPV chips).
+
 ### Stage summary
 
 | Metric | Value |

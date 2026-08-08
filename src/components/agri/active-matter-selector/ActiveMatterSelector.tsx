@@ -18,6 +18,7 @@ import {
   type ActiveMatter, type ActiveMatterType, type PlantProblem, type ProblemType,
 } from '@/lib/algeria-phyto-data';
 import { InpvIndexBrowser } from './InpvIndexBrowser';
+import { EphyIndexBrowser } from './EphyIndexBrowser';
 import {
   fetchPhytoIndex, indexByActive, normPhyto, type PhytoProduct,
 } from '@/lib/phyto-index';
@@ -341,10 +342,11 @@ export function ActiveMatterSelector() {
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="grid w-full max-w-md grid-cols-3">
+        <TabsList className="grid w-full max-w-xl grid-cols-4">
           <TabsTrigger value="decision">🧭 Décision</TabsTrigger>
           <TabsTrigger value="catalog">📚 Catalogue</TabsTrigger>
           <TabsTrigger value="inpv">📜 Index INPV</TabsTrigger>
+          <TabsTrigger value="ephy">🇫🇷 E-Phy</TabsTrigger>
         </TabsList>
 
         {/* ================================================================
@@ -692,6 +694,13 @@ export function ActiveMatterSelector() {
         ================================================================ */}
         <TabsContent value="inpv" className="space-y-4">
           <InpvIndexBrowser />
+        </TabsContent>
+
+        {/* ================================================================
+            E-PHY CATALOGUE TAB (France, Anses)
+        ================================================================ */}
+        <TabsContent value="ephy" className="space-y-4">
+          <EphyIndexBrowser />
         </TabsContent>
       </Tabs>
 
