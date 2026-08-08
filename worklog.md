@@ -372,3 +372,25 @@
 - Extension des `crops` de problèmes existants (oïdium/rouilles/septoria/fusariose/piétin/lémas/mouche de Hesse + avoine ; pucerons + laitue/artichaut/choux/tabac/poireau ; botrytis + laitue/artichaut ; acariens + tabac/aubergine ; tuta/spodoptera/helicoverpa/aleurodes + aubergine ; anthracnose/sitone/orobanche + pois chiche ; dicotylédones maraîchères + asperge/choux/poireau/carotte/aubergine) et des `crops`/`targets` de 17 substances existantes (deltaméthrine, cyperméthrine, abamectine, indoxacarbe, bifenthrine, chlorpyriphos-éthyl, lambda-cyhalothrine, acétamipride, imidaclopride, mancozèbe, cuivre, tébuconazole, azoxystrobine, captan, fosétyl-Al, métalaxyl-M, chlorothalonil).
 
 **Validation :** script node de cohérence (tous les `actives`/`targets`/`crops` résolvent ; aucun id dupliqué) → OK ; `npx tsc --noEmit` → 0 erreur sur le fichier ; `npm run build` → 8/8 routes.
+
+---
+
+## 2026-08-08 — Phase B : élargissement web (sorgho, coton, pistachier, grenadier, figuier, luzerne)
+
+**Contexte.** Suite de la Phase A : élargir encore le Decision tab via une passe de recherche web (EPPO / FAO / ITGC). Les sources web n'impliquent **pas** une homologation INPV : aucune substance n'a été ajoutée, uniquement des cultures, problèmes et câblages `crops`/`targets` sur les 99 substances existantes.
+
+**Nouvelles cultures (36 au total, +6).** `sorgho`, `coton`, `pistachier`, `grenadier`, `figuier`, `luzerne` (section `// ---- Added 2026-08-08 — crops from Phase B web research ----`).
+
+**Nouveaux problèmes (90 au total, +12), tous `source` web (mention en notes) :**
+- **Sorgho** : mouche des pousses (Atherigona soccata), foreurs des tiges (Sesamia, Chilo) [aussi maïs], anthracnose (Colletotrichum sublineolum).
+- **Coton** : ver rose (Pectinophora gossypiella), anthracnose du cotonnier (Glomerella gossypii), flétrissement verticillien (Verticillium dahliae).
+- **Pistachier** : psylle (Agonoscena pistaciae), taches foliaires/rouille (Septoria pistaciarum, Uromyces).
+- **Grenadier** : cochenille blanche (Ceraplastes russi).
+- **Figuier** : mouche noire des figues (Silba adipata).
+- **Luzerne** : apion (Apion pisi), rouille (Uromyces striatus).
+
+**Extensions de problèmes existants** pour couvrir les nouvelles cultures : pucerons (+sorgho, coton, grenadier, figuier, luzerne, pistachier), aleurodes (+coton), acariens (+coton, grenadier), mouche méditerranéenne (+grenadier, figuier), Spodoptera & Helicoverpa (+coton — ravageurs clés du cotonnier), charbon des céréales (+sorgho).
+
+**Câblage substances (crops/targets) :** deltaméthrine, lambda-cyhalothrine, acétamipride, imidaclopride, abamectine, chlorantraniliprole, émanectine, méthomyl, chlorpyriphos-éthyl, diméthoate, spinosad, thiophanate-méthyl, mancozèbe, chlorothalonil, difénoconazole, tébuconazole, azoxystrobine, soufre, cuivre, huile minérale — nouveaux crops et/ou nouveaux targets (psylle-pistachier, cochenille-grenadier, mouche-pousses-sorgho, foreurs-tiges, ver-rose-coton, verticilliose-coton, anthracnose-sorgho/coton, taches-pistachier, apion-luzerne, rouille-luzerne, mouche-figuier).
+
+**Validation :** script node de cohérence étendu (crops/targets/actives tous résolus ; aucun id dupliqué) → `crops=36 problems=90 matters=99` OK ; `npx tsc --noEmit` → 0 erreur sur le fichier ; `npm run build` → ✓ 8/8 routes.
