@@ -592,6 +592,88 @@ ACTIVE_OVERRIDES: dict[str, str] = {
     "12 52 078": "",                                      # KERAK (Zn fertiliser; suppress false positive)
 }
 
+# Completion fixes for the biostimulant / fertiliser / carences rows (the
+# REGULATEURS / CARENCES / ENGRAIS tail of the index) whose "Matière active"
+# column holds a composition the known-active matcher cannot resolve. The
+# composition is recovered from the printed column (see worklog Phase D2
+# follow-up) and pinned here by (homologation, page) so the parse stays
+# deterministic across regenerations.
+#
+# Five rows also carry a FABRICATED homologation: the anchor scan reconstructed
+# a number from text fragments when the printed digits sat outside the hom
+# band. Each is re-keyed to the number actually printed on the page (verified
+# against the PDF):
+#   CERATRAP   "20 13 530" -> 13 53 042   (p28, hydrolysat de protéines)
+#   AVANHUMUS  "35 14 540" -> 14 54 072   (p118, humiques/fulviques)
+#   MAXIM      "25 15 550" -> 15 55 071   (p168, triclopyr; brand is MAXIM,
+#                                          not the garbled "TRICHLOPYRACID")
+#   MEGAPLUS   "20 15 551" -> 15 55 123   (p168, P2O5+K2O)
+#   FITASIO    "20 15 551" -> 15 55 106   (p141, P2O5+K2O 30%+20% Liquide)
+ROW_FIXES: dict[tuple[str, int], dict] = {
+    ("20 13 530", 28): {"hom": "13 53 042",
+                        "active": "hydrolysat de protéines"},                      # CERATRAP
+    ("14 54 006", 43): {"brand": "LAMDOCK", "active": "lambda-cyhalothrine"},
+    ("11 51 022", 78): {"active": "prothioconazole + tébuconazole"},              # LAMARDOR
+    ("15 55 272", 86): {"brand": "RELIVE", "active": "triadiménol"},
+    ("15 55 273", 86): {"brand": "RIDOMIL", "active": "métalaxyl-m"},
+    ("08 46 182", 87): {"active": "dinocap + myclobutanil"},                      # SABITHANE
+    ("13 53 001", 110): {"brand": "AGRIFER", "active": "fer (chélate)"},
+    ("15 55 020", 112): {"active": "extraits d'algues marines"},                  # ALGALIV
+    ("15 55 094", 116): {"active": "acides aminés libres + azote"},               # AMINOCAT
+    ("11 51 035", 117): {"active": "acides aminés libres + matière organique"},   # AMINOSTAR
+    ("07 45 193", 117): {"active": "acides aminés + bétaïne"},                    # AMINOTONIC
+    ("35 14 540", 118): {"hom": "14 54 072",
+                         "active": "extraits humiques + extraits fulviques + potassium + azote organique + fer"},  # AVANHUMUS
+    ("14 54 074", 120): {"brand": "BIOCAT", "active": "acides humiques + acides fulviques"},
+    ("09 47 019", 125): {"brand": "CARBOFER", "active": "carbohydrates + chélate de fer + P2O5 + K2O"},
+    ("14 54 078", 127): {"active": "fer (EDDHA)"},                                # CORGALFe
+    ("16 56 094", 131): {"active": "azote total + acides aminés"},                # DELFANPLUS
+    ("07 45 207", 131): {"active": "azote total + acides aminés"},                # DELFANPLUS
+    ("15 55 154", 132): {"active": "fer chélaté (EDDHA)"},                        # DIAFERRENE
+    ("13 53 008", 138): {"brand": "FERTILEADER",
+                         "active": "N + P2O5 + K2O + Mn + B + Zn + Cu + Fe + Mo"},
+    ("14 54 086", 143): {"active": "N + P2O5 + K2O + CaO + MgO + SO3 + matière organique"},  # FRUTTURO
+    ("09 47 030", 145): {"brand": "GOEMAR BM", "active": "extraits d'algues + N + MgO + B + Mo"},
+    ("10 50 023", 150): {"active": "Mg + Mn + Cu + Zn"},                           # MULTIPLE
+    ("10 50 024", 150): {"active": "Mg + Mn + B + Mo + S"},                        # VERTRACE
+    ("09 47 032", 153): {"active": "acides humiques + acides fulviques"},          # HUMISTARWG
+    ("07 45 234", 153): {"active": "N + P2O5 + K2O + SO3 + MgO"},                  # PLEXACTHYVA
+    ("15 55 168", 156): {"active": "cuivre (complexé)"},                           # JOSCOP
+    ("12 52 078", 157): {"active": "zinc"},                                        # KERAK
+    ("15 55 058", 160): {"active": "fer (EDDHA)"},                                 # LIBRELFe-Hi
+    ("15 55 060", 161): {"brand": "LIBRELRMX", "active": "Fe + Cu + Mn + Zn"},
+    ("15 55 174", 161): {"active": "calcium (CaO complexé)"},                      # LIGOPLEXCa
+    ("15 55 173", 161): {"active": "magnésium (MgO complexé)"},                    # LIGOPLEXMg
+    ("14 54 057", 165): {"active": "azote + aminoacides libres"},                  # ESTIMULANT
+    ("25 15 550", 168): {"hom": "15 55 071", "brand": "MAXIM", "active": "triclopyr"},
+    ("20 15 551", 168): {"hom": "15 55 123", "active": "P2O5 + K2O"},              # MEGAPLUS
+    ("20 15 551", 141): {"hom": "15 55 106", "brand": "FITASIO",
+                         "active": "P2O5 + K2O", "concentration": "30 % + 20 %",
+                         "formulation": "SL"},
+    ("14 54 035", 174): {"brand": "NORUS 12-04-3", "active": "N + K2O + MgO + S"},
+    ("14 54 034", 175): {"brand": "NORUS 12-12-36", "active": "N + P2O5 + K2O + oligo-éléments"},
+    ("14 54 033", 175): {"brand": "NORUS 20-20-20", "active": "N + P2O5 + K2O + S + oligo-éléments"},
+    ("15 55 079", 177): {"brand": "OLIGOGREEN", "active": "B + Cu + Fe + Mn + Mo + Zn"},
+    ("07 45 263", 181): {"brand": "ORUS", "active": "fer (chélate)"},
+    ("15 55 184", 183): {"brand": "PLYAMINOL",
+                         "active": "Cu (EDTA) + Fe (EDTA) + Mn (EDTA) + Mo + Zn (EDTA)"},
+    ("15 55 192", 188): {"brand": "QUIXFE", "active": "Fe + Mn + Zn"},
+    ("15 55 195", 190): {"active": "acide humique + acide fulvique"},              # RAGONFORT
+    ("15 55 202", 193): {"brand": "ROMBIGEL 4-36+OE",
+                         "active": "N + P2O5 + K2O + B + Cu + Fe (EDTA) + Mn (EDTA) + Mo + Zn (EDTA)"},
+    ("13 53 018", 198): {"active": "acides aminés + peptides"},                    # SIAPTON
+    ("15 55 137", 203): {"active": "N + P2O5 + MgO + SO3"},                        # SULFAMMO
+    ("07 45 279", 204): {"active": "acide carboxylique"},                          # SUPALINK
+    ("10 50 040", 207): {"brand": "TIMAZOT 30", "active": "N + SO3 + MgO"},
+    ("15 55 213", 207): {"brand": "TOPPHOS 5-10-22",
+                         "active": "N + P2O5 + K2O + MgO + SO3 + B + Zn"},
+    ("14 54 049", 208): {"active": "calcium (EDTA)"},                              # TRADECORPCa
+    ("07 45 303", 211): {"active": "Mo + Zn + auxine + cytokinine"},               # ULTRAKELP
+    ("16 56 122", 212): {"active": "fer (EDDHA)"},                                 # VELLIRON
+    ("10 50 042", 213): {"brand": "VERDIRON", "active": "fer (EDDHA)"},
+    ("16 56 119", 216): {"active": "zinc (EDTA)"},                                 # ZINVELL
+}
+
 def main() -> int:
     products: list[dict] = []
     stats = Counter()
@@ -705,6 +787,18 @@ def main() -> int:
                                     break
                         if guarded:
                             rec["active"] = " + ".join(guarded)
+                fix = ROW_FIXES.get((hom, pno))
+                if fix:
+                    if "hom" in fix:
+                        rec["homologation"] = fix["hom"]
+                    if "brand" in fix:
+                        rec["brand"] = fix["brand"]
+                    if "active" in fix:
+                        rec["active"] = fix["active"]
+                    if "concentration" in fix:
+                        rec["concentration"] = fix["concentration"]
+                    if "formulation" in fix:
+                        rec["formulation"] = fix["formulation"]
                 if rec["brand"] and rec["active"]:
                     stats["full"] += 1
                 elif rec["brand"]:
@@ -742,7 +836,7 @@ def main() -> int:
         json.dump(
             {
                 "source": "INDEX_PRODUITS_PHYTO_2017 (Algérie, INPV)",
-                "generated": "pdfplumber char reconstruction (v3)",
+                "generated": "pdfplumber char reconstruction (v4, completed)",
                 "count": len(products),
                 "products": products,
             },

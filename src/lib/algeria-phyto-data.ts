@@ -574,6 +574,7 @@ export const INPV_HOMOLOGATIONS: Record<string, InpvProductRef[]> = {
   'lambda-cyhalothrine': [
     { brand: 'CYCLONE', homologation: '08 46 011', concentration: '50 g/L', formulation: 'EC' },
     { brand: 'LERATEX', homologation: '16 56 022', concentration: '50 g/L', formulation: 'EC' },
+    { brand: 'LAMDOCK', homologation: '14 54 006' },
     { brand: 'PULSAR', homologation: '08 46 060', concentration: '25 g/L', formulation: 'EC' },
   ],
   'linuron': [
@@ -608,6 +609,7 @@ export const INPV_HOMOLOGATIONS: Record<string, InpvProductRef[]> = {
     { brand: 'MATALAXYL TALAXYL+ MZ', homologation: '07 45 097', concentration: '8 %', formulation: 'WP' },
     { brand: 'METALAXYL', homologation: '07 45 117', concentration: '8 %', formulation: 'WP' },
     { brand: 'Metalaxyl', homologation: '08 46 073', concentration: '400 g/L', formulation: 'EC' },
+    { brand: 'RIDOMIL', homologation: '15 55 273' },
     { brand: 'THIAMETOXAM', homologation: '16 56 072', concentration: '20 %', formulation: 'WS' },
     { brand: 'ZELLOMIL MZWP DIMETHO', homologation: '07 45 123', concentration: '6 g/L', formulation: 'WP' },
   ],
@@ -642,6 +644,7 @@ export const INPV_HOMOLOGATIONS: Record<string, InpvProductRef[]> = {
   'myclobutanil': [
     { brand: 'BUTANIL', homologation: '08 46 151', concentration: '125 g/L', formulation: 'EC' },
     { brand: 'MYCLO', homologation: '08 46 094', concentration: '120 g/L', formulation: 'EC' },
+    { brand: 'SABITHANE', homologation: '08 46 182', concentration: '325 g/L', formulation: 'EC' },
     { brand: 'SYSTHANE', homologation: '08 46 109', concentration: '240 g/L', formulation: 'EC' },
   ],
   'oxyfluorfene': [
@@ -715,6 +718,7 @@ export const INPV_HOMOLOGATIONS: Record<string, InpvProductRef[]> = {
     { brand: 'FALCON', homologation: '15 55 269', concentration: '250 g/L', formulation: 'EC' },
     { brand: 'HORIZELL', homologation: '16 56 054', concentration: '250 g/L', formulation: 'EC' },
     { brand: 'HORIZON', homologation: '14 54 010', concentration: '250 g/L', formulation: 'EW' },
+    { brand: 'LAMARDOR', homologation: '11 51 022', concentration: '250 g/L', formulation: 'FS' },
     { brand: 'MICO- NAZOLE', homologation: '15 55 275', concentration: '60 g/L', formulation: 'FS' },
     { brand: 'RAXIL', homologation: '14 54 013', concentration: '60 g/L', formulation: 'FS' },
     { brand: 'SARGO', homologation: '15 55 277', concentration: '60 g/L', formulation: 'FS' },
