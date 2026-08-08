@@ -73,6 +73,9 @@ import { MoonPhaseCalendar } from '@/components/agri/nutri-tools/MoonPhaseCalend
 import { SeedRateCalculator } from '@/components/agri/nutri-tools/SeedRateCalculator';
 import { GrainBinInventoryTracker } from '@/components/agri/nutri-tools/GrainBinInventoryTracker';
 import { PollinatorHabitatPlanner } from '@/components/agri/nutri-tools/PollinatorHabitatPlanner';
+import { GDDTracker } from '@/components/agri/nutri-tools/GDDTracker';
+import { WaterHarvestingCalculator } from '@/components/agri/nutri-tools/WaterHarvestingCalculator';
+import { BiogasDigesterCalculator } from '@/components/agri/nutri-tools/BiogasDigesterCalculator';
 import { BookmarkedFormulas } from '@/components/agri/bookmarked-formulas';
 import { getBookmarks, toggleBookmark } from '@/lib/formula-bookmarks';
 import { OnboardingFlow } from '@/components/onboarding/OnboardingFlow';
@@ -322,6 +325,7 @@ export default function Page() {
             <CollapsibleSection title="Pest Threshold Calculator" description="EIL · action threshold · sequential sampling — 5 pest types" icon={Bug} color="#dc2626" storageKey="collapse_pest_threshold" defaultOpen={false}><div className="p-4"><PestThresholdCalculator /></div></CollapsibleSection>
             <CollapsibleSection title="Seed Rate Calculator" description="Target population × TGW × germination × field loss → kg seed/ha · 6 crops" icon={Sprout} color="#16a34a" storageKey="collapse_seedrate" defaultOpen={false}><div className="p-4"><SeedRateCalculator /></div></CollapsibleSection>
             <CollapsibleSection title="Moon Phase Planting Calendar" description="Biodynamic calendar · 29.5-day lunar cycle · 30-day forecast" icon={Moon} color="#6366f1" storageKey="collapse_moon" defaultOpen={false}><div className="p-4"><MoonPhaseCalendar /></div></CollapsibleSection>
+            <CollapsibleSection title="GDD Tracker (Growing Degree Days)" description="Accumulates thermal time from Open-Meteo · predicts growth stages · 5 crops" icon={Sun} color="#f59e0b" storageKey="collapse_gdd" defaultOpen={false}><div className="p-4"><GDDTracker /></div></CollapsibleSection>
           </div>
 
           {/* Sub-category: Soil & Livestock */}
@@ -340,6 +344,8 @@ export default function Page() {
             <CollapsibleSection title="Feed Ration Balancer (NRC 2021)" description="DMI · CP · TDN · Ca · P balancing — 8 ingredients · 4 animal types" icon={Beef} color="#8b5cf6" storageKey="collapse_ration" defaultOpen={false}><div className="p-4"><FeedRationBalancer /></div></CollapsibleSection>
             <CollapsibleSection title="Silage Fermentation Predictor" description="Moisture · sugar · packing density · chop length → fermentation quality score" icon={Beef} color="#f59e0b" storageKey="collapse_silage" defaultOpen={false}><div className="p-4"><SilageFermentationPredictor /></div></CollapsibleSection>
             <CollapsibleSection title="Bee Hive + Honey Yield Calculator" description="Daily weight gain · nectar flow projection · honey yield + revenue" icon={Bug} color="#eab308" storageKey="collapse_beehive" defaultOpen={false}><div className="p-4"><BeeHiveHoneyCalculator /></div></CollapsibleSection>
+            <CollapsibleSection title="Water Harvesting Calculator" description="Rooftop rainwater collection · cistern sizing · demand coverage" icon={Droplets} color="#0ea5e9" storageKey="collapse_water_harvest" defaultOpen={false}><div className="p-4"><WaterHarvestingCalculator /></div></CollapsibleSection>
+            <CollapsibleSection title="Biogas Digester Calculator" description="Biogas yield · digester sizing · energy + revenue · 5 substrates" icon={Flame} color="#f97316" storageKey="collapse_biogas" defaultOpen={false}><div className="p-4"><BiogasDigesterCalculator /></div></CollapsibleSection>
           </div>
 
           {/* Sub-category: Irrigation */}
