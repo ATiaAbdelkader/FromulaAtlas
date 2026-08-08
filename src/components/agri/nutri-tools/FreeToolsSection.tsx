@@ -16,7 +16,7 @@ import {
   Calculator, FlaskConical, Ruler, Droplets, Waves, Thermometer,
   Tractor, Package, Atom, BarChart3, Grid3x3, Beaker, Globe2,
   Sprout, Mountain, CloudRain, TableProperties, Network,
-  Star, Clock, Columns2, Check,
+  Star, Clock, Columns2, Check, ShieldCheck,
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
@@ -44,6 +44,7 @@ import { ToolExportBar, EXPORT_COPY_EVENT } from './ToolExportBar';
 import { KeyboardShortcutsHelp } from './KeyboardShortcutsHelp';
 import { CompareDialog } from './CompareDialog';
 import { SeasonPlanGenerator } from './SeasonPlanGenerator';
+import { ActiveMatterSelector } from '../active-matter-selector/ActiveMatterSelector';
 
 type ToolCategory = 'Converters' | 'Solution & Water' | 'Fertilizers' | 'Soil & Irrigation' | 'Reference';
 
@@ -287,6 +288,18 @@ const TOOLS: ToolMeta[] = [
     ],
     category: 'Reference', icon: Network, Component: NutrientInteractions,
   },
+  {
+    id: 'active-matter-selector',
+    name: 'Active Matter Selector — Algérie',
+    description: 'Décision aid: rank active ingredients against diseases, pests and weeds (crop-based, INPV 2017 + E-Phy data).',
+    benefit: 'From crop + observed symptoms to a ranked shortlist of registered active matters with doses, DAR, safety and restrictions — no more guesswork at the sprayer.',
+    howToUse: [
+      'Pick your crop, then the problem (disease / pest / weed) — or type symptoms like “taches brunes”.',
+      'Optionally set temperature, humidity and pressure to refine the ranking.',
+      'Read the ranked cards: confidence, dose, DAR, restrictions and alternatives; browse the full catalogue in the second tab.',
+    ],
+    category: 'Reference', icon: ShieldCheck, Component: ActiveMatterSelector,
+  },
 ];
 
 const CATEGORIES: ToolCategory[] = ['Converters', 'Solution & Water', 'Fertilizers', 'Soil & Irrigation', 'Reference'];
@@ -500,7 +513,7 @@ export function FreeToolsSection() {
       {/* Hero header */}
       <div className="rounded-xl p-5 sm:p-6 bg-gradient-to-br from-emerald-700 via-green-700 to-teal-800 text-white">
         <div className="flex items-center gap-2 mb-2 text-emerald-100 text-xs font-medium uppercase tracking-wide">
-          <Sparkles className="h-3.5 w-3.5" /> 18 Free Agronomic Tools
+          <Sparkles className="h-3.5 w-3.5" /> 19 Free Agronomic Tools
         </div>
         <h2 className="text-xl sm:text-2xl font-bold leading-tight mb-1">NutriPlant PRO Free Tools</h2>
         <p className="text-sm text-emerald-100/90 max-w-2xl">
@@ -527,7 +540,7 @@ export function FreeToolsSection() {
           icon={Info}
           color="#0891b2"
           title="What these tools are"
-          body="A curated set of 18 calculators and reference tables covering the day-to-day workflow of agronomists, growers, and consultants: unit conversions, water & nutrient solution diagnostics, fertilizer formulation, soil & irrigation planning, and crop-nutrition reference data."
+          body="A curated set of 19 calculators and reference tables covering the day-to-day workflow of agronomists, growers, and consultants: unit conversions, water & nutrient solution diagnostics, fertilizer formulation, soil & irrigation planning, crop-nutrition reference data, and an Algeria-focused active-matter selector."
         />
         <IntroCard
           icon={BookOpen}
