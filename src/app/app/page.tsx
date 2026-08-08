@@ -86,6 +86,7 @@ import { ApiDocsButton } from '@/components/agri/nutri-tools/ApiDocsButton';
 import { WorkflowRunner } from '@/components/agri/workflow-runner';
 import { SeasonScheduler } from '@/components/agri/season-scheduler';
 import { LanguageToggle } from '@/components/language-toggle';
+import { ActiveMatterSelector } from '@/components/agri/active-matter-selector/ActiveMatterSelector';
 import { handbook, allFormulas } from '@/lib/formulas-data';
 import type { Formula } from '@/lib/types';
 import type { Workflow } from '@/lib/workflows';
@@ -299,7 +300,7 @@ export default function Page() {
         <main className="flex-1 max-w-[1200px] mx-auto w-full p-4 sm:p-6 space-y-6">
           <div className="rounded-xl p-4 bg-gradient-to-r from-emerald-600 to-green-700 text-white">
             <div className="flex items-center gap-2"><Tractor className="h-5 w-5" /><h2 className="text-lg font-bold">Farm Management</h2></div>
-            <p className="text-xs text-emerald-100 mt-1">Fields · Crops · Soil · Livestock · Irrigation — 9 tools</p>
+            <p className="text-xs text-emerald-100 mt-1">Fields · Crops · Soil · Livestock · Irrigation · Protection — 10 tools</p>
           </div>
 
           {/* Sub-category: Fields & Crops */}
@@ -356,6 +357,12 @@ export default function Page() {
             <CollapsibleSection title="Seasonal Irrigation Planner" description="Season-by-season irrigation focus, risks and recommendations" icon={Calendar} color="#f59e0b" storageKey="collapse_seasonal" defaultOpen={false}><div className="p-4"><SeasonScheduler /></div></CollapsibleSection>
             <CollapsibleSection title="Evapotranspiration Tracker" description="Live ET₀ (Open-Meteo) · FAO-56 Kc × ETc · 7-day irrigation plan · ERA5 history — no API key needed" icon={Sun} color="#0891b2" storageKey="collapse_et_tracker" defaultOpen={false}><div className="p-4"><EvapotranspirationTracker /></div></CollapsibleSection>
             <CollapsibleSection title="Irrigation Scheduler" description="Controllers · Zones · Schedules · Sequences · Cycle-and-soak eco-mode · Weather % adjust · YAML/CSV/JSON export" icon={Clock} color="#0ea5e9" storageKey="collapse_irr_sched" defaultOpen={false}><div className="p-4"><IrrigationScheduler /></div></CollapsibleSection>
+          </div>
+
+          {/* Sub-category: Plant Protection */}
+          <div className="space-y-3">
+            <SubHeader emoji="🛡️" label="Plant Protection" />
+            <CollapsibleSection title="Active Matter Selector (Algérie)" description="Decide which active ingredient to use against diseases, pests and weeds — crop-based advisor · INPV 2017 catalogue · symptom search · ranked recommendations with confidence, doses, DAR and restrictions" icon={Bug} color="#65a30d" storageKey="collapse_active_matter" defaultOpen={false}><div className="p-4"><ActiveMatterSelector /></div></CollapsibleSection>
           </div>
         </main>
       )}

@@ -1,0 +1,165 @@
+=====================================================================
+TOOL: parse_phyto_index.py
+---------------------------------------------------------------------
+STATE SNAPSHOT  (saved 2026-08-08)
+---------------------------------------------------------------------
+PATH       : E:\FromulaAtlas-main\FromulaAtlas-main\scripts\parse_phyto_index.py
+PURPOSE    : Parse the INPV 2017 phytosanitary index PDF into the
+             runtime JSON public/data/phyto-2017-index.json (1,264
+             specialities, 197 product pages) and drive the
+             algeria-phyto-data.ts homologation reference export.
+DOCS       : worklog.md (entry 11 + Stage summary), PHASE_D2_STATUS.txt
+             does NOT exist (earlier mention was a phantom).
+HANDOFF    : State continued from the 2026-08-08 "empty-active recovery"
+             session. NEXT GOAL from user: keep adding products from the
+             PDF index (index is fully parsed; "continue" = extend /
+             refine specialities coverage as the index demands).
+
+=====================================================================
+1. CURRENT VERIFIED STATE
+=====================================================================
+- JSON: total 1264 | full 1211 (95.8 %) | brand-only 40 | low 13
+- empty 'active': 108 -> 53 (all biostimulant / fertilizer / ambiguous,
+  intentionally left empty):
+    REGULATEURS 38 | CARENCES 7 | ENGRAIS 2 | FONGICIDES 4
+    (LAMARDOR 11 51 022, SABITHANE 08 46 182, + 2 unnamed rows
+     15 55 272 / 15 55 273)
+    INSECTICIDES 1 (CERATRAP 20 13 530 - protein-bait attractant)
+    STOCKAGE 1 (14 54 006, unnamed)
+- Parser: py_compile clean; KNOWN_ACTIVES = 578 entries; ACTIVE_OVERRIDES
+  = 33 entries; strip recovery window STRIP_WIN = 9.0 / STRIP_GUARD = 8.7.
+- Export src/lib/algeria-phyto-data.ts: regenerated deterministically
+  (52 ids / 336 refs / 457 lines / 745 total). tsc --noEmit: 0 errors in
+  algeria-phyto-data.ts and parse_phyto_index.py (other tsc errors are
+  pre-existing, unrelated files: season-report, formulas-data, glossary,
+  websocket examples, translate_to_arabic).
+- Verification: all 33 override rows match the JSON exactly; key strip
+  rows correct (LUFOX->fenoxycarb, KZOIL->huile, AXIAL->pinoxaden+
+  cloquintocet, VERITA->fenamidone, PALLAS->pyroxsulam, FOSETOP->
+  fosetyl-Al, ETABOXAM->ethaboxam, APRONS->metalaxyl-m, ...).
+
+=====================================================================
+2. ROOT CAUSES OF THE OLD 108 EMPTY-'ACTIVE' ROWS
+=====================================================================
+- IDENT_MIN_TOP=560 drops substance text drawn ABOVE that band on
+  Layout-B pages (e.g. LUFOX 'FENOXYCARB' at tops 447-500).
+- Some substance columns sit just outside IDENT_WIN=6 (KZOIL 'HUILE...'
+  at dx -7.7).
+- Hyphen-wrapped / split substance names across columns (CYCLONE, FURY,
+  MOPISTOP, MONDIAL, VOLIAM, BIONO, REGALIS, D-D ...).
+- Several actives missing from KNOWN_ACTIVES (fenoxycarb, pinoxaden,
+  florasulam, pyroxsulam, metosulam, fluazifop-P-butyl, diuron,
+  fenamidone, ethaboxam, 2,4-D amine/ester, fosetyl-Al,
+  glufosinate-ammonium, tribenuron-methyl, acibenzolar-S-methyl,
+  prohexadione-calcium, hydrazide maleique, acide indole-butyrique,
+  dichloropropane, phosphure d'aluminium, ...).
+- CONFIDENTE (08 46 017) has NO substance text in the PDF at all.
+- Dictionary false positives (adjective 'soufres' matching 'soufre'
+  for KERAK).
+- An earlier USAGE-based post-recovery wrote false positives to the JSON
+  (LUFOX->lufenuron WRONG, LEXONE->linuron, MUSTANG->glyphosate,
+  PALLAS->oxyfluorfene, KERAK->soufre, D-D->dazomet ...). That data was
+  WIPED by the clean parser re-run. NEVER trust usage text for actives.
+
+=====================================================================
+3. THE FIX (in the parser; JSON is a derived artifact)
+=====================================================================
+(a) KNOWN_ACTIVES += 24 entries (incl. ethaboxam). French canonical +
+    English/OCR variants. norm() strips accents/case/punct.
+(b) Strip recovery inside main()'s per-anchor loop, runs ONLY when
+    rec['active'] is empty:
+        near = columns with |x0 - x_hom| <= STRIP_WIN (9.0), sorted by dx
+        soup = clean_text(col_text) joined
+        matched = match_actives(soup)
+        keep name only if its norm appears in some column whose
+        |x0 - x_hom| <= STRIP_GUARD (8.7)
+    -> rec['active'] = ' + '.join(kept)   (partials accepted)
+(c) ACTIVE_OVERRIDES: dict homologation -> active. Takes precedence over
+    the strip. Value "" suppresses the strip (KERAK). 33 entries:
+      08 46 017 acétamipride            (CONFIDENTE)
+      07 45 013 bacillus thuringiensis  (BATAK)
+      16 56 072 métalaxyl-m             (APRONS, strip caught neighbour cols)
+      08 46 011 lambda-cyhalothrine     (CYCLONE)
+      08 46 014 cyperméthrine           (CYRENC)
+      12 52 012 difénoconazole          (DIVIDEND)
+      09 47 001 zêta-cyperméthrine      (FURY)
+      16 56 030 phosphure d'aluminium   (FUMIGAS)
+      16 56 022 lambda-cyhalothrine     (LERATEX)
+      07 45 048 acétamipride            (MOPISTOP)
+      08 46 049 chlorpyriphos-éthyl + cyperméthrine  (MONDIAL)
+      08 46 054 fenpyroximate           (ORTUS)
+      11 51 031 chlorantraniliprole + thiaméthoxam   (VOLIAM FLEXI)
+      11 51 032 abamectine + chlorantraniliprole     (VOLIAM TARGO)
+      07 45 081 ethaboxam               (ETABOXAM)
+      07 45 083 fosétyl-Al              (FOLIETTE)
+      07 45 084 fosétyl-Al              (FOSETOP)
+      13 53 019 fosétyl-Al              (VALETTE)
+      14 54 036 2,4-D                   (SANHORMONE)
+      07 45 142 clodinafop-propargyl + cloquintocet-méxyl  (ZELLAMIN)
+      07 45 168 1,3-dichloropropène + dichloropropane      (D-D)
+      08 46 066 1,3-dichloropropène     (TELONEEC)
+      51 01 106 acibenzolar-S-méthyl    (BIONO)
+      15 10 110 prohexadione-calcium    (REGALIS)
+      08 46 176 hydrazide maléique      (HIMALAYA)
+      09 47 031 hydrazide maléique      (ITCAN)
+      07 45 055 acide indole-butyrique  (PLANDOR)
+      07 45 276 acide gibbérellique     (SPA-GIB)
+      15 55 280 soufre                  (SOFRAL)
+      07 45 128 tribénuron-méthyl       (AGRISTAR)
+      11 51 020 glufosinate-ammonium    (GLUSAR)
+      07 45 304 huile minérale          (SEFRAZIT)
+      12 52 078 ""                      (KERAK, suppress false positive)
+
+=====================================================================
+4. HOW TO RE-RUN / VERIFY
+=====================================================================
+- Re-run (full, ~7 min):  python scripts/parse_phyto_index.py
+  (cwd = E:\FromulaAtlas-main\FromulaAtlas-main).
+  Writes public/data/phyto-2017-index.json deterministically.
+  On Windows the shell tool may time out at 10 min; start detached with
+  Start-Process + -RedirectStandardOutput log, then poll.
+- Verify stats in log: full 1211, brand_only 40, low 13, known_only 546.
+- Verify overrides: compare each ACTIVE_OVERRIDES entry against the JSON.
+- Rebuild export:  python %TEMP%\opencode\genblock2.py
+  (REWROTE ids=52 rows=336 ...)  then npx tsc --noEmit (touched files).
+- Reference data kept in %TEMP%\opencode\:
+    ground_truth.txt  - per-row truth for the old 108 empty rows
+    strip_sim3.txt    - verified strip-recovery simulation
+    genblock2.py      - algeria-phyto-data.ts regenerator
+    probes/stripsim3  - validation scripts (import ppi from the file)
+
+=====================================================================
+5. KNOWN LIMITS (do NOT call the tool "perfect")
+=====================================================================
+- Brand/identity pollution in tight layouts (neighbour columns bleed):
+  'VERITA + FLASH NIUM', 'PALLAS QUINTOCET-MEXYL G/L'.
+- Duplicate-form artifacts: 'métribuzine + metribuzin',
+  'fosétyl-Al + fosétyl' (same substance, two spellings).
+- 53 rows intentionally empty (biostimulants/fertilizers/ambiguous PPP:
+  CERATRAP, LAMARDOR, SABITHANE, TRICHLOPYRACID).
+- Lazy _KNOWN_NORM build: _KNOWN_NORM stays [] until the first
+  match_actives() call; checking it directly without a match gives a
+  false "not found".
+- OCR/environment oddities: this env's file tools have shown phantom
+  views; verify parser state with python io.open AFTER any edit.
+- A few JSON rows (FOSETOP, ETABOXAM, APRONS-) were synced in place AND
+  mirrored in ACTIVE_OVERRIDES; a fresh parser re-run should reproduce
+  them (override map is the source of truth).
+
+=====================================================================
+6. NEXT STEPS (resume here)
+=====================================================================
+- Continue adding products from the PDF index as the app's catalogue
+  requires: index already covers all 1,264 specialities; further work =
+  refining noisy brands, deduping dual-spelling actives, and optionally
+  mapping the 53 biostimulant rows to a separate 'biostimulant' field.
+- Candidates for the next pass:
+  (1) de-noise brands via a tighter ident-column selection
+      (exclude neighbour columns that belong to a different hom anchor);
+  (2) dedupe equivalent actives when spelling variants both match
+      (métribuzine+metribuzin, fosétyl-Al+fosétyl, metalaxyl/métalaxyl-m);
+  (3) decide whether CERATRAP/LAMARDOR/SABITHANE/TRICHLOPYRACID deserve
+      manual actives (all ambiguous -> currently empty by design).
+- Keep the JSON parser-driven; never hand-edit the JSON without a
+  matching parser override.
+=====================================================================
