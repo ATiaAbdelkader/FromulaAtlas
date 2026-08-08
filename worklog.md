@@ -354,3 +354,21 @@
 - 53 rows still have no `active` — all in the fertilizer/biostimulant tail (REGULATEURS/CARENCES/ENGRAIS: amino acids, algue extracts, NPK foliars) or genuinely ambiguous PPP rows (CERATRAP protein bait, LAMARDOR, SABITHANE, TRICHLOPYRACID). Intentionally left empty (not PPP active substances).
 - Homologations are anchored to the 2017 index — always verify currency with the INPV.
 - The fertilizer/carences tail pages (226-232) use a different layout (Arabic text, no 2-2-3 homologations) and are intentionally not parsed.
+
+---
+
+## 2026-08-08 — Phase A : élargissement des données du Decision tab (mining INPV 2017)
+
+**Contexte.** L'utilisateur a demandé d'étendre les données du Decision tab (plus de cultures + ravageurs/maladies/adventices), avec la priorité affichée sur l'onglet Decision. Option C retenue : d'abord miner l'index INPV 2017 (données locales), puis une passe web.
+
+**Mining.** Nouveau script `scripts/mine_inpv_usages.py` : tokenise les lignes `usage` OCR des 1 253 produits (sur 1 264) qui en ont, agrège par culture et par cible (dicts CROPS/TARGETS + normalisation NFD), sort un rapport JSON (`C:\Users\PC\AppData\Local\Temp\opencode\inpv_links_report.json`). Console : définir `PYTHONIOENCODING=utf-8` (crash cp1256 sinon).
+
+**Liens vérifiés (INPV 2017) :** teigne pomme de terre (29), psylle poirier (17), punaises céréales (13), black-rot vigne (15), tavelure (41), mildiou (38), adventices (37), pucerons (36), mineuses (33), teigne (31), oïdium (26), cochenilles (24), aleurodes (24), moniliose (23), rouille (23), acariens (22), botrytis (21), carpocapse (20), alternaria (20), psylle (18), etc.
+
+**Modifications `src/lib/algeria-phyto-data.ts` :**
+- **30 cultures** (+11) : poireau, laitue, artichaut, asperge, carotte, aubergine, choux, arachide, avoine, pois chiche, tabac.
+- **78 problèmes** (+19) : teigne-pommedeterre, psylle-poirier, punaises-cereales, cloque-pecher, black-rot-vigne, carie, charbon-cereales, eudemis, cicadelle-vigne, altise-vigne, feu-bacterien, rouille-poireau, laitue-mildiou, aubergine-mildiou, carotte-mouche, rouille-asperge, cercosporiose-arachide, ascochyta-pois-chiche, mildiou-tabac — actives tous résolus sur des substances existantes ou ajoutées.
+- **99 substances** (+22) : huile minérale, acrinathrine, thiaclopride, lufénuron, flufénoxuron, fénoxycarb, buprofézine, pymétrozine, spirodiclofen, propargite, hexaconazole, triadiménol, triticonazole, thirame, propinèbe, fenhexamide, diméthomorphe, spiroxamine, triforine, proquinazid, téfluthrine, téflubenzuron. 17/22 présentes dans l'index INPV (vérifié champ `active`) → `source: 'inpv-2017'` ; flufénoxuron/pymétrozine/téfluthrine/téflubenzuron absents de l'index → `source: 'ephy'`, `registeredAlgeria: false`.
+- Extension des `crops` de problèmes existants (oïdium/rouilles/septoria/fusariose/piétin/lémas/mouche de Hesse + avoine ; pucerons + laitue/artichaut/choux/tabac/poireau ; botrytis + laitue/artichaut ; acariens + tabac/aubergine ; tuta/spodoptera/helicoverpa/aleurodes + aubergine ; anthracnose/sitone/orobanche + pois chiche ; dicotylédones maraîchères + asperge/choux/poireau/carotte/aubergine) et des `crops`/`targets` de 17 substances existantes (deltaméthrine, cyperméthrine, abamectine, indoxacarbe, bifenthrine, chlorpyriphos-éthyl, lambda-cyhalothrine, acétamipride, imidaclopride, mancozèbe, cuivre, tébuconazole, azoxystrobine, captan, fosétyl-Al, métalaxyl-M, chlorothalonil).
+
+**Validation :** script node de cohérence (tous les `actives`/`targets`/`crops` résolvent ; aucun id dupliqué) → OK ; `npx tsc --noEmit` → 0 erreur sur le fichier ; `npm run build` → 8/8 routes.
