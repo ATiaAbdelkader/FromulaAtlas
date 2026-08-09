@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useMemo, useState, useEffect, useRef } from 'react';
-import { Search, Sprout, Layers, BookOpen, Calculator, X, Leaf, Filter, Home, Wrench, Bug, TrendingUp, Droplets, Settings, Calendar, Satellite, ShoppingCart, Users, DollarSign, RefreshCw, Beef, FlaskConical, CloudRain, FileText, Trophy, Tractor, Sparkles, Download, CheckCircle2, MapPin, Shapes, Compass, Sun, Mountain, FlaskConical as Flask, CalendarDays, Clock, Warehouse, Recycle, Wind, Flame, Snowflake, Gauge, Shield, Moon } from 'lucide-react';
+import { Search, Sprout, Layers, BookOpen, Calculator, X, Leaf, Filter, Home, Wrench, Bug, TrendingUp, Droplets, Settings, Calendar, Satellite, ShoppingCart, Users, DollarSign, RefreshCw, Beef, FlaskConical, CloudRain, FileText, Trophy, Tractor, Sparkles, Download, CheckCircle2, MapPin, Shapes, Compass, Sun, Mountain, FlaskConical as Flask, CalendarDays, Clock, Warehouse, Recycle, Wind, Flame, Snowflake, Gauge, Shield, Moon, Microscope } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -76,6 +76,8 @@ import { PollinatorHabitatPlanner } from '@/components/agri/nutri-tools/Pollinat
 import { GDDTracker } from '@/components/agri/nutri-tools/GDDTracker';
 import { WaterHarvestingCalculator } from '@/components/agri/nutri-tools/WaterHarvestingCalculator';
 import { BiogasDigesterCalculator } from '@/components/agri/nutri-tools/BiogasDigesterCalculator';
+import { DiseaseReferenceGallery } from '@/components/agri/nutri-tools/DiseaseReferenceGallery';
+import { YieldEstimationCalculator } from '@/components/agri/nutri-tools/YieldEstimationCalculator';
 import { BookmarkedFormulas } from '@/components/agri/bookmarked-formulas';
 import { getBookmarks, toggleBookmark } from '@/lib/formula-bookmarks';
 import { OnboardingFlow } from '@/components/onboarding/OnboardingFlow';
@@ -316,6 +318,7 @@ export default function Page() {
             <CollapsibleSection title="Fertilization Generator" description="Per-crop lifecycle fertilization schedule · NPK + micros · Application methods + sources · 20 crops · PDF export" icon={Flask} color="#16a34a" storageKey="collapse_fertilization" defaultOpen={false}><div className="p-4"><FertilizationGenerator /></div></CollapsibleSection>
             <CollapsibleSection title="Labor Calendar" description="Phenology-driven field operations · Person-days/ha · Peak week detection · Skill levels · 20 crops · PDF export" icon={CalendarDays} color="#0891b2" storageKey="collapse_labor_cal" defaultOpen={false}><div className="p-4"><LaborCalendar /></div></CollapsibleSection>
             <CollapsibleSection title="Yield Gap Analysis" description="Benchmark actual vs potential yield by crop and climate zone" icon={TrendingUp} color="#0891b2" storageKey="collapse_yieldgap" defaultOpen={false}><div className="p-4"><YieldGapAnalysis /></div></CollapsibleSection>
+            <CollapsibleSection title="Yield Estimation Calculator" description="Heads/m² × kernels/head × kernel weight → yield (t/ha) — 6 crops · reference: GWHD dataset" icon={TrendingUp} color="#0891b2" storageKey="collapse_yieldest" defaultOpen={false}><div className="p-4"><YieldEstimationCalculator /></div></CollapsibleSection>
             <CollapsibleSection title="Companion Planting Guide" description="20 crops · 100+ pairings · synergy (✓) · antagonism (✗) · search any crop" icon={Sprout} color="#84cc16" storageKey="collapse_companion" defaultOpen={false}><div className="p-4"><CompanionPlantingGuide /></div></CollapsibleSection>
             <CollapsibleSection title="Seed Rate Calculator" description="Target population × TGW × germination × field loss → kg seed/ha · 6 crops" icon={Sprout} color="#16a34a" storageKey="collapse_seedrate" defaultOpen={false}><div className="p-4"><SeedRateCalculator /></div></CollapsibleSection>
             <CollapsibleSection title="Moon Phase Planting Calendar" description="Biodynamic calendar · 29.5-day lunar cycle · 30-day forecast" icon={Moon} color="#6366f1" storageKey="collapse_moon" defaultOpen={false}><div className="p-4"><MoonPhaseCalendar /></div></CollapsibleSection>
@@ -333,6 +336,7 @@ export default function Page() {
             <CollapsibleSection title="Drought Stress Index" description="ET₀ deficit + soil water depletion + crop stage → stress score + irrigation urgency" icon={Flame} color="#f97316" storageKey="collapse_drought" defaultOpen={false}><div className="p-4"><DroughtStressIndex /></div></CollapsibleSection>
             <CollapsibleSection title="Frost Protection Calculator" description="Radiative vs advective frost · Sprinkler / wind machine / smudge pot sizing" icon={Snowflake} color="#3b82f6" storageKey="collapse_frost" defaultOpen={false}><div className="p-4"><FrostProtectionCalculator /></div></CollapsibleSection>
             <CollapsibleSection title="Hail Damage Estimator" description="Crop stage × hail size × defoliation → yield loss % · insurance claim guidance" icon={CloudRain} color="#64748b" storageKey="collapse_hail" defaultOpen={false}><div className="p-4"><HailDamageEstimator /></div></CollapsibleSection>
+            <CollapsibleSection title="Disease & Weed Reference Gallery" description="Curated from PlantVillage (50K images) · PlantDoc · DeepWeeds · 35+ research datasets" icon={Microscope} color="#8b5cf6" storageKey="collapse_disease_ref" defaultOpen={false}><div className="p-4"><DiseaseReferenceGallery /></div></CollapsibleSection>
             <CollapsibleSection title="Active Matter Selector (Algérie)" description="Decide which active ingredient to use against diseases, pests and weeds — crop-based advisor · INPV 2017 catalogue · symptom search · ranked recommendations with confidence, doses, DAR and restrictions" icon={Bug} color="#65a30d" storageKey="collapse_active_matter" defaultOpen={false}><div className="p-4"><ActiveMatterSelector /></div></CollapsibleSection>
           </div>
 
