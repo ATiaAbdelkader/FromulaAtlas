@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Slider } from '@/components/ui/slider';
 import {
   AlertTriangle, Search, Wand2, ShieldCheck, BookOpen, Sparkles, Check, Thermometer, Droplets, Gauge, Library,
+  Camera, Download, Calendar, Loader2, FileText,
 } from 'lucide-react';
 import {
   ALGERIA_CROPS, ALGERIAN_ACTIVE_MATTERS, ACTIVE_MATTER_BY_ID, CROP_BY_ID,
@@ -205,6 +206,16 @@ export function ActiveMatterSelector() {
   const [results, setResults] = useState<Scored[] | null>(null);
   const [analysedProblem, setAnalysedProblem] = useState<PlantProblem | null>(null);
 
+  // ----- photo identification state -----
+  const [photoData, setPhotoData] = useState<string | null>(null);
+  const [photoLoading, setPhotoLoading] = useState(false);
+  const [photoResult, setPhotoResult] = useState<any>(null);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // ----- DAR treatment tracking -----
+  const [savedTreatments, setSavedTreatments] = useState<{ problemId: string; matterId: string; date: string; dar: number; harvestDate: string }[]>([]);
+
   // ----- catalog state -----
   const [query, setQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<'all' | ActiveMatterType>('all');
@@ -296,6 +307,121 @@ export function ActiveMatterSelector() {
     if (p) setProblemType(p.type);
   };
 
+  // ----- Photo identification handler -----
+  const handlePhotoUpload = useCallback(async (file: File) => {
+    setPhotoLoading(true);
+    setPhotoError(null);
+    setPhotoResult(null);
+    try {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const dataUrl = String(reader.result);
+        setPhotoData(dataUrl);
+        try {
+          const res = await fetch('/api/identify-symptom', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image: dataUrl }),
+          });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
+          setPhotoResult(data);
+          // Auto-select crop + problem if matched
+          if (data.suggested_active_matters && data.suggested_active_matters.length > 0) {
+            // Try to find matching problem in our database
+            const problemName = norm(data.problem_name || '');
+            const matched = PLANT_PROBLEMS.find(p => norm(p.name).includes(problemName) || problemName.includes(norm(p.name)));
+            if (matched) {
+              selectProblem(matched.id);
+              if (matched.crops[0]) setCrop(matched.crops[0]);
+            }
+          }
+        } catch (e: any) {
+          setPhotoError(e?.message || 'Échec de l\'analyse');
+        } finally {
+          setPhotoLoading(false);
+        }
+      };
+      reader.onerror = () => { setPhotoError('Lecture du fichier échouée'); setPhotoLoading(false); };
+      reader.readAsDataURL(file);
+    } catch (e: any) {
+      setPhotoError(e?.message || 'Erreur'); setPhotoLoading(false);
+    }
+  }, []);
+
+  // ----- PDF export handler -----
+  const exportTreatmentPDF = useCallback(() => {
+    if (!results || !analysedProblem) return;
+    const cropName = crop ? CROP_BY_ID[crop]?.name : '—';
+    const win = window.open('', '_blank');
+    if (!win) return;
+    const rows = results.slice(0, 5).map((r, i) => `
+      <tr>
+        <td>${i + 1}</td>
+        <td><strong>${r.matter.name}</strong><br/><span style="font-size:10px;color:#666">${r.matter.activeSubstance} (${r.matter.formulation})</span></td>
+        <td style="text-align:center;font-weight:bold;color:${r.score >= 0.75 ? '#059669' : r.score >= 0.55 ? '#d97706' : '#dc2626'}">${Math.round(r.score * 100)}%</td>
+        <td>${r.matter.applicationRate}</td>
+        <td style="text-align:center"><strong>${r.matter.preHarvestInterval}</strong></td>
+        <td>${r.matter.resistanceCode || '—'}</td>
+        <td style="font-size:10px">${r.warnings.join('; ') || '—'}</td>
+      </tr>
+    `).join('');
+    win.document.write(`<!doctype html><html><head><title>Plan de traitement — ${cropName} — ${analysedProblem.name}</title>
+      <style>
+        body { font-family: -apple-system, sans-serif; margin: 24px; color: #1f2937; }
+        h1 { color: #059669; border-bottom: 2px solid #059669; padding-bottom: 8px; font-size: 18px; }
+        h2 { font-size: 13px; text-transform: uppercase; color: #6b7280; margin-top: 20px; }
+        .meta { font-size: 11px; color: #6b7280; margin: 4px 0 16px; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        th { background: #ecfdf5; padding: 6px 8px; text-align: left; border: 1px solid #d1d5db; color: #065f46; }
+        td { padding: 6px 8px; border: 1px solid #d1d5db; vertical-align: top; }
+        .footer { margin-top: 24px; font-size: 10px; color: #6b7280; border-top: 1px solid #e5e7eb; padding-top: 8px; }
+        @media print { @page { margin: 1cm; } }
+      </style></head><body>
+      <h1>🌾 Plan de traitement phytosanitaire</h1>
+      <div class="meta">
+        <strong>Culture:</strong> ${cropName} ·
+        <strong>Problème:</strong> ${analysedProblem.name} ${analysedProblem.nameAr || ''} ·
+        <strong>Date:</strong> ${new Date().toLocaleDateString('fr-FR')} ·
+        <strong>Conditions:</strong> ${temperature}°C, ${humidity}% HR, ${rainfall}mm pluie, pression ${severity}
+      </div>
+      <h2>Classement des matières actives recommandées</h2>
+      <table>
+        <thead><tr><th>#</th><th>Produit</th><th>Score</th><th>Dose</th><th>DAR (j)</th><th>Groupe</th><th>Remarques</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <div class="footer">
+        ⚠️ Ce document est une aide à la décision basée sur l'Index INPV 2017 et E-Phy/Anses.
+        Vérifiez toujours l'étiquette du produit et l'homologation algérienne en vigueur.
+        Généré par Formula Atlas — ${new Date().toLocaleString('fr-FR')}
+      </div>
+    </body></html>`);
+    win.document.close();
+    setTimeout(() => win.print(), 300);
+  }, [results, analysedProblem, crop, temperature, humidity, rainfall, severity]);
+
+  // ----- DAR treatment save handler -----
+  const saveTreatment = useCallback((matterId: string, dar: number) => {
+    const today = new Date();
+    const harvest = new Date(today);
+    harvest.setDate(harvest.getDate() + dar);
+    const treatment = {
+      problemId: problemId || analysedProblem?.id || '',
+      matterId,
+      date: today.toISOString().slice(0, 10),
+      dar,
+      harvestDate: harvest.toISOString().slice(0, 10),
+    };
+    // Save to localStorage for Today's Tasks widget
+    try {
+      const key = 'phyto_treatments_v1';
+      const existing = JSON.parse(localStorage.getItem(key) || '[]');
+      existing.push(treatment);
+      localStorage.setItem(key, JSON.stringify(existing));
+    } catch { /* ignore */ }
+    setSavedTreatments(prev => [...prev, treatment]);
+  }, [problemId, analysedProblem]);
+
   // =========================================================================
   return (
     <div className="space-y-5">
@@ -353,6 +479,52 @@ export function ActiveMatterSelector() {
             DECISION TAB
         ================================================================ */}
         <TabsContent value="decision" className="space-y-4">
+          {/* ---- Photo identification ---- */}
+          <Card className="border-emerald-200 dark:border-emerald-900 bg-emerald-50/30 dark:bg-emerald-950/10">
+            <CardContent className="p-4">
+              <div className="flex flex-col sm:flex-row items-start gap-4">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <Camera className="h-4 w-4 text-emerald-600" />
+                    <span className="text-sm font-semibold">Identification par photo (IA)</span>
+                    <Badge variant="outline" className="text-[9px]">Nouveau</Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-2">Prenez une photo du problème (feuille malade, insecte, adventice) — l'IA identifie le problème et remplit automatiquement les champs ci-dessous.</p>
+                  <input ref={fileInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handlePhotoUpload(f); }} />
+                  <Button size="sm" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={photoLoading} className="gap-1.5">
+                    {photoLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
+                    {photoLoading ? 'Analyse en cours…' : 'Téléverser une photo'}
+                  </Button>
+                </div>
+                {photoData && (
+                  <div className="relative shrink-0">
+                    <img src={photoData} alt="Symptôme" className="w-24 h-24 rounded-lg object-cover border-2 border-emerald-300" />
+                    {photoLoading && <div className="absolute inset-0 rounded-lg bg-black/40 flex items-center justify-center"><Loader2 className="h-6 w-6 text-white animate-spin" /></div>}
+                  </div>
+                )}
+              </div>
+              {photoError && <div className="mt-2 text-xs text-rose-600">⚠️ {photoError}</div>}
+              {photoResult && !photoLoading && (
+                <div className="mt-3 rounded-lg border border-emerald-200 dark:border-emerald-800 bg-background p-3 space-y-1.5 text-xs">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge className="bg-emerald-600 text-white text-[10px]">{photoResult.problem_type}</Badge>
+                    <span className="font-semibold">{photoResult.problem_name}</span>
+                    {photoResult.problem_name_ar && <span className="text-muted-foreground" dir="rtl">{photoResult.problem_name_ar}</span>}
+                    <Badge variant="outline" className="text-[10px] ml-auto">Confiance: {Math.round((photoResult.confidence || 0) * 100)}%</Badge>
+                  </div>
+                  {photoResult.symptoms_observed?.length > 0 && <div className="text-muted-foreground">Symptômes: {photoResult.symptoms_observed.join(', ')}</div>}
+                  {photoResult.recommendation && <div className="text-foreground/80">{photoResult.recommendation}</div>}
+                  {photoResult.suggested_active_matters?.length > 0 && (
+                    <div className="flex flex-wrap gap-1 pt-1">
+                      <span className="text-muted-foreground">Matières actives suggérées:</span>
+                      {photoResult.suggested_active_matters.map((m: string, i: number) => <Badge key={i} variant="secondary" className="text-[9px]">{m}</Badge>)}
+                    </div>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           <div className="grid gap-4 lg:grid-cols-3">
             {/* ---- Step 1 : culture ---- */}
             <Card>
@@ -549,11 +721,14 @@ export function ActiveMatterSelector() {
                   {analysedProblem.crops.slice(0, 3).map((c) => (
                     <Badge key={c} variant="outline" className="text-[10px]">{CROP_BY_ID[c]?.emoji} {CROP_BY_ID[c]?.name}</Badge>
                   ))}
+                  <Button size="sm" variant="outline" onClick={exportTreatmentPDF} className="gap-1.5 text-xs h-7">
+                    <FileText className="h-3.5 w-3.5" /> Exporter PDF
+                  </Button>
                 </div>
               </div>
 
               {results.map((r, i) => (
-                <RecommendationCard key={r.matter.id} scored={r} rank={i + 1} top={i === 0} problem={analysedProblem} inpv={inpvMatchesFor.get(r.matter.id) ?? []} />
+                <RecommendationCard key={r.matter.id} scored={r} rank={i + 1} top={i === 0} problem={analysedProblem} inpv={inpvMatchesFor.get(r.matter.id) ?? []} onSaveTreatment={saveTreatment} />
               ))}
 
               <p className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300">
@@ -726,16 +901,24 @@ export function ActiveMatterSelector() {
 // Recommendation card
 // ---------------------------------------------------------------------------
 function RecommendationCard({
-  scored, rank, top, problem, inpv,
+  scored, rank, top, problem, inpv, onSaveTreatment,
 }: {
   scored: Scored;
   rank: number;
   top: boolean;
   problem: PlantProblem;
   inpv: PhytoProduct[];
+  onSaveTreatment: (matterId: string, dar: number) => void;
 }) {
   const { matter: m } = scored;
   const cropNames = m.crops.slice(0, 4).map((c) => CROP_BY_ID[c]?.name ?? c);
+  const [treatmentSaved, setTreatmentSaved] = useState(false);
+  const darDays = parseInt(m.preHarvestInterval) || 0;
+  const harvestDate = useMemo(() => {
+    if (!darDays) return null;
+    const d = new Date(); d.setDate(d.getDate() + darDays);
+    return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+  }, [darDays]);
   return (
     <Card className={`overflow-hidden ${top ? 'border-emerald-500/70 shadow-md ring-1 ring-emerald-500/30' : ''}`}>
       {top && (
@@ -775,6 +958,22 @@ function RecommendationCard({
               <span className="font-medium text-foreground">Application :</span> {m.applicationRate} · DAR {m.preHarvestInterval} ·
               cultures : {cropNames.join(', ')}{m.crops.length > 4 ? ` (+${m.crops.length - 4})` : ''}
             </li>
+            {/* DAR countdown */}
+            {darDays > 0 && harvestDate && (
+              <li className="flex items-center gap-2 rounded-md border border-amber-200 dark:border-amber-800 bg-amber-50/60 dark:bg-amber-950/30 px-2 py-1.5">
+                <Calendar className="h-3.5 w-3.5 text-amber-600 shrink-0" />
+                <span className="text-amber-800 dark:text-amber-300">
+                  <strong>DAR: {darDays} jours</strong> — récolte possible à partir du <strong>{harvestDate}</strong>
+                </span>
+                {!treatmentSaved ? (
+                  <Button size="sm" variant="outline" className="ml-auto text-[10px] h-6 gap-1" onClick={() => { onSaveTreatment(m.id, darDays); setTreatmentSaved(true); }}>
+                    <Check className="h-3 w-3" /> Enregistrer
+                  </Button>
+                ) : (
+                  <Badge variant="default" className="ml-auto text-[9px] bg-emerald-600">✓ Enregistré</Badge>
+                )}
+              </li>
+            )}
             {scored.factors.map((f) => (
               <li key={f} className="flex items-start gap-1.5 text-emerald-700 dark:text-emerald-400">
                 <Check className="mt-0.5 h-3 w-3 shrink-0" /> {f}
