@@ -333,6 +333,7 @@ export default function Page() {
             <CollapsibleSection title="Drought Stress Index" description="ET₀ deficit + soil water depletion + crop stage → stress score + irrigation urgency" icon={Flame} color="#f97316" storageKey="collapse_drought" defaultOpen={false}><div className="p-4"><DroughtStressIndex /></div></CollapsibleSection>
             <CollapsibleSection title="Frost Protection Calculator" description="Radiative vs advective frost · Sprinkler / wind machine / smudge pot sizing" icon={Snowflake} color="#3b82f6" storageKey="collapse_frost" defaultOpen={false}><div className="p-4"><FrostProtectionCalculator /></div></CollapsibleSection>
             <CollapsibleSection title="Hail Damage Estimator" description="Crop stage × hail size × defoliation → yield loss % · insurance claim guidance" icon={CloudRain} color="#64748b" storageKey="collapse_hail" defaultOpen={false}><div className="p-4"><HailDamageEstimator /></div></CollapsibleSection>
+            <CollapsibleSection title="Active Matter Selector (Algérie)" description="Decide which active ingredient to use against diseases, pests and weeds — crop-based advisor · INPV 2017 catalogue · symptom search · ranked recommendations with confidence, doses, DAR and restrictions" icon={Bug} color="#65a30d" storageKey="collapse_active_matter" defaultOpen={false}><div className="p-4"><ActiveMatterSelector /></div></CollapsibleSection>
           </div>
 
           {/* Sub-category: Soil & Livestock */}
@@ -363,12 +364,6 @@ export default function Page() {
             <CollapsibleSection title="Seasonal Irrigation Planner" description="Season-by-season irrigation focus, risks and recommendations" icon={Calendar} color="#f59e0b" storageKey="collapse_seasonal" defaultOpen={false}><div className="p-4"><SeasonScheduler /></div></CollapsibleSection>
             <CollapsibleSection title="Evapotranspiration Tracker" description="Live ET₀ (Open-Meteo) · FAO-56 Kc × ETc · 7-day irrigation plan · ERA5 history — no API key needed" icon={Sun} color="#0891b2" storageKey="collapse_et_tracker" defaultOpen={false}><div className="p-4"><EvapotranspirationTracker /></div></CollapsibleSection>
             <CollapsibleSection title="Irrigation Scheduler" description="Controllers · Zones · Schedules · Sequences · Cycle-and-soak eco-mode · Weather % adjust · YAML/CSV/JSON export" icon={Clock} color="#0ea5e9" storageKey="collapse_irr_sched" defaultOpen={false}><div className="p-4"><IrrigationScheduler /></div></CollapsibleSection>
-          </div>
-
-          {/* Sub-category: Plant Protection */}
-          <div className="space-y-3">
-            <SubHeader emoji="🛡️" label="Plant Protection" />
-            <CollapsibleSection title="Active Matter Selector (Algérie)" description="Decide which active ingredient to use against diseases, pests and weeds — crop-based advisor · INPV 2017 catalogue · symptom search · ranked recommendations with confidence, doses, DAR and restrictions" icon={Bug} color="#65a30d" storageKey="collapse_active_matter" defaultOpen={false}><div className="p-4"><ActiveMatterSelector /></div></CollapsibleSection>
           </div>
         </main>
       )}
