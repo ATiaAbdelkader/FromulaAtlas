@@ -23,6 +23,8 @@
 9. Ran `npx tsc --noEmit 2>&1 | grep -E "calculators" | head -20` — **no errors** returned (exit code 0, empty output). All pre-existing errors in other files (`page.tsx`, `formula-card.tsx`, `formula-detail-dialog.tsx`, `formulas-data.ts`, `examples/`, `skills/`, `scripts/`) are unrelated to this task and were left untouched.
 10. Verified final counts: 40 new calculator codes added (`56.1`–`56.7`, `652.1`–`652.6`, `EP405.1`–`EP458.3`, `IPCC.1`–`IPCC.5`, `NRC.1`–`NRC.4`, `FE.1`–`FE.3`, `DRIS.1`–`DRIS.3`, `SH.1`–`SH.4`, `WP.1`–`WP.3`). Total calculator entries in the registry went from 155 → 195 (155 + 40 new). Two existing entries were renamed (`INS.56.1`, `INS.56.2`), preserving all existing calculator code.
 
+
+
 ### Stage summary
 
 | Metric | Value |
@@ -180,3 +182,215 @@
 - Water Quality (2): IRR-12.1 SAR (safe/marginal/unsafe), IRR-12.2 RSC (safe/marginal/unsafe).
 
 **Known data-model note:** The `agri_formulas.json` database lists ~100 IRR formula codes for Part XVIII, but only 51 now have interactive calculators (40 task-spec + 11 pre-existing non-task). The remaining ~49 IRR formula codes render as read-only formula cards without interactive inputs. The `calculators[formula.code]` lookup pattern means the 17 replaced codes now use the task-spec field schemas (different input keys than the old minimal versions) — any UI component that hard-coded the old field keys for these 17 codes would need updating, though the `interactive-calculator.tsx` component reads field schemas dynamically from the `CalcConfig.fields` array, so no UI changes are required.
+
+---
+
+## PhaseD — Active Matter Selector for Algeria (Plant Protection Advisor)
+
+- **Task ID:** PhytoDZ
+- **Agent:** general-purpose
+- **Files changed:**
+  - `src/lib/algeria-phyto-data.ts` (new — data module: 59 problems, 77 active matters, 19 Algerian crops)
+  - `src/components/agri/active-matter-selector/ActiveMatterSelector.tsx` (new — dual-mode UI: Decision wizard + Catalogue)
+  - `src/app/app/page.tsx` (new “Plant Protection” sub-category in the FARM tab, “10 tools” banner)
+  - `src/components/agri/nutri-tools/FreeToolsSection.tsx` (19th tool entry, “Reference” category)
+  - `scripts/extract_phyto_pdf.py` (new — 180°-rotation text extractor for the INPV 2017 PDF)
+  - `phyto_2017_extracted.txt` (new — 30,452-line plain-text extraction of the 232-page index)
+
+### Work log
+
+1. **Recovered the broken in-progress component** (`active-matter-selector/ActiveMatterSelector.tsx`): the previous session had left an unclosed `ALGERIAN_ACTIVE_MATTERS` array (truncated mid-entry at `atrazine-herbicide`, ~200 repetitive cosmetic variants) and no UI at all. Replaced it entirely.
+
+2. **Extracted the primary source** — `INDEX_PRODUITS_PHYTO_2017.pdf` (Algerian INPV 2017 product index, 232 pages). The product-table pages are physically rotated 180°, so `pdfplumber` returned fully mirrored text. Wrote `scripts/extract_phyto_pdf.py` which reverses each line character-wise and reverses line order. Full extraction: 30,452 lines. Confirmed the index contains (fuzzy letter-spaced match counts): Tilt (167), métribuzine (19), glyphosate (11), Dual (9), métam-sodium (6), Decis (5), Sencor (4), oxyfluorfène (4), MCPA (4), linuron (4), Bacillus (4), fenoxaprop (3), clodinafop (3), sulfosulfuron (2), Score (2), trifluraline, pendiméthaline, méthiocarbe, cléthodime, bromadiolone, Amistar, acétamipride — directly substantiating the curated catalogue.
+
+3. **Built `src/lib/algeria-phyto-data.ts`** (pure data, no JSX): `ActiveMatter` / `PlantProblem` interfaces, `ALGERIA_CROPS` (19 crops incl. olive, date palm, vine, chickpea/lentil/fève, sugar beet, sunflower), `PLANT_PROBLEMS` (59 problems: 24 diseases, 28 pests, 7 weeds — covering wheat/barley rust & septoria, potato/tomato late & early blight, vine & onion & cucurbit downy mildew, powdery mildew, olive peacock spot & olive fly, Bayoud, Tuta/Spodoptera/Helicoverpa, aphids/whitefly/thrips/mites, medfly, desert locust, Dubas, red palm weevil, wild oat/ryegrass/broomrape/orobanche, etc.), and `ALGERIAN_ACTIVE_MATTERS` (77 entries, each with brand name, active substance, formulation, IRAC/FRAC/HRAC code, dose, DAR, safety/cost/availability, restrictions, alternatives, `registeredAlgeria` flag, source). Kept one curated entry per active substance — no cosmetic duplicates.
+
+4. **Wrote the Decision engine** (`scoreActives` in the component): ranks a problem’s candidate actives from a base score adjusted by environment heuristics — temperature (soufre > 28 °C phytotoxicity, triazoles < 8 °C reduced uptake), humidity ≥ 85 % (boost systemics, slight penalty to contact products), rainfall > 15 mm (contact wash-off warning), severity (high pressure pushes the top-2 references), resistance-group dedupe (same IRAC/FRAC/HRAC code as a higher-ranked candidate ⇒ −0.05 + “alterner” warning), and `registeredAlgeria` penalty. Confidence clamped to [0.30–0.97], rendered as an SVG ring.
+
+5. **Built the UI** — banner (INPV 2017 badges, AR subtitle), 3-step “how it works” strip, then two tabs:
+   - **Décision**: crop → problem type toggle (Maladie/Ravageur/Adventice) → problem dropdown filtered by crop+type, or free-text symptom search with live-matched problem cards (normalised, accent-insensitive) → optional sliders (temp 0–45 °C, humidity 10–100 %, rainfall 0–40 mm, severity) → “Analyser” → ranked recommendation cards: confidence ring, “Choix recommandé” ribbon, safety/cost/availability badges, mode d’action, dose/DAR/cultures, green rationale bullets, amber warning box, restrictions, alternative chips.
+   - **Catalogue**: search + filters (type, crop, availability) with live result count — mirrors the agriai.live/phyto-index UX pattern the user referenced.
+   - Prominent **disclaimer** (informational support; verify INPV homologation + label before use) and a sources footer (INPV 2017, E-Phy/Anses Licence Ouverte 2.0, EPPO).
+
+6. **Validated data integrity at runtime** via `npx tsx`: every problem crop ∈ ALGERIA_CROPS, every `actives` id ∈ catalogue, every `targets` id ∈ problems, no orphan problems (each problem reachable from ≥ 1 active’s targets). Fixed 4 real defects found: `helicoverpa` referenced crop `chickpea` (→ `legumes`), `blackscale` referenced active `huile` (removed; now in notes), `cypermethrine` crop `cotton` and `linuron` crop `carrot` (dropped, not in the 19-crop set). Wired `cypermethrine` and `methomyl` into relevant pest actives lists so they surface in recommendations.
+
+7. **Wired into the app**: `src/app/app/page.tsx` — new “🛡️ Plant Protection” sub-category (FARM tab) with a `CollapsibleSection` hosting the tool (icon Bug, #65a30d; banner count 9 → 10 tools). `FreeToolsSection.tsx` — 19th tool entry (`active-matter-selector`, “Reference” category, ShieldCheck icon), updated “18 Free Agronomic Tools” → 19 in the hero and intro card. The tool dialog already renders full-width (max-w-1600px).
+
+8. **Verification**: `npx tsc --noEmit` filtered to the new/touched files → 0 errors (the repo has many pre-existing errors in unrelated files). Full `npm run build` → succeeded (8/8 static pages; `/app` route generated).
+
+### Stage summary
+
+| Metric | Value |
+|---|---|
+| Data module | `src/lib/algeria-phyto-data.ts` — 59 problems, 77 active matters, 19 crops |
+| Problems covered | 24 diseases · 28 pests · 7 weeds (incl. Bayoud, œil de paon, Tuta, orobanche, criquet pèlerin) |
+| PDF extracted | 232 pages → 30,452 lines (`phyto_2017_extracted.txt`, rotation-fixed) |
+| Products confirmed in INPV 2017 index | Tilt, Decis, Roundup, Sencor, Dual, Score, Amistar, Topik, MCPA, linuron, oxyfluorfène, acétamipride, abamectine, BT, méthiocarbe, bromadiolone, … |
+| UI modes | Decision wizard (scored recommendations) + Catalogue (search/filters) |
+| Scoring heuristics | temperature, humidity, rainfall, severity, resistance-group dedupe, INPV registration |
+| Wiring | page.tsx FARM tab + FreeToolsSection (19th tool) |
+| TypeScript errors (new files) | 0 |
+| `npm run build` | ✓ 8/8 routes generated |
+
+**Known limits / next steps:**
+- Catalogue is a curated v1 (77 actives); the extracted `phyto_2017_extracted.txt` enables a full auto-parsed enrichment pass (product-by-product rows with homologation numbers) in a later phase.
+- Algeria registration status is anchored to the 2017 index — a live INPV check (or a newer official list) should refresh `registeredAlgeria` flags.
+- The free-text symptom matcher is keyword-based (accent-insensitive); an LLM-assisted matching mode could be added on top of the deterministic engine.
+
+---
+
+## PhaseD2 — INPV 2017 index enrichment (full product-level parse)
+
+- **Task ID:** PhytoDZ-enrich
+- **Files changed:**
+  - `scripts/parse_phyto_index.py` (rewritten — direct pdfplumber char-stream parser; the old text-file parser is superseded)
+  - `public/data/phyto-2017-index.json` (new — **1,264 specialities**, ~557 KB, statically served)
+  - `src/lib/phyto-index.ts` (new — shared fetch/normalisation/match helpers for the index)
+  - `src/components/agri/active-matter-selector/InpvIndexBrowser.tsx` (new — third tab: searchable INPV 2017 index browser)
+  - `src/components/agri/active-matter-selector/ActiveMatterSelector.tsx` (3rd tab + INPV homologation chips on Catalogue & Recommendation cards)
+
+### Work log
+
+1. **Reverse-engineered the PDF geometry.** The 180°-rotated pages could not be parsed line-wise (columns interleave in `extract_text()`), so the parser was rebuilt on raw `pdfplumber` chars. Probing revealed the true layout:
+   - Every product is anchored by its **homologation number** — 7 digits (groups 2-2-3) in a band near the page top (`tops ~166-277`, position varies per page ⇒ wide 150-280 band + verification).
+   - Each x-column reads **bottom→top** (the whole table is drawn rotated); a product’s identity (brand, active, concentration, formulation) shares the x-column of its homologation digits (±6pt) at the bottom of the page (tops ~560-745).
+   - Company (Représentant/Firme) text sits above the hom band (tops < 178); usage columns (target/culture/dose/DAR) sit nearby and are attached to the nearest anchor.
+   - Section names (INSECTICIDES, FONGICIDES, …) appear as vertical page-edge labels; carried forward across pages.
+
+2. **Parsed 1,264 specialities** across 197 product pages (212 scanned; blank/divider/Arabic fertilizer pages 21, 58-59, 63, 95, 108-109, 217, 226-232 have no 2-2-3 homologations). Extraction pipeline: x-cluster chars (2pt) → bottom→top column reading with 8pt word gaps → hom anchors (7-digit runs verified by identity glyphs) → identity via mean-top-ordered columns (brand sits lowest) → wrapped-active reassembly by concatenating non-conc/form tokens and fuzzy-matching against an expanded known-active list (substring match preferred, LCS fallback, both token orders tried).
+
+3. **Quality result:** 1,173 rows brand+active (93 %), 78 brand-only, 13 low. Verified first-page rows decode exactly (ADVANCE 10 50 001, ACTARA 12 52 002, ACTELLIC 11 51 001, ACTEVAP 07 45 006, ADRESS 08 46 001, ADVATHION 07 45 159 — the old line-based parse mis-assigned several of these). Cross-checked against the known brands: ACTELLIC → pirimiphos-méthyl 500 g/L EC, ACTEVAP → 50 % EC, ADVATHION → méthidathion 400 g/L EC, ACTARA → thiaméthoxame 25 % WG, ADVANCE → abamectine 18 g/L EC, ADRESS → lufénuron 30 g/L RB. Section labels: INSECTICIDES 223, ACARICIDES 20, FONGICIDES 252, HERBICIDES 114, NEMATICIDES 13, RODENTICIDES 11, MOLLUSCICIDES (under DIVERS), STOCKAGE 29, REGULATEURS/CARENCES 575 (paired page labels), ENGRAIS/BIOSTIMULANTS 15.
+
+4. **Shipped the data as a runtime-fetched JSON** (`public/data/phyto-2017-index.json`) — kept out of the bundle (557 KB). `src/lib/phyto-index.ts` adds `fetchPhytoIndex()` (single-flight cache), accent-insensitive `normPhyto()`, and `indexByActive()`.
+
+5. **UI: third tab “📜 Index INPV”** — new `InpvIndexBrowser.tsx`: search by brand / substance / company / homologation (accepts “1252001” or “12 52 001”), section filter with live counts, paged list (40/page + “show more”), homologation mono badge, formulation chip, page number, amber “2017 index may be outdated” disclaimer.
+
+6. **Enrichment in the existing tabs:** the selector now loads the index once and, for every curated active matter, finds matching specialities (normalised active-substance substring, both directions). Catalogue cards show “Index INPV : brand · n°” chips; Recommendation cards show a “Spécialités homologuées — index INPV 2017” section with brand, homologation and concentration badges (title tooltip = first usage line).
+
+7. **Verification:** `npx tsc --noEmit` filtered to touched files → 0 errors. Full `npm run build` → ✓ (8/8 routes). JSON regenerated deterministically by the parser.
+
+8. **Follow-up session (2026-08-08) — parser refinement + homologation export.**
+   - Smoke check: dev server `:3000` serves `public/data/phyto-2017-index.json` (HTTP 200, `application/json`, 1,264 products).
+   - Fixed a `NameError: BRAND_TRAIL` crash left by the earlier rewrite (definition re-added); the parser now runs clean end-to-end (~420 s, 212 pages scanned, 197 anchored).
+   - `parse_identity` reworked with new helpers `_noise` (strip concentration/number noise), `_match_soup` (formulation-safe soup build; leading formulation codes stripped everywhere EXCEPT the brand-position token), and `_derive_brand` (brand = leading text before the leftmost matched active). This fixes glued brand+active tokens (CARLOFOSCHLORPYRI- → CARLOFOS + chlorpyriphos-éthyl 48 % EC), glued concentrations (PULSAR2,5LAMBDA-CYHA- → PULSAR + lambda-cyhalothrine 25 g/L EC) and wrapped actives (THIAME-…THOXAM → thiaméthoxam).
+   - `KNOWN_ACTIVES` expanded to **445 entries** (French canonical + English/OCR variants: chlorpyriphos-éthyl, glyphosate, thiaclopride, huile minérale, …).
+   - **Quality delta:** full 1152→1156 · brand-only 99→95 · **known-only 416→488 (+72 rows now matched to a known substance)** · low 13 (unchanged).
+
+9. **Homologation reference export.** Appended to `src/lib/algeria-phyto-data.ts`: `InpvProductRef` interface + `INPV_HOMOLOGATIONS` — **50 curated active matters → 311 brand+homologation references** (with concentration/formulation), generated deterministically from the index JSON. Keyed by curated active id for quick lookup in the Catalogue / Recommendation chips.
+
+10. **Verification.** `npx tsc --noEmit`: only pre-existing errors in unrelated files (season-report, formulas-data, glossary, websocket examples, translate_to_arabic) — `algeria-phyto-data.ts` and `parse_phyto_index.py` are clean. Parser remains deterministic; the JSON is regenerable.
+
+11. **Follow-up session (2026-08-08) — empty-active recovery (108 → 53).**
+    - The JSON carried **108 products with an empty `active`** (42 brand-only + the low/no-brand tail). Root causes probed on the PDF geometry: `IDENT_MIN_TOP=560` drops substance text drawn *above* that band on Layout-B pages (LUFOX's `FENOXYCARB` at tops 447–500); some substance columns sit just outside `IDENT_WIN=6` (KZOIL's `HUILEMINÉRALE-` at dx −7.7); many substance names are hyphen-wrapped across columns (CYCLONE, FURY, MOPISTOP, MONDIAL, VOLIAM, BIONÒ, REGALIS…); several actives were missing from `KNOWN_ACTIVES`; CONFIDENTE has no substance text at all; and dictionary false positives (adjective `soufrés` matching `soufre` for KERAK).
+    - **Parser fix (source of truth, re-run):** `KNOWN_ACTIVES` +24 (fenoxycarb, pinoxaden, florasulam, pyroxsulam, métosulam, fluazifop-P-butyl, diuron, fenamidone, ethaboxam, 2,4-D amine/ester, fosétyl-Al, glufosinate-ammonium, tribénuron-méthyl, acibenzolar-S-méthyl, prohexadione-calcium, hydrazide maléique, acide indole-butyrique, dichloropropane, phosphure d’aluminium, …); **strip recovery** in `main()` — when a row is still empty, sweep columns within `STRIP_WIN=9.0` of the hom digits, `match_actives` the soup, keep only matches whose nearest column is at `STRIP_GUARD≤8.7pt` (23 rows recovered: LUFOX→fenoxycarb, KZOIL→huile, AXIAL→pinoxaden+cloquintocet, FUSILADEMAX→fluazifop-P-butyl, LEXONE/SENCOR/UNIMARK→métribuzine, MUSTANG→florasulam, PALLAS→pyroxsulam, SANSAC→métosulam, ZELLURON→diuron, VERITA→fenamidone, …); **`ACTIVE_OVERRIDES`** (hom → active, 32 entries) for rows whose substance is absent or a false-positive trap — value `""` suppresses the strip (KERAK).
+    - **Result:** empty-active **108 → 53**, all in the fertilizer/biostimulant tail (REGULATEURS 38, CARENCES 7, ENGRAIS 2, STOCKAGE 1) plus genuinely ambiguous PPP rows (CERATRAP protein-bait attractant, LAMARDOR, SABITHANE, TRICHLOPYRACID). Quality: **full 1211 / 1,264 (95.8 %), brand-only 40, low 13, known-only 546+**.
+    - Re-ran the parser (~7 min) — the JSON is regenerated from the PDF, wiping an earlier usage-based post-processing that had written false positives (LUFOX→lufénuron etc.). Export `algeria-phyto-data.ts` regenerated deterministically (52 ids / 336 refs).
+
+12. **Follow-up session (2026-08-08) — full completion (1,264/1,264) via `ROW_FIXES`.**
+    - 5 mis-anchored homologations were identified by cross-checking hom digits against the printed pages: CERATRAP was anchored to `20 13 530` but prints `13 53 042` (p28); AVANHUMUS `35 14 540` → `14 54 072` (p118); FITASIO `20 15 551` → `15 55 106` (p141); MAXIM `25 15 550` → `15 55 071` (p168); MEGAPLUS `20 15 551` → `15 55 123` (p168). All 5 were verified against page dumps.
+    - Added `ROW_FIXES` (54 entries keyed `(hom, page)`, applied after the strip sweep; supports `hom`/`brand`/`active`/`concentration`/`formulation`). FITASIO repurposed its fabricated `20 15 551` row (no removal needed); LAMARDOR/SABITHANE were no longer left empty — SABITHANE resolved to `myclobutanil 325 g/L EC`, LAMARDOR to `tebuconazole 250 g/L FS` via the fixes.
+    - **Parser re-run result: full 1,264 / 1,264 (100 %), brand-only 0, low 0, empty-active 0, empty-brand 0.** JSON metadata bumped to `pdfplumber char reconstruction (v4, completed)`.
+    - **Encoding repair:** the old committed JSON carried ~1,000 rows of double-encoded mojibake (`Ã©` for `é`, etc.) from an earlier export path; full regeneration produced clean UTF-8. Verified via a repair-table comparison — zero semantic regressions vs. the old file.
+    - `INPV_HOMOLOGATIONS` in `src/lib/algeria-phyto-data.ts` extended: LAMDOCK (`14 54 006`, lambda-cyhalothrine), RIDOMIL (`15 55 273`, metalaxyl-m), SABITHANE (`08 46 182`, myclobutanil), LAMARDOR (`11 51 022`, tebuconazole).
+    - Committed as `63522e7` and pushed to `origin/main` (range `f86cf90..63522e7`).
+
+---
+
+## PhaseE — E-Phy (France/Anses) catalogue integration
+
+- **Task ID:** PhytoEPhy
+- **Date:** 2026-08-08
+- **Files changed:**
+  - `scripts/build_ephy_index.py` (new — builds the two public E-Phy index JSONs from Anses CSV exports)
+  - `public/data/ephy-ppp-index.json` (new — **14,054 products**, 3,826 KB raw / 444 KB gzip)
+  - `public/data/ephy-mfsc-index.json` (new — **1,265 products**, 532 KB raw / 73 KB gzip)
+  - `src/lib/ephy-index.ts` (new — fetch/norm/active-summary helpers for the E-Phy indexes)
+  - `src/components/agri/active-matter-selector/EphyIndexBrowser.tsx` (new — fourth tab: E-Phy browser)
+  - `src/components/agri/active-matter-selector/ActiveMatterSelector.tsx` (4th tab wired in)
+
+### Work log
+
+1. **Source CSVs:** `produits_utf8.csv` — 15,132 rows (`PPP` 13,550 · `MFSC` 1,078 · `ADJUVANT` 304 · `PRODUIT-MIXTE` 187 · `MELANGE` 13); `etat`: `RETIRE` 12,444 / `AUTORISE` 2,688. Schemas confirmed: `produits` (19 cols + trailing empty), `mfsc_et_mixte_composition`, `substance_active`, `produits_usages`, `mfsc_et_mixte_usage`.
+2. **Build script** reads `EPHY_DATA_DIR` (or default `%TEMP%\opencode\ephy\xu`), parses actives with the regex `^(.*?)\s*\([^)]*\)\s*([\d.,]+)\s*(\S+)$`, and emits:
+   - `ephy-ppp-index.json`: PPP + ADJUVANT + PRODUIT-MIXTE + MELANGE (14,054) → `{amm, name, alt[], titulaire, etat, premiereAutorisation, actives[], fonctions[], formulations[]}`. `alt` kept (only 1,361 records / 28 KB).
+   - `ephy-mfsc-index.json`: 1,078 MFSC rows + 187 composition-only orphans → `{amm, name, alt[], titulaire, etat, premiereAutorisation, composition, classe, revendication}`.
+3. **`src/lib/ephy-index.ts`:** `EphyPppProduct`/`EphyMfscProduct`/`EphyActive` interfaces, `normEphy = normPhyto` (accent-insensitive), `ephyActiveSummary` (rejoin name+conc), lazy single-flight `fetchEphyPppIndex`/`fetchEphyMfscIndex`.
+4. **`EphyIndexBrowser.tsx`** (4th tab `🇫🇷 E-Phy`): PPP/MFSC sub-tabs; search (brand / substance / AMM / titulaire); `etat` select (AUTORISE / RETIRÉ / all); `fonction` (PPP) and `classe` (MFSC) filters with live counts; pagination (40/page); `EtatBadge` (green AUTORISE / red RETIRÉ); amber disclaimer that French authorization ≠ INPV registration; product detail line (titulaire · first authorization · actives).
+5. **Wiring:** `ActiveMatterSelector` TabsList now `grid-cols-4`; `<TabsContent value="ephy"><EphyIndexBrowser/></TabsContent>` added after the INPV tab.
+6. **Verification:** `npx tsc --noEmit` filtered to the touched files → 0 errors. `npm run build` → ✓ (8/8 routes, Turbopack). JSON files confirmed valid UTF-8 (byte-level check). `line-clamp-2` is Tailwind v4 core (no plugin needed).
+
+### Stage summary
+
+| Metric | Value |
+|---|---|
+| PPP/adjuvant/mix products | 14,054 (3,826 KB raw / 444 KB gzip) |
+| MFSC + composition orphans | 1,265 (532 KB raw / 73 KB gzip) |
+| Data files | `public/data/ephy-ppp-index.json`, `public/data/ephy-mfsc-index.json` (runtime-fetched) |
+| Shared lib | `src/lib/ephy-index.ts` |
+| New UI | `EphyIndexBrowser.tsx` (4th tab) |
+| TypeScript errors (new files) | 0 |
+| `npm run build` | ✓ 8/8 routes |
+
+**Known limits / next steps:**
+- E-Phy data is a snapshot of the Anses export; authorization status (`AUTORISE`/`RETIRÉ`) is France-only and must not be presented as Algerian registration.
+- PPP index excludes pre-2015 AMMs (the Anses `produits_utf8` dump covers the current catalogue).
+- Future ideas: match curated Algerian actives against E-Phy actives to surface French product references on the Catalogue / Recommendation cards (mirrors the INPV chips).
+
+### Stage summary
+
+| Metric | Value |
+|---|---|
+| Parser | `scripts/parse_phyto_index.py` (pdfplumber char-stream, bottom→top column model) |
+| Specialities parsed | 1,264 (197 pages; 8 no-anchor pages) |
+| Brand+active quality | 1,211 / 1,264 (95.8 %) · brand-only 40 · known-only 546 · low 13 |
+| Data file | `public/data/phyto-2017-index.json` (557 KB, runtime-fetched) |
+| Shared lib | `src/lib/phyto-index.ts` (fetch + norm + indexByActive) |
+| New UI | `InpvIndexBrowser.tsx` (3rd tab) + INPV chips on Catalogue & Recommendation cards |
+| TypeScript errors (new files) | 0 |
+| `npm run build` | ✓ 8/8 routes generated |
+
+**Known limits / next steps:**
+- Remaining noise (~4 %): mix/wrapped rows still carry glued fragments in the brand (e.g. `LONIL CHLOROTHA- ARDAVO`, `PHOS-ETHYL CHLORPYRI- CHLORBAN`) and rare duplicate-match artifacts (e.g. `métribuzine + metribuzin`, `fosétyl-Al + fosétyl`). The `active_raw` field preserves the un-matched tokens; the UI shows the reassembled name when available.
+- 53 rows still have no `active` — all in the fertilizer/biostimulant tail (REGULATEURS/CARENCES/ENGRAIS: amino acids, algue extracts, NPK foliars) or genuinely ambiguous PPP rows (CERATRAP protein bait, LAMARDOR, SABITHANE, TRICHLOPYRACID). Intentionally left empty (not PPP active substances).
+- Homologations are anchored to the 2017 index — always verify currency with the INPV.
+- The fertilizer/carences tail pages (226-232) use a different layout (Arabic text, no 2-2-3 homologations) and are intentionally not parsed.
+
+---
+
+## 2026-08-08 — Phase A : élargissement des données du Decision tab (mining INPV 2017)
+
+**Contexte.** L'utilisateur a demandé d'étendre les données du Decision tab (plus de cultures + ravageurs/maladies/adventices), avec la priorité affichée sur l'onglet Decision. Option C retenue : d'abord miner l'index INPV 2017 (données locales), puis une passe web.
+
+**Mining.** Nouveau script `scripts/mine_inpv_usages.py` : tokenise les lignes `usage` OCR des 1 253 produits (sur 1 264) qui en ont, agrège par culture et par cible (dicts CROPS/TARGETS + normalisation NFD), sort un rapport JSON (`C:\Users\PC\AppData\Local\Temp\opencode\inpv_links_report.json`). Console : définir `PYTHONIOENCODING=utf-8` (crash cp1256 sinon).
+
+**Liens vérifiés (INPV 2017) :** teigne pomme de terre (29), psylle poirier (17), punaises céréales (13), black-rot vigne (15), tavelure (41), mildiou (38), adventices (37), pucerons (36), mineuses (33), teigne (31), oïdium (26), cochenilles (24), aleurodes (24), moniliose (23), rouille (23), acariens (22), botrytis (21), carpocapse (20), alternaria (20), psylle (18), etc.
+
+**Modifications `src/lib/algeria-phyto-data.ts` :**
+- **30 cultures** (+11) : poireau, laitue, artichaut, asperge, carotte, aubergine, choux, arachide, avoine, pois chiche, tabac.
+- **78 problèmes** (+19) : teigne-pommedeterre, psylle-poirier, punaises-cereales, cloque-pecher, black-rot-vigne, carie, charbon-cereales, eudemis, cicadelle-vigne, altise-vigne, feu-bacterien, rouille-poireau, laitue-mildiou, aubergine-mildiou, carotte-mouche, rouille-asperge, cercosporiose-arachide, ascochyta-pois-chiche, mildiou-tabac — actives tous résolus sur des substances existantes ou ajoutées.
+- **99 substances** (+22) : huile minérale, acrinathrine, thiaclopride, lufénuron, flufénoxuron, fénoxycarb, buprofézine, pymétrozine, spirodiclofen, propargite, hexaconazole, triadiménol, triticonazole, thirame, propinèbe, fenhexamide, diméthomorphe, spiroxamine, triforine, proquinazid, téfluthrine, téflubenzuron. 17/22 présentes dans l'index INPV (vérifié champ `active`) → `source: 'inpv-2017'` ; flufénoxuron/pymétrozine/téfluthrine/téflubenzuron absents de l'index → `source: 'ephy'`, `registeredAlgeria: false`.
+- Extension des `crops` de problèmes existants (oïdium/rouilles/septoria/fusariose/piétin/lémas/mouche de Hesse + avoine ; pucerons + laitue/artichaut/choux/tabac/poireau ; botrytis + laitue/artichaut ; acariens + tabac/aubergine ; tuta/spodoptera/helicoverpa/aleurodes + aubergine ; anthracnose/sitone/orobanche + pois chiche ; dicotylédones maraîchères + asperge/choux/poireau/carotte/aubergine) et des `crops`/`targets` de 17 substances existantes (deltaméthrine, cyperméthrine, abamectine, indoxacarbe, bifenthrine, chlorpyriphos-éthyl, lambda-cyhalothrine, acétamipride, imidaclopride, mancozèbe, cuivre, tébuconazole, azoxystrobine, captan, fosétyl-Al, métalaxyl-M, chlorothalonil).
+
+**Validation :** script node de cohérence (tous les `actives`/`targets`/`crops` résolvent ; aucun id dupliqué) → OK ; `npx tsc --noEmit` → 0 erreur sur le fichier ; `npm run build` → 8/8 routes.
+
+---
+
+## 2026-08-08 — Phase B : élargissement web (sorgho, coton, pistachier, grenadier, figuier, luzerne)
+
+**Contexte.** Suite de la Phase A : élargir encore le Decision tab via une passe de recherche web (EPPO / FAO / ITGC). Les sources web n'impliquent **pas** une homologation INPV : aucune substance n'a été ajoutée, uniquement des cultures, problèmes et câblages `crops`/`targets` sur les 99 substances existantes.
+
+**Nouvelles cultures (36 au total, +6).** `sorgho`, `coton`, `pistachier`, `grenadier`, `figuier`, `luzerne` (section `// ---- Added 2026-08-08 — crops from Phase B web research ----`).
+
+**Nouveaux problèmes (90 au total, +12), tous `source` web (mention en notes) :**
+- **Sorgho** : mouche des pousses (Atherigona soccata), foreurs des tiges (Sesamia, Chilo) [aussi maïs], anthracnose (Colletotrichum sublineolum).
+- **Coton** : ver rose (Pectinophora gossypiella), anthracnose du cotonnier (Glomerella gossypii), flétrissement verticillien (Verticillium dahliae).
+- **Pistachier** : psylle (Agonoscena pistaciae), taches foliaires/rouille (Septoria pistaciarum, Uromyces).
+- **Grenadier** : cochenille blanche (Ceraplastes russi).
+- **Figuier** : mouche noire des figues (Silba adipata).
+- **Luzerne** : apion (Apion pisi), rouille (Uromyces striatus).
+
+**Extensions de problèmes existants** pour couvrir les nouvelles cultures : pucerons (+sorgho, coton, grenadier, figuier, luzerne, pistachier), aleurodes (+coton), acariens (+coton, grenadier), mouche méditerranéenne (+grenadier, figuier), Spodoptera & Helicoverpa (+coton — ravageurs clés du cotonnier), charbon des céréales (+sorgho).
+
+**Câblage substances (crops/targets) :** deltaméthrine, lambda-cyhalothrine, acétamipride, imidaclopride, abamectine, chlorantraniliprole, émanectine, méthomyl, chlorpyriphos-éthyl, diméthoate, spinosad, thiophanate-méthyl, mancozèbe, chlorothalonil, difénoconazole, tébuconazole, azoxystrobine, soufre, cuivre, huile minérale — nouveaux crops et/ou nouveaux targets (psylle-pistachier, cochenille-grenadier, mouche-pousses-sorgho, foreurs-tiges, ver-rose-coton, verticilliose-coton, anthracnose-sorgho/coton, taches-pistachier, apion-luzerne, rouille-luzerne, mouche-figuier).
+
+**Validation :** script node de cohérence étendu (crops/targets/actives tous résolus ; aucun id dupliqué) → `crops=36 problems=90 matters=99` OK ; `npx tsc --noEmit` → 0 erreur sur le fichier ; `npm run build` → ✓ 8/8 routes.
