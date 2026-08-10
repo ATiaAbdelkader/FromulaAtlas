@@ -80,6 +80,7 @@ import { DiseaseReferenceGallery } from '@/components/agri/nutri-tools/DiseaseRe
 import { YieldEstimationCalculator } from '@/components/agri/nutri-tools/YieldEstimationCalculator';
 import { SoilColorIdentifier } from '@/components/agri/nutri-tools/SoilColorIdentifier';
 import { LivestockGrowthBenchmark } from '@/components/agri/nutri-tools/LivestockGrowthBenchmark';
+import { CropCalendarGenerator } from '@/components/agri/nutri-tools/CropCalendarGenerator';
 import { BookmarkedFormulas } from '@/components/agri/bookmarked-formulas';
 import { getBookmarks, toggleBookmark } from '@/lib/formula-bookmarks';
 import { OnboardingFlow } from '@/components/onboarding/OnboardingFlow';
@@ -325,6 +326,7 @@ export default function Page() {
             <CollapsibleSection title="Seed Rate Calculator" description="Target population × TGW × germination × field loss → kg seed/ha · 6 crops" icon={Sprout} color="#16a34a" storageKey="collapse_seedrate" defaultOpen={false}><div className="p-4"><SeedRateCalculator /></div></CollapsibleSection>
             <CollapsibleSection title="Moon Phase Planting Calendar" description="Biodynamic calendar · 29.5-day lunar cycle · 30-day forecast" icon={Moon} color="#6366f1" storageKey="collapse_moon" defaultOpen={false}><div className="p-4"><MoonPhaseCalendar /></div></CollapsibleSection>
             <CollapsibleSection title="GDD Tracker (Growing Degree Days)" description="Accumulates thermal time from Open-Meteo · predicts growth stages · 5 crops" icon={Sun} color="#f59e0b" storageKey="collapse_gdd" defaultOpen={false}><div className="p-4"><GDDTracker /></div></CollapsibleSection>
+            <CollapsibleSection title="Crop Calendar Generator" description="One-click complete farm calendar: planting + fertilization + irrigation + pest control + labor · 20 crops · editable · PDF export" icon={CalendarDays} color="#16a34a" storageKey="crop_calendar_gen" defaultOpen={false}><div className="p-4"><CropCalendarGenerator /></div></CollapsibleSection>
           </div>
 
           {/* Sub-category: Plant Protection */}
