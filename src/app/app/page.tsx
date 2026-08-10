@@ -81,6 +81,7 @@ import { YieldEstimationCalculator } from '@/components/agri/nutri-tools/YieldEs
 import { SoilColorIdentifier } from '@/components/agri/nutri-tools/SoilColorIdentifier';
 import { LivestockGrowthBenchmark } from '@/components/agri/nutri-tools/LivestockGrowthBenchmark';
 import { CropCalendarGenerator } from '@/components/agri/nutri-tools/CropCalendarGenerator';
+import { SoilTextureTriangle } from '@/components/agri/nutri-tools/SoilTextureTriangle';
 import { BookmarkedFormulas } from '@/components/agri/bookmarked-formulas';
 import { getBookmarks, toggleBookmark } from '@/lib/formula-bookmarks';
 import { OnboardingFlow } from '@/components/onboarding/OnboardingFlow';
@@ -349,6 +350,7 @@ export default function Page() {
             <SubHeader emoji="🧪" label="Soil & Livestock" />
             <CollapsibleSection title="Soil Test History Tracker" description="Multi-year soil test tracking · Trend charts · Amendment recommendations · PDF export" icon={FlaskConical} color="#8b5cf6" storageKey="collapse_soil_history" defaultOpen={false}><div className="p-4"><SoilTestHistoryTracker /></div></CollapsibleSection>
             <CollapsibleSection title="Soil Color Identifier" description="Munsell color → mineral + drainage + iron status · US state soils · 13 minerals · 50 states" icon={Mountain} color="#78716c" storageKey="collapse_soil_color" defaultOpen={false}><div className="p-4"><SoilColorIdentifier /></div></CollapsibleSection>
+            <CollapsibleSection title="Soil Texture Triangle" description="Interactive ternary diagram · USDA/SSEW/International classification · soil properties + management recommendations" icon={Mountain} color="#78716c" storageKey="collapse_soil_texture" defaultOpen={false}><div className="p-4"><SoilTextureTriangle /></div></CollapsibleSection>
             <CollapsibleSection title="Post-Harvest Storage Calculator" description="EMC (Henderson) · Safe storage days · Drying time + cost · Bin aeration fan sizing — 7 crops" icon={Warehouse} color="#f59e0b" storageKey="collapse_postharvest" defaultOpen={false}><div className="p-4"><PostHarvestStorageCalculator /></div></CollapsibleSection>
             <CollapsibleSection title="Compost Mixer Calculator" description="C:N ratio · Moisture adjustment · 10 common feedstocks · Target 30:1" icon={Recycle} color="#16a34a" storageKey="collapse_compost" defaultOpen={false}><div className="p-4"><CompostMixerCalculator /></div></CollapsibleSection>
             <CollapsibleSection title="Cover Crop Selector" description="12 species · 9 goals · drought tolerance · ranked recommendations" icon={Sprout} color="#84cc16" storageKey="collapse_covercrop" defaultOpen={false}><div className="p-4"><CoverCropSelector /></div></CollapsibleSection>
