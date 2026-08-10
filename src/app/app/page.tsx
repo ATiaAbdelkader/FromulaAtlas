@@ -78,6 +78,8 @@ import { WaterHarvestingCalculator } from '@/components/agri/nutri-tools/WaterHa
 import { BiogasDigesterCalculator } from '@/components/agri/nutri-tools/BiogasDigesterCalculator';
 import { DiseaseReferenceGallery } from '@/components/agri/nutri-tools/DiseaseReferenceGallery';
 import { YieldEstimationCalculator } from '@/components/agri/nutri-tools/YieldEstimationCalculator';
+import { SoilColorIdentifier } from '@/components/agri/nutri-tools/SoilColorIdentifier';
+import { LivestockGrowthBenchmark } from '@/components/agri/nutri-tools/LivestockGrowthBenchmark';
 import { BookmarkedFormulas } from '@/components/agri/bookmarked-formulas';
 import { getBookmarks, toggleBookmark } from '@/lib/formula-bookmarks';
 import { OnboardingFlow } from '@/components/onboarding/OnboardingFlow';
@@ -344,6 +346,7 @@ export default function Page() {
           <div className="space-y-3">
             <SubHeader emoji="🧪" label="Soil & Livestock" />
             <CollapsibleSection title="Soil Test History Tracker" description="Multi-year soil test tracking · Trend charts · Amendment recommendations · PDF export" icon={FlaskConical} color="#8b5cf6" storageKey="collapse_soil_history" defaultOpen={false}><div className="p-4"><SoilTestHistoryTracker /></div></CollapsibleSection>
+            <CollapsibleSection title="Soil Color Identifier" description="Munsell color → mineral + drainage + iron status · US state soils · 13 minerals · 50 states" icon={Mountain} color="#78716c" storageKey="collapse_soil_color" defaultOpen={false}><div className="p-4"><SoilColorIdentifier /></div></CollapsibleSection>
             <CollapsibleSection title="Post-Harvest Storage Calculator" description="EMC (Henderson) · Safe storage days · Drying time + cost · Bin aeration fan sizing — 7 crops" icon={Warehouse} color="#f59e0b" storageKey="collapse_postharvest" defaultOpen={false}><div className="p-4"><PostHarvestStorageCalculator /></div></CollapsibleSection>
             <CollapsibleSection title="Compost Mixer Calculator" description="C:N ratio · Moisture adjustment · 10 common feedstocks · Target 30:1" icon={Recycle} color="#16a34a" storageKey="collapse_compost" defaultOpen={false}><div className="p-4"><CompostMixerCalculator /></div></CollapsibleSection>
             <CollapsibleSection title="Cover Crop Selector" description="12 species · 9 goals · drought tolerance · ranked recommendations" icon={Sprout} color="#84cc16" storageKey="collapse_covercrop" defaultOpen={false}><div className="p-4"><CoverCropSelector /></div></CollapsibleSection>
@@ -354,6 +357,7 @@ export default function Page() {
             <CollapsibleSection title="Yield Monitor Calibrator" description="Moisture correction · flow calibration · test weight assessment" icon={Gauge} color="#6366f1" storageKey="collapse_yieldmon" defaultOpen={false}><div className="p-4"><YieldMonitorCalibrator /></div></CollapsibleSection>
             <CollapsibleSection title="Livestock Management" description="Feed rations (NRC 2021) · Pasture capacity · Manure NPK value · Rotational grazing" icon={Beef} color="#f59e0b" storageKey="collapse_livestock" defaultOpen={false}><div className="p-4"><LivestockIntegration /></div></CollapsibleSection>
             <CollapsibleSection title="Feed Ration Balancer (NRC 2021)" description="DMI · CP · TDN · Ca · P balancing — 8 ingredients · 4 animal types" icon={Beef} color="#8b5cf6" storageKey="collapse_ration" defaultOpen={false}><div className="p-4"><FeedRationBalancer /></div></CollapsibleSection>
+            <CollapsibleSection title="Livestock Growth Benchmarks" description="Real trial data: broiler + pig + cattle · compare your animals to reference curves" icon={Beef} color="#f59e0b" storageKey="collapse_livestock_bench" defaultOpen={false}><div className="p-4"><LivestockGrowthBenchmark /></div></CollapsibleSection>
             <CollapsibleSection title="Silage Fermentation Predictor" description="Moisture · sugar · packing density · chop length → fermentation quality score" icon={Beef} color="#f59e0b" storageKey="collapse_silage" defaultOpen={false}><div className="p-4"><SilageFermentationPredictor /></div></CollapsibleSection>
             <CollapsibleSection title="Bee Hive + Honey Yield Calculator" description="Daily weight gain · nectar flow projection · honey yield + revenue" icon={Bug} color="#eab308" storageKey="collapse_beehive" defaultOpen={false}><div className="p-4"><BeeHiveHoneyCalculator /></div></CollapsibleSection>
             <CollapsibleSection title="Water Harvesting Calculator" description="Rooftop rainwater collection · cistern sizing · demand coverage" icon={Droplets} color="#0ea5e9" storageKey="collapse_water_harvest" defaultOpen={false}><div className="p-4"><WaterHarvestingCalculator /></div></CollapsibleSection>
