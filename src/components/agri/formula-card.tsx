@@ -9,6 +9,9 @@ import { cn } from '@/lib/utils';
 import { calculators } from './calculators';
 import { useLanguageStore } from '@/lib/language-store';
 import { toggleBookmark, getBookmarks } from '@/lib/formula-bookmarks';
+import { getFormulaMeta, DIFFICULTY_CONFIG } from '@/lib/formula-tags';
+import { getPrimaryScenario } from '@/lib/formula-scenarios';
+import { useMemo } from 'react';
 
 interface FormulaCardProps {
   formula: Formula;
@@ -51,6 +54,13 @@ export function FormulaCard({ formula, onSelect }: FormulaCardProps) {
   const displayPurpose = (language === 'ar' && (formula as any).purpose_ar) ? (formula as any).purpose_ar : formula.purpose;
   const [bookmarked, setBookmarked] = useState<boolean>(() => getBookmarks().includes(formula.code));
 
+  // Auto-computed difficulty + tags
+  const meta = useMemo(() => getFormulaMeta(formula), [formula.code, formula.name, formula.formula, formula.variables, formula.purpose, formula.part]);
+  const diffConfig = DIFFICULTY_CONFIG[meta.difficulty];
+
+  // Primary scenario for color-coding
+  const scenario = useMemo(() => getPrimaryScenario(formula), [formula.code, formula.part, formula.name, formula.purpose]);
+
   const handleBookmark = (e: React.MouseEvent) => {
     e.stopPropagation();
     const next = toggleBookmark(formula.code);
@@ -64,6 +74,7 @@ export function FormulaCard({ formula, onSelect }: FormulaCardProps) {
         color.border
       )}
       onClick={() => onSelect(formula)}
+      style={{ borderLeftColor: scenario.color }}
     >
       <CardHeader className="pb-3 space-y-2">
         <div className="flex items-start justify-between gap-2">
@@ -101,6 +112,18 @@ export function FormulaCard({ formula, onSelect }: FormulaCardProps) {
         <h3 className="text-base font-semibold leading-tight tracking-tight">
           {displayName}
         </h3>
+
+        {/* Difficulty badge + tags row */}
+        <div className="flex items-center gap-1.5 flex-wrap mt-1">
+          <span className={cn('inline-flex items-center gap-0.5 text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded border', diffConfig.bg)}>
+            {isRTL ? diffConfig.label_ar : diffConfig.label}
+          </span>
+          {meta.tags.map(tag => (
+            <span key={tag} className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground border border-border/50">
+              {tag}
+            </span>
+          ))}
+        </div>
       </CardHeader>
 
       <CardContent className="flex-1 space-y-3">

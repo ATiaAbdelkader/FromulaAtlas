@@ -26,9 +26,10 @@ import { FormulaCard, hasCalculator } from './formula-card';
 import { FormulaDetailDialog } from './formula-detail-dialog';
 import { allFormulas } from '@/lib/formulas-data';
 import {
-  FORMULA_SCENARIOS, getFormulaScenarios, getScenarioCounts,
+  FORMULA_SCENARIOS, getFormulaScenarios, getScenarioCounts, getPrimaryScenario,
   type FormulaScenario,
 } from '@/lib/formula-scenarios';
+import { getFormulaOfTheDay } from '@/lib/learning';
 import { getBookmarks } from '@/lib/formula-bookmarks';
 import { useTranslation } from '@/lib/language-store';
 import { cn } from '@/lib/utils';
@@ -154,25 +155,31 @@ export function FormulaExplorer({
 
         {/* Scenario hub — only when no scenario selected and no quick filter active */}
         {!activeScenario && quickFilter === 'all' && !searchQuery && (
-          <div className="mb-6">
-            <div className="flex items-center gap-2 mb-3">
-              <Sparkles className="h-4 w-4 text-emerald-600" />
-              <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
-                {isRTL ? 'تصفّح حسب السيناريو' : 'Browse by Scenario'}
-              </h2>
+          <>
+            {/* Formula of the Day hero banner */}
+            <FormulaOfDayBanner isRTL={isRTL} onSelect={handleSelectFormula} />
+
+            {/* Scenario grid */}
+            <div className="mb-6">
+              <div className="flex items-center gap-2 mb-3">
+                <Sparkles className="h-4 w-4 text-emerald-600" />
+                <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
+                  {isRTL ? 'تصفّح حسب السيناريو' : 'Browse by Scenario'}
+                </h2>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                {FORMULA_SCENARIOS.map(scenario => (
+                  <ScenarioCard
+                    key={scenario.id}
+                    scenario={scenario}
+                    count={scenarioCounts[scenario.id] || 0}
+                    isRTL={isRTL}
+                    onClick={() => setActiveScenario(scenario.id)}
+                  />
+                ))}
+              </div>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-              {FORMULA_SCENARIOS.map(scenario => (
-                <ScenarioCard
-                  key={scenario.id}
-                  scenario={scenario}
-                  count={scenarioCounts[scenario.id] || 0}
-                  isRTL={isRTL}
-                  onClick={() => setActiveScenario(scenario.id)}
-                />
-              ))}
-            </div>
-          </div>
+          </>
         )}
 
         {/* Active scenario header */}
@@ -369,6 +376,20 @@ function ScenarioCard({ scenario, count, isRTL, onClick }: {
   isRTL: boolean;
   onClick: () => void;
 }) {
+  // Get top 3 formulas for this scenario (prefer ones with calculators)
+  const previewFormulas = useMemo(() => {
+    const scenarioFormulas = allFormulas.filter(f => getFormulaScenarios(f).includes(scenario.id));
+    // Sort: with calculator first, then by code
+    return scenarioFormulas
+      .sort((a, b) => {
+        const aCalc = hasCalculator(a.code) ? 0 : 1;
+        const bCalc = hasCalculator(b.code) ? 0 : 1;
+        if (aCalc !== bCalc) return aCalc - bCalc;
+        return a.code.localeCompare(b.code);
+      })
+      .slice(0, 3);
+  }, [scenario.id]);
+
   return (
     <button
       onClick={onClick}
@@ -394,6 +415,19 @@ function ScenarioCard({ scenario, count, isRTL, onClick }: {
       <p className="text-[10px] text-muted-foreground leading-relaxed line-clamp-2">
         {isRTL ? scenario.subtitle_ar : scenario.subtitle}
       </p>
+
+      {/* Top 3 formula preview */}
+      {previewFormulas.length > 0 && (
+        <div className="mt-2 pt-2 border-t border-border/40 space-y-0.5">
+          {previewFormulas.map(f => (
+            <div key={f.code} className="flex items-center gap-1 text-[9px] text-muted-foreground">
+              {hasCalculator(f.code) && <Calculator className="h-2.5 w-2.5 text-emerald-500 flex-shrink-0" />}
+              <span className="font-mono font-bold flex-shrink-0" style={{ color: scenario.color }}>{f.code}</span>
+              <span className="truncate">{f.name}</span>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Hover indicator */}
       <div className="flex items-center gap-1 text-[10px] font-medium mt-2 transition-colors" style={{ color: scenario.color }}>
@@ -425,6 +459,84 @@ function QuickFilterChip({ active, onClick, label, count, icon: Icon }: {
       {label}
       <span className={cn('font-mono font-bold', active ? 'text-emerald-100' : 'text-muted-foreground/70')}>{count}</span>
     </button>
+  );
+}
+
+/**
+ * Formula of the Day hero banner — shows above the scenario grid.
+ * Uses the existing getFormulaOfTheDay() helper from the learning module.
+ */
+function FormulaOfDayBanner({ isRTL, onSelect }: { isRTL: boolean; onSelect: (f: Formula) => void }) {
+  const formula = useMemo(() => getFormulaOfTheDay(), []);
+  const scenario = useMemo(() => getPrimaryScenario(formula), [formula.code, formula.part, formula.name, formula.purpose]);
+  const calcAvailable = hasCalculator(formula.code);
+  const name = isRTL && (formula as any).name_ar ? (formula as any).name_ar : formula.name;
+  const purpose = isRTL && (formula as any).purpose_ar ? (formula as any).purpose_ar : formula.purpose;
+
+  return (
+    <div className="mb-6">
+      <div
+        className="relative overflow-hidden rounded-2xl border-2 p-5 cursor-pointer hover:shadow-xl transition-all group"
+        style={{ borderColor: `${scenario.color}40`, background: `linear-gradient(135deg, ${scenario.color}08, transparent 60%)` }}
+        onClick={() => onSelect(formula)}
+      >
+        {/* Background emoji watermark */}
+        <div className="absolute -bottom-4 -right-4 text-8xl opacity-[0.04] select-none pointer-events-none">
+          {scenario.emoji}
+        </div>
+
+        <div className="flex items-start gap-4 relative">
+          {/* Left: badge */}
+          <div className="flex-shrink-0 flex flex-col items-center gap-1">
+            <div
+              className="flex items-center justify-center h-12 w-12 rounded-xl text-white shadow-md"
+              style={{ background: `linear-gradient(135deg, ${scenario.color}, ${scenario.color}dd)` }}
+            >
+              <Sparkles className="h-6 w-6" />
+            </div>
+            <span className="text-[8px] uppercase tracking-wider font-bold" style={{ color: scenario.color }}>
+              {isRTL ? 'اليوم' : 'Today'}
+            </span>
+          </div>
+
+          {/* Right: content */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[10px] uppercase tracking-wide font-bold text-muted-foreground">
+                {isRTL ? 'معادلة اليوم' : 'Formula of the Day'}
+              </span>
+              <Badge variant="outline" className="text-[9px] font-mono font-bold" style={{ color: scenario.color, borderColor: `${scenario.color}40` }}>
+                {formula.code}
+              </Badge>
+              {calcAvailable && (
+                <Badge variant="secondary" className="text-[9px] gap-0.5">
+                  <Calculator className="h-2.5 w-2.5" />
+                  {isRTL ? 'حاسبة' : 'Calculator'}
+                </Badge>
+              )}
+              <span className="text-[9px] text-muted-foreground flex items-center gap-0.5">
+                {scenario.emoji} {isRTL ? scenario.title_ar : scenario.title}
+              </span>
+            </div>
+            <h3 className="text-base sm:text-lg font-bold leading-tight mb-1 group-hover:text-emerald-600 transition-colors">
+              {name}
+            </h3>
+            <div className="rounded-md bg-stone-50 dark:bg-stone-900/50 border border-stone-200 dark:border-stone-800 px-3 py-1.5 font-mono text-xs mb-1.5 overflow-x-auto">
+              <span className="text-emerald-700 dark:text-emerald-400 font-semibold">{formula.formula.split('=')[0]?.trim() || formula.formula.split(' ')[0]}</span>
+              {formula.formula.includes('=') && (
+                <span className="text-stone-700 dark:text-stone-300"> = {formula.formula.split('=').slice(1).join('=').trim()}</span>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground line-clamp-1 leading-relaxed">{purpose}</p>
+          </div>
+
+          {/* Click arrow */}
+          <div className="flex-shrink-0 self-center">
+            <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:translate-x-1 transition-transform" style={{ color: scenario.color }} />
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
