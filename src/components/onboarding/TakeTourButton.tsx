@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Sparkles } from 'lucide-react';
 import { resetOnboarding } from '@/lib/onboarding-store';
 import { OnboardingFlow } from './OnboardingFlow';
+import { useTranslation } from '@/lib/language-store';
 
 /**
  * Button that resets the onboarding state and re-mounts the OnboardingFlow
@@ -13,6 +14,7 @@ import { OnboardingFlow } from './OnboardingFlow';
 export function TakeTourButton() {
   const [replayKey, setReplayKey] = useState(0);
   const [forceShow, setForceShow] = useState(false);
+  const { isRTL } = useTranslation();
 
   const handleClick = () => {
     resetOnboarding();
@@ -27,10 +29,10 @@ export function TakeTourButton() {
         size="sm"
         onClick={handleClick}
         className="gap-1.5 text-xs text-muted-foreground hover:text-foreground"
-        title="Replay the welcome tour"
+        title={isRTL ? 'إعادة جولة الترحيب' : 'Replay the welcome tour'}
       >
         <Sparkles className="h-3.5 w-3.5" />
-        <span className="hidden sm:inline">Tour</span>
+        <span className="hidden sm:inline">{isRTL ? 'جولة' : 'Tour'}</span>
       </Button>
       {forceShow && (
         <OnboardingFlow key={replayKey} />

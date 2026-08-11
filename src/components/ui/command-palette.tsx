@@ -36,6 +36,7 @@ import {
   TOOL_REGISTRY, searchTools, recordToolUse,
   type ToolEntry, type TabId,
 } from '@/lib/tool-registry';
+import { useTranslation } from '@/lib/language-store';
 
 interface CommandPaletteProps {
   open: boolean;
@@ -46,6 +47,7 @@ interface CommandPaletteProps {
 
 export function CommandPalette({ open, onOpenChange, onSelect }: CommandPaletteProps) {
   const [query, setQuery] = useState('');
+  const { isRTL } = useTranslation();
 
   // Reset query when opening
   useEffect(() => {
@@ -83,7 +85,13 @@ export function CommandPalette({ open, onOpenChange, onSelect }: CommandPaletteP
     onOpenChange(false);
   }, [onSelect, onOpenChange]);
 
-  const CATEGORY_LABELS: Record<string, string> = {
+  const CATEGORY_LABELS: Record<string, string> = isRTL ? {
+    farm: 'إدارة المزرعة',
+    tools: 'الأدوات المجانية',
+    insights: 'الذكاء والتحليلات',
+    formulas: 'أطلس المعادلات',
+    agents: 'وكلاء الذكاء',
+  } : {
     farm: 'Farm Management',
     tools: 'Free Tools',
     insights: 'Intelligence & Insights',
@@ -101,7 +109,9 @@ export function CommandPalette({ open, onOpenChange, onSelect }: CommandPaletteP
           <div className="flex items-center border-b px-3">
             <Search className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" />
             <CommandInput
-              placeholder="Search tools, agents, formulas… (or type a keyword like 'frost' or 'fertilizer')"
+              placeholder={isRTL
+                ? 'ابحث عن أدوات أو وكلاء أو معادلات… (أو اكتب كلمة مثل «صقيع» أو «سماد»)'
+                : "Search tools, agents, formulas… (or type a keyword like 'frost' or 'fertilizer')"}
               value={query}
               onValueChange={setQuery}
               className="h-12 flex-1 bg-transparent outline-none placeholder:text-muted-foreground text-sm"
@@ -112,12 +122,12 @@ export function CommandPalette({ open, onOpenChange, onSelect }: CommandPaletteP
           </div>
           <CommandList className="max-h-[400px] overflow-y-auto">
             <CommandEmpty className="py-6 text-center text-sm text-muted-foreground">
-              No results for "{query}"
+              {isRTL ? `لا نتائج لـ «${query}»` : `No results for "${query}"`}
             </CommandEmpty>
 
             {!query && (
               <div className="px-3 py-2 text-[10px] text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
-                <Sparkles className="h-3 w-3" /> Suggested — start typing or pick from below
+                <Sparkles className="h-3 w-3" /> {isRTL ? 'مقترح — ابدأ الكتابة أو اختر من الأسفل' : 'Suggested — start typing or pick from below'}
               </div>
             )}
 
@@ -158,14 +168,14 @@ export function CommandPalette({ open, onOpenChange, onSelect }: CommandPaletteP
           <div className="border-t flex items-center justify-between px-3 py-2 text-[10px] text-muted-foreground">
             <div className="flex items-center gap-3">
               <span className="flex items-center gap-1">
-                <kbd className="rounded border bg-muted px-1 py-0.5 font-mono">↑↓</kbd> navigate
+                <kbd className="rounded border bg-muted px-1 py-0.5 font-mono">↑↓</kbd> {isRTL ? 'تنقّل' : 'navigate'}
               </span>
               <span className="flex items-center gap-1">
-                <kbd className="rounded border bg-muted px-1 py-0.5 font-mono">↵</kbd> select
+                <kbd className="rounded border bg-muted px-1 py-0.5 font-mono">↵</kbd> {isRTL ? 'اختيار' : 'select'}
               </span>
             </div>
             <span className="flex items-center gap-1">
-              <CornerDownLeft className="h-3 w-3" /> {TOOL_REGISTRY.length} tools indexed
+              <CornerDownLeft className="h-3 w-3" /> {TOOL_REGISTRY.length} {isRTL ? 'أداة مفهرسة' : 'tools indexed'}
             </span>
           </div>
         </Command>
@@ -179,14 +189,15 @@ export function CommandPalette({ open, onOpenChange, onSelect }: CommandPaletteP
 // ============================================================================
 
 export function CommandPaletteTrigger({ onClick }: { onClick: () => void }) {
+  const { isRTL } = useTranslation();
   return (
     <button
       onClick={onClick}
       className="flex items-center gap-2 px-3 py-1.5 rounded-md border bg-muted/30 hover:bg-muted/60 text-xs text-muted-foreground transition-colors"
-      title="Search tools (⌘K)"
+      title={isRTL ? 'بحث في الأدوات (⌘K)' : 'Search tools (⌘K)'}
     >
       <Search className="h-3.5 w-3.5" />
-      <span className="hidden sm:inline">Search tools…</span>
+      <span className="hidden sm:inline">{isRTL ? 'بحث في الأدوات…' : 'Search tools…'}</span>
       <kbd className="hidden sm:inline-block pointer-events-none select-none rounded border bg-muted px-1.5 py-0.5 font-mono text-[10px]">
         ⌘K
       </kbd>

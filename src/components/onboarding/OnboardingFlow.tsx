@@ -10,6 +10,7 @@ import {
   isFirstVisit, completeOnboarding, skipOnboarding,
   ROLE_OPTIONS, CROP_OPTIONS, type UserRole,
 } from '@/lib/onboarding-store';
+import { useTranslation } from '@/lib/language-store';
 
 type Step = 'welcome' | 'role' | 'crop' | 'features' | 'finish';
 
@@ -17,23 +18,32 @@ const FEATURE_HIGHLIGHTS = [
   {
     icon: Calculator,
     color: '#16a34a',
-    title: '18 Free Agronomic Tools',
+    title: '91 Free Agronomic Tools',
+    title_ar: '91 أداة زراعية مجانية',
     description: 'Converters, hydro solution designer, VPD estimator, fertilizer compatibility matrix, soil texture triangle, and more — all native, no sign-up.',
+    description_ar: 'محوّلات، مصمّم محاليل مائية، مقدّر VPD، مصفوفة توافق الأسمدة، مثلث نسجة التربة، والمزيد — كلها أصيلة بلا تسجيل.',
     badge: 'Tools tab',
+    badge_ar: 'تبويب الأدوات',
   },
   {
     icon: Bot,
     color: '#0891b2',
     title: 'AI Agronomist Assistant',
-    description: 'A floating chat that knows all 18 tools. Describe a symptom or share lab values — it tells you exactly which tool to open and what to enter.',
+    title_ar: 'مساعد المهندس الزراعي بالذكاء',
+    description: 'A floating chat that knows all 91 tools. Describe a symptom or share lab values — it tells you exactly which tool to open and what to enter.',
+    description_ar: 'دردشة عائمة تعرف كل الـ91 أداة. صِف عرضاً أو شارك قيم المختبر — يخبرك بالضبط بأي أداة تفتحها وماذا تدخل.',
     badge: 'Bottom-right',
+    badge_ar: 'أسفل اليمين',
   },
   {
     icon: Calendar,
     color: '#7c3aed',
     title: 'Season Plan Generator',
+    title_ar: 'مولّد خطة الموسم',
     description: 'Generate a 52-week NPK + irrigation + fertigation plan for any crop in under 5 seconds. Download as PDF. Includes soil/water quality warnings.',
+    description_ar: 'ولّد خطة 52 أسبوعاً لـ NPK + ري + تسميد بالري لأي محصول في أقل من 5 ثوانٍ. نزّلها PDF. تتضمّن تحذيرات جودة التربة/الماء.',
     badge: 'Pro feature',
+    badge_ar: 'ميزة احترافية',
   },
 ];
 
@@ -46,6 +56,7 @@ export function OnboardingFlow() {
   const [step, setStep] = useState<Step>('welcome');
   const [role, setRole] = useState<UserRole | null>(null);
   const [crop, setCrop] = useState<string | null>(null);
+  const { isRTL } = useTranslation();
 
   // Auto-show on first visit (client-side check)
   useEffect(() => {
@@ -110,7 +121,7 @@ export function OnboardingFlow() {
         )}
 
         {step !== 'finish' && (
-          <button onClick={handleSkip} className="absolute top-4 right-4 z-20 text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-muted/50 transition-colors" title="Skip tour">
+          <button onClick={handleSkip} className="absolute top-4 right-4 z-20 text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-muted/50 transition-colors" title={isRTL ? 'تخطّي الجولة' : 'Skip tour'}>
             <X className="h-4 w-4" />
           </button>
         )}
@@ -126,17 +137,23 @@ export function OnboardingFlow() {
               </div>
               <div>
                 <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
-                  Welcome to <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">Formula Atlas</span>
+                  {isRTL ? (<>
+                    مرحبًا بك في <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">أطلس المعادلات</span>
+                  </>) : (<>
+                    Welcome to <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">Formula Atlas</span>
+                  </>)}
                 </h1>
                 <p className="text-sm text-muted-foreground mt-2 max-w-md mx-auto leading-relaxed">
-                  Your all-in-one agronomy platform — 18 precision calculators, an AI agronomist, and a 52-week season plan generator. Let&apos;s take a 60-second tour.
+                  {isRTL
+                    ? 'منصة زراعية شاملة — 91 حاسبة دقيقة، ومهندس زراعي بالذكاء الاصطناعي، ومولّد خطة موسم 52 أسبوعاً. لنأخذ جولة 60 ثانية.'
+                    : 'Your all-in-one agronomy platform — 91 precision calculators, an AI agronomist, and a 52-week season plan generator. Let\'s take a 60-second tour.'}
                 </p>
               </div>
               <div className="grid grid-cols-3 gap-3 w-full max-w-md mt-2">
                 {[
-                  { icon: Calculator, label: '18 Tools', color: '#16a34a' },
-                  { icon: Bot, label: 'AI Assistant', color: '#0891b2' },
-                  { icon: Calendar, label: 'Season Plan', color: '#7c3aed' },
+                  { icon: Calculator, label: isRTL ? '91 أداة' : '91 Tools', color: '#16a34a' },
+                  { icon: Bot, label: isRTL ? 'مساعد ذكاء' : 'AI Assistant', color: '#0891b2' },
+                  { icon: Calendar, label: isRTL ? 'خطة موسمية' : 'Season Plan', color: '#7c3aed' },
                 ].map((f, i) => (
                   <div key={i} className="flex flex-col items-center gap-1.5 p-3 rounded-lg bg-muted/40 border border-border/60">
                     <div className="flex items-center justify-center h-8 w-8 rounded-lg" style={{ background: `${f.color}20`, color: f.color }}>
@@ -147,17 +164,17 @@ export function OnboardingFlow() {
                 ))}
               </div>
               <Button onClick={next} size="lg" className="mt-4 bg-gradient-to-r from-emerald-600 to-green-700 hover:from-emerald-700 hover:to-green-800 gap-2">
-                Get Started <ArrowRight className="h-4 w-4" />
+                {isRTL ? 'ابدأ الآن' : 'Get Started'} <ArrowRight className="h-4 w-4" />
               </Button>
-              <button onClick={handleSkip} className="text-xs text-muted-foreground hover:text-foreground underline mt-1">Skip the tour</button>
+              <button onClick={handleSkip} className="text-xs text-muted-foreground hover:text-foreground underline mt-1">{isRTL ? 'تخطّي الجولة' : 'Skip the tour'}</button>
             </div>
           )}
 
           {step === 'role' && (
             <div className="flex-1 flex flex-col space-y-4" style={{ animation: 'ob-fade-in 0.4s ease-out' }}>
               <div className="text-center space-y-1">
-                <h2 className="text-xl font-bold text-foreground">Who are you?</h2>
-                <p className="text-xs text-muted-foreground">We&apos;ll tailor examples and recommendations to your role.</p>
+                <h2 className="text-xl font-bold text-foreground">{isRTL ? 'من أنت؟' : 'Who are you?'}</h2>
+                <p className="text-xs text-muted-foreground">{isRTL ? 'سنخصّص الأمثلة والتوصيات حسب دورك.' : 'We\'ll tailor examples and recommendations to your role.'}</p>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 flex-1">
                 {ROLE_OPTIONS.map(r => (
@@ -176,8 +193,8 @@ export function OnboardingFlow() {
                 ))}
               </div>
               <div className="flex justify-between items-center pt-2">
-                <Button variant="ghost" size="sm" onClick={back} className="gap-1.5 text-muted-foreground"><ArrowLeft className="h-3.5 w-3.5" /> Back</Button>
-                <Button onClick={next} disabled={!role} size="sm" className="gap-1.5">Continue <ArrowRight className="h-3.5 w-3.5" /></Button>
+                <Button variant="ghost" size="sm" onClick={back} className="gap-1.5 text-muted-foreground"><ArrowLeft className="h-3.5 w-3.5" /> {isRTL ? 'رجوع' : 'Back'}</Button>
+                <Button onClick={next} disabled={!role} size="sm" className="gap-1.5">{isRTL ? 'متابعة' : 'Continue'} <ArrowRight className="h-3.5 w-3.5" /></Button>
               </div>
             </div>
           )}
@@ -185,8 +202,8 @@ export function OnboardingFlow() {
           {step === 'crop' && (
             <div className="flex-1 flex flex-col space-y-4" style={{ animation: 'ob-fade-in 0.4s ease-out' }}>
               <div className="text-center space-y-1">
-                <h2 className="text-xl font-bold text-foreground">What do you grow?</h2>
-                <p className="text-xs text-muted-foreground">We&apos;ll pre-load crop-specific presets in the calculators.</p>
+                <h2 className="text-xl font-bold text-foreground">{isRTL ? 'ماذا تزرع؟' : 'What do you grow?'}</h2>
+                <p className="text-xs text-muted-foreground">{isRTL ? 'سنحمّل مسبقاً إعدادات المحاصيل في الحاسبات.' : 'We\'ll pre-load crop-specific presets in the calculators.'}</p>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 flex-1">
                 {CROP_OPTIONS.map(c => (
@@ -202,8 +219,8 @@ export function OnboardingFlow() {
                 ))}
               </div>
               <div className="flex justify-between items-center pt-2">
-                <Button variant="ghost" size="sm" onClick={back} className="gap-1.5 text-muted-foreground"><ArrowLeft className="h-3.5 w-3.5" /> Back</Button>
-                <Button onClick={next} disabled={!crop} size="sm" className="gap-1.5">Continue <ArrowRight className="h-3.5 w-3.5" /></Button>
+                <Button variant="ghost" size="sm" onClick={back} className="gap-1.5 text-muted-foreground"><ArrowLeft className="h-3.5 w-3.5" /> {isRTL ? 'رجوع' : 'Back'}</Button>
+                <Button onClick={next} disabled={!crop} size="sm" className="gap-1.5">{isRTL ? 'متابعة' : 'Continue'} <ArrowRight className="h-3.5 w-3.5" /></Button>
               </div>
             </div>
           )}
@@ -211,8 +228,8 @@ export function OnboardingFlow() {
           {step === 'features' && (
             <div className="flex-1 flex flex-col space-y-3" style={{ animation: 'ob-fade-in 0.4s ease-out' }}>
               <div className="text-center space-y-1 mb-2">
-                <h2 className="text-xl font-bold text-foreground">Your 3 power features</h2>
-                <p className="text-xs text-muted-foreground">Everything you need to replace 5 tools you use daily.</p>
+                <h2 className="text-xl font-bold text-foreground">{isRTL ? 'ميزاتك القوية الثلاث' : 'Your 3 power features'}</h2>
+                <p className="text-xs text-muted-foreground">{isRTL ? 'كل ما تحتاجه لاستبدال 5 أدوات تستخدمها يومياً.' : 'Everything you need to replace 5 tools you use daily.'}</p>
               </div>
               <div className="space-y-2.5 flex-1">
                 {FEATURE_HIGHLIGHTS.map((f, i) => (
@@ -222,17 +239,17 @@ export function OnboardingFlow() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="text-sm font-semibold text-foreground">{f.title}</h3>
-                        <span className="text-[9px] px-1.5 py-0.5 rounded-full font-medium" style={{ background: `${f.color}20`, color: f.color }}>{f.badge}</span>
+                        <h3 className="text-sm font-semibold text-foreground">{isRTL ? f.title_ar : f.title}</h3>
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-full font-medium" style={{ background: `${f.color}20`, color: f.color }}>{isRTL ? f.badge_ar : f.badge}</span>
                       </div>
-                      <p className="text-xs text-muted-foreground leading-relaxed mt-0.5">{f.description}</p>
+                      <p className="text-xs text-muted-foreground leading-relaxed mt-0.5">{isRTL ? f.description_ar : f.description}</p>
                     </div>
                   </div>
                 ))}
               </div>
               <div className="flex justify-between items-center pt-2">
-                <Button variant="ghost" size="sm" onClick={back} className="gap-1.5 text-muted-foreground"><ArrowLeft className="h-3.5 w-3.5" /> Back</Button>
-                <Button onClick={next} size="sm" className="gap-1.5">Almost there <ArrowRight className="h-3.5 w-3.5" /></Button>
+                <Button variant="ghost" size="sm" onClick={back} className="gap-1.5 text-muted-foreground"><ArrowLeft className="h-3.5 w-3.5" /> {isRTL ? 'رجوع' : 'Back'}</Button>
+                <Button onClick={next} size="sm" className="gap-1.5">{isRTL ? 'كدنا' : 'Almost there'} <ArrowRight className="h-3.5 w-3.5" /></Button>
               </div>
             </div>
           )}
@@ -248,36 +265,47 @@ export function OnboardingFlow() {
                 ))}
               </div>
               <div className="space-y-1.5">
-                <h2 className="text-2xl font-bold text-foreground">You&apos;re all set!</h2>
+                <h2 className="text-2xl font-bold text-foreground">{isRTL ? 'كل شيء جاهز!' : 'You\'re all set!'}</h2>
                 <p className="text-sm text-muted-foreground max-w-sm leading-relaxed">
                   {role && crop ? (
-                    <>
-                      As a <strong className="text-foreground">{ROLE_OPTIONS.find(r => r.id === role)?.label}</strong> working with{' '}
-                      <strong className="text-foreground">{CROP_OPTIONS.find(c => c.id === crop)?.label}</strong>, your presets are ready.
-                      Open the <strong className="text-foreground">Tools tab</strong> to start, or click the{' '}
-                      <strong className="text-foreground">AI Agronomist</strong> button anytime you need guidance.
-                    </>
+                    isRTL ? (
+                      <>
+                        بصفتك <strong className="text-foreground">{ROLE_OPTIONS.find(r => r.id === role)?.label}</strong> الذي يزرع{' '}
+                        <strong className="text-foreground">{CROP_OPTIONS.find(c => c.id === crop)?.label}</strong>، إعداداتك المسبقة جاهزة.
+                        افتح <strong className="text-foreground">تبويب الأدوات</strong> للبدء، أو اضغط زر{' '}
+                        <strong className="text-foreground">المهندس الزراعي بالذكاء</strong> عندما تحتاج إرشاداً.
+                      </>
+                    ) : (
+                      <>
+                        As a <strong className="text-foreground">{ROLE_OPTIONS.find(r => r.id === role)?.label}</strong> working with{' '}
+                        <strong className="text-foreground">{CROP_OPTIONS.find(c => c.id === crop)?.label}</strong>, your presets are ready.
+                        Open the <strong className="text-foreground">Tools tab</strong> to start, or click the{' '}
+                        <strong className="text-foreground">AI Agronomist</strong> button anytime you need guidance.
+                      </>
+                    )
                   ) : (
-                    <>Open the Tools tab to explore all 18 calculators, or click the AI Agronomist button for instant guidance.</>
+                    isRTL
+                      ? <>افتح تبويب الأدوات لاستكشاف كل الحاسبات الـ91، أو اضغط زر المهندس الزراعي بالذكاء لإرشاد فوري.</>
+                      : <>Open the Tools tab to explore all 91 calculators, or click the AI Agronomist button for instant guidance.</>
                   )}
                 </p>
               </div>
               <div className="grid grid-cols-3 gap-2 w-full max-w-sm">
                 <div className="rounded-lg p-2.5 bg-muted/40 border border-border">
-                  <div className="text-lg font-bold text-emerald-600">18</div>
-                  <div className="text-[10px] text-muted-foreground">Tools</div>
+                  <div className="text-lg font-bold text-emerald-600">91</div>
+                  <div className="text-[10px] text-muted-foreground">{isRTL ? 'أداة' : 'Tools'}</div>
                 </div>
                 <div className="rounded-lg p-2.5 bg-muted/40 border border-border">
                   <div className="text-lg font-bold text-cyan-600">AI</div>
-                  <div className="text-[10px] text-muted-foreground">Agronomist</div>
+                  <div className="text-[10px] text-muted-foreground">{isRTL ? 'مهندس' : 'Agronomist'}</div>
                 </div>
                 <div className="rounded-lg p-2.5 bg-muted/40 border border-border">
                   <div className="text-lg font-bold text-violet-600">52</div>
-                  <div className="text-[10px] text-muted-foreground">Week plans</div>
+                  <div className="text-[10px] text-muted-foreground">{isRTL ? 'خطة أسبوعية' : 'Week plans'}</div>
                 </div>
               </div>
               <Button onClick={handleFinish} size="lg" className="mt-2 bg-gradient-to-r from-emerald-600 to-green-700 hover:from-emerald-700 hover:to-green-800 gap-2">
-                <Zap className="h-4 w-4" /> Start using Formula Atlas
+                <Zap className="h-4 w-4" /> {isRTL ? 'ابدأ استخدام أطلس المعادلات' : 'Start using Formula Atlas'}
               </Button>
             </div>
           )}
@@ -285,8 +313,8 @@ export function OnboardingFlow() {
 
         {step !== 'welcome' && step !== 'finish' && (
           <div className="px-6 sm:px-10 py-2.5 border-t border-border/60 bg-muted/20 flex items-center justify-between text-[11px] text-muted-foreground">
-            <span>Step {stepIndex} of {stepCount - 2}</span>
-            <span className="flex items-center gap-1">Takes ~60 seconds <ChevronRight className="h-3 w-3" /></span>
+            <span>{isRTL ? `الخطوة ${stepIndex} من ${stepCount - 2}` : `Step ${stepIndex} of ${stepCount - 2}`}</span>
+            <span className="flex items-center gap-1">{isRTL ? '~60 ثانية' : 'Takes ~60 seconds'} <ChevronRight className="h-3 w-3" /></span>
           </div>
         )}
       </div>
