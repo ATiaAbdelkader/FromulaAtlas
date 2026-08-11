@@ -34,6 +34,7 @@ import { WeatherAlertBanner } from '@/components/agri/weather-alert-banner';
 import { FarmStats } from '@/components/agri/farm-stats';
 import { TodayTasks } from '@/components/agri/today-tasks';
 import { FarmProfileWizard, needsFarmProfileSetup } from '@/components/agri/farm-profile-wizard';
+import { useTranslation } from '@/lib/language-store';
 
 const FARM_PROFILE_KEY = 'farm_profile_v1';
 const LAST_LOC_KEY = 'et_tracker_last_loc_v1';
@@ -65,6 +66,7 @@ export function HomeDashboard({ onNavigate, onOpenTool, onOpenSearch }: HomeDash
   const [weatherError, setWeatherError] = useState<string | null>(null);
   const [recent, setRecent] = useState<ToolEntry[]>([]);
   const [wizardOpen, setWizardOpen] = useState(false);
+  const { t, isRTL, language } = useTranslation();
 
   // Load farm profile + recent tools from localStorage on mount
   useEffect(() => {
@@ -118,15 +120,17 @@ export function HomeDashboard({ onNavigate, onOpenTool, onOpenSearch }: HomeDash
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
             <div className="flex items-center gap-2 mb-1 text-emerald-100 text-xs font-medium uppercase tracking-wide">
-              <Sprout className="h-3.5 w-3.5" /> {profile.name ? `${profile.name}` : 'Your AI-powered agronomy platform'}
+              <Sprout className="h-3.5 w-3.5" /> {profile.name ? `${profile.name}` : t.appSubtitle}
             </div>
             <h2 className="text-xl sm:text-2xl font-bold leading-tight">
-              {greeting()}, farmer 👋
+              {greeting(language)}, {isRTL ? 'أيها المزارع' : 'farmer'} 👋
             </h2>
             <p className="text-emerald-100 text-xs mt-1">
               {today
-                ? `Today's ET₀ is ${today.et0.toFixed(1)} mm · ${wmoDescription(today.weatherCode).label.toLowerCase()}`
-                : 'Loading today\'s conditions…'}
+                ? (isRTL
+                    ? `التبدّر المرجعي اليوم ${today.et0.toFixed(1)} مم · ${wmoDescription(today.weatherCode).label}`
+                    : `Today's ET₀ is ${today.et0.toFixed(1)} mm · ${wmoDescription(today.weatherCode).label.toLowerCase()}`)
+                : (isRTL ? 'جارٍ تحميل ظروف اليوم…' : 'Loading today\'s conditions…')}
             </p>
           </div>
           <Button
@@ -135,7 +139,7 @@ export function HomeDashboard({ onNavigate, onOpenTool, onOpenSearch }: HomeDash
             onClick={onOpenSearch}
             className="gap-1.5 bg-white/15 hover:bg-white/25 text-white border-0"
           >
-            <Sparkles className="h-3.5 w-3.5" /> Search tools (⌘K)
+            <Sparkles className="h-3.5 w-3.5" /> {isRTL ? 'بحث في الأدوات (⌘K)' : 'Search tools (⌘K)'}
           </Button>
         </div>
       </section>
@@ -145,7 +149,7 @@ export function HomeDashboard({ onNavigate, onOpenTool, onOpenSearch }: HomeDash
 
       {/* Farm stats — aggregate counts */}
       <section>
-        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Your Farm at a Glance</div>
+        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{isRTL ? 'مزرعتك في لمحة' : 'Your Farm at a Glance'}</div>
         <FarmStats />
       </section>
 
@@ -157,7 +161,7 @@ export function HomeDashboard({ onNavigate, onOpenTool, onOpenSearch }: HomeDash
         <div className="lg:col-span-2 rounded-xl border bg-card p-4">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-              <MapPin className="h-3 w-3" /> Current Weather
+              <MapPin className="h-3 w-3" /> {isRTL ? 'الطقس الحالي' : 'Current Weather'}
             </div>
             <Button size="sm" variant="ghost" onClick={fetchWeather} disabled={weatherLoading} className="h-6 w-6 p-0">
               <RefreshCw className={`h-3 w-3 ${weatherLoading ? 'animate-spin' : ''}`} />
@@ -169,7 +173,7 @@ export function HomeDashboard({ onNavigate, onOpenTool, onOpenSearch }: HomeDash
           {!weatherLoading && weatherError && (
             <div className="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-400 py-4">
               <AlertTriangle className="h-4 w-4 shrink-0" />
-              <span>Weather unavailable: {weatherError}. ET Tracker still works — open it to set your location.</span>
+              <span>{isRTL ? `الطقس غير متاح: ${weatherError}. متعقّب التبدّر لا يزال يعمل — افتحه لتحديد موقعك.` : `Weather unavailable: ${weatherError}. ET Tracker still works — open it to set your location.`}</span>
             </div>
           )}
 
@@ -183,10 +187,10 @@ export function HomeDashboard({ onNavigate, onOpenTool, onOpenSearch }: HomeDash
                   <div className="text-xs text-muted-foreground">{wmoDescription(current.weatherCode).label}</div>
                 </div>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-                  <div><span className="text-muted-foreground">RH</span> <strong className="font-mono">{current.relativeHumidity}%</strong></div>
-                  <div><span className="text-muted-foreground">Wind</span> <strong className="font-mono">{current.windSpeed10m.toFixed(1)} km/h</strong></div>
-                  <div><span className="text-muted-foreground">Hi/Lo</span> <strong className="font-mono">{today.tempMax.toFixed(0)}°/{today.tempMin.toFixed(0)}°</strong></div>
-                  <div><span className="text-muted-foreground">Rain</span> <strong className="font-mono">{today.precipitationSum.toFixed(1)} mm</strong></div>
+                  <div><span className="text-muted-foreground">{isRTL ? 'الرطوبة' : 'RH'}</span> <strong className="font-mono">{current.relativeHumidity}%</strong></div>
+                  <div><span className="text-muted-foreground">{isRTL ? 'الرياح' : 'Wind'}</span> <strong className="font-mono">{current.windSpeed10m.toFixed(1)} km/h</strong></div>
+                  <div><span className="text-muted-foreground">{isRTL ? 'ع/من' : 'Hi/Lo'}</span> <strong className="font-mono">{today.tempMax.toFixed(0)}°/{today.tempMin.toFixed(0)}°</strong></div>
+                  <div><span className="text-muted-foreground">{isRTL ? 'المطر' : 'Rain'}</span> <strong className="font-mono">{today.precipitationSum.toFixed(1)} mm</strong></div>
                 </div>
               </div>
 
@@ -217,7 +221,7 @@ export function HomeDashboard({ onNavigate, onOpenTool, onOpenSearch }: HomeDash
         {/* ET₀ today — 1 col */}
         <div className="rounded-xl border bg-gradient-to-br from-cyan-50/60 to-sky-50/40 dark:from-cyan-950/20 dark:to-sky-950/10 p-4 flex flex-col">
           <div className="flex items-center gap-1.5 text-xs font-semibold text-cyan-700 dark:text-cyan-300 uppercase tracking-wide mb-2">
-            <Droplets className="h-3 w-3" /> Today's Water Need
+            <Droplets className="h-3 w-3" /> {isRTL ? 'احتياج المياه اليوم' : 'Today\'s Water Need'}
           </div>
           {today ? (
             <>
@@ -225,14 +229,14 @@ export function HomeDashboard({ onNavigate, onOpenTool, onOpenSearch }: HomeDash
                 {today.et0.toFixed(1)}
                 <span className="text-sm font-normal text-muted-foreground ml-1">mm</span>
               </div>
-              <div className="text-[10px] text-muted-foreground mt-1">Reference ET₀ (FAO-56)</div>
+              <div className="text-[10px] text-muted-foreground mt-1">{isRTL ? 'التبخّر المرجعي ET₀ (FAO-56)' : 'Reference ET₀ (FAO-56)'}</div>
               <div className="mt-auto pt-3 space-y-1">
                 <div className="flex items-center justify-between text-[10px]">
-                  <span className="text-muted-foreground">Rain today</span>
+                  <span className="text-muted-foreground">{isRTL ? 'المطر اليوم' : 'Rain today'}</span>
                   <span className="font-mono font-semibold">{today.precipitationSum.toFixed(1)} mm</span>
                 </div>
                 <div className="flex items-center justify-between text-[10px]">
-                  <span className="text-muted-foreground">Net irrigation</span>
+                  <span className="text-muted-foreground">{isRTL ? 'الري الصافي' : 'Net irrigation'}</span>
                   <span className={`font-mono font-semibold ${Math.max(0, today.et0 - today.precipitationSum * 0.8) > 1 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
                     {Math.max(0, today.et0 - today.precipitationSum * 0.8).toFixed(1)} mm
                   </span>
@@ -243,7 +247,7 @@ export function HomeDashboard({ onNavigate, onOpenTool, onOpenSearch }: HomeDash
                   onClick={() => onOpenTool('farm', 'collapse_et_tracker')}
                   className="w-full text-[10px] h-7 mt-2 gap-1"
                 >
-                  Open ET Tracker <ArrowRight className="h-3 w-3" />
+                  {isRTL ? 'افتح متعقّب التبدّر' : 'Open ET Tracker'} <ArrowRight className="h-3 w-3" />
                 </Button>
               </div>
             </>
@@ -257,34 +261,34 @@ export function HomeDashboard({ onNavigate, onOpenTool, onOpenSearch }: HomeDash
       {/* Quick actions */}
       {/* =================================================================== */}
       <section>
-        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Quick Actions</div>
+        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{isRTL ? 'إجراءات سريعة' : 'Quick Actions'}</div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           <QuickAction
             icon={Sprout}
             color="#16a34a"
-            label="Fertilization plan"
-            desc="20 crops · NPK schedule"
+            label={isRTL ? 'خطة التسميد' : 'Fertilization plan'}
+            desc={isRTL ? '20 محصول · جدول NPK' : '20 crops · NPK schedule'}
             onClick={() => { recordToolUse('fertilization'); onOpenTool('farm', 'collapse_fertilization'); }}
           />
           <QuickAction
             icon={Clock}
             color="#0ea5e9"
-            label="Irrigation schedule"
-            desc="Controllers · YAML export"
+            label={isRTL ? 'جدول الري' : 'Irrigation schedule'}
+            desc={isRTL ? 'متحكّمات · تصدير YAML' : 'Controllers · YAML export'}
             onClick={() => { recordToolUse('irrigation-scheduler'); onOpenTool('farm', 'collapse_irr_sched'); }}
           />
           <QuickAction
             icon={Sparkles}
             color="#6366f1"
-            label="Ask AI specialist"
-            desc="10 agents · Crop Scout, etc."
+            label={isRTL ? 'اسأل وكيل ذكاء' : 'Ask AI specialist'}
+            desc={isRTL ? '10 وكلاء · كشف المحاصيل...' : '10 agents · Crop Scout, etc.'}
             onClick={() => { recordToolUse('ai-specialists'); onOpenTool('insights', 'collapse_agent_chat'); }}
           />
           <QuickAction
             icon={MapPin}
             color="#10b981"
-            label="Import field"
-            desc="GeoJSON · KML · CSV"
+            label={isRTL ? 'استيراد حقل' : 'Import field'}
+            desc={isRTL ? 'GeoJSON · KML · CSV' : 'GeoJSON · KML · CSV'}
             onClick={() => { recordToolUse('field-boundary'); onOpenTool('farm', 'collapse_boundary'); }}
           />
         </div>
@@ -300,7 +304,7 @@ export function HomeDashboard({ onNavigate, onOpenTool, onOpenSearch }: HomeDash
         <div className="rounded-xl border bg-card p-4">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-              <Sprout className="h-3 w-3" /> Farm Profile
+              <Sprout className="h-3 w-3" /> {isRTL ? 'ملف المزرعة' : 'Farm Profile'}
             </div>
             <Button
               size="sm"
@@ -308,38 +312,38 @@ export function HomeDashboard({ onNavigate, onOpenTool, onOpenSearch }: HomeDash
               onClick={() => setWizardOpen(true)}
               className="text-[10px] h-6 gap-1"
             >
-              {profile.name ? 'Edit' : 'Set up'}
+              {profile.name ? (isRTL ? 'تعديل' : 'Edit') : (isRTL ? 'إعداد' : 'Set up')}
             </Button>
           </div>
           {profile.name || profile.crop ? (
             <div className="space-y-1.5 text-xs">
               {profile.name && (
                 <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground w-16">Farm:</span>
+                  <span className="text-muted-foreground w-16">{isRTL ? 'المزرعة:' : 'Farm:'}</span>
                   <strong>{profile.name}</strong>
                 </div>
               )}
               {profile.crop && (
                 <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground w-16">Crop:</span>
+                  <span className="text-muted-foreground w-16">{isRTL ? 'المحصول:' : 'Crop:'}</span>
                   <strong>{CROP_LIFECYCLES.find(c => c.id === profile.crop)?.emoji} {CROP_LIFECYCLES.find(c => c.id === profile.crop)?.name}</strong>
                 </div>
               )}
               {profile.plantingDate && (
                 <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground w-16">Planted:</span>
+                  <span className="text-muted-foreground w-16">{isRTL ? 'الزراعة:' : 'Planted:'}</span>
                   <strong className="font-mono">{profile.plantingDate}</strong>
                 </div>
               )}
               {profile.area !== undefined && (
                 <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground w-16">Area:</span>
+                  <span className="text-muted-foreground w-16">{isRTL ? 'المساحة:' : 'Area:'}</span>
                   <strong>{profile.area} ha</strong>
                 </div>
               )}
               {profile.lat && profile.lng && (
                 <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground w-16">Location:</span>
+                  <span className="text-muted-foreground w-16">{isRTL ? 'الموقع:' : 'Location:'}</span>
                   <strong className="font-mono text-[10px]">{profile.lat}, {profile.lng}</strong>
                 </div>
               )}
@@ -347,9 +351,9 @@ export function HomeDashboard({ onNavigate, onOpenTool, onOpenSearch }: HomeDash
           ) : (
             <div className="text-center py-4">
               <Sprout className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
-              <p className="text-xs text-muted-foreground mb-2">No farm profile yet.</p>
+              <p className="text-xs text-muted-foreground mb-2">{isRTL ? 'لا يوجد ملف مزرعة بعد.' : 'No farm profile yet.'}</p>
               <Button size="sm" onClick={() => setWizardOpen(true)} className="gap-1.5 text-xs">
-                <Sparkles className="h-3.5 w-3.5" /> Set up your farm
+                <Sparkles className="h-3.5 w-3.5" /> {isRTL ? 'أعدّ مزرعتك' : 'Set up your farm'}
               </Button>
             </div>
           )}
@@ -363,10 +367,10 @@ export function HomeDashboard({ onNavigate, onOpenTool, onOpenSearch }: HomeDash
         <section>
           <div className="flex items-center justify-between mb-2">
             <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1">
-              <Clock className="h-3 w-3" /> Recently Used
+              <Clock className="h-3 w-3" /> {isRTL ? 'المستخدمة مؤخراً' : 'Recently Used'}
             </div>
             <Button size="sm" variant="ghost" onClick={onOpenSearch} className="text-[10px] h-6 gap-1">
-              <Sparkles className="h-3 w-3" /> Browse all (⌘K)
+              <Sparkles className="h-3 w-3" /> {isRTL ? 'تصفّح الكل (⌘K)' : 'Browse all (⌘K)'}
             </Button>
           </div>
           <div className="flex gap-2 overflow-x-auto pb-1">
@@ -400,12 +404,12 @@ export function HomeDashboard({ onNavigate, onOpenTool, onOpenSearch }: HomeDash
       {/* Quick navigation cards (original, preserved) */}
       {/* =================================================================== */}
       <section>
-        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Browse by Category</div>
+        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{isRTL ? 'تصفّح حسب الفئة' : 'Browse by Category'}</div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <NavCard icon={Tractor} label="Farm" desc="Fields, crops, soil, livestock, irrigation" color="#16a34a" onClick={() => onNavigate('farm')} />
-          <NavCard icon={Sparkles} label="Insights" desc="NDVI, weather, AI, financial, community" color="#6366f1" onClick={() => onNavigate('insights')} />
-          <NavCard icon={Wrench} label="Tools" desc="18 free agronomic calculators" color="#0891b2" onClick={() => onNavigate('tools')} />
-          <NavCard icon={BookOpen} label="Formulas" desc="332 formulas with calculators" color="#f59e0b" onClick={() => onNavigate('formulas')} />
+          <NavCard icon={Tractor} label={t.tabFarm} desc={isRTL ? 'الحقول، المحاصيل، التربة، الماشية، الري' : 'Fields, crops, soil, livestock, irrigation'} color="#16a34a" onClick={() => onNavigate('farm')} />
+          <NavCard icon={Sparkles} label={t.tabInsights} desc={isRTL ? 'NDVI، الطقس، الذكاء، المالية، المجتمع' : 'NDVI, weather, AI, financial, community'} color="#6366f1" onClick={() => onNavigate('insights')} />
+          <NavCard icon={Wrench} label={t.tabTools} desc={isRTL ? '18 حاسبة زراعية مجانية' : '18 free agronomic calculators'} color="#0891b2" onClick={() => onNavigate('tools')} />
+          <NavCard icon={BookOpen} label={t.tabFormulas} desc={isRTL ? '500 معادلة بحاسبات' : '500 formulas with calculators'} color="#f59e0b" onClick={() => onNavigate('formulas')} />
         </div>
       </section>
 
@@ -490,8 +494,13 @@ function NavCard({ icon: Icon, label, desc, color, onClick }: {
   );
 }
 
-function greeting(): string {
+function greeting(lang?: 'en' | 'ar'): string {
   const h = new Date().getHours();
+  if (lang === 'ar') {
+    if (h < 12) return 'صباح الخير';
+    if (h < 18) return 'مساء الخير';
+    return 'مساء الخير';
+  }
   if (h < 12) return 'Good morning';
   if (h < 18) return 'Good afternoon';
   return 'Good evening';

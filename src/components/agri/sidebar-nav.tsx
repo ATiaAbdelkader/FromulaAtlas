@@ -24,6 +24,7 @@ import { handbook } from '@/lib/formulas-data';
 import { getPartTheme, domainMeta, type Domain } from './part-themes';
 import type { Formula } from '@/lib/types';
 import { calculators } from './calculators';
+import { useTranslation } from '@/lib/language-store';
 
 interface SidebarNavProps {
   selectedPart: string | null;
@@ -60,6 +61,7 @@ export function SidebarNav({
   const [expandedParts, setExpandedParts] = useState<Set<string>>(new Set());
   const [localSearch, setLocalSearch] = useState('');
   const [activeDomain, setActiveDomain] = useState<Domain | null>(null);
+  const { t, isRTL } = useTranslation();
 
   const togglePart = (partTitle: string) => {
     setExpandedParts(prev => {
@@ -156,9 +158,9 @@ export function SidebarNav({
             <Layers3 className="h-4 w-4" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-sm font-semibold tracking-tight leading-tight">Library</div>
+            <div className="text-sm font-semibold tracking-tight leading-tight">{t.sections}</div>
             <div className="text-[10px] text-muted-foreground uppercase tracking-wider">
-              {handbook.meta.total_parts} parts · {handbook.meta.total_chapters} sections
+              {handbook.meta.total_parts} {t.footerParts} · {handbook.meta.total_chapters} {t.footerSections}
             </div>
           </div>
         </div>
@@ -166,11 +168,11 @@ export function SidebarNav({
         {/* Quick stats row */}
         <div className="flex items-center gap-2 text-[10px]">
           <div className="flex-1 rounded-md bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 px-2 py-1 flex items-center justify-between">
-            <span className="text-muted-foreground uppercase tracking-wider">Formulas</span>
+            <span className="text-muted-foreground uppercase tracking-wider">{t.statsFormulas}</span>
             <span className="font-mono font-bold text-emerald-700 dark:text-emerald-400">{totalFormulas}</span>
           </div>
           <div className="flex-1 rounded-md bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 px-2 py-1 flex items-center justify-between">
-            <span className="text-muted-foreground uppercase tracking-wider">Calcs</span>
+            <span className="text-muted-foreground uppercase tracking-wider">{t.interactiveCalculators}</span>
             <span className="font-mono font-bold text-emerald-700 dark:text-emerald-400">
               {Object.keys(calculators).length}
             </span>
@@ -184,7 +186,7 @@ export function SidebarNav({
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
           <Input
             type="search"
-            placeholder="Filter parts & sections..."
+            placeholder={isRTL ? 'تصفية الأجزاء والأقسام...' : 'Filter parts & sections...'}
             value={localSearch}
             onChange={e => setLocalSearch(e.target.value)}
             className="pl-8 pr-7 h-8 text-xs"
@@ -248,7 +250,7 @@ export function SidebarNav({
         >
           <span className="flex items-center gap-2 text-xs font-medium text-stone-700 dark:text-stone-300 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
             <Calculator className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-500" />
-            Calculator only
+            {t.calculatorOnly}
           </span>
           <Switch
             id="calc-only"
@@ -292,7 +294,7 @@ export function SidebarNav({
             <div className="mt-3 mb-3">
               <div className="flex items-center gap-1.5 px-2 mb-1 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">
                 <Clock className="h-3 w-3" />
-                Recently viewed
+                {isRTL ? 'شوهد مؤخراً' : 'Recently viewed'}
               </div>
               <div className="space-y-0.5">
                 {recentFormulas.slice(0, 4).map(f => {
@@ -458,7 +460,7 @@ export function SidebarNav({
                               })}
                               {chapterCounts.length === 0 && (
                                 <div className="px-2 py-1 text-[10px] text-muted-foreground italic">
-                                  No sections match
+                                  {isRTL ? 'لا أقسام مطابقة' : 'No sections match'}
                                 </div>
                               )}
                             </div>
@@ -474,7 +476,7 @@ export function SidebarNav({
           {filteredParts.length === 0 && (
             <div className="text-center py-8 text-xs text-muted-foreground">
               <Search className="h-6 w-6 mx-auto mb-2 opacity-50" />
-              No matches for &ldquo;{localSearch}&rdquo;
+              {isRTL ? `لا توجد نتائج لـ «${localSearch}»` : `No matches for \u201c${localSearch}\u201d`}
             </div>
           )}
         </div>
@@ -486,8 +488,10 @@ export function SidebarNav({
           <span className="flex items-center gap-1">
             <Hash className="h-2.5 w-2.5" />
             {selectedPart
-              ? `Filtered to ${selectedChapter !== null ? '1 section' : `${handbook.parts.find(p => p.title === selectedPart)?.chapters.length || 0} sections`}`
-              : 'Showing all parts'}
+              ? isRTL
+                ? `مصفى إلى ${selectedChapter !== null ? 'قسم واحد' : `${handbook.parts.find(p => p.title === selectedPart)?.chapters.length || 0} أقسام`}`
+                : `Filtered to ${selectedChapter !== null ? '1 section' : `${handbook.parts.find(p => p.title === selectedPart)?.chapters.length || 0} sections`}`
+              : (isRTL ? 'عرض كل الأجزاء' : 'Showing all parts')}
           </span>
           <span className="font-mono">{filteredParts.length}/{handbook.parts.length}</span>
         </div>

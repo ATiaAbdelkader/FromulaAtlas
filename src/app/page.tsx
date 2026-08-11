@@ -23,6 +23,7 @@ import {
   ChevronRight, Microscope, Globe,
 } from 'lucide-react';
 import { AnimatedCounter } from '@/components/agri/nutri-tools/AnimatedCounter';
+import { LanguageToggle } from '@/components/language-toggle';
 
 export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
@@ -58,6 +59,7 @@ export default function LandingPage() {
             <a href="#stats" className="text-muted-foreground hover:text-foreground transition-colors">Stats</a>
             <a href="#founder" className="text-muted-foreground hover:text-foreground transition-colors">Founder</a>
             <Link href="/app" className="text-muted-foreground hover:text-foreground transition-colors">Open App</Link>
+            <LanguageToggle />
           </div>
           <Link href="/app" className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-gradient-to-r from-emerald-600 to-green-700 text-white text-xs sm:text-sm font-medium hover:shadow-lg hover:scale-105 transition-all">
             Launch App <ArrowRight className="h-3.5 w-3.5" />

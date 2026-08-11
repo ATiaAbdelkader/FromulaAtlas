@@ -220,15 +220,15 @@ export default function Page() {
               <ApiDocsButton />
               <TelegramConnectButton />
               {installPromptEvent && !isInstalled && (
-                <Button size="sm" onClick={handleInstall} className="gap-1.5 text-xs h-9 bg-emerald-600 hover:bg-emerald-700" title="Install Formula Atlas as an app">
+                <Button size="sm" onClick={handleInstall} className="gap-1.5 text-xs h-9 bg-emerald-600 hover:bg-emerald-700" title={t.installApp}>
                   <Download className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">Install App</span>
+                  <span className="hidden sm:inline">{t.installApp}</span>
                 </Button>
               )}
               {isInstalled && (
-                <span className="hidden sm:flex items-center gap-1 text-xs text-emerald-600 px-2" title="App installed">
+                <span className="hidden sm:flex items-center gap-1 text-xs text-emerald-600 px-2" title={t.installed}>
                   <CheckCircle2 className="h-3.5 w-3.5" />
-                  <span className="hidden lg:inline">Installed</span>
+                  <span className="hidden lg:inline">{t.installed}</span>
                 </span>
               )}
               <LanguageToggle />
@@ -236,7 +236,7 @@ export default function Page() {
                 <div className="lg:hidden">
                   <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
                     <SheetTrigger asChild>
-                      <Button variant="outline" size="sm" className="gap-2"><Layers className="h-4 w-4" />Browse</Button>
+                      <Button variant="outline" size="sm" className="gap-2"><Layers className="h-4 w-4" />{t.browse}</Button>
                     </SheetTrigger>
                     <SheetContent side="left" className="p-0 gap-0 w-[340px] sm:w-[380px] overflow-hidden">{sidebarContent}</SheetContent>
                   </Sheet>
@@ -264,12 +264,12 @@ export default function Page() {
         <div className="border-t border-border bg-muted/30">
           <div className="max-w-[1600px] mx-auto px-4 sm:px-6">
             <div className="flex items-center gap-1 overflow-x-auto">
-              <TabButton active={activeTab === 'home'} onClick={() => setActiveTab('home')} icon={Home} label="Home" />
-              <TabButton active={activeTab === 'formulas'} onClick={() => setActiveTab('formulas')} icon={BookOpen} label="Formulas" badge={allFormulas.length} />
-              <TabButton active={activeTab === 'tools'} onClick={() => setActiveTab('tools')} icon={Wrench} label="Tools" />
-              <TabButton active={activeTab === 'farm'} onClick={() => setActiveTab('farm')} icon={Tractor} label="Farm" />
-              <TabButton active={activeTab === 'insights'} onClick={() => setActiveTab('insights')} icon={Sparkles} label="Insights" />
-              <TabButton active={activeTab === 'about'} onClick={() => setActiveTab('about')} icon={Users} label="About" />
+              <TabButton active={activeTab === 'home'} onClick={() => setActiveTab('home')} icon={Home} label={t.tabHome} />
+              <TabButton active={activeTab === 'formulas'} onClick={() => setActiveTab('formulas')} icon={BookOpen} label={t.tabFormulas} badge={allFormulas.length} />
+              <TabButton active={activeTab === 'tools'} onClick={() => setActiveTab('tools')} icon={Wrench} label={t.tabTools} />
+              <TabButton active={activeTab === 'farm'} onClick={() => setActiveTab('farm')} icon={Tractor} label={t.tabFarm} />
+              <TabButton active={activeTab === 'insights'} onClick={() => setActiveTab('insights')} icon={Sparkles} label={t.tabInsights} />
+              <TabButton active={activeTab === 'about'} onClick={() => setActiveTab('about')} icon={Users} label={t.tabAbout} />
             </div>
           </div>
         </div>
@@ -287,8 +287,8 @@ export default function Page() {
           <SeasonScheduler />
 
           <CollapsibleSection
-            title="Achievements & Leaderboard"
-            description="Badges · Levels · Points · Global ranking · Progress tracking"
+            title={t.achievements}
+            description={t.achievementsDesc}
             icon={Trophy}
             color="#7c3aed"
             storageKey="collapse_gamification"
@@ -305,13 +305,13 @@ export default function Page() {
       {activeTab === 'farm' && (
         <main className="flex-1 max-w-[1200px] mx-auto w-full p-4 sm:p-6 space-y-6">
           <div className="rounded-xl p-4 bg-gradient-to-r from-emerald-600 to-green-700 text-white">
-            <div className="flex items-center gap-2"><Tractor className="h-5 w-5" /><h2 className="text-lg font-bold">Farm Management</h2></div>
-            <p className="text-xs text-emerald-100 mt-1">Fields · Crops · Soil · Livestock · Irrigation · Protection — 10 tools</p>
+            <div className="flex items-center gap-2"><Tractor className="h-5 w-5" /><h2 className="text-lg font-bold">{t.farmManagement}</h2></div>
+            <p className="text-xs text-emerald-100 mt-1">{t.farmManagementSubtitle}</p>
           </div>
 
           {/* Sub-category: Fields & Crops */}
           <div className="space-y-3">
-            <SubHeader emoji="🌱" label="Fields & Crops" />
+            <SubHeader emoji="🌱" label={t.fieldsAndCrops} />
             <CollapsibleSection title="Multi-Field Dashboard" description="Track every field, crop stage and irrigation demand in one place" icon={Layers} color="#16a34a" storageKey="collapse_multifield" defaultOpen={false}><div className="p-4"><MultiFieldDashboard /></div></CollapsibleSection>
             <CollapsibleSection title="Coordinate Converter" description="DMS ↔ Decimal · UTM ↔ Lat/Lng · Batch CSV conversion (WGS84)" icon={MapPin} color="#6366f1" storageKey="collapse_coords" defaultOpen={false}><div className="p-4"><CoordinateConverter /></div></CollapsibleSection>
             <CollapsibleSection title="Field Boundary Importer" description="Import GeoJSON · KML · WKT · CSV · Area/perimeter/centroid · Convert & export · SVG preview" icon={Shapes} color="#10b981" storageKey="collapse_boundary" defaultOpen={false}><div className="p-4"><FieldBoundaryImporter /></div></CollapsibleSection>
@@ -332,7 +332,7 @@ export default function Page() {
 
           {/* Sub-category: Plant Protection */}
           <div className="space-y-3">
-            <SubHeader emoji="🛡️" label="Plant Protection" />
+            <SubHeader emoji="🛡️" label={t.plantProtection} />
             <CollapsibleSection title="Field Scouting Log" description="Voice + photo field observations with severity tagging" icon={Sprout} color="#84cc16" storageKey="collapse_scouting" defaultOpen={false}><div className="p-4"><FieldScoutingLog /></div></CollapsibleSection>
             <CollapsibleSection title="Pest Threshold Calculator" description="EIL · action threshold · sequential sampling — 5 pest types" icon={Bug} color="#dc2626" storageKey="collapse_pest_threshold" defaultOpen={false}><div className="p-4"><PestThresholdCalculator /></div></CollapsibleSection>
             <CollapsibleSection title="Pesticide Dose + PHI Calculator" description="AI rate → product rate · Tank mix · Rainfast · Pre-harvest interval countdown · 5 herbicides" icon={FlaskConical} color="#dc2626" storageKey="collapse_pesticide" defaultOpen={false}><div className="p-4"><PesticideDoseCalculator /></div></CollapsibleSection>
@@ -347,7 +347,7 @@ export default function Page() {
 
           {/* Sub-category: Soil & Livestock */}
           <div className="space-y-3">
-            <SubHeader emoji="🧪" label="Soil & Livestock" />
+            <SubHeader emoji="🧪" label={t.soilAndLivestock} />
             <CollapsibleSection title="Soil Test History Tracker" description="Multi-year soil test tracking · Trend charts · Amendment recommendations · PDF export" icon={FlaskConical} color="#8b5cf6" storageKey="collapse_soil_history" defaultOpen={false}><div className="p-4"><SoilTestHistoryTracker /></div></CollapsibleSection>
             <CollapsibleSection title="Soil Color Identifier" description="Munsell color → mineral + drainage + iron status · US state soils · 13 minerals · 50 states" icon={Mountain} color="#78716c" storageKey="collapse_soil_color" defaultOpen={false}><div className="p-4"><SoilColorIdentifier /></div></CollapsibleSection>
             <CollapsibleSection title="Soil Texture Triangle" description="Interactive ternary diagram · USDA/SSEW/International classification · soil properties + management recommendations" icon={Mountain} color="#78716c" storageKey="collapse_soil_texture" defaultOpen={false}><div className="p-4"><SoilTextureTriangle /></div></CollapsibleSection>
@@ -370,7 +370,7 @@ export default function Page() {
 
           {/* Sub-category: Irrigation */}
           <div className="space-y-3">
-            <SubHeader emoji="💧" label="Irrigation" />
+            <SubHeader emoji="💧" label={t.irrigation} />
             <CollapsibleSection title="Irrigation Program Generator" description="Decadal (10-day) irrigation schedule from the BRL/COM memento" icon={Droplets} color="#0ea5e9" storageKey="collapse_irrigation" defaultOpen={false}><div className="p-4"><IrrigationProgramGenerator /></div></CollapsibleSection>
             <CollapsibleSection title="Irrigation System Designer" description="Multi-zone sprinkler / drip / bubbler designer with pump sizing" icon={Settings} color="#6366f1" storageKey="collapse_system_design" defaultOpen={false}><div className="p-4"><IrrigationSystemDesigner /></div></CollapsibleSection>
             <CollapsibleSection title="Seasonal Irrigation Planner" description="Season-by-season irrigation focus, risks and recommendations" icon={Calendar} color="#f59e0b" storageKey="collapse_seasonal" defaultOpen={false}><div className="p-4"><SeasonScheduler /></div></CollapsibleSection>
@@ -384,13 +384,13 @@ export default function Page() {
       {activeTab === 'insights' && (
         <main className="flex-1 max-w-[1200px] mx-auto w-full p-4 sm:p-6 space-y-6">
           <div className="rounded-xl p-4 bg-gradient-to-r from-indigo-600 to-violet-700 text-white">
-            <div className="flex items-center gap-2"><Sparkles className="h-5 w-5" /><h2 className="text-lg font-bold">Intelligence & Insights</h2></div>
-            <p className="text-xs text-indigo-100 mt-1">Satellite · Weather · AI · Financial · Marketplace · Community — 8 tools</p>
+            <div className="flex items-center gap-2"><Sparkles className="h-5 w-5" /><h2 className="text-lg font-bold">{t.intelligenceAndInsights}</h2></div>
+            <p className="text-xs text-indigo-100 mt-1">{t.intelligenceAndInsightsSubtitle}</p>
           </div>
 
           {/* Sub-category: Intelligence */}
           <div className="space-y-3">
-            <SubHeader emoji="🛰️" label="Intelligence & AI" />
+            <SubHeader emoji="🛰️" label={t.intelligenceAndAI} />
             <CollapsibleSection title="NDVI Satellite Field Maps" description="Vegetation health heatmap · Stress zone detection · AI recommendations · PDF export" icon={Satellite} color="#6366f1" storageKey="collapse_ndvi" defaultOpen={false}><div className="p-4"><NdviFieldMaps /></div></CollapsibleSection>
             <CollapsibleSection title="Weather Radar + Frost Maps" description="Live 7-day forecast · Frost risk · Heat warnings · Spray windows · Microclimate" icon={CloudRain} color="#0ea5e9" storageKey="collapse_weather_radar" defaultOpen={false}><div className="p-4"><WeatherRadar /></div></CollapsibleSection>
             <CollapsibleSection title="Smart Agriculture Suite" description="Disease detection · crop recommendation · fertilizer guidance" icon={Bug} color="#65a30d" storageKey="collapse_agriplanner" defaultOpen={false}><div className="p-4"><AgriPlannerSuite /></div></CollapsibleSection>
@@ -399,7 +399,7 @@ export default function Page() {
 
           {/* Sub-category: Business */}
           <div className="space-y-3">
-            <SubHeader emoji="💰" label="Business & Marketplace" />
+            <SubHeader emoji="💰" label={t.businessAndMarketplace} />
             <CollapsibleSection title="Financial Dashboard" description="Costs · Revenue · Gross margin · Break-even · ROI · What-if scenario analysis" icon={DollarSign} color="#f59e0b" storageKey="collapse_financial" defaultOpen={false}><div className="p-4"><FinancialDashboard /></div></CollapsibleSection>
             <CollapsibleSection title="Marketplace — Buy Fertilizers & Supplies" description="Price comparison from 3 suppliers · Shopping cart · Order export" icon={ShoppingCart} color="#f59e0b" storageKey="collapse_marketplace" defaultOpen={false}><div className="p-4"><Marketplace /></div></CollapsibleSection>
             <CollapsibleSection title="Sustainability Scorecard" description="5 traffic-light metrics — NUE, water, carbon, soil, pesticides" icon={Leaf} color="#16a34a" storageKey="collapse_sustainability" defaultOpen={false}><div className="p-4"><SustainabilityScorecard /></div></CollapsibleSection>
@@ -411,14 +411,14 @@ export default function Page() {
 
           {/* Sub-category: Community & Reports */}
           <div className="space-y-3">
-            <SubHeader emoji="👥" label="Community & Reports" />
+            <SubHeader emoji="👥" label={t.communityAndReports} />
             <CollapsibleSection title="Farmer Community & Knowledge Exchange" description="Share experiences · Ask questions · Benchmark your farm · Success stories" icon={Users} color="#3b82f6" storageKey="collapse_community" defaultOpen={false}><div className="p-4"><FarmerCommunity /></div></CollapsibleSection>
             <CollapsibleSection title="Professional Report Generator" description="Branded multi-page PDF · Combines all data · Cover page · AI recommendations" icon={FileText} color="#0ea5e9" storageKey="collapse_report" defaultOpen={false}><div className="p-4"><ReportGenerator /></div></CollapsibleSection>
           </div>
 
           {/* Sub-category: Settings & Integrations */}
           <div className="space-y-3">
-            <SubHeader emoji="🔌" label="Settings & Integrations" />
+            <SubHeader emoji="🔌" label={t.settingsAndIntegrations} />
             <CollapsibleSection title="Service Integrations" description="Plug in free-tier services — Clerk auth, Neon Postgres, OneSignal push, MapTiler maps, Gemini AI" icon={Settings} color="#64748b" storageKey="collapse_integrations" defaultOpen={false}><div className="p-4"><ServiceIntegrations /></div></CollapsibleSection>
           </div>
         </main>
@@ -437,18 +437,18 @@ export default function Page() {
             />
             <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
               <div className="flex items-center gap-2 flex-wrap min-w-0">
-                <h2 className="text-lg font-semibold">{selectedChapter !== null && currentChapterInfo ? `Section ${currentChapterInfo.number}: ${currentChapterInfo.title}` : selectedPart ? selectedPart : t.allFormulas}</h2>
-                <Badge variant="secondary" className="font-mono">{filteredFormulas.length} of {allFormulas.length}</Badge>
+                <h2 className="text-lg font-semibold">{selectedChapter !== null && currentChapterInfo ? `${t.sectionLabel} ${currentChapterInfo.number}: ${currentChapterInfo.title}` : selectedPart ? selectedPart : t.allFormulas}</h2>
+                <Badge variant="secondary" className="font-mono">{filteredFormulas.length} {t.ofFormulas} {allFormulas.length}</Badge>
               </div>
-              {hasActiveFilters && <Button variant="outline" size="sm" onClick={handleClearFilters} className="gap-1.5 text-xs"><X className="h-3.5 w-3.5" />Clear</Button>}
+              {hasActiveFilters && <Button variant="outline" size="sm" onClick={handleClearFilters} className="gap-1.5 text-xs"><X className="h-3.5 w-3.5" />{t.clear}</Button>}
             </div>
 
             {hasActiveFilters && (
               <div className="flex items-center gap-2 mb-4 flex-wrap">
                 <Filter className="h-4 w-4 text-muted-foreground" />
-                {selectedPart && <Badge variant="outline" className="gap-1.5">Part: {selectedPart}<button onClick={() => { setSelectedPart(null); setSelectedChapter(null); }}><X className="h-3 w-3" /></button></Badge>}
-                {selectedChapter !== null && <Badge variant="outline" className="gap-1.5">Section: {selectedChapter}<button onClick={() => setSelectedChapter(null)}><X className="h-3 w-3" /></button></Badge>}
-                {onlyWithCalculators && <Badge variant="outline" className="gap-1.5">Calculator only<button onClick={() => setOnlyWithCalculators(false)}><X className="h-3 w-3" /></button></Badge>}
+                {selectedPart && <Badge variant="outline" className="gap-1.5">{t.partLabel}: {selectedPart}<button onClick={() => { setSelectedPart(null); setSelectedChapter(null); }}><X className="h-3 w-3" /></button></Badge>}
+                {selectedChapter !== null && <Badge variant="outline" className="gap-1.5">{t.sectionLabel}: {selectedChapter}<button onClick={() => setSelectedChapter(null)}><X className="h-3 w-3" /></button></Badge>}
+                {onlyWithCalculators && <Badge variant="outline" className="gap-1.5">{t.calculatorOnly}<button onClick={() => setOnlyWithCalculators(false)}><X className="h-3 w-3" /></button></Badge>}
                 {searchQuery && <Badge variant="outline" className="gap-1.5">&quot;{searchQuery}&quot;<button onClick={() => setSearchQuery('')}><X className="h-3 w-3" /></button></Badge>}
               </div>
             )}
@@ -458,8 +458,8 @@ export default function Page() {
             {filteredFormulas.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <div className="rounded-full bg-muted p-4 mb-3"><Search className="h-8 w-8 text-muted-foreground" /></div>
-                <h3 className="text-lg font-semibold mb-1">No formulas match</h3>
-                <Button onClick={handleClearFilters} variant="outline" size="sm" className="mt-2">Clear filters</Button>
+                <h3 className="text-lg font-semibold mb-1">{t.noFormulasMatch}</h3>
+                <Button onClick={handleClearFilters} variant="outline" size="sm" className="mt-2">{t.clearFilters}</Button>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -478,9 +478,9 @@ export default function Page() {
             <div className="flex items-center justify-center h-12 w-12 rounded-full bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 mx-auto mb-3">
               <Wrench className="h-6 w-6" />
             </div>
-            <h3 className="text-base font-semibold mb-1">Guided Workflows</h3>
+            <h3 className="text-base font-semibold mb-1">{t.guidedWorkflows}</h3>
             <p className="text-sm text-muted-foreground mb-4 max-w-md mx-auto">
-              Step-by-step calculators that solve common farm tasks. Pick a goal and walk through it.
+              {t.guidedWorkflowsDesc}
             </p>
           </div>
           <UseCasesSection onLaunch={(wf) => { setActiveWorkflow(wf); setWorkflowOpen(true); }} />
@@ -497,9 +497,9 @@ export default function Page() {
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <div className="flex items-center gap-2 text-sm text-muted-foreground"><Sprout className="h-4 w-4 text-emerald-600" /><span>{t.appName} · {handbook.meta.version}</span></div>
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
-            <Link href="/" className="hover:text-foreground transition-colors">Landing Page</Link>
-            <Link href="/about" className="hover:text-foreground transition-colors">About</Link>
-            <span>{handbook.meta.total_formulas} formulas · {handbook.meta.total_parts} parts · {handbook.meta.total_chapters} sections</span>
+            <Link href="/" className="hover:text-foreground transition-colors">{t.openLanding}</Link>
+            <Link href="/about" className="hover:text-foreground transition-colors">{t.aboutLink}</Link>
+            <span>{handbook.meta.total_formulas} {t.footerFormulas} · {handbook.meta.total_parts} {t.footerParts} · {handbook.meta.total_chapters} {t.footerSections}</span>
           </div>
         </div>
       </footer>
@@ -562,28 +562,29 @@ function MobileBottomNav({ activeTab, onTabChange, onSearch }: {
   onTabChange: (tab: TabId) => void;
   onSearch: () => void;
 }) {
+  const { t } = useTranslation();
   const tabs: { id: TabId; icon: typeof Home; label: string }[] = [
-    { id: 'home', icon: Home, label: 'Home' },
-    { id: 'farm', icon: Tractor, label: 'Farm' },
-    { id: 'insights', icon: Sparkles, label: 'Insights' },
-    { id: 'formulas', icon: BookOpen, label: 'Formulas' },
+    { id: 'home', icon: Home, label: t.tabHome },
+    { id: 'farm', icon: Tractor, label: t.tabFarm },
+    { id: 'insights', icon: Sparkles, label: t.tabInsights },
+    { id: 'formulas', icon: BookOpen, label: t.tabFormulas },
   ];
   return (
     <nav className="sm:hidden fixed bottom-0 inset-x-0 z-40 border-t bg-background/95 backdrop-blur-md safe-area-pb">
       <div className="grid grid-cols-5 items-center h-14">
-        {tabs.slice(0, 2).map(t => (
-          <MobileTabButton key={t.id} active={activeTab === t.id} icon={t.icon} label={t.label} onClick={() => onTabChange(t.id)} />
+        {tabs.slice(0, 2).map(tab => (
+          <MobileTabButton key={tab.id} active={activeTab === tab.id} icon={tab.icon} label={tab.label} onClick={() => onTabChange(tab.id)} />
         ))}
         {/* Center search button */}
         <button
           onClick={onSearch}
           className="flex flex-col items-center justify-center -mt-4 mx-auto w-12 h-12 rounded-full bg-gradient-to-br from-emerald-600 to-green-700 text-white shadow-lg active:scale-95 transition-transform"
-          title="Search (⌘K)"
+          title={`${t.searchTitle} (⌘K)`}
         >
           <Search className="h-5 w-5" />
         </button>
-        {tabs.slice(2).map(t => (
-          <MobileTabButton key={t.id} active={activeTab === t.id} icon={t.icon} label={t.label} onClick={() => onTabChange(t.id)} />
+        {tabs.slice(2).map(tab => (
+          <MobileTabButton key={tab.id} active={activeTab === tab.id} icon={tab.icon} label={tab.label} onClick={() => onTabChange(tab.id)} />
         ))}
       </div>
     </nav>
@@ -627,6 +628,7 @@ function QuickNav({ icon: Icon, label, desc, color, onClick }: { icon: typeof Ho
  */
 function SeasonPlanGeneratorWrapper() {
   const [open, setOpen] = useState(false);
+  const { t } = useTranslation();
   return (
     <div className="space-y-3">
       <div className="rounded-lg border-2 border-emerald-200 dark:border-emerald-900 bg-gradient-to-br from-emerald-50/60 to-green-50/40 dark:from-emerald-950/20 dark:to-green-950/10 p-4">
