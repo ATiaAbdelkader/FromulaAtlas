@@ -98,6 +98,7 @@ import type { Formula } from '@/lib/types';
 import type { Workflow } from '@/lib/workflows';
 import { useTranslation } from '@/lib/language-store';
 import { cn } from '@/lib/utils';
+import { FormulaExplorer } from '@/components/agri/formula-explorer';
 
 type TabId = 'home' | 'formulas' | 'tools' | 'farm' | 'insights' | 'about';
 
@@ -435,50 +436,18 @@ export default function Page() {
         </main>
       )}
 
-      {/* FORMULAS TAB */}
+      {/* FORMULAS TAB — new FormulaExplorer with view toggle */}
       {activeTab === 'formulas' && (
-        <div className="flex-1 max-w-[1600px] mx-auto w-full flex">
-          <aside className="hidden lg:block w-[300px] flex-shrink-0 border-r border-border bg-background sticky top-[160px] h-[calc(100vh-160px)] overflow-hidden">{sidebarContent}</aside>
-          <main className="flex-1 min-w-0 p-4 sm:p-6">
-            <BookmarkedFormulas
-              bookmarks={bookmarks}
-              formulas={allFormulas}
-              onSelect={handleSelectFormula}
-              onRemove={(code) => { toggleBookmark(code); setBookmarks(prev => prev.filter(c => c !== code)); }}
-            />
-            <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
-              <div className="flex items-center gap-2 flex-wrap min-w-0">
-                <h2 className="text-lg font-semibold">{selectedChapter !== null && currentChapterInfo ? `${t.sectionLabel} ${currentChapterInfo.number}: ${currentChapterInfo.title}` : selectedPart ? selectedPart : t.allFormulas}</h2>
-                <Badge variant="secondary" className="font-mono">{filteredFormulas.length} {t.ofFormulas} {allFormulas.length}</Badge>
-              </div>
-              {hasActiveFilters && <Button variant="outline" size="sm" onClick={handleClearFilters} className="gap-1.5 text-xs"><X className="h-3.5 w-3.5" />{t.clear}</Button>}
-            </div>
-
-            {hasActiveFilters && (
-              <div className="flex items-center gap-2 mb-4 flex-wrap">
-                <Filter className="h-4 w-4 text-muted-foreground" />
-                {selectedPart && <Badge variant="outline" className="gap-1.5">{t.partLabel}: {selectedPart}<button onClick={() => { setSelectedPart(null); setSelectedChapter(null); }}><X className="h-3 w-3" /></button></Badge>}
-                {selectedChapter !== null && <Badge variant="outline" className="gap-1.5">{t.sectionLabel}: {selectedChapter}<button onClick={() => setSelectedChapter(null)}><X className="h-3 w-3" /></button></Badge>}
-                {onlyWithCalculators && <Badge variant="outline" className="gap-1.5">{t.calculatorOnly}<button onClick={() => setOnlyWithCalculators(false)}><X className="h-3 w-3" /></button></Badge>}
-                {searchQuery && <Badge variant="outline" className="gap-1.5">&quot;{searchQuery}&quot;<button onClick={() => setSearchQuery('')}><X className="h-3 w-3" /></button></Badge>}
-              </div>
-            )}
-
-            {currentChapterInfo?.intro && <div className="bg-card border border-border rounded-lg p-4 mb-5"><p className="text-sm text-muted-foreground leading-relaxed">{currentChapterInfo.intro}</p></div>}
-
-            {filteredFormulas.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 text-center">
-                <div className="rounded-full bg-muted p-4 mb-3"><Search className="h-8 w-8 text-muted-foreground" /></div>
-                <h3 className="text-lg font-semibold mb-1">{t.noFormulasMatch}</h3>
-                <Button onClick={handleClearFilters} variant="outline" size="sm" className="mt-2">{t.clearFilters}</Button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                {filteredFormulas.map(formula => <FormulaCard key={`${formula.code}-${formula.part}`} formula={formula} onSelect={handleSelectFormula} />)}
-              </div>
-            )}
-          </main>
-        </div>
+        <main className="flex-1 max-w-[1600px] mx-auto w-full p-4 sm:p-6">
+          <FormulaExplorer
+            classicSidebar={sidebarContent}
+            searchQuery={searchQuery}
+            onSearchQueryChange={setSearchQuery}
+            selectedPart={selectedPart}
+            selectedChapter={selectedChapter}
+            onlyWithCalculators={onlyWithCalculators}
+          />
+        </main>
       )}
 
       {/* TOOLS TAB */}

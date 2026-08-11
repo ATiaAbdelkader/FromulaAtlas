@@ -1,0 +1,450 @@
+'use client';
+
+/**
+ * FormulaExplorer — replaces the textbook-style Part/Chapter sidebar
+ * with a problem-driven, visual, multi-view browsing experience.
+ *
+ * Three views:
+ *   1. Explorer (default) — 8 scenario cards → visual formula grid
+ *   2. Classic — the original Part/Chapter sidebar (preserved)
+ *   3. Graph — formula relationship map (uses FormulaGraph)
+ *
+ * The Explorer view groups 500 formulas into 8 real-world scenarios
+ * ("Manage My Water", "Test My Soil", etc.) instead of 44 academic
+ * Parts. Users pick what they want to DO, not what chapter to READ.
+ */
+
+import { useState, useMemo } from 'react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import {
+  Search, X, ArrowRight, Sparkles, BookOpen, Network as GraphIcon,
+  Star, Clock, Calculator, Filter, Layers, ChevronRight,
+} from 'lucide-react';
+import { FormulaCard, hasCalculator } from './formula-card';
+import { FormulaDetailDialog } from './formula-detail-dialog';
+import { allFormulas } from '@/lib/formulas-data';
+import {
+  FORMULA_SCENARIOS, getFormulaScenarios, getScenarioCounts,
+  type FormulaScenario,
+} from '@/lib/formula-scenarios';
+import { getBookmarks } from '@/lib/formula-bookmarks';
+import { useTranslation } from '@/lib/language-store';
+import { cn } from '@/lib/utils';
+import type { Formula } from '@/lib/types';
+
+type ViewMode = 'explorer' | 'classic' | 'graph';
+type QuickFilter = 'all' | 'calculator' | 'recent' | 'bookmarked';
+
+interface FormulaExplorerProps {
+  /** The classic sidebar (passed from parent when view = 'classic') */
+  classicSidebar?: React.ReactNode;
+  /** Search query from parent (shared between views) */
+  searchQuery: string;
+  onSearchQueryChange: (q: string) => void;
+  /** Selected part from parent (used in classic mode) */
+  selectedPart: string | null;
+  selectedChapter: number | null;
+  onlyWithCalculators: boolean;
+}
+
+export function FormulaExplorer({
+  classicSidebar,
+  searchQuery,
+  onSearchQueryChange,
+  selectedPart,
+  selectedChapter,
+  onlyWithCalculators,
+}: FormulaExplorerProps) {
+  const { t, isRTL } = useTranslation();
+  const [view, setView] = useState<ViewMode>('explorer');
+  const [activeScenario, setActiveScenario] = useState<string | null>(null);
+  const [quickFilter, setQuickFilter] = useState<QuickFilter>('all');
+  const [selectedFormula, setSelectedFormula] = useState<Formula | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  // Bookmarks + recents
+  const [bookmarks] = useState<string[]>(() => getBookmarks());
+  const recents = useMemo(() => {
+    try {
+      const raw = localStorage.getItem('nutriplant_recents_v1');
+      return raw ? JSON.parse(raw).map((r: any) => r.code || r) : [];
+    } catch { return []; }
+  }, []);
+
+  // Scenario counts
+  const scenarioCounts = useMemo(() => getScenarioCounts(allFormulas), []);
+
+  // Filtered formulas based on active scenario + quick filter + search
+  const filteredFormulas = useMemo(() => {
+    let result = allFormulas;
+
+    // Scenario filter
+    if (activeScenario) {
+      result = result.filter(f => getFormulaScenarios(f).includes(activeScenario));
+    }
+
+    // Quick filter
+    if (quickFilter === 'calculator') {
+      result = result.filter(f => hasCalculator(f.code));
+    } else if (quickFilter === 'bookmarked') {
+      result = result.filter(f => bookmarks.includes(f.code));
+    } else if (quickFilter === 'recent') {
+      result = result.filter(f => recents.includes(f.code));
+    }
+
+    // Search
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      const terms = q.split(/\s+/).filter(Boolean);
+      result = result.filter(f => {
+        const haystack = `${f.code} ${f.name} ${(f as any).name_ar || ''} ${f.formula} ${f.variables} ${f.purpose} ${f.part}`.toLowerCase();
+        return terms.every(t => haystack.includes(t));
+      });
+    }
+
+    // Calculator-only toggle (from parent)
+    if (onlyWithCalculators) {
+      result = result.filter(f => hasCalculator(f.code));
+    }
+
+    return result;
+  }, [activeScenario, quickFilter, searchQuery, onlyWithCalculators, bookmarks, recents]);
+
+  const handleSelectFormula = (formula: Formula) => {
+    setSelectedFormula(formula);
+    setDialogOpen(true);
+  };
+
+  // ========================================================================
+  // EXPLORER VIEW — scenario hub + visual formula grid
+  // ========================================================================
+  if (view === 'explorer') {
+    return (
+      <div className="flex-1 min-w-0">
+        {/* View toggle + search bar */}
+        <div className="flex items-center gap-3 mb-4 flex-wrap">
+          <ViewToggle view={view} onViewChange={setView} isRTL={isRTL} />
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Input
+              type="search"
+              placeholder={t.searchPlaceholder}
+              value={searchQuery}
+              onChange={e => onSearchQueryChange(e.target.value)}
+              className="pl-9 pr-10 h-10 text-sm"
+            />
+            {searchQuery && (
+              <button onClick={() => onSearchQueryChange('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Quick filter chips */}
+        <div className="flex items-center gap-1.5 mb-4 flex-wrap">
+          <Filter className="h-3.5 w-3.5 text-muted-foreground" />
+          <QuickFilterChip active={quickFilter === 'all' && !activeScenario} onClick={() => { setQuickFilter('all'); setActiveScenario(null); }} label={t.allFormulas} count={allFormulas.length} />
+          <QuickFilterChip active={quickFilter === 'calculator'} onClick={() => { setQuickFilter('calculator'); setActiveScenario(null); }} label={t.interactiveCalculators} count={allFormulas.filter(f => hasCalculator(f.code)).length} icon={Calculator} />
+          <QuickFilterChip active={quickFilter === 'recent'} onClick={() => { setQuickFilter('recent'); setActiveScenario(null); }} label={isRTL ? 'شوهد مؤخراً' : 'Recently Used'} count={recents.length} icon={Clock} />
+          <QuickFilterChip active={quickFilter === 'bookmarked'} onClick={() => { setQuickFilter('bookmarked'); setActiveScenario(null); }} label={isRTL ? 'المفضّلة' : 'Bookmarked'} count={bookmarks.length} icon={Star} />
+        </div>
+
+        {/* Scenario hub — only when no scenario selected and no quick filter active */}
+        {!activeScenario && quickFilter === 'all' && !searchQuery && (
+          <div className="mb-6">
+            <div className="flex items-center gap-2 mb-3">
+              <Sparkles className="h-4 w-4 text-emerald-600" />
+              <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
+                {isRTL ? 'تصفّح حسب السيناريو' : 'Browse by Scenario'}
+              </h2>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              {FORMULA_SCENARIOS.map(scenario => (
+                <ScenarioCard
+                  key={scenario.id}
+                  scenario={scenario}
+                  count={scenarioCounts[scenario.id] || 0}
+                  isRTL={isRTL}
+                  onClick={() => setActiveScenario(scenario.id)}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Active scenario header */}
+        {activeScenario && (
+          <div className="mb-4 flex items-center gap-3">
+            <Button variant="ghost" size="sm" onClick={() => setActiveScenario(null)} className="gap-1 text-xs">
+              <X className="h-3.5 w-3.5" /> {isRTL ? 'كل السيناريوهات' : 'All scenarios'}
+            </Button>
+            {(() => {
+              const s = FORMULA_SCENARIOS.find(x => x.id === activeScenario);
+              if (!s) return null;
+              return (
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">{s.emoji}</span>
+                  <div>
+                    <div className="text-sm font-bold" style={{ color: s.color }}>
+                      {isRTL ? s.title_ar : s.title}
+                    </div>
+                    <div className="text-[10px] text-muted-foreground">
+                      {scenarioCounts[s.id]} {isRTL ? 'معادلة' : 'formulas'}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        )}
+
+        {/* Formula count + results */}
+        <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-semibold">
+              {searchQuery || activeScenario || quickFilter !== 'all'
+                ? `${filteredFormulas.length} ${isRTL ? 'نتيجة' : 'results'}`
+                : isRTL ? 'كل المعادلات' : t.allFormulas}
+            </h3>
+            <Badge variant="secondary" className="font-mono">{filteredFormulas.length} / {allFormulas.length}</Badge>
+          </div>
+        </div>
+
+        {/* Formula grid */}
+        {filteredFormulas.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="rounded-full bg-muted p-4 mb-3"><Search className="h-8 w-8 text-muted-foreground" /></div>
+            <h3 className="text-lg font-semibold mb-1">{t.noFormulasMatch}</h3>
+            <Button onClick={() => { setActiveScenario(null); setQuickFilter('all'); onSearchQueryChange(''); }} variant="outline" size="sm" className="mt-2">{t.clearFilters}</Button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+            {filteredFormulas.map(formula => (
+              <FormulaCard key={`${formula.code}-${formula.part}`} formula={formula} onSelect={handleSelectFormula} />
+            ))}
+          </div>
+        )}
+
+        <FormulaDetailDialog formula={selectedFormula} open={dialogOpen} onOpenChange={setDialogOpen} />
+      </div>
+    );
+  }
+
+  // ========================================================================
+  // CLASSIC VIEW — preserves the original sidebar + grid layout
+  // ========================================================================
+  if (view === 'classic') {
+    return (
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-3 mb-4">
+          <ViewToggle view={view} onViewChange={setView} isRTL={isRTL} />
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Input
+              type="search"
+              placeholder={t.searchPlaceholder}
+              value={searchQuery}
+              onChange={e => onSearchQueryChange(e.target.value)}
+              className="pl-9 pr-10 h-10 text-sm"
+            />
+            {searchQuery && <button onClick={() => onSearchQueryChange('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>}
+          </div>
+        </div>
+
+        <div className="flex gap-4">
+          {classicSidebar && (
+            <aside className="hidden lg:block w-[300px] flex-shrink-0 border-r border-border bg-background sticky top-[160px] h-[calc(100vh-160px)] overflow-hidden">
+              {classicSidebar}
+            </aside>
+          )}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+              <div className="flex items-center gap-2 flex-wrap min-w-0">
+                <h2 className="text-lg font-semibold">
+                  {selectedChapter !== null
+                    ? `${t.sectionLabel} ${selectedChapter}`
+                    : selectedPart ?? t.allFormulas}
+                </h2>
+                <Badge variant="secondary" className="font-mono">{filteredFormulas.length} / {allFormulas.length}</Badge>
+              </div>
+              {onlyWithCalculators && <Badge variant="outline" className="gap-1.5 text-xs"><Calculator className="h-3 w-3" /> {t.calculatorOnly}</Badge>}
+            </div>
+            {filteredFormulas.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <div className="rounded-full bg-muted p-4 mb-3"><Search className="h-8 w-8 text-muted-foreground" /></div>
+                <h3 className="text-lg font-semibold mb-1">{t.noFormulasMatch}</h3>
+                <Button onClick={() => onSearchQueryChange('')} variant="outline" size="sm" className="mt-2">{t.clear}</Button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                {filteredFormulas.map(formula => <FormulaCard key={`${formula.code}-${formula.part}`} formula={formula} onSelect={handleSelectFormula} />)}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <FormulaDetailDialog formula={selectedFormula} open={dialogOpen} onOpenChange={setDialogOpen} />
+      </div>
+    );
+  }
+
+  // ========================================================================
+  // GRAPH VIEW — visual formula relationship map
+  // ========================================================================
+  return (
+    <div className="flex-1 min-w-0">
+      <div className="flex items-center gap-3 mb-4">
+        <ViewToggle view={view} onViewChange={setView} isRTL={isRTL} />
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+          <Input
+            type="search"
+            placeholder={t.searchPlaceholder}
+            value={searchQuery}
+            onChange={e => onSearchQueryChange(e.target.value)}
+            className="pl-9 pr-10 h-10 text-sm"
+          />
+          {searchQuery && <button onClick={() => onSearchQueryChange('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>}
+        </div>
+      </div>
+      <div className="rounded-xl border border-border bg-card p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <GraphIcon className="h-4 w-4 text-indigo-600" />
+          <h3 className="text-sm font-semibold">{isRTL ? 'خريطة علاقات المعادلات' : 'Formula Relationship Map'}</h3>
+          <Badge variant="outline" className="text-[10px] ml-auto">{allFormulas.length} {isRTL ? 'عقدة' : 'nodes'}</Badge>
+        </div>
+        <div className="text-xs text-muted-foreground mb-4">
+          {isRTL
+            ? 'تصفّح بصرياً كيف ترتبط المعادلات ببعضها. اضغط على أي معادلة لرؤية التفاصيل.'
+            : 'Visually explore how formulas relate to each other. Click any formula to see details.'}
+        </div>
+        {/* Reuse the existing FormulaGraph component */}
+        <FormulaGraphLazy onSelect={handleSelectFormula} />
+      </div>
+      <FormulaDetailDialog formula={selectedFormula} open={dialogOpen} onOpenChange={setDialogOpen} />
+    </div>
+  );
+}
+
+// ============================================================================
+// Sub-components
+// ============================================================================
+
+function ViewToggle({ view, onViewChange, isRTL }: { view: ViewMode; onViewChange: (v: ViewMode) => void; isRTL: boolean }) {
+  const modes: { id: ViewMode; label: string; label_ar: string; icon: typeof Sparkles }[] = [
+    { id: 'explorer', label: 'Explorer', label_ar: 'المستكشف', icon: Sparkles },
+    { id: 'classic', label: 'Classic', label_ar: 'كلاسيكي', icon: BookOpen },
+    { id: 'graph', label: 'Graph', label_ar: 'الخريطة', icon: GraphIcon },
+  ];
+  return (
+    <div className="inline-flex items-center gap-0.5 rounded-lg border border-border bg-muted/30 p-0.5">
+      {modes.map(m => {
+        const Icon = m.icon;
+        return (
+          <button
+            key={m.id}
+            onClick={() => onViewChange(m.id)}
+            className={cn(
+              'flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all',
+              view === m.id
+                ? 'bg-emerald-600 text-white shadow-sm'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
+            )}
+          >
+            <Icon className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">{isRTL ? m.label_ar : m.label}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function ScenarioCard({ scenario, count, isRTL, onClick }: {
+  scenario: FormulaScenario;
+  count: number;
+  isRTL: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="group relative overflow-hidden rounded-xl border-2 border-border bg-card p-4 text-left hover:shadow-lg hover:-translate-y-0.5 transition-all"
+    >
+      {/* Gradient header strip */}
+      <div className={cn('absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r', scenario.gradient)} />
+
+      {/* Emoji + count */}
+      <div className="flex items-start justify-between mb-2 mt-1">
+        <span className="text-3xl">{scenario.emoji}</span>
+        <Badge variant="outline" className="text-[10px] font-mono font-bold" style={{ color: scenario.color, borderColor: `${scenario.color}40` }}>
+          {count}
+        </Badge>
+      </div>
+
+      {/* Title */}
+      <h3 className="text-sm font-bold leading-tight mb-1" style={{ color: scenario.color }}>
+        {isRTL ? scenario.title_ar : scenario.title}
+      </h3>
+
+      {/* Subtitle */}
+      <p className="text-[10px] text-muted-foreground leading-relaxed line-clamp-2">
+        {isRTL ? scenario.subtitle_ar : scenario.subtitle}
+      </p>
+
+      {/* Hover indicator */}
+      <div className="flex items-center gap-1 text-[10px] font-medium mt-2 transition-colors" style={{ color: scenario.color }}>
+        {isRTL ? 'تصفّح' : 'Browse'}
+        <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
+      </div>
+    </button>
+  );
+}
+
+function QuickFilterChip({ active, onClick, label, count, icon: Icon }: {
+  active: boolean;
+  onClick: () => void;
+  label: string;
+  count: number;
+  icon?: typeof Star;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        'flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-medium border transition-all',
+        active
+          ? 'bg-emerald-600 text-white border-emerald-600'
+          : 'bg-background border-border text-muted-foreground hover:border-emerald-300'
+      )}
+    >
+      {Icon && <Icon className="h-3 w-3" />}
+      {label}
+      <span className={cn('font-mono font-bold', active ? 'text-emerald-100' : 'text-muted-foreground/70')}>{count}</span>
+    </button>
+  );
+}
+
+/**
+ * Lazy-loaded FormulaGraph — avoids importing the heavy graph component
+ * until the user actually switches to the Graph view.
+ */
+function FormulaGraphLazy({ onSelect }: { onSelect: (f: Formula) => void }) {
+  const [GraphComponent, setGraphComponent] = useState<React.ComponentType<{ maxNodes?: number; className?: string }> | null>(null);
+
+  useMemo(() => {
+    import('./formula-graph').then(mod => {
+      setGraphComponent(() => mod.FormulaGraph);
+    });
+  }, []);
+
+  if (!GraphComponent) {
+    return <div className="h-[500px] flex items-center justify-center text-sm text-muted-foreground">Loading graph…</div>;
+  }
+  // The FormulaGraph component renders its own interactive node selection.
+  // We pass maxNodes=200 to show more of the 500 formulas.
+  return <GraphComponent maxNodes={200} className="w-full h-[600px]" />;
+}
