@@ -24,10 +24,12 @@ import {
 } from 'lucide-react';
 import { AnimatedCounter } from '@/components/agri/nutri-tools/AnimatedCounter';
 import { LanguageToggle } from '@/components/language-toggle';
+import { useTranslation } from '@/lib/language-store';
 
 export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
   const [activeFeature, setActiveFeature] = useState(0);
+  const { isRTL } = useTranslation();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -82,37 +84,48 @@ export default function LandingPage() {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-emerald-300/50 bg-emerald-50/50 dark:bg-emerald-950/30 mb-6">
             <Sparkles className="h-3 w-3 text-emerald-600" />
-            <span className="text-[11px] font-medium text-emerald-700 dark:text-emerald-300">AI-powered agronomy platform · Free forever</span>
+            <span className="text-[11px] font-medium text-emerald-700 dark:text-emerald-300">{isRTL ? 'منصة زراعية بالذكاء الاصطناعي · مجانية للأبد' : 'AI-powered agronomy platform · Free forever'}</span>
           </div>
 
           {/* Headline */}
           <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.05] mb-6">
-            From <span className="bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 bg-clip-text text-transparent">soil</span> to <span className="bg-gradient-to-r from-cyan-600 via-sky-600 to-blue-600 bg-clip-text text-transparent">sky</span>,
-            <br />your farm&apos;s <span className="bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 bg-clip-text text-transparent">operating system</span>.
+            {isRTL ? (
+              <>
+                من <span className="bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 bg-clip-text text-transparent">التربة</span> إلى <span className="bg-gradient-to-r from-cyan-600 via-sky-600 to-blue-600 bg-clip-text text-transparent">السماء</span>،
+                <br /><span className="bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 bg-clip-text text-transparent">نظام تشغيل</span> مزرعتك.
+              </>
+            ) : (
+              <>
+                From <span className="bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 bg-clip-text text-transparent">soil</span> to <span className="bg-gradient-to-r from-cyan-600 via-sky-600 to-blue-600 bg-clip-text text-transparent">sky</span>,
+                <br />your farm&apos;s <span className="bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 bg-clip-text text-transparent">operating system</span>.
+              </>
+            )}
           </h1>
 
           {/* Subtitle */}
           <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto mb-8 leading-relaxed">
-            332 agronomic formulas. 50+ interactive tools. GIS, AI specialists, irrigation scheduling, and FAO-56 ET₀ — all in one platform. Built by a researcher, for farmers, agronomists, and students.
+            {isRTL
+              ? '500 معادلة زراعية. أكثر من 91 أداة تفاعلية. نظم معلومات جغرافية، وكلاء ذكاء اصطناعي، جدولة ري، و ET₀ وفق FAO-56 — كل ذلك في منصة واحدة. صمّمه باحث، للمزارعين والمهندسين الزراعيين والطلاب.'
+              : '500 agronomic formulas. 91+ interactive tools. GIS, AI specialists, irrigation scheduling, and FAO-56 ET₀ — all in one platform. Built by a researcher, for farmers, agronomists, and students.'}
           </p>
 
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-12">
             <Link href="/app" className="group flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-green-700 text-white font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all">
-              <Play className="h-4 w-4" /> Launch the App
+              <Play className="h-4 w-4" /> {isRTL ? 'افتح التطبيق' : 'Launch the App'}
               <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
             </Link>
             <a href="#features" className="flex items-center gap-2 px-6 py-3 rounded-xl border-2 border-border bg-background hover:bg-muted/50 font-semibold transition-all">
-              <Sparkles className="h-4 w-4" /> Explore Features
+              <Sparkles className="h-4 w-4" /> {isRTL ? 'استكشف الميزات' : 'Explore Features'}
             </a>
           </div>
 
           {/* Trust indicators */}
           <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1"><Check className="h-3 w-3 text-emerald-600" /> No signup required</span>
-            <span className="flex items-center gap-1"><Check className="h-3 w-3 text-emerald-600" /> Works offline (PWA)</span>
-            <span className="flex items-center gap-1"><Check className="h-3 w-3 text-emerald-600" /> Open data (FAO-56, Open-Meteo)</span>
-            <span className="flex items-center gap-1"><Check className="h-3 w-3 text-emerald-600" /> Multi-language ready</span>
+            <span className="flex items-center gap-1"><Check className="h-3 w-3 text-emerald-600" /> {isRTL ? 'بدون تسجيل' : 'No signup required'}</span>
+            <span className="flex items-center gap-1"><Check className="h-3 w-3 text-emerald-600" /> {isRTL ? 'يعمل دون اتصال (PWA)' : 'Works offline (PWA)'}</span>
+            <span className="flex items-center gap-1"><Check className="h-3 w-3 text-emerald-600" /> {isRTL ? 'بيانات مفتوحة (FAO-56، Open-Meteo)' : 'Open data (FAO-56, Open-Meteo)'}</span>
+            <span className="flex items-center gap-1"><Check className="h-3 w-3 text-emerald-600" /> {isRTL ? 'متعدد اللغات' : 'Multi-language ready'}</span>
           </div>
 
           {/* Dashboard mockup — animated preview of the app */}
@@ -130,10 +143,10 @@ export default function LandingPage() {
       <section id="stats" className="py-12 border-y bg-gradient-to-r from-emerald-50/50 via-cyan-50/30 to-violet-50/50 dark:from-emerald-950/20 dark:via-cyan-950/10 dark:to-violet-950/20">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-8">
-            <StatCounter icon={BookOpen} value={332} label="Agronomic formulas" color="#f59e0b" />
-            <StatCounter icon={Calculator} value={50} suffix="+" label="Interactive tools" color="#0891b2" />
-            <StatCounter icon={Sparkles} value={10} label="AI specialists" color="#6366f1" />
-            <StatCounter icon={Sprout} value={20} label="Crop profiles" color="#16a34a" />
+            <StatCounter icon={BookOpen} value={500} label={isRTL ? 'معادلة زراعية' : 'Agronomic formulas'} color="#f59e0b" />
+            <StatCounter icon={Calculator} value={91} suffix="+" label={isRTL ? 'أداة تفاعلية' : 'Interactive tools'} color="#0891b2" />
+            <StatCounter icon={Sparkles} value={10} label={isRTL ? 'وكلاء ذكاء' : 'AI specialists'} color="#6366f1" />
+            <StatCounter icon={Sprout} value={20} label={isRTL ? 'محصول' : 'Crop profiles'} color="#16a34a" />
           </div>
         </div>
       </section>
@@ -145,13 +158,19 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border bg-muted/50 text-xs text-muted-foreground mb-4">
-              <Zap className="h-3 w-3" /> Everything you need
+              <Zap className="h-3 w-3" /> {isRTL ? 'كل ما تحتاجه' : 'Everything you need'}
             </div>
             <h2 className="text-3xl sm:text-5xl font-bold tracking-tight mb-4">
-              One platform, <span className="bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent">every workflow</span>
+              {isRTL ? (
+                <>منصة واحدة، <span className="bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent">كل سير العمل</span></>
+              ) : (
+                <>One platform, <span className="bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent">every workflow</span></>
+              )}
             </h2>
             <p className="text-base text-muted-foreground max-w-2xl mx-auto">
-              From the first soil test to the final harvest report — Formula Atlas covers the entire growing season with research-grade tools.
+              {isRTL
+                ? 'من أول تحليل تربة إلى تقرير الحصاد النهائي — يغطّي أطلس المعادلات الموسم الزراعي بأكمله بأدوات بمستوى البحث العلمي.'
+                : 'From the first soil test to the final harvest report — Formula Atlas covers the entire growing season with research-grade tools.'}
             </p>
           </div>
 
@@ -220,8 +239,8 @@ export default function LandingPage() {
       <section className="py-20 bg-muted/20">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-3">50+ tools, zero friction</h2>
-            <p className="text-sm text-muted-foreground max-w-xl mx-auto">Press ⌘K from anywhere in the app to find any tool in milliseconds.</p>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-3">{isRTL ? 'أكثر من 91 أداة، بلا احتكاك' : '91+ tools, zero friction'}</h2>
+            <p className="text-sm text-muted-foreground max-w-xl mx-auto">{isRTL ? 'اضغط ⌘K من أي مكان في التطبيق لإيجاد أي أداة في أجزاء من الثانية.' : 'Press ⌘K from anywhere in the app to find any tool in milliseconds.'}</p>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {ALL_TOOLS.map((tool) => {
@@ -252,37 +271,53 @@ export default function LandingPage() {
       <section className="py-20 bg-muted/20">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-3">Built for everyone in agriculture</h2>
-            <p className="text-sm text-muted-foreground max-w-xl mx-auto">From the smallholder farmer to the PhD researcher — Formula Atlas adapts to your scale.</p>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-3">{isRTL ? 'مصمّم للجميع في الزراعة' : 'Built for everyone in agriculture'}</h2>
+            <p className="text-sm text-muted-foreground max-w-xl mx-auto">{isRTL ? 'من المزارع صغير الحيز إلى الباحث الدكتوراه — يتكيّف أطلس المعادلات مع نطاقك.' : 'From the smallholder farmer to the PhD researcher — Formula Atlas adapts to your scale.'}</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <UseCaseCard
               icon={Sprout}
               color="#16a34a"
-              title="Farmers"
-              description="Plan irrigation, track soil tests, schedule labor, and get AI advice — all offline-capable."
-              points={['Free forever', 'Works on phone', 'No signup', 'PWA installable']}
+              title={isRTL ? 'المزارعون' : 'Farmers'}
+              description={isRTL
+                ? 'خطط للري، تابع تحاليل التربة، جدول العمالة، واحصل على نصائح بالذكاء الاصطناعي — كلها تعمل دون اتصال.'
+                : 'Plan irrigation, track soil tests, schedule labor, and get AI advice — all offline-capable.'}
+              points={isRTL
+                ? ['مجاني للأبد', 'يعمل على الهاتف', 'بدون تسجيل', 'PWA قابل للتثبيت']
+                : ['Free forever', 'Works on phone', 'No signup', 'PWA installable']}
             />
             <UseCaseCard
               icon={Microscope}
               color="#6366f1"
-              title="Researchers"
-              description="332 formulas with citations, FAO-56 ET₀ math, and exportable data for papers."
-              points={['FAO-56 + Vincenty', 'Citation-ready', 'CSV/JSON export', 'Open data sources']}
+              title={isRTL ? 'الباحثون' : 'Researchers'}
+              description={isRTL
+                ? '500 معادلة مع مراجع، رياضيات FAO-56 ET₀، وبيانات قابلة للتصدير للأبحاث.'
+                : '500 formulas with citations, FAO-56 ET₀ math, and exportable data for papers.'}
+              points={isRTL
+                ? ['FAO-56 + فينسنتي', 'جاهز للاقتباس', 'تصدير CSV/JSON', 'مصادر بيانات مفتوحة']
+                : ['FAO-56 + Vincenty', 'Citation-ready', 'CSV/JSON export', 'Open data sources']}
             />
             <UseCaseCard
               icon={Users}
               color="#f59e0b"
-              title="Students"
-              description="Learn agronomy interactively — every formula has a calculator with worked examples."
-              points={['218 calculators', 'Step-by-step', 'Glossary built-in', 'Multi-language']}
+              title={isRTL ? 'الطلاب' : 'Students'}
+              description={isRTL
+                ? 'تعلّم الزراعة تفاعلياً — كل معادلة لها حاسبة مع أمثلة محلولة.'
+                : 'Learn agronomy interactively — every formula has a calculator with worked examples.'}
+              points={isRTL
+                ? ['218 حاسبة', 'خطوة بخطوة', 'مسرد مدمج', 'متعدد اللغات']
+                : ['218 calculators', 'Step-by-step', 'Glossary built-in', 'Multi-language']}
             />
             <UseCaseCard
               icon={Globe}
               color="#0891b2"
-              title="Extension agents"
-              description="Recommend plans to farmers in minutes. Export PDFs. Sync via YAML to Home Assistant."
-              points={['PDF reports', 'YAML irrigation', 'Multi-farm', 'Offline-first']}
+              title={isRTL ? 'الإرشاد الزراعي' : 'Extension agents'}
+              description={isRTL
+                ? 'أوصِ المزارعين بخطط في دقائق. صدّر PDF. زامن عبر YAML إلى Home Assistant.'
+                : 'Recommend plans to farmers in minutes. Export PDFs. Sync via YAML to Home Assistant.'}
+              points={isRTL
+                ? ['تقارير PDF', 'ري YAML', 'متعدد المزارع', 'الأولوية لدون اتصال']
+                : ['PDF reports', 'YAML irrigation', 'Multi-farm', 'Offline-first']}
             />
           </div>
         </div>
@@ -295,10 +330,10 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-amber-300/50 bg-amber-50/50 dark:bg-amber-950/30 mb-4">
-              <span className="text-[11px] font-medium text-amber-700 dark:text-amber-300">⭐ Trusted by growers worldwide</span>
+              <span className="text-[11px] font-medium text-amber-700 dark:text-amber-300">⭐ {isRTL ? 'موثوق به من المزارعين حول العالم' : 'Trusted by growers worldwide'}</span>
             </div>
-            <h2 className="text-3xl sm:text-4xl font-bold mb-3">Loved by the community</h2>
-            <p className="text-sm text-muted-foreground">Real stories from farmers, researchers, and educators using Formula Atlas.</p>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-3">{isRTL ? 'محبوب من المجتمع' : 'Loved by the community'}</h2>
+            <p className="text-sm text-muted-foreground">{isRTL ? 'قصص حقيقية من مزارعين وباحثين ومربّين يستخدمون أطلس المعادلات.' : 'Real stories from farmers, researchers, and educators using Formula Atlas.'}</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -340,22 +375,24 @@ export default function LandingPage() {
         <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-violet-300/50 bg-violet-50/50 dark:bg-violet-950/30 mb-6">
             <Microscope className="h-3 w-3 text-violet-600" />
-            <span className="text-[11px] font-medium text-violet-700 dark:text-violet-300">Built by a researcher</span>
+            <span className="text-[11px] font-medium text-violet-700 dark:text-violet-300">{isRTL ? 'صمّمه باحث' : 'Built by a researcher'}</span>
           </div>
           <blockquote className="text-xl sm:text-2xl font-medium leading-relaxed mb-6">
-            &ldquo;Every task, goal, and insight captured here contributes to my mission of becoming a more effective researcher, educator, and leader in agriculture.&rdquo;
+            {isRTL
+              ? '«كل مهمة وهدف ورؤية مسجّلة هنا تساهم في مهمتي بأن أكون باحثاً ومربّياً وقائداً أكثر فعالية في الزراعة.»'
+              : '"Every task, goal, and insight captured here contributes to my mission of becoming a more effective researcher, educator, and leader in agriculture."'}
           </blockquote>
           <div className="flex items-center justify-center gap-3">
             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-500 to-green-700 text-white flex items-center justify-center font-bold">
               AA
             </div>
             <div className="text-left">
-              <div className="font-semibold text-sm">Abdelkader Atia</div>
-              <div className="text-xs text-muted-foreground">PhD Researcher · Algeria</div>
+              <div className="font-semibold text-sm">{isRTL ? 'عبد القادر عطية' : 'Abdelkader Atia'}</div>
+              <div className="text-xs text-muted-foreground">{isRTL ? 'باحث دكتوراه · الجزائر' : 'PhD Researcher · Algeria'}</div>
             </div>
           </div>
           <Link href="/about" className="inline-flex items-center gap-1.5 mt-6 text-sm text-muted-foreground hover:text-foreground">
-            Read the full story <ChevronRight className="h-3.5 w-3.5" />
+            {isRTL ? 'اقرأ القصة كاملة' : 'Read the full story'} <ChevronRight className="h-3.5 w-3.5" />
           </Link>
         </div>
       </section>
@@ -370,19 +407,21 @@ export default function LandingPage() {
             <div className="absolute top-0 left-0 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
             <div className="absolute bottom-0 right-0 w-64 h-64 bg-cyan-300/20 rounded-full blur-3xl" />
             <div className="relative">
-              <h2 className="text-3xl sm:text-5xl font-bold mb-4">Start growing smarter today</h2>
+              <h2 className="text-3xl sm:text-5xl font-bold mb-4">{isRTL ? 'ابدأ بزراعة أذكى اليوم' : 'Start growing smarter today'}</h2>
               <p className="text-emerald-100 text-base sm:text-lg mb-8 max-w-xl mx-auto">
-                Free forever. No signup. Works offline. Built for farmers, agronomists, and students in arid and semi-arid regions.
+                {isRTL
+                  ? 'مجاني للأبد. بدون تسجيل. يعمل دون اتصال. صُمّم للمزارعين والمهندسين الزراعيين والطلاب في المناطق القاحلة وشبه القاحلة.'
+                  : 'Free forever. No signup. Works offline. Built for farmers, agronomists, and students in arid and semi-arid regions.'}
               </p>
               <Link href="/app" className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-white text-emerald-700 font-bold text-base shadow-lg hover:shadow-xl hover:scale-105 transition-all">
-                <Play className="h-5 w-5" /> Launch Formula Atlas
+                <Play className="h-5 w-5" /> {isRTL ? 'افتح أطلس المعادلات' : 'Launch Formula Atlas'}
                 <ArrowRight className="h-5 w-5" />
               </Link>
               <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-8 text-xs text-emerald-100">
-                <span className="flex items-center gap-1"><Check className="h-3 w-3" /> 332 formulas</span>
-                <span className="flex items-center gap-1"><Check className="h-3 w-3" /> 50+ tools</span>
-                <span className="flex items-center gap-1"><Check className="h-3 w-3" /> 10 AI agents</span>
-                <span className="flex items-center gap-1"><Check className="h-3 w-3" /> GIS suite</span>
+                <span className="flex items-center gap-1"><Check className="h-3 w-3" /> {isRTL ? '500 معادلة' : '500 formulas'}</span>
+                <span className="flex items-center gap-1"><Check className="h-3 w-3" /> {isRTL ? '91+ أداة' : '91+ tools'}</span>
+                <span className="flex items-center gap-1"><Check className="h-3 w-3" /> {isRTL ? '10 وكلاء ذكاء' : '10 AI agents'}</span>
+                <span className="flex items-center gap-1"><Check className="h-3 w-3" /> {isRTL ? 'حزمة GIS' : 'GIS suite'}</span>
                 <span className="flex items-center gap-1"><Check className="h-3 w-3" /> FAO-56 ET₀</span>
               </div>
             </div>
@@ -399,11 +438,11 @@ export default function LandingPage() {
             <div className="w-6 h-6 rounded-md bg-gradient-to-br from-emerald-500 to-green-700 flex items-center justify-center">
               <Sprout className="h-3 w-3 text-white" />
             </div>
-            <span>Formula Atlas · Built by Abdelkader Atia</span>
+            <span>{isRTL ? 'أطلس المعادلات · صمّمه عبد القادر عطية' : 'Formula Atlas · Built by Abdelkader Atia'}</span>
           </div>
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
-            <Link href="/app" className="hover:text-foreground">Open App</Link>
-            <Link href="/about" className="hover:text-foreground">About</Link>
+            <Link href="/app" className="hover:text-foreground">{isRTL ? 'افتح التطبيق' : 'Open App'}</Link>
+            <Link href="/about" className="hover:text-foreground">{isRTL ? 'حول' : 'About'}</Link>
             <span>© {new Date().getFullYear()}</span>
           </div>
         </div>

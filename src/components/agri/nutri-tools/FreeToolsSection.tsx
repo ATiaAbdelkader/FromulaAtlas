@@ -45,6 +45,7 @@ import { KeyboardShortcutsHelp } from './KeyboardShortcutsHelp';
 import { CompareDialog } from './CompareDialog';
 import { SeasonPlanGenerator } from './SeasonPlanGenerator';
 import { ActiveMatterSelector } from '../active-matter-selector/ActiveMatterSelector';
+import { useTranslation } from '@/lib/language-store';
 
 type ToolCategory = 'Converters' | 'Solution & Water' | 'Fertilizers' | 'Soil & Irrigation' | 'Reference';
 
@@ -304,6 +305,23 @@ const TOOLS: ToolMeta[] = [
 
 const CATEGORIES: ToolCategory[] = ['Converters', 'Solution & Water', 'Fertilizers', 'Soil & Irrigation', 'Reference'];
 
+/** Arabic display labels for each category. The underlying `ToolCategory`
+ * type stays in English (it's used as a key), but the user-facing chip
+ * and count badge render through this map when the language is Arabic. */
+const CATEGORY_LABEL_AR: Record<ToolCategory, string> = {
+  'Converters':         'المحوّلات',
+  'Solution & Water':   'المحاليل والمياه',
+  'Fertilizers':        'الأسمدة',
+  'Soil & Irrigation':  'التربة والري',
+  'Reference':          'مراجع',
+};
+
+/** Returns the localized display label for a category given the active
+ * language flag. */
+export function categoryLabel(c: ToolCategory, isRTL: boolean): string {
+  return isRTL ? CATEGORY_LABEL_AR[c] : c;
+}
+
 export const CATEGORY_COLORS: Record<ToolCategory, string> = {
   'Converters':         'bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-900',
   'Solution & Water':   'bg-cyan-100 dark:bg-cyan-950/40 text-cyan-700 dark:text-cyan-300 border-cyan-300 dark:border-cyan-900',
@@ -326,6 +344,7 @@ export function FreeToolsSection() {
   const [openTool, setOpenTool] = useState<ToolMeta | null>(null);
   const [showHints, setShowHints] = useState(false);
   const [seasonPlanOpen, setSeasonPlanOpen] = useState(false);
+  const { isRTL } = useTranslation();
 
   // Comparison tray — holds up to 2 tool IDs for side-by-side comparison.
   // Persists across tool-dialog opens/closes but not across page reloads (v1).
@@ -513,13 +532,15 @@ export function FreeToolsSection() {
       {/* Hero header */}
       <div className="rounded-xl p-5 sm:p-6 bg-gradient-to-br from-emerald-700 via-green-700 to-teal-800 text-white">
         <div className="flex items-center gap-2 mb-2 text-emerald-100 text-xs font-medium uppercase tracking-wide">
-          <Sparkles className="h-3.5 w-3.5" /> 19 Free Agronomic Tools
+          <Sparkles className="h-3.5 w-3.5" /> {isRTL ? '19 أداة زراعية مجانية' : '19 Free Agronomic Tools'}
         </div>
-        <h2 className="text-xl sm:text-2xl font-bold leading-tight mb-1">NutriPlant PRO Free Tools</h2>
+        <h2 className="text-xl sm:text-2xl font-bold leading-tight mb-1">
+          {isRTL ? 'أدوات NutriPlant PRO المجانية' : 'NutriPlant PRO Free Tools'}
+        </h2>
         <p className="text-sm text-emerald-100/90 max-w-2xl">
-          A native reimplementation of NutriPlant PRO's public free-tools collection —
-          converters, solution & water diagnostics, fertilizer calculators, soil & irrigation
-          tools, and quick-reference matrices. All calculations run client-side; nothing is sent to a server.
+          {isRTL
+            ? 'إعادة تنفيذ أصيلة لمجموعة الأدوات المجانية العامة من NutriPlant PRO — محوّلات، تشخيص محاليل ومياه، حاسبات أسمدة، أدوات تربة وري، ومصفوفات مرجعية. كل الحسابات تعمل في المتصفح، لا شيء يُرسل إلى خادم.'
+            : 'A native reimplementation of NutriPlant PRO\'s public free-tools collection — converters, solution & water diagnostics, fertilizer calculators, soil & irrigation tools, and quick-reference matrices. All calculations run client-side; nothing is sent to a server.'}
         </p>
         <div className="flex flex-wrap gap-3 mt-3 text-xs">
           {CATEGORIES.map(c => {
@@ -527,7 +548,7 @@ export function FreeToolsSection() {
             return (
               <div key={c} className="bg-white/10 backdrop-blur rounded px-2 py-1 border border-white/20 flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full" style={{ background: CATEGORY_DOT_COLORS[c] }} />
-                <span className="text-emerald-100">{c}</span> <span className="font-bold ml-0.5">{count}</span>
+                <span className="text-emerald-100">{categoryLabel(c, isRTL)}</span> <span className="font-bold ml-0.5">{count}</span>
               </div>
             );
           })}
@@ -539,20 +560,26 @@ export function FreeToolsSection() {
         <IntroCard
           icon={Info}
           color="#0891b2"
-          title="What these tools are"
-          body="A curated set of 19 calculators and reference tables covering the day-to-day workflow of agronomists, growers, and consultants: unit conversions, water & nutrient solution diagnostics, fertilizer formulation, soil & irrigation planning, crop-nutrition reference data, and an Algeria-focused active-matter selector."
+          title={isRTL ? 'ما هذه الأدوات' : 'What these tools are'}
+          body={isRTL
+            ? 'مجموعة منتقاة من 19 حاسبة وجدول مرجعي تغطي العمل اليومي للمهندسين الزراعيين والمزارعين والاستشاريين: تحويل الوحدات، تشخيص المياه والمحاليل الغذائية، صياغة الأسمدة، تخطيط التربة والري، بيانات تغذية المحاصيل المرجعية، ومنتقي المادة الفعالة للجزائر.'
+            : 'A curated set of 19 calculators and reference tables covering the day-to-day workflow of agronomists, growers, and consultants: unit conversions, water & nutrient solution diagnostics, fertilizer formulation, soil & irrigation planning, crop-nutrition reference data, and an Algeria-focused active-matter selector.'}
         />
         <IntroCard
           icon={BookOpen}
           color="#16a34a"
-          title="How to use them"
-          body="Browse the cards below, filter by category, or search by name. Click any card to open the tool in a dialog — enter your inputs and the result updates live. Each tool's dialog also shows a short benefit and step-by-step usage hint."
+          title={isRTL ? 'كيف تستخدمها' : 'How to use them'}
+          body={isRTL
+            ? 'تصفّح البطاقات أدناه، صفِّ حسب الفئة، أو ابحث بالاسم. اضغط أي بطاقة لفتح الأداة في نافذة — أدخل قيمك والنتيجة تتحدّث مباشرة. تعرض نافذة كل أداة فائدة قصيرة وخطوات استخدام.'
+            : 'Browse the cards below, filter by category, or search by name. Click any card to open the tool in a dialog — enter your inputs and the result updates live. Each tool\'s dialog also shows a short benefit and step-by-step usage hint.'}
         />
         <IntroCard
           icon={Lightbulb}
           color="#d97706"
-          title="Why use them"
-          body="They replace guesswork with calculation: precise acid doses, exact NPK blends, FAO-56 irrigation sheets, CEC-based amendment plans, and fertilization carbon footprints — turning lab reports and field observations into defensible decisions."
+          title={isRTL ? 'لماذا تستخدمها' : 'Why use them'}
+          body={isRTL
+            ? 'تستبدل التخمين بالحساب: جرعات حمض دقيقة، خلطات NPK مضبوطة، جداول ري وفق FAO-56، خطط تعديل قائمة على CEC، وأثر كربوني للتسميد — تحوّل تقارير المختبر والملاحظات الحقلية إلى قرارات قابلة للدفاع.'
+            : 'They replace guesswork with calculation: precise acid doses, exact NPK blends, FAO-56 irrigation sheets, CEC-based amendment plans, and fertilization carbon footprints — turning lab reports and field observations into defensible decisions.'}
         />
       </div>
 
@@ -565,7 +592,7 @@ export function FreeToolsSection() {
               ref={searchInputRef}
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Search tools by name, description, or benefit... (Ctrl+K)"
+              placeholder={isRTL ? 'ابحث عن أداة بالاسم أو الوصف أو الفائدة... (Ctrl+K)' : 'Search tools by name, description, or benefit... (Ctrl+K)'}
               className="pl-9 pr-8 h-10"
             />
             {search && (
@@ -575,13 +602,13 @@ export function FreeToolsSection() {
             )}
           </div>
           <div className="flex flex-wrap gap-1">
-            <CategoryChip active={activeCategory === 'All'} onClick={() => setActiveCategory('All')} label="All" count={TOOLS.length} />
+            <CategoryChip active={activeCategory === 'All'} onClick={() => setActiveCategory('All')} label={isRTL ? 'الكل' : 'All'} count={TOOLS.length} />
             {CATEGORIES.map(c => (
               <CategoryChip
                 key={c}
                 active={activeCategory === c}
                 onClick={() => setActiveCategory(c)}
-                label={c}
+                label={categoryLabel(c, isRTL)}
                 count={TOOLS.filter(t => t.category === c).length}
               />
             ))}
@@ -595,7 +622,7 @@ export function FreeToolsSection() {
         <div className="space-y-3">
           {favorites.length > 0 && (
             <ToolRow
-              label="Favorites"
+              label={isRTL ? 'المفضّلة' : 'Favorites'}
               icon={<Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />}
               ids={favorites}
               onOpen={openToolById}
@@ -603,7 +630,7 @@ export function FreeToolsSection() {
           )}
           {recent.length > 0 && (
             <ToolRow
-              label="Recently used"
+              label={isRTL ? 'المستخدمة مؤخراً' : 'Recently used'}
               icon={<Clock className="h-3.5 w-3.5 text-emerald-600" />}
               ids={recent}
               onOpen={openToolById}
