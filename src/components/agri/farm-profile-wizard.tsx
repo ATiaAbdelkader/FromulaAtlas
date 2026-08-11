@@ -32,6 +32,7 @@ import {
   Calendar, Sparkles,
 } from 'lucide-react';
 import { CROP_LIFECYCLES } from '@/lib/crop-lifecycle';
+import { useTranslation } from '@/lib/language-store';
 
 const FARM_PROFILE_KEY = 'farm_profile_v1';
 const ET_TRACKER_LOC_KEY = 'et_tracker_last_loc_v1';
@@ -61,6 +62,7 @@ export function FarmProfileWizard({ open, onOpenChange, onSaved }: FarmProfileWi
   const [profile, setProfile] = useState<FarmProfile>({});
   const [locating, setLocating] = useState(false);
   const [locError, setLocError] = useState<string | null>(null);
+  const { isRTL } = useTranslation();
 
   // Load existing profile on open
   useEffect(() => {
@@ -81,7 +83,7 @@ export function FarmProfileWizard({ open, onOpenChange, onSaved }: FarmProfileWi
     setLocating(true);
     setLocError(null);
     if (!navigator.geolocation) {
-      setLocError('Geolocation not available in this browser');
+      setLocError(isRTL ? 'التحديد الجغرافي غير متاح في هذا المتصفح' : 'Geolocation not available in this browser');
       setLocating(false);
       return;
     }
@@ -94,12 +96,12 @@ export function FarmProfileWizard({ open, onOpenChange, onSaved }: FarmProfileWi
         setLocating(false);
       },
       (err) => {
-        setLocError(err.message || 'Could not get location');
+        setLocError(err.message || (isRTL ? 'تعذّر الحصول على الموقع' : 'Could not get location'));
         setLocating(false);
       },
       { enableHighAccuracy: true, timeout: 10000 },
     );
-  }, []);
+  }, [isRTL]);
 
   const save = () => {
     const finalProfile = { ...profile, setupCompleted: true };
@@ -128,13 +130,13 @@ export function FarmProfileWizard({ open, onOpenChange, onSaved }: FarmProfileWi
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Tractor className="h-5 w-5 text-emerald-600" />
-            {step === 'Name' && 'Welcome to Formula Atlas'}
-            {step === 'Location' && 'Where is your farm?'}
-            {step === 'Crop' && 'What are you growing?'}
-            {step === 'Details' && 'Planting details'}
+            {step === 'Name' && (isRTL ? 'مرحبًا بك في أطلس المعادلات' : 'Welcome to Formula Atlas')}
+            {step === 'Location' && (isRTL ? 'أين مزرعتك؟' : 'Where is your farm?')}
+            {step === 'Crop' && (isRTL ? 'ماذا تزرع؟' : 'What are you growing?')}
+            {step === 'Details' && (isRTL ? 'تفاصيل الزراعة' : 'Planting details')}
           </DialogTitle>
           <DialogDescription className="sr-only">
-            Farm profile setup — step {stepIndex + 1} of {STEPS.length}
+            {isRTL ? `إعداد ملف المزرعة — الخطوة ${stepIndex + 1} من ${STEPS.length}` : `Farm profile setup — step ${stepIndex + 1} of ${STEPS.length}`}
           </DialogDescription>
         </DialogHeader>
 
@@ -155,14 +157,16 @@ export function FarmProfileWizard({ open, onOpenChange, onSaved }: FarmProfileWi
           {step === 'Name' && (
             <div className="space-y-3">
               <p className="text-xs text-muted-foreground">
-                Let's set up your farm profile. This takes 30 seconds and pre-fills your location, crop, and planting date across all tools. You can edit it later.
+                {isRTL
+                  ? 'لنُعدّ ملف مزرعتك. يستغرق هذا 30 ثانية ويملأ مسبقاً موقعك ومحصولك وتاريخ زراعتك عبر كل الأدوات. يمكنك تعديله لاحقاً.'
+                  : 'Let\'s set up your farm profile. This takes 30 seconds and pre-fills your location, crop, and planting date across all tools. You can edit it later.'}
               </p>
               <div>
-                <Label className="text-xs">Farm name (optional)</Label>
+                <Label className="text-xs">{isRTL ? 'اسم المزرعة (اختياري)' : 'Farm name (optional)'}</Label>
                 <Input
                   value={profile.name ?? ''}
                   onChange={e => update({ name: e.target.value })}
-                  placeholder="e.g. Green Valley Farm"
+                  placeholder={isRTL ? 'مثال: مزرعة الوادي الأخضر' : 'e.g. Green Valley Farm'}
                   className="mt-1"
                   autoFocus
                 />
@@ -173,7 +177,9 @@ export function FarmProfileWizard({ open, onOpenChange, onSaved }: FarmProfileWi
           {step === 'Location' && (
             <div className="space-y-3">
               <p className="text-xs text-muted-foreground">
-                Used for weather forecasts, ET₀ calculations, and sunrise/sunset times. We won't share this — it's stored only in your browser.
+                {isRTL
+                  ? 'يُستخدم لتوقعات الطقس وحسابات ET₀ وأوقات الشروق/الغروب. لن نشاركه — يُخزَّن فقط في متصفحك.'
+                  : 'Used for weather forecasts, ET₀ calculations, and sunrise/sunset times. We won\'t share this — it\'s stored only in your browser.'}
               </p>
               <Button
                 onClick={useMyLocation}
@@ -182,15 +188,15 @@ export function FarmProfileWizard({ open, onOpenChange, onSaved }: FarmProfileWi
                 className="w-full gap-2"
               >
                 <Crosshair className={`h-4 w-4 ${locating ? 'animate-pulse' : ''}`} />
-                {locating ? 'Detecting…' : 'Use my current location'}
+                {locating ? (isRTL ? 'جارٍ التحديد…' : 'Detecting…') : (isRTL ? 'استخدم موقعي الحالي' : 'Use my current location')}
               </Button>
               {locError && (
                 <p className="text-[10px] text-rose-600">{locError}</p>
               )}
-              <div className="text-center text-[10px] text-muted-foreground">— or enter manually —</div>
+              <div className="text-center text-[10px] text-muted-foreground">{isRTL ? '— أو أدخل يدوياً —' : '— or enter manually —'}</div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <Label className="text-[10px]">Latitude</Label>
+                  <Label className="text-[10px]">{isRTL ? 'خط العرض' : 'Latitude'}</Label>
                   <Input
                     value={profile.lat ?? ''}
                     onChange={e => update({ lat: e.target.value })}
@@ -201,7 +207,7 @@ export function FarmProfileWizard({ open, onOpenChange, onSaved }: FarmProfileWi
                   />
                 </div>
                 <div>
-                  <Label className="text-[10px]">Longitude</Label>
+                  <Label className="text-[10px]">{isRTL ? 'خط الطول' : 'Longitude'}</Label>
                   <Input
                     value={profile.lng ?? ''}
                     onChange={e => update({ lng: e.target.value })}
@@ -214,7 +220,7 @@ export function FarmProfileWizard({ open, onOpenChange, onSaved }: FarmProfileWi
               </div>
               {profile.lat && profile.lng && (
                 <div className="flex items-center gap-1.5 text-[10px] text-emerald-600">
-                  <Check className="h-3 w-3" /> Location set: {profile.lat}, {profile.lng}
+                  <Check className="h-3 w-3" /> {isRTL ? 'تم تعيين الموقع:' : 'Location set:'} {profile.lat}, {profile.lng}
                 </div>
               )}
             </div>
@@ -223,7 +229,9 @@ export function FarmProfileWizard({ open, onOpenChange, onSaved }: FarmProfileWi
           {step === 'Crop' && (
             <div className="space-y-3">
               <p className="text-xs text-muted-foreground">
-                Pick your main crop. This pre-fills the Labor Calendar, Fertilization Generator, and ET Tracker with the right Kc values and growth stages.
+                {isRTL
+                  ? 'اختر محصولك الرئيسي. هذا يملأ مسبقاً تقويم العمالة، مولّد التسميد، ومتعقّب ET بقيم Kc ومراحل النمو الصحيحة.'
+                  : 'Pick your main crop. This pre-fills the Labor Calendar, Fertilization Generator, and ET Tracker with the right Kc values and growth stages.'}
               </p>
               <div className="grid grid-cols-2 gap-1.5 max-h-[200px] overflow-y-auto">
                 {CROP_LIFECYCLES.map(c => (
@@ -247,11 +255,13 @@ export function FarmProfileWizard({ open, onOpenChange, onSaved }: FarmProfileWi
           {step === 'Details' && (
             <div className="space-y-3">
               <p className="text-xs text-muted-foreground">
-                When did you plant (or plan to plant)? This anchors the Labor Calendar to the right growth stage.
+                {isRTL
+                  ? 'متى زرعت (أو تخطط للزراعة)؟ هذا يثبّت تقويم العمالة على مرحلة النمو الصحيحة.'
+                  : 'When did you plant (or plan to plant)? This anchors the Labor Calendar to the right growth stage.'}
               </p>
               <div>
                 <Label className="text-xs flex items-center gap-1">
-                  <Calendar className="h-3 w-3" /> Planting date
+                  <Calendar className="h-3 w-3" /> {isRTL ? 'تاريخ الزراعة' : 'Planting date'}
                 </Label>
                 <Input
                   type="date"
@@ -262,7 +272,7 @@ export function FarmProfileWizard({ open, onOpenChange, onSaved }: FarmProfileWi
               </div>
               <div>
                 <Label className="text-xs flex items-center gap-1">
-                  <Sprout className="h-3 w-3" /> Total area (hectares)
+                  <Sprout className="h-3 w-3" /> {isRTL ? 'المساحة الإجمالية (هكتار)' : 'Total area (hectares)'}
                 </Label>
                 <Input
                   type="number"
@@ -270,12 +280,14 @@ export function FarmProfileWizard({ open, onOpenChange, onSaved }: FarmProfileWi
                   min="0.1"
                   value={profile.area ?? ''}
                   onChange={e => update({ area: parseFloat(e.target.value) || undefined })}
-                  placeholder="e.g. 5.0"
+                  placeholder={isRTL ? 'مثال: 5.0' : 'e.g. 5.0'}
                   className="mt-1"
                 />
               </div>
               <div className="rounded-md border bg-muted/20 p-2 text-[10px] text-muted-foreground">
-                💡 You can change any of this later from the Home tab → "Edit farm profile".
+                {isRTL
+                  ? '💡 يمكنك تغيير كل هذا لاحقاً من التبويب الرئيسي ← «تعديل ملف المزرعة».'
+                  : '💡 You can change any of this later from the Home tab → "Edit farm profile".'}
               </div>
             </div>
           )}
@@ -290,7 +302,7 @@ export function FarmProfileWizard({ open, onOpenChange, onSaved }: FarmProfileWi
             className="gap-1 text-xs"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            {stepIndex === 0 ? 'Skip for now' : 'Back'}
+            {stepIndex === 0 ? (isRTL ? 'تخطّي الآن' : 'Skip for now') : (isRTL ? 'رجوع' : 'Back')}
           </Button>
           {stepIndex < STEPS.length - 1 ? (
             <Button
@@ -299,7 +311,7 @@ export function FarmProfileWizard({ open, onOpenChange, onSaved }: FarmProfileWi
               disabled={!canProceed}
               className="gap-1 text-xs"
             >
-              Next <ArrowRight className="h-3.5 w-3.5" />
+              {isRTL ? 'التالي' : 'Next'} <ArrowRight className="h-3.5 w-3.5" />
             </Button>
           ) : (
             <Button
@@ -307,7 +319,7 @@ export function FarmProfileWizard({ open, onOpenChange, onSaved }: FarmProfileWi
               onClick={save}
               className="gap-1.5 text-xs bg-emerald-600 hover:bg-emerald-700"
             >
-              <Check className="h-3.5 w-3.5" /> Save farm profile
+              <Check className="h-3.5 w-3.5" /> {isRTL ? 'حفظ ملف المزرعة' : 'Save farm profile'}
             </Button>
           )}
         </div>
