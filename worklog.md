@@ -394,3 +394,28 @@
 **Câblage substances (crops/targets) :** deltaméthrine, lambda-cyhalothrine, acétamipride, imidaclopride, abamectine, chlorantraniliprole, émanectine, méthomyl, chlorpyriphos-éthyl, diméthoate, spinosad, thiophanate-méthyl, mancozèbe, chlorothalonil, difénoconazole, tébuconazole, azoxystrobine, soufre, cuivre, huile minérale — nouveaux crops et/ou nouveaux targets (psylle-pistachier, cochenille-grenadier, mouche-pousses-sorgho, foreurs-tiges, ver-rose-coton, verticilliose-coton, anthracnose-sorgho/coton, taches-pistachier, apion-luzerne, rouille-luzerne, mouche-figuier).
 
 **Validation :** script node de cohérence étendu (crops/targets/actives tous résolus ; aucun id dupliqué) → `crops=36 problems=90 matters=99` OK ; `npx tsc --noEmit` → 0 erreur sur le fichier ; `npm run build` → ✓ 8/8 routes.
+
+---
+Task ID: cairo-arabic
+Agent: main (Super Z)
+Task: Apply Cairo font to the app and start the Arabic translation system
+
+Work Log:
+- Replaced Geist Sans with Cairo (next/font/google) — single family covers both Latin and Arabic glyphs
+- Loaded 7 weights (300-900) with `latin`, `latin-ext`, `arabic` subsets, `display: swap`
+- Updated globals.css: `--font-sans` + `--font-cairo` + `--font-arabic` vars, RTL-specific CSS for `[dir="rtl"]` (line-height 1.85, no letter-spacing, monospace numerals forced LTR for calculator consistency, no text justification)
+- Expanded language-store.ts: uiStrings dict grew from 9 → 90+ keys covering app identity, all 6 nav tabs, header actions, search/command palette, formulas tab labels, farm/insights sub-categories, common actions (save/cancel/export/etc), units (kg/ha, t/ha, mm/day, hectares, etc), footer, achievements, onboarding, theme/language toggles, empty states, errors, bookmarks, formula dialog
+- Updated `useTranslation()` hook to expose `{ t, language, isRTL }`
+- Refactored LanguageToggle: uses useTranslation for tooltip strings (was hard-coded)
+- Wired translations into app/page.tsx: all 6 TabButton labels, MobileBottomNav (also fixed a shadowed-variable bug where map callback used `t` shadowing the translation object — renamed to `tab`), farm/insights sub-headers, formulas filter badges (Part:/Section:/Calculator only → translated), empty states, footer
+- Wired translations into sidebar-nav.tsx: Library header, "Formulas"/"Calcs" stat labels, search placeholder, Calculator only toggle, Recently viewed header, "No sections match", "No matches for …", footer summary
+- Wired translations into home-dashboard.tsx: greeting() now takes a `lang` arg (returns صباح الخير / مساء الخير in Arabic), welcome header subtitle, weather widget labels (RH/Wind/Hi/Lo/Rain), ET₀ widget labels, Quick Actions (4 buttons), Farm Profile card, Recently Used section, Browse by Category nav cards
+- Added LanguageToggle to landing page nav so visitors can switch language before entering the app
+- TypeScript check passed for all edited files (pre-existing errors in season-report/smart-alerts/field-mode are unrelated)
+- Committed and pushed to GitHub (commit 80a4a64)
+
+Stage Summary:
+- Cairo font is now active across the entire app for both English and Arabic
+- Full RTL support: `<html dir="rtl">` set on language switch, line-height bumped for Arabic, monospace numerals forced LTR
+- 90+ UI strings translated to Arabic covering all main app chrome (tabs, headers, dashboard widgets, sidebar, formulas filters, footer)
+- Push succeeded; Vercel should auto-deploy from commit 80a4a64

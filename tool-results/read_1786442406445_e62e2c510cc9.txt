@@ -1,0 +1,662 @@
+     1→'use client';
+     2→
+     3→import Link from 'next/link';
+     4→import { useMemo, useState, useEffect, useRef } from 'react';
+     5→import { Search, Sprout, Layers, BookOpen, Calculator, X, Leaf, Filter, Home, Wrench, Bug, TrendingUp, Droplets, Settings, Calendar, Satellite, ShoppingCart, Users, DollarSign, RefreshCw, Beef, FlaskConical, CloudRain, FileText, Trophy, Tractor, Sparkles, Download, CheckCircle2, MapPin, Shapes, Compass, Sun, Mountain, FlaskConical as Flask, CalendarDays, Clock, Warehouse, Recycle, Wind, Flame, Snowflake, Gauge, Shield, Moon, Microscope } from 'lucide-react';
+     6→import { Input } from '@/components/ui/input';
+     7→import { Button } from '@/components/ui/button';
+     8→import { Badge } from '@/components/ui/badge';
+     9→import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+    10→import { FormulaCard, hasCalculator } from '@/components/agri/formula-card';
+    11→import { FormulaDetailDialog } from '@/components/agri/formula-detail-dialog';
+    12→import { SidebarNav } from '@/components/agri/sidebar-nav';
+    13→import { UseCasesSection } from '@/components/agri/use-cases-section';
+    14→import { FreeToolsSection } from '@/components/agri/nutri-tools/FreeToolsSection';
+    15→import { AgronomistAssistant } from '@/components/agri/nutri-tools/AgronomistAssistant';
+    16→import { AgriAgentChat } from '@/components/agri/nutri-tools/AgriAgentChat';
+    17→import { CommandPalette, CommandPaletteTrigger } from '@/components/ui/command-palette';
+    18→import { HomeDashboard } from '@/components/agri/home-dashboard';
+    19→import { AboutPage } from '@/components/agri/about-page';
+    20→import { recordToolUse, type ToolEntry } from '@/lib/tool-registry';
+    21→import { FieldDataCapture } from '@/components/agri/nutri-tools/FieldDataCapture';
+    22→import { MultiFieldDashboard } from '@/components/agri/nutri-tools/MultiFieldDashboard';
+    23→import { YieldGapAnalysis } from '@/components/agri/nutri-tools/YieldGapAnalysis';
+    24→import { SustainabilityScorecard } from '@/components/agri/nutri-tools/SustainabilityScorecard';
+    25→import { FieldScoutingLog } from '@/components/agri/nutri-tools/FieldScoutingLog';
+    26→import { CollapsibleSection } from '@/components/agri/nutri-tools/CollapsibleSection';
+    27→import { IrrigationProgramGenerator } from '@/components/agri/nutri-tools/IrrigationProgramGenerator';
+    28→import { IrrigationSystemDesigner } from '@/components/agri/nutri-tools/IrrigationSystemDesigner';
+    29→import { AgriPlannerSuite } from '@/components/agri/nutri-tools/AgriPlannerSuite';
+    30→import { NdviFieldMaps } from '@/components/agri/nutri-tools/NdviFieldMaps';
+    31→import { Marketplace } from '@/components/agri/nutri-tools/Marketplace';
+    32→import { FarmerCommunity } from '@/components/agri/nutri-tools/FarmerCommunity';
+    33→import { FinancialDashboard } from '@/components/agri/nutri-tools/FinancialDashboard';
+    34→import { CropRotationPlanner } from '@/components/agri/nutri-tools/CropRotationPlanner';
+    35→import { LivestockIntegration } from '@/components/agri/nutri-tools/LivestockIntegration';
+    36→import { SoilTestHistoryTracker } from '@/components/agri/nutri-tools/SoilTestHistoryTracker';
+    37→import { WeatherRadar } from '@/components/agri/nutri-tools/WeatherRadar';
+    38→import { ReportGenerator } from '@/components/agri/nutri-tools/ReportGenerator';
+    39→import { GamificationPanel } from '@/components/agri/nutri-tools/GamificationPanel';
+    40→import { CoordinateConverter } from '@/components/agri/nutri-tools/CoordinateConverter';
+    41→import { FieldBoundaryImporter } from '@/components/agri/nutri-tools/FieldBoundaryImporter';
+    42→import { DistanceBearingCalculator } from '@/components/agri/nutri-tools/DistanceBearingCalculator';
+    43→import { ElevationSlopeAnalyzer } from '@/components/agri/nutri-tools/ElevationSlopeAnalyzer';
+    44→import { EvapotranspirationTracker } from '@/components/agri/nutri-tools/EvapotranspirationTracker';
+    45→import { ServiceIntegrations } from '@/components/agri/nutri-tools/ServiceIntegrations';
+    46→import { FertilizationGenerator } from '@/components/agri/nutri-tools/FertilizationGenerator';
+    47→import { LaborCalendar } from '@/components/agri/nutri-tools/LaborCalendar';
+    48→import { SeasonPlanGenerator } from '@/components/agri/nutri-tools/SeasonPlanGenerator';
+    49→import { IrrigationScheduler } from '@/components/agri/nutri-tools/IrrigationScheduler';
+    50→import { PostHarvestStorageCalculator } from '@/components/agri/nutri-tools/PostHarvestStorageCalculator';
+    51→import { CompostMixerCalculator } from '@/components/agri/nutri-tools/CompostMixerCalculator';
+    52→import { PesticideDoseCalculator } from '@/components/agri/nutri-tools/PesticideDoseCalculator';
+    53→import { RUSLEErosionCalculator } from '@/components/agri/nutri-tools/RUSLEErosionCalculator';
+    54→import { CarbonCreditCalculator } from '@/components/agri/nutri-tools/CarbonCreditCalculator';
+    55→import { GreenhouseClimateDesigner } from '@/components/agri/nutri-tools/GreenhouseClimateDesigner';
+    56→import { DiseaseForecastDashboard } from '@/components/agri/nutri-tools/DiseaseForecastDashboard';
+    57→import { FeedRationBalancer } from '@/components/agri/nutri-tools/FeedRationBalancer';
+    58→import { CoverCropSelector } from '@/components/agri/nutri-tools/CoverCropSelector';
+    59→import { SprayDriftAssessor } from '@/components/agri/nutri-tools/SprayDriftAssessor';
+    60→import { DroughtStressIndex } from '@/components/agri/nutri-tools/DroughtStressIndex';
+    61→import { PumpEfficiencyCalculator } from '@/components/agri/nutri-tools/PumpEfficiencyCalculator';
+    62→import { BeeHiveHoneyCalculator } from '@/components/agri/nutri-tools/BeeHiveHoneyCalculator';
+    63→import { CompanionPlantingGuide } from '@/components/agri/nutri-tools/CompanionPlantingGuide';
+    64→import { SilageFermentationPredictor } from '@/components/agri/nutri-tools/SilageFermentationPredictor';
+    65→import { FrostProtectionCalculator } from '@/components/agri/nutri-tools/FrostProtectionCalculator';
+    66→import { BufferStripDesigner } from '@/components/agri/nutri-tools/BufferStripDesigner';
+    67→import { HailDamageEstimator } from '@/components/agri/nutri-tools/HailDamageEstimator';
+    68→import { PestThresholdCalculator } from '@/components/agri/nutri-tools/PestThresholdCalculator';
+    69→import { YieldMonitorCalibrator } from '@/components/agri/nutri-tools/YieldMonitorCalibrator';
+    70→import { ManureManagementPlanner } from '@/components/agri/nutri-tools/ManureManagementPlanner';
+    71→import { MachineryCostCalculator } from '@/components/agri/nutri-tools/MachineryCostCalculator';
+    72→import { MoonPhaseCalendar } from '@/components/agri/nutri-tools/MoonPhaseCalendar';
+    73→import { SeedRateCalculator } from '@/components/agri/nutri-tools/SeedRateCalculator';
+    74→import { GrainBinInventoryTracker } from '@/components/agri/nutri-tools/GrainBinInventoryTracker';
+    75→import { PollinatorHabitatPlanner } from '@/components/agri/nutri-tools/PollinatorHabitatPlanner';
+    76→import { GDDTracker } from '@/components/agri/nutri-tools/GDDTracker';
+    77→import { WaterHarvestingCalculator } from '@/components/agri/nutri-tools/WaterHarvestingCalculator';
+    78→import { BiogasDigesterCalculator } from '@/components/agri/nutri-tools/BiogasDigesterCalculator';
+    79→import { DiseaseReferenceGallery } from '@/components/agri/nutri-tools/DiseaseReferenceGallery';
+    80→import { YieldEstimationCalculator } from '@/components/agri/nutri-tools/YieldEstimationCalculator';
+    81→import { SoilColorIdentifier } from '@/components/agri/nutri-tools/SoilColorIdentifier';
+    82→import { LivestockGrowthBenchmark } from '@/components/agri/nutri-tools/LivestockGrowthBenchmark';
+    83→import { CropCalendarGenerator } from '@/components/agri/nutri-tools/CropCalendarGenerator';
+    84→import { SoilTextureTriangle } from '@/components/agri/nutri-tools/SoilTextureTriangle';
+    85→import { BookmarkedFormulas } from '@/components/agri/bookmarked-formulas';
+    86→import { getBookmarks, toggleBookmark } from '@/lib/formula-bookmarks';
+    87→import { OnboardingFlow } from '@/components/onboarding/OnboardingFlow';
+    88→import { TakeTourButton } from '@/components/onboarding/TakeTourButton';
+    89→import { TelegramConnectButton } from '@/components/agri/nutri-tools/TelegramConnectButton';
+    90→import { NotificationCenter } from '@/components/agri/nutri-tools/NotificationCenter';
+    91→import { ApiDocsButton } from '@/components/agri/nutri-tools/ApiDocsButton';
+    92→import { WorkflowRunner } from '@/components/agri/workflow-runner';
+    93→import { SeasonScheduler } from '@/components/agri/season-scheduler';
+    94→import { LanguageToggle } from '@/components/language-toggle';
+    95→import { ActiveMatterSelector } from '@/components/agri/active-matter-selector/ActiveMatterSelector';
+    96→import { handbook, allFormulas } from '@/lib/formulas-data';
+    97→import type { Formula } from '@/lib/types';
+    98→import type { Workflow } from '@/lib/workflows';
+    99→import { useTranslation } from '@/lib/language-store';
+   100→import { cn } from '@/lib/utils';
+   101→
+   102→type TabId = 'home' | 'formulas' | 'tools' | 'farm' | 'insights' | 'about';
+   103→
+   104→export default function Page() {
+   105→  const [activeTab, setActiveTab] = useState<TabId>('home');
+   106→  const [searchQuery, setSearchQuery] = useState('');
+   107→  const [paletteOpen, setPaletteOpen] = useState(false);
+   108→  const [selectedPart, setSelectedPart] = useState<string | null>(null);
+   109→  const [selectedChapter, setSelectedChapter] = useState<number | null>(null);
+   110→  const [onlyWithCalculators, setOnlyWithCalculators] = useState(false);
+   111→  const [selectedFormula, setSelectedFormula] = useState<Formula | null>(null);
+   112→  const [dialogOpen, setDialogOpen] = useState(false);
+   113→  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+   114→  const [activeWorkflow, setActiveWorkflow] = useState<Workflow | null>(null);
+   115→  const [workflowOpen, setWorkflowOpen] = useState(false);
+   116→  const { t, isRTL } = useTranslation();
+   117→  const [bookmarks, setBookmarks] = useState<string[]>([]);
+   118→  const [installPromptEvent, setInstallPromptEvent] = useState<any>(null);
+   119→  const [isInstalled, setIsInstalled] = useState(false);
+   120→
+   121→  useEffect(() => { setBookmarks(getBookmarks()); }, []);
+   122→
+   123→  // PWA install prompt listener
+   124→  useEffect(() => {
+   125→    const handler = (e: any) => {
+   126→      e.preventDefault();
+   127→      setInstallPromptEvent(e);
+   128→    };
+   129→    window.addEventListener('beforeinstallprompt', handler);
+   130→    window.addEventListener('appinstalled', () => { setIsInstalled(true); setInstallPromptEvent(null); });
+   131→    // Check if already installed (standalone mode)
+   132→    if (window.matchMedia('(display-mode: standalone)').matches) setIsInstalled(true);
+   133→    return () => window.removeEventListener('beforeinstallprompt', handler);
+   134→  }, []);
+   135→
+   136→  const handleInstall = async () => {
+   137→    if (!installPromptEvent) return;
+   138→    installPromptEvent.prompt();
+   139→    const { outcome } = await installPromptEvent.userChoice;
+   140→    if (outcome === 'accepted') setIsInstalled(true);
+   141→    setInstallPromptEvent(null);
+   142→  };
+   143→
+   144→  const filteredFormulas = useMemo(() => {
+   145→    let result = allFormulas;
+   146→    if (selectedPart) result = result.filter(f => f.part === selectedPart);
+   147→    if (selectedChapter !== null) result = result.filter(f => f.chapter_number === selectedChapter && f.part === selectedPart);
+   148→    if (onlyWithCalculators) result = result.filter(f => hasCalculator(f.code));
+   149→    if (searchQuery.trim()) {
+   150→      const q = searchQuery.toLowerCase().trim();
+   151→      const terms = q.split(/\s+/).filter(Boolean);
+   152→      result = result.filter(f => {
+   153→        const haystack = `${f.code} ${f.name} ${(f as any).name_ar || ''} ${f.formula} ${f.variables} ${f.purpose} ${f.example} ${f.pitfall} ${f.chapter} ${f.part}`.toLowerCase();
+   154→        return terms.every(t => haystack.includes(t));
+   155→      });
+   156→    }
+   157→    return result;
+   158→  }, [searchQuery, selectedPart, selectedChapter, onlyWithCalculators]);
+   159→
+   160→  const handleSelectFormula = (formula: Formula) => {
+   161→    setSelectedFormula(formula);
+   162→    setDialogOpen(true);
+   163→  };
+   164→
+   165→  const handleClearFilters = () => {
+   166→    setSelectedPart(null);
+   167→    setSelectedChapter(null);
+   168→    setOnlyWithCalculators(false);
+   169→    setSearchQuery('');
+   170→  };
+   171→
+   172→  const hasActiveFilters = selectedPart || selectedChapter !== null || onlyWithCalculators || searchQuery;
+   173→
+   174→  const currentChapterInfo = useMemo(() => {
+   175→    if (selectedChapter !== null && selectedPart) {
+   176→      const part = handbook.parts.find(p => p.title === selectedPart);
+   177→      return part?.chapters.find(c => c.number === selectedChapter);
+   178→    }
+   179→    return null;
+   180→  }, [selectedPart, selectedChapter]);
+   181→
+   182→  const sidebarContent = (
+   183→    <SidebarNav
+   184→      selectedPart={selectedPart}
+   185→      selectedChapter={selectedChapter}
+   186→      onlyWithCalculators={onlyWithCalculators}
+   187→      onSelectPart={setSelectedPart}
+   188→      onSelectChapter={setSelectedChapter}
+   189→      onToggleCalculatorFilter={() => setOnlyWithCalculators(!onlyWithCalculators)}
+   190→      searchQuery={searchQuery}
+   191→    />
+   192→  );
+   193→
+   194→  /** Open a tool by switching tab + auto-opening its CollapsibleSection. */
+   195→  const openTool = (tab: TabId, storageKey?: string) => {
+   196→    if (storageKey) {
+   197→      try { localStorage.setItem(storageKey, 'true'); } catch { /* ignore */ }
+   198→    }
+   199→    setActiveTab(tab);
+   200→    window.scrollTo({ top: 0, behavior: 'smooth' });
+   201→  };
+   202→
+   203→  return (
+   204→    <div className="min-h-screen flex flex-col bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
+   205→      {/* Header */}
+   206→      <header className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b border-border">
+   207→        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-3">
+   208→          <div className="flex items-center justify-between gap-3 mb-2">
+   209→            <div className="flex items-center gap-3 min-w-0">
+   210→              <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-gradient-to-br from-emerald-500 to-green-700 text-white flex-shrink-0 shadow-sm">
+   211→                <Sprout className="h-6 w-6" />
+   212→              </div>
+   213→              <div className="min-w-0">
+   214→                <h1 className="text-base sm:text-lg font-bold tracking-tight leading-tight truncate">{t.appName}</h1>
+   215→                <p className="text-xs text-muted-foreground truncate">{t.appSubtitle} · {handbook.meta.version}</p>
+   216→              </div>
+   217→            </div>
+   218→            <div className="flex items-center gap-1">
+   219→              <TakeTourButton />
+   220→              <ApiDocsButton />
+   221→              <TelegramConnectButton />
+   222→              {installPromptEvent && !isInstalled && (
+   223→                <Button size="sm" onClick={handleInstall} className="gap-1.5 text-xs h-9 bg-emerald-600 hover:bg-emerald-700" title="Install Formula Atlas as an app">
+   224→                  <Download className="h-3.5 w-3.5" />
+   225→                  <span className="hidden sm:inline">Install App</span>
+   226→                </Button>
+   227→              )}
+   228→              {isInstalled && (
+   229→                <span className="hidden sm:flex items-center gap-1 text-xs text-emerald-600 px-2" title="App installed">
+   230→                  <CheckCircle2 className="h-3.5 w-3.5" />
+   231→                  <span className="hidden lg:inline">Installed</span>
+   232→                </span>
+   233→              )}
+   234→              <LanguageToggle />
+   235→              {activeTab === 'formulas' && (
+   236→                <div className="lg:hidden">
+   237→                  <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+   238→                    <SheetTrigger asChild>
+   239→                      <Button variant="outline" size="sm" className="gap-2"><Layers className="h-4 w-4" />Browse</Button>
+   240→                    </SheetTrigger>
+   241→                    <SheetContent side="left" className="p-0 gap-0 w-[340px] sm:w-[380px] overflow-hidden">{sidebarContent}</SheetContent>
+   242→                  </Sheet>
+   243→                </div>
+   244→              )}
+   245→            </div>
+   246→          </div>
+   247→
+   248→          {/* Command palette trigger — visible on all tabs */}
+   249→          <div className="hidden sm:block">
+   250→            <CommandPaletteTrigger onClick={() => setPaletteOpen(true)} />
+   251→          </div>
+   252→
+   253→          {/* Search bar — only on formulas tab */}
+   254→          {activeTab === 'formulas' && (
+   255→            <div className="relative">
+   256→              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+   257→              <Input type="search" placeholder={t.searchPlaceholder} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 pr-10 h-10 text-sm" />
+   258→              {searchQuery && <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>}
+   259→            </div>
+   260→          )}
+   261→        </div>
+   262→
+   263→        {/* Tab bar */}
+   264→        <div className="border-t border-border bg-muted/30">
+   265→          <div className="max-w-[1600px] mx-auto px-4 sm:px-6">
+   266→            <div className="flex items-center gap-1 overflow-x-auto">
+   267→              <TabButton active={activeTab === 'home'} onClick={() => setActiveTab('home')} icon={Home} label="Home" />
+   268→              <TabButton active={activeTab === 'formulas'} onClick={() => setActiveTab('formulas')} icon={BookOpen} label="Formulas" badge={allFormulas.length} />
+   269→              <TabButton active={activeTab === 'tools'} onClick={() => setActiveTab('tools')} icon={Wrench} label="Tools" />
+   270→              <TabButton active={activeTab === 'farm'} onClick={() => setActiveTab('farm')} icon={Tractor} label="Farm" />
+   271→              <TabButton active={activeTab === 'insights'} onClick={() => setActiveTab('insights')} icon={Sparkles} label="Insights" />
+   272→              <TabButton active={activeTab === 'about'} onClick={() => setActiveTab('about')} icon={Users} label="About" />
+   273→            </div>
+   274→          </div>
+   275→        </div>
+   276→      </header>
+   277→
+   278→      {/* HOME TAB — personalized dashboard */}
+   279→      {activeTab === 'home' && (
+   280→        <main className="flex-1 max-w-[1200px] mx-auto w-full p-4 sm:p-6 space-y-6 pb-20 sm:pb-6">
+   281→          <HomeDashboard
+   282→            onNavigate={(tab) => setActiveTab(tab)}
+   283→            onOpenTool={(tab, storageKey) => openTool(tab, storageKey)}
+   284→            onOpenSearch={() => setPaletteOpen(true)}
+   285→          />
+   286→
+   287→          <SeasonScheduler />
+   288→
+   289→          <CollapsibleSection
+   290→            title="Achievements & Leaderboard"
+   291→            description="Badges · Levels · Points · Global ranking · Progress tracking"
+   292→            icon={Trophy}
+   293→            color="#7c3aed"
+   294→            storageKey="collapse_gamification"
+   295→            defaultOpen={false}
+   296→          >
+   297→            <div className="p-4"><GamificationPanel /></div>
+   298→          </CollapsibleSection>
+   299→
+   300→          <UseCasesSection onLaunch={(wf) => { setActiveWorkflow(wf); setWorkflowOpen(true); }} />
+   301→        </main>
+   302→      )}
+   303→
+   304→      {/* FARM TAB — fields, crops, soil, livestock, irrigation */}
+   305→      {activeTab === 'farm' && (
+   306→        <main className="flex-1 max-w-[1200px] mx-auto w-full p-4 sm:p-6 space-y-6">
+   307→          <div className="rounded-xl p-4 bg-gradient-to-r from-emerald-600 to-green-700 text-white">
+   308→            <div className="flex items-center gap-2"><Tractor className="h-5 w-5" /><h2 className="text-lg font-bold">Farm Management</h2></div>
+   309→            <p className="text-xs text-emerald-100 mt-1">Fields · Crops · Soil · Livestock · Irrigation · Protection — 10 tools</p>
+   310→          </div>
+   311→
+   312→          {/* Sub-category: Fields & Crops */}
+   313→          <div className="space-y-3">
+   314→            <SubHeader emoji="🌱" label="Fields & Crops" />
+   315→            <CollapsibleSection title="Multi-Field Dashboard" description="Track every field, crop stage and irrigation demand in one place" icon={Layers} color="#16a34a" storageKey="collapse_multifield" defaultOpen={false}><div className="p-4"><MultiFieldDashboard /></div></CollapsibleSection>
+   316→            <CollapsibleSection title="Coordinate Converter" description="DMS ↔ Decimal · UTM ↔ Lat/Lng · Batch CSV conversion (WGS84)" icon={MapPin} color="#6366f1" storageKey="collapse_coords" defaultOpen={false}><div className="p-4"><CoordinateConverter /></div></CollapsibleSection>
+   317→            <CollapsibleSection title="Field Boundary Importer" description="Import GeoJSON · KML · WKT · CSV · Area/perimeter/centroid · Convert & export · SVG preview" icon={Shapes} color="#10b981" storageKey="collapse_boundary" defaultOpen={false}><div className="p-4"><FieldBoundaryImporter /></div></CollapsibleSection>
+   318→            <CollapsibleSection title="Distance & Bearing Calculator" description="Vincenty geodesic distance · Initial/final bearing · Destination projection · Batch CSV · Field-to-field" icon={Compass} color="#0891b2" storageKey="collapse_distance" defaultOpen={false}><div className="p-4"><DistanceBearingCalculator /></div></CollapsibleSection>
+   319→            <CollapsibleSection title="Elevation & Slope Analyzer" description="Open-Meteo elevation API · Point / Path profile / Slope grid · Aspect · Hillshade · Frost risk — no key" icon={Mountain} color="#78716c" storageKey="collapse_elevation" defaultOpen={false}><div className="p-4"><ElevationSlopeAnalyzer /></div></CollapsibleSection>
+   320→            <CollapsibleSection title="Crop Rotation Planner" description="Multi-year rotation · N credit tracking · Disease breaks · Cover crops · Soil health score" icon={RefreshCw} color="#16a34a" storageKey="collapse_rotation" defaultOpen={false}><div className="p-4"><CropRotationPlanner /></div></CollapsibleSection>
+   321→            <CollapsibleSection title="Season Plan Generator" description="AI-powered week-by-week crop plan · Kc + NPK + irrigation + fertigation + warnings" icon={Sparkles} color="#7c3aed" storageKey="collapse_season_plan" defaultOpen={false}><div className="p-4"><SeasonPlanGeneratorWrapper /></div></CollapsibleSection>
+   322→            <CollapsibleSection title="Fertilization Generator" description="Per-crop lifecycle fertilization schedule · NPK + micros · Application methods + sources · 20 crops · PDF export" icon={Flask} color="#16a34a" storageKey="collapse_fertilization" defaultOpen={false}><div className="p-4"><FertilizationGenerator /></div></CollapsibleSection>
+   323→            <CollapsibleSection title="Labor Calendar" description="Phenology-driven field operations · Person-days/ha · Peak week detection · Skill levels · 20 crops · PDF export" icon={CalendarDays} color="#0891b2" storageKey="collapse_labor_cal" defaultOpen={false}><div className="p-4"><LaborCalendar /></div></CollapsibleSection>
+   324→            <CollapsibleSection title="Yield Gap Analysis" description="Benchmark actual vs potential yield by crop and climate zone" icon={TrendingUp} color="#0891b2" storageKey="collapse_yieldgap" defaultOpen={false}><div className="p-4"><YieldGapAnalysis /></div></CollapsibleSection>
+   325→            <CollapsibleSection title="Yield Estimation Calculator" description="Heads/m² × kernels/head × kernel weight → yield (t/ha) — 6 crops · reference: GWHD dataset" icon={TrendingUp} color="#0891b2" storageKey="collapse_yieldest" defaultOpen={false}><div className="p-4"><YieldEstimationCalculator /></div></CollapsibleSection>
+   326→            <CollapsibleSection title="Companion Planting Guide" description="20 crops · 100+ pairings · synergy (✓) · antagonism (✗) · search any crop" icon={Sprout} color="#84cc16" storageKey="collapse_companion" defaultOpen={false}><div className="p-4"><CompanionPlantingGuide /></div></CollapsibleSection>
+   327→            <CollapsibleSection title="Seed Rate Calculator" description="Target population × TGW × germination × field loss → kg seed/ha · 6 crops" icon={Sprout} color="#16a34a" storageKey="collapse_seedrate" defaultOpen={false}><div className="p-4"><SeedRateCalculator /></div></CollapsibleSection>
+   328→            <CollapsibleSection title="Moon Phase Planting Calendar" description="Biodynamic calendar · 29.5-day lunar cycle · 30-day forecast" icon={Moon} color="#6366f1" storageKey="collapse_moon" defaultOpen={false}><div className="p-4"><MoonPhaseCalendar /></div></CollapsibleSection>
+   329→            <CollapsibleSection title="GDD Tracker (Growing Degree Days)" description="Accumulates thermal time from Open-Meteo · predicts growth stages · 5 crops" icon={Sun} color="#f59e0b" storageKey="collapse_gdd" defaultOpen={false}><div className="p-4"><GDDTracker /></div></CollapsibleSection>
+   330→            <CollapsibleSection title="Crop Calendar Generator" description="One-click complete farm calendar: planting + fertilization + irrigation + pest control + labor · 20 crops · editable · PDF export" icon={CalendarDays} color="#16a34a" storageKey="crop_calendar_gen" defaultOpen={false}><div className="p-4"><CropCalendarGenerator /></div></CollapsibleSection>
+   331→          </div>
+   332→
+   333→          {/* Sub-category: Plant Protection */}
+   334→          <div className="space-y-3">
+   335→            <SubHeader emoji="🛡️" label="Plant Protection" />
+   336→            <CollapsibleSection title="Field Scouting Log" description="Voice + photo field observations with severity tagging" icon={Sprout} color="#84cc16" storageKey="collapse_scouting" defaultOpen={false}><div className="p-4"><FieldScoutingLog /></div></CollapsibleSection>
+   337→            <CollapsibleSection title="Pest Threshold Calculator" description="EIL · action threshold · sequential sampling — 5 pest types" icon={Bug} color="#dc2626" storageKey="collapse_pest_threshold" defaultOpen={false}><div className="p-4"><PestThresholdCalculator /></div></CollapsibleSection>
+   338→            <CollapsibleSection title="Pesticide Dose + PHI Calculator" description="AI rate → product rate · Tank mix · Rainfast · Pre-harvest interval countdown · 5 herbicides" icon={FlaskConical} color="#dc2626" storageKey="collapse_pesticide" defaultOpen={false}><div className="p-4"><PesticideDoseCalculator /></div></CollapsibleSection>
+   339→            <CollapsibleSection title="Spray Drift Risk Assessor" description="Wind · Delta-T · Droplet size · Boom height → drift score + buffer distance" icon={Wind} color="#0ea5e9" storageKey="collapse_drift" defaultOpen={false}><div className="p-4"><SprayDriftAssessor /></div></CollapsibleSection>
+   340→            <CollapsibleSection title="Disease Forecast Dashboard" description="5 disease models (Blitecast · TOMCAST · Mills · FHB · Downy mildew) · weather-based spray timing" icon={Bug} color="#dc2626" storageKey="collapse_disease" defaultOpen={false}><div className="p-4"><DiseaseForecastDashboard /></div></CollapsibleSection>
+   341→            <CollapsibleSection title="Drought Stress Index" description="ET₀ deficit + soil water depletion + crop stage → stress score + irrigation urgency" icon={Flame} color="#f97316" storageKey="collapse_drought" defaultOpen={false}><div className="p-4"><DroughtStressIndex /></div></CollapsibleSection>
+   342→            <CollapsibleSection title="Frost Protection Calculator" description="Radiative vs advective frost · Sprinkler / wind machine / smudge pot sizing" icon={Snowflake} color="#3b82f6" storageKey="collapse_frost" defaultOpen={false}><div className="p-4"><FrostProtectionCalculator /></div></CollapsibleSection>
+   343→            <CollapsibleSection title="Hail Damage Estimator" description="Crop stage × hail size × defoliation → yield loss % · insurance claim guidance" icon={CloudRain} color="#64748b" storageKey="collapse_hail" defaultOpen={false}><div className="p-4"><HailDamageEstimator /></div></CollapsibleSection>
+   344→            <CollapsibleSection title="Disease & Weed Reference Gallery" description="Curated from PlantVillage (50K images) · PlantDoc · DeepWeeds · 35+ research datasets" icon={Microscope} color="#8b5cf6" storageKey="collapse_disease_ref" defaultOpen={false}><div className="p-4"><DiseaseReferenceGallery /></div></CollapsibleSection>
+   345→            <CollapsibleSection title="Active Matter Selector (Algérie)" description="Decide which active ingredient to use against diseases, pests and weeds — crop-based advisor · INPV 2017 catalogue · symptom search · ranked recommendations with confidence, doses, DAR and restrictions" icon={Bug} color="#65a30d" storageKey="collapse_active_matter" defaultOpen={false}><div className="p-4"><ActiveMatterSelector /></div></CollapsibleSection>
+   346→          </div>
+   347→
+   348→          {/* Sub-category: Soil & Livestock */}
+   349→          <div className="space-y-3">
+   350→            <SubHeader emoji="🧪" label="Soil & Livestock" />
+   351→            <CollapsibleSection title="Soil Test History Tracker" description="Multi-year soil test tracking · Trend charts · Amendment recommendations · PDF export" icon={FlaskConical} color="#8b5cf6" storageKey="collapse_soil_history" defaultOpen={false}><div className="p-4"><SoilTestHistoryTracker /></div></CollapsibleSection>
+   352→            <CollapsibleSection title="Soil Color Identifier" description="Munsell color → mineral + drainage + iron status · US state soils · 13 minerals · 50 states" icon={Mountain} color="#78716c" storageKey="collapse_soil_color" defaultOpen={false}><div className="p-4"><SoilColorIdentifier /></div></CollapsibleSection>
+   353→            <CollapsibleSection title="Soil Texture Triangle" description="Interactive ternary diagram · USDA/SSEW/International classification · soil properties + management recommendations" icon={Mountain} color="#78716c" storageKey="collapse_soil_texture" defaultOpen={false}><div className="p-4"><SoilTextureTriangle /></div></CollapsibleSection>
+   354→            <CollapsibleSection title="Post-Harvest Storage Calculator" description="EMC (Henderson) · Safe storage days · Drying time + cost · Bin aeration fan sizing — 7 crops" icon={Warehouse} color="#f59e0b" storageKey="collapse_postharvest" defaultOpen={false}><div className="p-4"><PostHarvestStorageCalculator /></div></CollapsibleSection>
+   355→            <CollapsibleSection title="Compost Mixer Calculator" description="C:N ratio · Moisture adjustment · 10 common feedstocks · Target 30:1" icon={Recycle} color="#16a34a" storageKey="collapse_compost" defaultOpen={false}><div className="p-4"><CompostMixerCalculator /></div></CollapsibleSection>
+   356→            <CollapsibleSection title="Cover Crop Selector" description="12 species · 9 goals · drought tolerance · ranked recommendations" icon={Sprout} color="#84cc16" storageKey="collapse_covercrop" defaultOpen={false}><div className="p-4"><CoverCropSelector /></div></CollapsibleSection>
+   357→            <CollapsibleSection title="Greenhouse Climate Designer" description="Heating load · Ventilation rate · CO₂ enrichment sizing · 4 glazing types" icon={Home} color="#10b981" storageKey="collapse_greenhouse" defaultOpen={false}><div className="p-4"><GreenhouseClimateDesigner /></div></CollapsibleSection>
+   358→            <CollapsibleSection title="Grain Bin Inventory Tracker" description="Volume × density × price → stored grain value · multi-bin" icon={Warehouse} color="#f59e0b" storageKey="collapse_grainbin" defaultOpen={false}><div className="p-4"><GrainBinInventoryTracker /></div></CollapsibleSection>
+   359→            <CollapsibleSection title="Manure Management Planner" description="N-P-K value · application timing · buffer zone compliance · 6 manure types" icon={Droplets} color="#8b5cf6" storageKey="collapse_manure" defaultOpen={false}><div className="p-4"><ManureManagementPlanner /></div></CollapsibleSection>
+   360→            <CollapsibleSection title="Machinery Cost Calculator" description="Ownership + operating cost → $/ha + $/hr · buy vs custom hire" icon={Tractor} color="#f59e0b" storageKey="collapse_machinery" defaultOpen={false}><div className="p-4"><MachineryCostCalculator /></div></CollapsibleSection>
+   361→            <CollapsibleSection title="Yield Monitor Calibrator" description="Moisture correction · flow calibration · test weight assessment" icon={Gauge} color="#6366f1" storageKey="collapse_yieldmon" defaultOpen={false}><div className="p-4"><YieldMonitorCalibrator /></div></CollapsibleSection>
+   362→            <CollapsibleSection title="Livestock Management" description="Feed rations (NRC 2021) · Pasture capacity · Manure NPK value · Rotational grazing" icon={Beef} color="#f59e0b" storageKey="collapse_livestock" defaultOpen={false}><div className="p-4"><LivestockIntegration /></div></CollapsibleSection>
+   363→            <CollapsibleSection title="Feed Ration Balancer (NRC 2021)" description="DMI · CP · TDN · Ca · P balancing — 8 ingredients · 4 animal types" icon={Beef} color="#8b5cf6" storageKey="collapse_ration" defaultOpen={false}><div className="p-4"><FeedRationBalancer /></div></CollapsibleSection>
+   364→            <CollapsibleSection title="Livestock Growth Benchmarks" description="Real trial data: broiler + pig + cattle · compare your animals to reference curves" icon={Beef} color="#f59e0b" storageKey="collapse_livestock_bench" defaultOpen={false}><div className="p-4"><LivestockGrowthBenchmark /></div></CollapsibleSection>
+   365→            <CollapsibleSection title="Silage Fermentation Predictor" description="Moisture · sugar · packing density · chop length → fermentation quality score" icon={Beef} color="#f59e0b" storageKey="collapse_silage" defaultOpen={false}><div className="p-4"><SilageFermentationPredictor /></div></CollapsibleSection>
+   366→            <CollapsibleSection title="Bee Hive + Honey Yield Calculator" description="Daily weight gain · nectar flow projection · honey yield + revenue" icon={Bug} color="#eab308" storageKey="collapse_beehive" defaultOpen={false}><div className="p-4"><BeeHiveHoneyCalculator /></div></CollapsibleSection>
+   367→            <CollapsibleSection title="Water Harvesting Calculator" description="Rooftop rainwater collection · cistern sizing · demand coverage" icon={Droplets} color="#0ea5e9" storageKey="collapse_water_harvest" defaultOpen={false}><div className="p-4"><WaterHarvestingCalculator /></div></CollapsibleSection>
+   368→            <CollapsibleSection title="Biogas Digester Calculator" description="Biogas yield · digester sizing · energy + revenue · 5 substrates" icon={Flame} color="#f97316" storageKey="collapse_biogas" defaultOpen={false}><div className="p-4"><BiogasDigesterCalculator /></div></CollapsibleSection>
+   369→          </div>
+   370→
+   371→          {/* Sub-category: Irrigation */}
+   372→          <div className="space-y-3">
+   373→            <SubHeader emoji="💧" label="Irrigation" />
+   374→            <CollapsibleSection title="Irrigation Program Generator" description="Decadal (10-day) irrigation schedule from the BRL/COM memento" icon={Droplets} color="#0ea5e9" storageKey="collapse_irrigation" defaultOpen={false}><div className="p-4"><IrrigationProgramGenerator /></div></CollapsibleSection>
+   375→            <CollapsibleSection title="Irrigation System Designer" description="Multi-zone sprinkler / drip / bubbler designer with pump sizing" icon={Settings} color="#6366f1" storageKey="collapse_system_design" defaultOpen={false}><div className="p-4"><IrrigationSystemDesigner /></div></CollapsibleSection>
+   376→            <CollapsibleSection title="Seasonal Irrigation Planner" description="Season-by-season irrigation focus, risks and recommendations" icon={Calendar} color="#f59e0b" storageKey="collapse_seasonal" defaultOpen={false}><div className="p-4"><SeasonScheduler /></div></CollapsibleSection>
+   377→            <CollapsibleSection title="Evapotranspiration Tracker" description="Live ET₀ (Open-Meteo) · FAO-56 Kc × ETc · 7-day irrigation plan · ERA5 history — no API key needed" icon={Sun} color="#0891b2" storageKey="collapse_et_tracker" defaultOpen={false}><div className="p-4"><EvapotranspirationTracker /></div></CollapsibleSection>
+   378→            <CollapsibleSection title="Irrigation Scheduler" description="Controllers · Zones · Schedules · Sequences · Cycle-and-soak eco-mode · Weather % adjust · YAML/CSV/JSON export" icon={Clock} color="#0ea5e9" storageKey="collapse_irr_sched" defaultOpen={false}><div className="p-4"><IrrigationScheduler /></div></CollapsibleSection>
+   379→          </div>
+   380→        </main>
+   381→      )}
+   382→
+   383→      {/* INSIGHTS TAB — intelligence, business, community */}
+   384→      {activeTab === 'insights' && (
+   385→        <main className="flex-1 max-w-[1200px] mx-auto w-full p-4 sm:p-6 space-y-6">
+   386→          <div className="rounded-xl p-4 bg-gradient-to-r from-indigo-600 to-violet-700 text-white">
+   387→            <div className="flex items-center gap-2"><Sparkles className="h-5 w-5" /><h2 className="text-lg font-bold">Intelligence & Insights</h2></div>
+   388→            <p className="text-xs text-indigo-100 mt-1">Satellite · Weather · AI · Financial · Marketplace · Community — 8 tools</p>
+   389→          </div>
+   390→
+   391→          {/* Sub-category: Intelligence */}
+   392→          <div className="space-y-3">
+   393→            <SubHeader emoji="🛰️" label="Intelligence & AI" />
+   394→            <CollapsibleSection title="NDVI Satellite Field Maps" description="Vegetation health heatmap · Stress zone detection · AI recommendations · PDF export" icon={Satellite} color="#6366f1" storageKey="collapse_ndvi" defaultOpen={false}><div className="p-4"><NdviFieldMaps /></div></CollapsibleSection>
+   395→            <CollapsibleSection title="Weather Radar + Frost Maps" description="Live 7-day forecast · Frost risk · Heat warnings · Spray windows · Microclimate" icon={CloudRain} color="#0ea5e9" storageKey="collapse_weather_radar" defaultOpen={false}><div className="p-4"><WeatherRadar /></div></CollapsibleSection>
+   396→            <CollapsibleSection title="Smart Agriculture Suite" description="Disease detection · crop recommendation · fertilizer guidance" icon={Bug} color="#65a30d" storageKey="collapse_agriplanner" defaultOpen={false}><div className="p-4"><AgriPlannerSuite /></div></CollapsibleSection>
+   397→            <CollapsibleSection title="AI Specialists (Multi-Agent Chat)" description="10 specialized AI agents — Agronomist · Crop Scout · Irrigation Engineer · Soil Scientist · Operations Manager · Financial Analyst · Sustainability Officer · Grant Writer · GIS Analyst · Livestock Vet" icon={Sparkles} color="#6366f1" storageKey="collapse_agent_chat" defaultOpen={false}><div className="p-4"><AgriAgentChat /></div></CollapsibleSection>
+   398→          </div>
+   399→
+   400→          {/* Sub-category: Business */}
+   401→          <div className="space-y-3">
+   402→            <SubHeader emoji="💰" label="Business & Marketplace" />
+   403→            <CollapsibleSection title="Financial Dashboard" description="Costs · Revenue · Gross margin · Break-even · ROI · What-if scenario analysis" icon={DollarSign} color="#f59e0b" storageKey="collapse_financial" defaultOpen={false}><div className="p-4"><FinancialDashboard /></div></CollapsibleSection>
+   404→            <CollapsibleSection title="Marketplace — Buy Fertilizers & Supplies" description="Price comparison from 3 suppliers · Shopping cart · Order export" icon={ShoppingCart} color="#f59e0b" storageKey="collapse_marketplace" defaultOpen={false}><div className="p-4"><Marketplace /></div></CollapsibleSection>
+   405→            <CollapsibleSection title="Sustainability Scorecard" description="5 traffic-light metrics — NUE, water, carbon, soil, pesticides" icon={Leaf} color="#16a34a" storageKey="collapse_sustainability" defaultOpen={false}><div className="p-4"><SustainabilityScorecard /></div></CollapsibleSection>
+   406→            <CollapsibleSection title="RUSLE Erosion Calculator" description="A = R × K × LS × C × P — universal soil loss equation · 14 regions · 12 soil types" icon={Mountain} color="#78716c" storageKey="collapse_rusle" defaultOpen={false}><div className="p-4"><RUSLEErosionCalculator /></div></CollapsibleSection>
+   407→            <CollapsibleSection title="Buffer Strip Designer" description="Width × vegetation → sediment / N / P trapping efficiency · NRCS standards" icon={Shield} color="#14b8a6" storageKey="collapse_buffer" defaultOpen={false}><div className="p-4"><BufferStripDesigner /></div></CollapsibleSection>
+   408→            <CollapsibleSection title="Pollinator Habitat Planner" description="10 species · bloom season + pollinator type + goal filtering" icon={Bug} color="#eab308" storageKey="collapse_pollinator" defaultOpen={false}><div className="p-4"><PollinatorHabitatPlanner /></div></CollapsibleSection>
+   409→            <CollapsibleSection title="Carbon Credit Estimator" description="IPCC Tier 2 · 6 practices · $/ha revenue · 20% permanence buffer · 10-yr commitment" icon={Leaf} color="#10b981" storageKey="collapse_carbon" defaultOpen={false}><div className="p-4"><CarbonCreditCalculator /></div></CollapsibleSection>
+   410→          </div>
+   411→
+   412→          {/* Sub-category: Community & Reports */}
+   413→          <div className="space-y-3">
+   414→            <SubHeader emoji="👥" label="Community & Reports" />
+   415→            <CollapsibleSection title="Farmer Community & Knowledge Exchange" description="Share experiences · Ask questions · Benchmark your farm · Success stories" icon={Users} color="#3b82f6" storageKey="collapse_community" defaultOpen={false}><div className="p-4"><FarmerCommunity /></div></CollapsibleSection>
+   416→            <CollapsibleSection title="Professional Report Generator" description="Branded multi-page PDF · Combines all data · Cover page · AI recommendations" icon={FileText} color="#0ea5e9" storageKey="collapse_report" defaultOpen={false}><div className="p-4"><ReportGenerator /></div></CollapsibleSection>
+   417→          </div>
+   418→
+   419→          {/* Sub-category: Settings & Integrations */}
+   420→          <div className="space-y-3">
+   421→            <SubHeader emoji="🔌" label="Settings & Integrations" />
+   422→            <CollapsibleSection title="Service Integrations" description="Plug in free-tier services — Clerk auth, Neon Postgres, OneSignal push, MapTiler maps, Gemini AI" icon={Settings} color="#64748b" storageKey="collapse_integrations" defaultOpen={false}><div className="p-4"><ServiceIntegrations /></div></CollapsibleSection>
+   423→          </div>
+   424→        </main>
+   425→      )}
+   426→
+   427→      {/* FORMULAS TAB */}
+   428→      {activeTab === 'formulas' && (
+   429→        <div className="flex-1 max-w-[1600px] mx-auto w-full flex">
+   430→          <aside className="hidden lg:block w-[300px] flex-shrink-0 border-r border-border bg-background sticky top-[160px] h-[calc(100vh-160px)] overflow-hidden">{sidebarContent}</aside>
+   431→          <main className="flex-1 min-w-0 p-4 sm:p-6">
+   432→            <BookmarkedFormulas
+   433→              bookmarks={bookmarks}
+   434→              formulas={allFormulas}
+   435→              onSelect={handleSelectFormula}
+   436→              onRemove={(code) => { toggleBookmark(code); setBookmarks(prev => prev.filter(c => c !== code)); }}
+   437→            />
+   438→            <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+   439→              <div className="flex items-center gap-2 flex-wrap min-w-0">
+   440→                <h2 className="text-lg font-semibold">{selectedChapter !== null && currentChapterInfo ? `Section ${currentChapterInfo.number}: ${currentChapterInfo.title}` : selectedPart ? selectedPart : t.allFormulas}</h2>
+   441→                <Badge variant="secondary" className="font-mono">{filteredFormulas.length} of {allFormulas.length}</Badge>
+   442→              </div>
+   443→              {hasActiveFilters && <Button variant="outline" size="sm" onClick={handleClearFilters} className="gap-1.5 text-xs"><X className="h-3.5 w-3.5" />Clear</Button>}
+   444→            </div>
+   445→
+   446→            {hasActiveFilters && (
+   447→              <div className="flex items-center gap-2 mb-4 flex-wrap">
+   448→                <Filter className="h-4 w-4 text-muted-foreground" />
+   449→                {selectedPart && <Badge variant="outline" className="gap-1.5">Part: {selectedPart}<button onClick={() => { setSelectedPart(null); setSelectedChapter(null); }}><X className="h-3 w-3" /></button></Badge>}
+   450→                {selectedChapter !== null && <Badge variant="outline" className="gap-1.5">Section: {selectedChapter}<button onClick={() => setSelectedChapter(null)}><X className="h-3 w-3" /></button></Badge>}
+   451→                {onlyWithCalculators && <Badge variant="outline" className="gap-1.5">Calculator only<button onClick={() => setOnlyWithCalculators(false)}><X className="h-3 w-3" /></button></Badge>}
+   452→                {searchQuery && <Badge variant="outline" className="gap-1.5">&quot;{searchQuery}&quot;<button onClick={() => setSearchQuery('')}><X className="h-3 w-3" /></button></Badge>}
+   453→              </div>
+   454→            )}
+   455→
+   456→            {currentChapterInfo?.intro && <div className="bg-card border border-border rounded-lg p-4 mb-5"><p className="text-sm text-muted-foreground leading-relaxed">{currentChapterInfo.intro}</p></div>}
+   457→
+   458→            {filteredFormulas.length === 0 ? (
+   459→              <div className="flex flex-col items-center justify-center py-16 text-center">
+   460→                <div className="rounded-full bg-muted p-4 mb-3"><Search className="h-8 w-8 text-muted-foreground" /></div>
+   461→                <h3 className="text-lg font-semibold mb-1">No formulas match</h3>
+   462→                <Button onClick={handleClearFilters} variant="outline" size="sm" className="mt-2">Clear filters</Button>
+   463→              </div>
+   464→            ) : (
+   465→              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+   466→                {filteredFormulas.map(formula => <FormulaCard key={`${formula.code}-${formula.part}`} formula={formula} onSelect={handleSelectFormula} />)}
+   467→              </div>
+   468→            )}
+   469→          </main>
+   470→        </div>
+   471→      )}
+   472→
+   473→      {/* TOOLS TAB */}
+   474→      {activeTab === 'tools' && (
+   475→        <main className="flex-1 max-w-[1400px] mx-auto w-full p-4 sm:p-6 space-y-6">
+   476→          <FreeToolsSection />
+   477→          <div className="rounded-xl border-2 border-dashed border-border bg-card/50 p-8 text-center">
+   478→            <div className="flex items-center justify-center h-12 w-12 rounded-full bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 mx-auto mb-3">
+   479→              <Wrench className="h-6 w-6" />
+   480→            </div>
+   481→            <h3 className="text-base font-semibold mb-1">Guided Workflows</h3>
+   482→            <p className="text-sm text-muted-foreground mb-4 max-w-md mx-auto">
+   483→              Step-by-step calculators that solve common farm tasks. Pick a goal and walk through it.
+   484→            </p>
+   485→          </div>
+   486→          <UseCasesSection onLaunch={(wf) => { setActiveWorkflow(wf); setWorkflowOpen(true); }} />
+   487→        </main>
+   488→      )}
+   489→
+   490→      {/* ABOUT TAB — founder profile + mission */}
+   491→      {activeTab === 'about' && (
+   492→        <AboutPage />
+   493→      )}
+   494→
+   495→      {/* Footer */}
+   496→      <footer className="mt-auto border-t border-border bg-card">
+   497→        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+   498→          <div className="flex items-center gap-2 text-sm text-muted-foreground"><Sprout className="h-4 w-4 text-emerald-600" /><span>{t.appName} · {handbook.meta.version}</span></div>
+   499→          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+   500→            <Link href="/" className="hover:text-foreground transition-colors">Landing Page</Link>
+   501→            <Link href="/about" className="hover:text-foreground transition-colors">About</Link>
+   502→            <span>{handbook.meta.total_formulas} formulas · {handbook.meta.total_parts} parts · {handbook.meta.total_chapters} sections</span>
+   503→          </div>
+   504→        </div>
+   505→      </footer>
+   506→
+   507→      {/* Dialogs */}
+   508→      <FormulaDetailDialog formula={selectedFormula} open={dialogOpen} onOpenChange={setDialogOpen} />
+   509→      <WorkflowRunner workflow={activeWorkflow} open={workflowOpen} onOpenChange={setWorkflowOpen} />
+   510→
+   511→      {/* AI Agronomist Assistant — floating chat, available on all tabs */}
+   512→      <AgronomistAssistant />
+   513→
+   514→      {/* Field Data Capture — floating scan button, available on all tabs */}
+   515→      <FieldDataCapture />
+   516→
+   517→      {/* Predictive Alerts — floating bell button, available on all tabs */}
+   518→      <NotificationCenter />
+   519→
+   520→      {/* Command Palette — Cmd+K global search, available on all tabs */}
+   521→      <CommandPalette
+   522→        open={paletteOpen}
+   523→        onOpenChange={setPaletteOpen}
+   524→        onSelect={(entry) => openTool(entry.tab, entry.storageKey)}
+   525→      />
+   526→
+   527→      {/* Mobile bottom tab bar — thumb-friendly navigation on phones */}
+   528→      <MobileBottomNav activeTab={activeTab} onTabChange={(tab) => setActiveTab(tab)} onSearch={() => setPaletteOpen(true)} />
+   529→
+   530→      {/* Onboarding flow — auto-shows on first visit, replayable via header Tour button */}
+   531→      <OnboardingFlow />
+   532→    </div>
+   533→  );
+   534→}
+   535→
+   536→function TabButton({ active, onClick, icon: Icon, label, badge }: { active: boolean; onClick: () => void; icon: typeof Home; label: string; badge?: number }) {
+   537→  return (
+   538→    <button onClick={onClick} className={cn('flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-all border-b-2 -mb-px', active ? 'border-emerald-600 text-emerald-700 dark:text-emerald-400' : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border')}>
+   539→      <Icon className="h-4 w-4" />
+   540→      {label}
+   541→      {badge !== undefined && <span className={cn('text-[10px] font-mono font-bold px-1.5 py-0.5 rounded', active ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400' : 'bg-muted text-muted-foreground')}>{badge}</span>}
+   542→    </button>
+   543→  );
+   544→}
+   545→
+   546→function StatBadge({ icon: Icon, label, value }: { icon: typeof Layers; label: string; value: number }) {
+   547→  return (
+   548→    <div className="bg-white/10 backdrop-blur rounded-lg px-3 py-2 border border-white/20">
+   549→      <div className="flex items-center gap-1.5 text-emerald-100 text-[10px] uppercase tracking-wide font-medium"><Icon className="h-3 w-3" />{label}</div>
+   550→      <div className="text-xl font-bold mt-0.5">{value}</div>
+   551→    </div>
+   552→  );
+   553→}
+   554→
+   555→/**
+   556→ * Mobile bottom tab bar — thumb-friendly navigation for phones.
+   557→ * Hidden on sm+ screens (the header tab bar takes over).
+   558→ * Includes a center search button (⌘K) for one-thumb access.
+   559→ */
+   560→function MobileBottomNav({ activeTab, onTabChange, onSearch }: {
+   561→  activeTab: TabId;
+   562→  onTabChange: (tab: TabId) => void;
+   563→  onSearch: () => void;
+   564→}) {
+   565→  const tabs: { id: TabId; icon: typeof Home; label: string }[] = [
+   566→    { id: 'home', icon: Home, label: 'Home' },
+   567→    { id: 'farm', icon: Tractor, label: 'Farm' },
+   568→    { id: 'insights', icon: Sparkles, label: 'Insights' },
+   569→    { id: 'formulas', icon: BookOpen, label: 'Formulas' },
+   570→  ];
+   571→  return (
+   572→    <nav className="sm:hidden fixed bottom-0 inset-x-0 z-40 border-t bg-background/95 backdrop-blur-md safe-area-pb">
+   573→      <div className="grid grid-cols-5 items-center h-14">
+   574→        {tabs.slice(0, 2).map(t => (
+   575→          <MobileTabButton key={t.id} active={activeTab === t.id} icon={t.icon} label={t.label} onClick={() => onTabChange(t.id)} />
+   576→        ))}
+   577→        {/* Center search button */}
+   578→        <button
+   579→          onClick={onSearch}
+   580→          className="flex flex-col items-center justify-center -mt-4 mx-auto w-12 h-12 rounded-full bg-gradient-to-br from-emerald-600 to-green-700 text-white shadow-lg active:scale-95 transition-transform"
+   581→          title="Search (⌘K)"
+   582→        >
+   583→          <Search className="h-5 w-5" />
+   584→        </button>
+   585→        {tabs.slice(2).map(t => (
+   586→          <MobileTabButton key={t.id} active={activeTab === t.id} icon={t.icon} label={t.label} onClick={() => onTabChange(t.id)} />
+   587→        ))}
+   588→      </div>
+   589→    </nav>
+   590→  );
+   591→}
+   592→
+   593→function MobileTabButton({ active, icon: Icon, label, onClick }: {
+   594→  active: boolean; icon: typeof Home; label: string; onClick: () => void;
+   595→}) {
+   596→  return (
+   597→    <button
+   598→      onClick={onClick}
+   599→      className={`flex flex-col items-center justify-center gap-0.5 h-full text-[9px] font-medium transition-colors ${
+   600→        active ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'
+   601→      }`}
+   602→    >
+   603→      <Icon className={`h-5 w-5 ${active ? 'scale-110' : ''} transition-transform`} />
+   604→      <span>{label}</span>
+   605→    </button>
+   606→  );
+   607→}
+   608→
+   609→function QuickNav({ icon: Icon, label, desc, color, onClick }: { icon: typeof Home; label: string; desc: string; color: string; onClick: () => void }) {
+   610→  return (
+   611→    <button onClick={onClick} className="group flex items-center gap-3 p-4 rounded-xl border-2 border-border bg-card hover:border-emerald-400 hover:shadow-md hover:-translate-y-0.5 transition-all text-left">
+   612→      <div className="flex items-center justify-center h-10 w-10 rounded-lg flex-shrink-0" style={{ background: `${color}20`, color }}>
+   613→        <Icon className="h-5 w-5" />
+   614→      </div>
+   615→      <div className="flex-1 min-w-0">
+   616→        <div className="text-sm font-semibold group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">{label}</div>
+   617→        <div className="text-[11px] text-muted-foreground leading-tight mt-0.5">{desc}</div>
+   618→      </div>
+   619→    </button>
+   620→  );
+   621→}
+   622→
+   623→/**
+   624→ * Wrapper for the Season Plan Generator modal — exposes a button inside a
+   625→ * CollapsibleSection so users can find it without going through the
+   626→ * FreeToolsSection's "Pro feature" card.
+   627→ */
+   628→function SeasonPlanGeneratorWrapper() {
+   629→  const [open, setOpen] = useState(false);
+   630→  return (
+   631→    <div className="space-y-3">
+   632→      <div className="rounded-lg border-2 border-emerald-200 dark:border-emerald-900 bg-gradient-to-br from-emerald-50/60 to-green-50/40 dark:from-emerald-950/20 dark:to-green-950/10 p-4">
+   633→        <div className="flex items-start gap-3">
+   634→          <div className="shrink-0 w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center">
+   635→            <Sparkles className="h-5 w-5" />
+   636→          </div>
+   637→          <div className="flex-1">
+   638→            <h4 className="text-sm font-semibold text-emerald-900 dark:text-emerald-100">AI Season Plan Generator</h4>
+   639→            <p className="text-[11px] text-emerald-700 dark:text-emerald-300 mt-0.5">
+   640→              Generates a complete week-by-week crop plan from your inputs — Kc curve, NPK dose per week, irrigation schedule, fertigation recipe, growth-stage notes, and warnings (frost/heat/water stress). Powered by the LLM via the <code className="text-[10px]">/api/season-plan</code> route.
+   641→            </p>
+   642→            <Button size="sm" onClick={() => setOpen(true)} className="mt-2 gap-1.5">
+   643→              <Sparkles className="h-3.5 w-3.5" /> Open Season Plan Generator
+   644→            </Button>
+   645→          </div>
+   646→        </div>
+   647→      </div>
+   648→      <SeasonPlanGenerator open={open} onOpenChange={setOpen} />
+   649→    </div>
+   650→  );
+   651→}
+   652→
+   653→function SubHeader({ emoji, label }: { emoji: string; label: string }) {
+   654→  return (
+   655→    <div className="flex items-center gap-2 pt-2">
+   656→      <span className="text-lg">{emoji}</span>
+   657→      <span className="text-sm font-bold text-muted-foreground uppercase tracking-wide">{label}</span>
+   658→      <div className="flex-1 h-px bg-border" />
+   659→    </div>
+   660→  );
+   661→}
+   662→
