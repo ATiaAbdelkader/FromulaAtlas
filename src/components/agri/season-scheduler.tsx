@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { Workflow } from '@/lib/workflows';
+import { useTranslation } from '@/lib/language-store';
 
 interface SeasonSchedulerProps {
   onLaunchWorkflow?: (workflow: Workflow) => void;
@@ -120,6 +121,7 @@ export function SeasonScheduler({ onLaunchWorkflow }: SeasonSchedulerProps) {
   // Defer date computation to after mount to avoid SSR hydration mismatch
   // (server renders in UTC, client in user's timezone — they can differ by a day)
   const [now, setNow] = useState<Date | null>(null);
+  const { isRTL } = useTranslation();
 
   useEffect(() => {
     setNow(new Date());
@@ -132,8 +134,68 @@ export function SeasonScheduler({ onLaunchWorkflow }: SeasonSchedulerProps) {
   const season = getSeason(month, hemisphere);
   const SeasonIcon = season.icon;
 
-  const monthName = effectiveNow.toLocaleString('en-US', { month: 'long' });
+  const monthName = effectiveNow.toLocaleString(isRTL ? 'ar' : 'en-US', { month: 'long' });
   const dayOfMonth = effectiveNow.getDate();
+
+  // Arabic overrides for season strings (name, focus, risk, recommendations)
+  const seasonAr: Record<string, {
+    name: string;
+    irrigationFocus: string;
+    riskAlert?: string;
+    recommendations: string[];
+  }> = {
+    spring: {
+      name: 'الربيع',
+      irrigationFocus: 'تأسيس المحصول والري المبكر',
+      riskAlert: 'خطر صقيع للمحاصيل المزروعة مبكراً — راقب أدنى درجات الحرارة وجهّز حماية الصقيع.',
+      recommendations: [
+        'احسب احتياج المحصول المائي (ETc) للمحاصيل المزروعة حديثاً',
+        'أعدّ جدولة الري بناءً على ماء التربة و ET',
+        'تحقّق من تجانس النظام قبل ذروة الموسم',
+        'خطّط لمعدلات حقن السماد للتسميد بالري',
+      ],
+    },
+    summer: {
+      name: 'الصيف',
+      irrigationFocus: 'ذروة الطلب المائي وإدارة الإجهاد الحراري',
+      riskAlert: 'ذروة الطلب المائي — قد يتجاوز ET 8 مم/يوم. تأكّد أن المضخات والفلاتر تتحمّل التشغيل المستمر.',
+      recommendations: [
+        'ذروة ET — احسب الاحتياج الإجمالي للري يومياً',
+        'راقب THI لإجهاد الماشية الحراري',
+        'تحقّق من تجانس التوزيع — الحرارة تضغط على الرؤوس',
+        'احسب متطلّب الغسل إذا تراكمت الملوحة',
+      ],
+    },
+    autumn: {
+      name: 'الخريف',
+      irrigationFocus: 'تجهيز الحصاد وصيانة النظام',
+      riskAlert: 'الأمطار المبكرة قد تغرق المحاصيل إذا لم يُوقف الري في الوقت. راقب توقعات الطقس.',
+      recommendations: [
+        'قلّل الري نضج المحصول — احسب الري النهائي',
+        'اغسل وفحص خطوط التنقيط قبل التخزين الشتوي',
+        'اختبر جودة المياه قبل الموسم القادم',
+        'دقّق أداء النظام للموسم — احسب WUE',
+      ],
+    },
+    winter: {
+      name: 'الشتاء',
+      irrigationFocus: 'صيانة النظام وتخطيط الموسم القادم',
+      riskAlert: 'خطر تلف التجمّد — فرّغ كل الأنابيب والمضخات والخزّانات. خزّن المعدات الحساسة داخل البيوت.',
+      recommendations: [
+        'فرّغ وأصلح نظام الري لمنع تلف التجمّد',
+        'خطّط لتصميم نظام الموسم القادم — راجع حجم الأنابيب',
+        'راجع توفّر المياه وسعة التخزين',
+        'حلّل بيانات أداء الموسم الماضي وقارن',
+      ],
+    },
+  };
+
+  const seasonKey = season.name.toLowerCase();
+  const ar = isRTL ? seasonAr[seasonKey] : null;
+  const localizedName = isRTL && ar ? ar.name : season.name;
+  const localizedFocus = isRTL && ar ? ar.irrigationFocus : season.irrigationFocus;
+  const localizedRisk = isRTL && ar && ar.riskAlert ? ar.riskAlert : season.riskAlert;
+  const localizedRecs = isRTL && ar ? ar.recommendations : season.recommendations.map(r => r.text);
 
   return (
     <section className="mb-8">
@@ -141,10 +203,10 @@ export function SeasonScheduler({ onLaunchWorkflow }: SeasonSchedulerProps) {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <Calendar className="h-4 w-4 text-emerald-600" />
-            <h2 className="text-lg font-semibold tracking-tight">Seasonal Irrigation Planner</h2>
+            <h2 className="text-lg font-semibold tracking-tight">{isRTL ? 'مخطّط الري الموسمي' : 'Seasonal Irrigation Planner'}</h2>
           </div>
           <p className="text-sm text-muted-foreground">
-            Today is {monthName} {dayOfMonth}. Here&apos;s what to focus on this season.
+            {isRTL ? `اليوم ${dayOfMonth} ${monthName}. إليك ما يجب التركيز عليه هذا الموسم.` : `Today is ${monthName} ${dayOfMonth}. Here's what to focus on this season.`}
           </p>
         </div>
         <div className="flex items-center gap-1">
@@ -158,7 +220,7 @@ export function SeasonScheduler({ onLaunchWorkflow }: SeasonSchedulerProps) {
                 : 'bg-background text-muted-foreground border-border'
             )}
           >
-            Northern
+            {isRTL ? 'شمالي' : 'Northern'}
           </button>
           <button
             onClick={() => setHemisphere('southern')}
@@ -169,7 +231,7 @@ export function SeasonScheduler({ onLaunchWorkflow }: SeasonSchedulerProps) {
                 : 'bg-background text-muted-foreground border-border'
             )}
           >
-            Southern
+            {isRTL ? 'جنوبي' : 'Southern'}
           </button>
         </div>
       </div>
@@ -182,23 +244,23 @@ export function SeasonScheduler({ onLaunchWorkflow }: SeasonSchedulerProps) {
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <h3 className={cn('text-xl font-bold', season.color)}>{season.name}</h3>
+              <h3 className={cn('text-xl font-bold', season.color)}>{localizedName}</h3>
               <Badge variant="outline" className="text-[10px] font-normal">
                 {season.months}
               </Badge>
             </div>
             <p className="text-sm text-muted-foreground mt-0.5">
-              {season.irrigationFocus}
+              {localizedFocus}
             </p>
           </div>
         </div>
 
         {/* Risk alert */}
-        {season.riskAlert && (
+        {localizedRisk && (
           <div className="mb-4 rounded-lg border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 p-3 flex items-start gap-2">
             <span className="text-amber-600 dark:text-amber-400 text-sm">⚠</span>
             <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
-              {season.riskAlert}
+              {localizedRisk}
             </p>
           </div>
         )}
@@ -206,7 +268,7 @@ export function SeasonScheduler({ onLaunchWorkflow }: SeasonSchedulerProps) {
         {/* Recommendations */}
         <div className="space-y-2">
           <div className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground mb-2">
-            This Season&apos;s Priorities
+            {isRTL ? 'أولويات هذا الموسم' : 'This Season\'s Priorities'}
           </div>
           {season.recommendations.map((rec, idx) => (
             <div
@@ -217,7 +279,7 @@ export function SeasonScheduler({ onLaunchWorkflow }: SeasonSchedulerProps) {
                 {idx + 1}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm leading-relaxed">{rec.text}</p>
+                <p className="text-sm leading-relaxed">{localizedRecs[idx] ?? rec.text}</p>
                 {rec.formulaCodes && rec.formulaCodes.length > 0 && (
                   <div className="flex flex-wrap gap-1 mt-1.5">
                     {rec.formulaCodes.map(code => (
@@ -250,7 +312,7 @@ export function SeasonScheduler({ onLaunchWorkflow }: SeasonSchedulerProps) {
             }}
           >
             <Droplets className="h-3.5 w-3.5" />
-            Start {season.name} Workflow
+            {isRTL ? `ابدأ سير عمل ${localizedName}` : `Start ${season.name} Workflow`}
             <ArrowRight className="h-3 w-3" />
           </Button>
         </div>

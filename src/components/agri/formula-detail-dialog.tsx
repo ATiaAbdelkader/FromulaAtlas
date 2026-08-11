@@ -34,6 +34,7 @@ function FormulaField({ icon: Icon, label, children }: { icon: any; label: strin
 
 export function FormulaDetailDialog({ formula, open, onOpenChange }: FormulaDetailDialogProps) {
   const language = useLanguageStore(s => s.language);
+  const isRTL = language === 'ar';
   if (!formula) return null;
 
   const color = getPartColor(formula.part);
@@ -52,10 +53,10 @@ export function FormulaDetailDialog({ formula, open, onOpenChange }: FormulaDeta
               {formula.code}
             </Badge>
             <Badge variant="outline" className="text-xs font-normal bg-white/60">
-              Part {formula.part_roman} · {formula.part}
+              {isRTL ? `الجزء ${formula.part_roman} · ${formula.part}` : `Part ${formula.part_roman} · ${formula.part}`}
             </Badge>
             <Badge variant="outline" className="text-xs font-normal bg-white/60">
-              Sec. {formula.chapter_number} · {formula.chapter}
+              {isRTL ? `قسم ${formula.chapter_number} · ${formula.chapter}` : `Sec. ${formula.chapter_number} · ${formula.chapter}`}
             </Badge>
           </div>
           <DialogTitle className="text-lg font-bold tracking-tight">
@@ -73,7 +74,7 @@ export function FormulaDetailDialog({ formula, open, onOpenChange }: FormulaDeta
             <div className="space-y-1.5">
               <div className="flex items-center gap-2 text-sm font-semibold text-stone-700 dark:text-stone-300">
                 <Calculator className="h-4 w-4 text-emerald-600 dark:text-emerald-500" />
-                Formula
+                {isRTL ? 'المعادلة' : 'Formula'}
               </div>
               <div className="rounded-lg bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 p-4 font-mono text-base overflow-x-auto leading-relaxed">
                 <span className="text-emerald-700 dark:text-emerald-400 font-semibold">
@@ -89,10 +90,10 @@ export function FormulaDetailDialog({ formula, open, onOpenChange }: FormulaDeta
 
             {/* 2-column: Variables + Purpose */}
             <div className="grid md:grid-cols-2 gap-5">
-              <FormulaField icon={Variable} label="Variables & Units">
+              <FormulaField icon={Variable} label={isRTL ? 'المتغيرات والوحدات' : 'Variables & Units'}>
                 {displayVariables}
               </FormulaField>
-              <FormulaField icon={Target} label="Purpose">
+              <FormulaField icon={Target} label={isRTL ? 'الغرض' : 'Purpose'}>
                 {displayPurpose}
               </FormulaField>
             </div>
@@ -100,7 +101,7 @@ export function FormulaDetailDialog({ formula, open, onOpenChange }: FormulaDeta
             <Separator />
 
             {/* Example */}
-            <FormulaField icon={Beaker} label="Worked Example">
+            <FormulaField icon={Beaker} label={isRTL ? 'مثال محلول' : 'Worked Example'}>
               {formula.example}
             </FormulaField>
 
@@ -109,7 +110,7 @@ export function FormulaDetailDialog({ formula, open, onOpenChange }: FormulaDeta
               <div className="space-y-1.5">
                 <div className="flex items-center gap-2 text-sm font-semibold text-amber-700 dark:text-amber-500">
                   <AlertTriangle className="h-4 w-4" />
-                  Common Pitfall
+                  {isRTL ? 'مزالق شائعة' : 'Common Pitfall'}
                 </div>
                 <div className="text-sm bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-md p-3 leading-relaxed">
                   {formula.pitfall}
@@ -122,7 +123,7 @@ export function FormulaDetailDialog({ formula, open, onOpenChange }: FormulaDeta
               <div className="space-y-1.5">
                 <div className="flex items-center gap-2 text-sm font-semibold text-blue-700 dark:text-blue-500">
                   <Lightbulb className="h-4 w-4" />
-                  Decision Rule
+                  {isRTL ? 'قاعدة قرار' : 'Decision Rule'}
                 </div>
                 <div className="text-sm bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 rounded-md p-3 leading-relaxed">
                   {formula.decision}
@@ -139,8 +140,8 @@ export function FormulaDetailDialog({ formula, open, onOpenChange }: FormulaDeta
                     <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400">
                       <Calculator className="h-4 w-4" />
                     </div>
-                    <h3 className="text-sm font-bold text-emerald-800 dark:text-emerald-300">Interactive Calculator</h3>
-                    <Badge variant="outline" className="text-[9px] text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800">Live</Badge>
+                    <h3 className="text-sm font-bold text-emerald-800 dark:text-emerald-300">{isRTL ? 'حاسبة تفاعلية' : 'Interactive Calculator'}</h3>
+                    <Badge variant="outline" className="text-[9px] text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800">{isRTL ? 'مباشر' : 'Live'}</Badge>
                   </div>
                   <InteractiveCalculator formula={formula} />
                 </div>
@@ -149,7 +150,7 @@ export function FormulaDetailDialog({ formula, open, onOpenChange }: FormulaDeta
 
             {/* Notes */}
             {formula.notes && (
-              <FormulaField icon={BookOpen} label="Notes">
+              <FormulaField icon={BookOpen} label={isRTL ? 'ملاحظات' : 'Notes'}>
                 {formula.notes}
               </FormulaField>
             )}
@@ -159,7 +160,7 @@ export function FormulaDetailDialog({ formula, open, onOpenChange }: FormulaDeta
         {/* Fixed footer */}
         <div className="p-3 border-t bg-stone-50 dark:bg-stone-900/50 flex justify-end flex-shrink-0">
           <Button variant="outline" onClick={() => onOpenChange(false)} className="gap-1.5">
-            <X className="h-3.5 w-3.5" /> Close
+            <X className="h-3.5 w-3.5" /> {isRTL ? 'إغلاق' : 'Close'}
           </Button>
         </div>
       </DialogContent>

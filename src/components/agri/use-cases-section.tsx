@@ -4,6 +4,7 @@ import { Zap, ArrowRight, Clock, Droplets, CloudRain, ClipboardCheck, Sprout, Pa
 import { Badge } from '@/components/ui/badge';
 import { workflows, type Workflow } from '@/lib/workflows';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/language-store';
 
 interface UseCasesSectionProps {
   onLaunch: (workflow: Workflow) => void;
@@ -20,25 +21,38 @@ const domainMeta: Record<string, { color: string; bg: string; border: string; la
 };
 
 export function UseCasesSection({ onLaunch }: UseCasesSectionProps) {
+  const { isRTL } = useTranslation();
+  const localDomainMeta = (key: string) => {
+    const base = domainMeta[key];
+    if (!base) return domainMeta['cross-cutting'];
+    const labelAr: Record<string, string> = {
+      crop: 'المحاصيل',
+      animal: 'الحيوان',
+      'cross-cutting': 'تطبيقي',
+    };
+    return { ...base, label: isRTL ? labelAr[key] : base.label };
+  };
   return (
     <section className="mb-8">
       <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <Zap className="h-4 w-4 text-emerald-600" />
-            <h2 className="text-lg font-semibold tracking-tight">Guided Workflows</h2>
+            <h2 className="text-lg font-semibold tracking-tight">{isRTL ? 'سير العمل الموجّه' : 'Guided Workflows'}</h2>
           </div>
           <p className="text-sm text-muted-foreground">
-            Step-by-step calculators that solve common farm tasks. Pick a goal and we&apos;ll walk you through it.
+            {isRTL
+              ? 'حاسبات خطوة بخطوة تحلّ مهام المزرعة الشائعة. اختر هدفاً وسنرشدك خلاله.'
+              : 'Step-by-step calculators that solve common farm tasks. Pick a goal and we\'ll walk you through it.'}
           </p>
         </div>
-        <Badge variant="outline" className="text-xs">{workflows.length} workflows</Badge>
+        <Badge variant="outline" className="text-xs">{workflows.length} {isRTL ? 'سير عمل' : 'workflows'}</Badge>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {workflows.map(wf => {
           const Icon = iconMap[wf.icon] ?? Zap;
-          const meta = domainMeta[wf.domain];
+          const meta = localDomainMeta(wf.domain);
           return (
             <button
               key={wf.id}
@@ -61,10 +75,10 @@ export function UseCasesSection({ onLaunch }: UseCasesSectionProps) {
                 {wf.steps.map((step, idx) => (
                   <span key={idx} className="text-[10px] font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded">{idx + 1}</span>
                 ))}
-                <span className="text-[10px] text-muted-foreground ml-1">{wf.steps.length} steps</span>
+                <span className="text-[10px] text-muted-foreground ml-1">{wf.steps.length} {isRTL ? 'خطوات' : 'steps'}</span>
               </div>
               <div className={cn('flex items-center gap-1.5 text-xs font-medium transition-colors', meta.color)}>
-                Start workflow
+                {isRTL ? 'ابدأ سير العمل' : 'Start workflow'}
                 <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
               </div>
             </button>

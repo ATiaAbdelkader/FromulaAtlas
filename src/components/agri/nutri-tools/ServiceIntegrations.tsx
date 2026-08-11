@@ -28,6 +28,7 @@ import {
   Settings, Key, CheckCircle2, Copy, Check, ExternalLink,
   Database, Bell, Map as MapIcon, Lock, Cloud, Sparkles,
 } from 'lucide-react';
+import { useTranslation } from '@/lib/language-store';
 
 interface Integration {
   id: string;
@@ -141,6 +142,7 @@ const INTEGRATIONS: Integration[] = [
 const LS_KEYS = INTEGRATIONS.map(i => i.storageKey);
 
 export function ServiceIntegrations() {
+  const { isRTL } = useTranslation();
   const [values, setValues] = useState<Record<string, string>>({});
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [showEnv, setShowEnv] = useState(false);
@@ -194,13 +196,13 @@ export function ServiceIntegrations() {
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
-          <Settings className="h-4 w-4 text-slate-600" /> Service Integrations
+          <Settings className="h-4 w-4 text-slate-600" /> {isRTL ? 'تكاملات الخدمات' : 'Service Integrations'}
         </CardTitle>
         <div className="flex items-center gap-2 mt-1">
           <Badge variant={readyCount > 0 ? 'default' : 'outline'} className="text-[10px]">
-            {readyCount}/{INTEGRATIONS.length} ready
+            {readyCount}/{INTEGRATIONS.length} {isRTL ? 'جاهز' : 'ready'}
           </Badge>
-          <span className="text-[10px] text-muted-foreground">All services have free tiers — no credit card required to start.</span>
+          <span className="text-[10px] text-muted-foreground">{isRTL ? 'كل الخدمات لها خطط مجانية — لا حاجة لبطاقة ائتمان للبدء.' : 'All services have free tiers — no credit card required to start.'}</span>
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -213,6 +215,7 @@ export function ServiceIntegrations() {
               value={values[i.id] || ''}
               onChange={v => setValue(i.id, v)}
               copied={copiedId === i.id}
+              isRTL={isRTL}
               onCopy={() => {
                 navigator.clipboard.writeText(values[i.id] || '');
                 setCopiedId(i.id);
@@ -230,7 +233,9 @@ export function ServiceIntegrations() {
             className="gap-1.5 text-xs w-full"
           >
             <Key className="h-3.5 w-3.5" />
-            {showEnv ? 'Hide' : 'Show'} .env.local export ({readyCount} keys set)
+            {isRTL
+              ? `${showEnv ? 'إخفاء' : 'إظهار'} تصدير .env.local (${readyCount} ${isRTL ? 'مفاتيح مضبوطة' : 'keys set'})`
+              : `${showEnv ? 'Hide' : 'Show'} .env.local export (${readyCount} keys set)`}
           </Button>
           {showEnv && (
             <div className="mt-2 space-y-2">
@@ -241,10 +246,12 @@ export function ServiceIntegrations() {
               />
               <Button size="sm" onClick={copyEnv} className="gap-1.5 text-xs w-full">
                 {copiedId === 'env' ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
-                Copy .env.local to clipboard
+                {isRTL ? 'نسخ .env.local إلى الحافظة' : 'Copy .env.local to clipboard'}
               </Button>
               <p className="text-[10px] text-muted-foreground">
-                💡 Keys entered here are stored in your browser's localStorage (per-device). To deploy to production, paste the snippet above into your hosting provider's environment variables.
+                {isRTL
+                  ? '💡 المفاتيح المُدخلة هنا تُخزَّن في localStorage متصفّحك (لكل جهاز). للنشر الإنتاجي، الصق المقتطف أعلاه في متغيّرات البيئة لدى مزوّد الاستضافة.'
+                  : '💡 Keys entered here are stored in your browser\'s localStorage (per-device). To deploy to production, paste the snippet above into your hosting provider\'s environment variables.'}
               </p>
             </div>
           )}
@@ -252,7 +259,9 @@ export function ServiceIntegrations() {
 
         {/* Privacy note */}
         <div className="rounded-md border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 p-2 text-[10px] text-muted-foreground">
-          <strong className="text-slate-700 dark:text-slate-300">Privacy:</strong> Keys never leave your browser until you deploy. They are only sent to the corresponding service's API endpoint when that integration is actually used in the app. The Open-Meteo weather integration in the ET Tracker above needs no key — it's genuinely free.
+          <strong className="text-slate-700 dark:text-slate-300">{isRTL ? 'الخصوصية:' : 'Privacy:'}</strong> {isRTL
+            ? 'المفاتيح لا تغادر متصفّحك حتى تنشر. تُرسَل فقط إلى نقطة API للخدمة المقابلة عند استخدام التكامل فعلياً في التطبيق. تكامل Open-Meteo للطقس في متعقّب ET أعلاه لا يحتاج مفتاحاً — إنه مجاني فعلاً.'
+            : 'Keys never leave your browser until you deploy. They are only sent to the corresponding service\'s API endpoint when that integration is actually used in the app. The Open-Meteo weather integration in the ET Tracker above needs no key — it\'s genuinely free.'}
         </div>
       </CardContent>
     </Card>
@@ -264,13 +273,14 @@ export function ServiceIntegrations() {
 // ============================================================================
 
 function IntegrationRow({
-  integration: i, value, onChange, copied, onCopy,
+  integration: i, value, onChange, copied, onCopy, isRTL,
 }: {
   integration: Integration;
   value: string;
   onChange: (v: string) => void;
   copied: boolean;
   onCopy: () => void;
+  isRTL: boolean;
 }) {
   const ready = value.trim().length > 0;
   const masked = i.type !== 'url' && value && !copied;
@@ -291,10 +301,10 @@ function IntegrationRow({
             <span className="font-medium text-xs">{i.name}</span>
             {ready ? (
               <Badge variant="default" className="text-[9px] bg-emerald-600">
-                <CheckCircle2 className="h-2.5 w-2.5 mr-0.5" /> Ready
+                <CheckCircle2 className="h-2.5 w-2.5 mr-0.5" /> {isRTL ? 'جاهز' : 'Ready'}
               </Badge>
             ) : (
-              <Badge variant="outline" className="text-[9px]">Not configured</Badge>
+              <Badge variant="outline" className="text-[9px]">{isRTL ? 'غير مُعدّ' : 'Not configured'}</Badge>
             )}
             {i.signupUrl && (
               <a
@@ -303,14 +313,14 @@ function IntegrationRow({
                 rel="noopener noreferrer"
                 className="ml-auto text-[10px] text-blue-600 hover:underline flex items-center gap-0.5"
               >
-                Sign up <ExternalLink className="h-2.5 w-2.5" />
+                {isRTL ? 'سجّل' : 'Sign up'} <ExternalLink className="h-2.5 w-2.5" />
               </a>
             )}
           </div>
           <p className="text-[10px] text-muted-foreground mt-0.5">{i.description}</p>
           <div className="mt-1 grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-0.5 text-[10px]">
-            <div><span className="text-muted-foreground">Free tier:</span> {i.freeTier}</div>
-            <div><span className="text-muted-foreground">Unlocks:</span> {i.unlocks}</div>
+            <div><span className="text-muted-foreground">{isRTL ? 'الخطة المجانية:' : 'Free tier:'}</span> {i.freeTier}</div>
+            <div><span className="text-muted-foreground">{isRTL ? 'يفتح:' : 'Unlocks:'}</span> {i.unlocks}</div>
           </div>
           <div className="mt-2 flex gap-1.5 items-center">
             <Input

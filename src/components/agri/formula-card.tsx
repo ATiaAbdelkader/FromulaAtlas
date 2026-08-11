@@ -46,6 +46,7 @@ export function FormulaCard({ formula, onSelect }: FormulaCardProps) {
   const color = getPartColor(formula.part);
   const calcAvailable = hasCalculator(formula.code);
   const language = useLanguageStore(s => s.language);
+  const isRTL = language === 'ar';
   const displayName = (language === 'ar' && (formula as any).name_ar) ? (formula as any).name_ar : formula.name;
   const displayPurpose = (language === 'ar' && (formula as any).purpose_ar) ? (formula as any).purpose_ar : formula.purpose;
   const [bookmarked, setBookmarked] = useState<boolean>(() => getBookmarks().includes(formula.code));
@@ -73,7 +74,7 @@ export function FormulaCard({ formula, onSelect }: FormulaCardProps) {
             {calcAvailable && (
               <Badge variant="secondary" className="gap-1 text-xs">
                 <Calculator className="h-3 w-3" />
-                Calculator
+                {isRTL ? 'حاسبة' : 'Calculator'}
               </Badge>
             )}
           </div>
@@ -81,8 +82,8 @@ export function FormulaCard({ formula, onSelect }: FormulaCardProps) {
             <button
               type="button"
               onClick={handleBookmark}
-              aria-label={bookmarked ? 'Remove bookmark' : 'Add bookmark'}
-              title={bookmarked ? 'Remove bookmark' : 'Add bookmark'}
+              aria-label={bookmarked ? (isRTL ? 'إزالة من المفضلة' : 'Remove bookmark') : (isRTL ? 'أضف إلى المفضلة' : 'Add bookmark')}
+              title={bookmarked ? (isRTL ? 'إزالة من المفضلة' : 'Remove bookmark') : (isRTL ? 'أضف إلى المفضلة' : 'Add bookmark')}
               className={cn(
                 'p-1 rounded transition-colors',
                 bookmarked
@@ -93,7 +94,7 @@ export function FormulaCard({ formula, onSelect }: FormulaCardProps) {
               <Star className="h-3.5 w-3.5" fill={bookmarked ? 'currentColor' : 'none'} />
             </button>
             <span className="text-xs text-muted-foreground font-medium whitespace-nowrap">
-              Sec. {formula.chapter_number}
+              {isRTL ? `قسم ${formula.chapter_number}` : `Sec. ${formula.chapter_number}`}
             </span>
           </div>
         </div>
@@ -132,7 +133,7 @@ export function FormulaCard({ formula, onSelect }: FormulaCardProps) {
         {formula.example && (
           <Badge variant="outline" className="text-xs font-normal">
             <Beaker className="h-3 w-3 mr-1" />
-            Example
+            {isRTL ? 'مثال' : 'Example'}
           </Badge>
         )}
       </CardFooter>

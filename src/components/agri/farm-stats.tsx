@@ -15,6 +15,7 @@
 
 import { useState, useEffect } from 'react';
 import { Layers, Droplets, FlaskConical, MapPin } from 'lucide-react';
+import { useTranslation } from '@/lib/language-store';
 
 interface Stat {
   icon: typeof Layers;
@@ -24,11 +25,12 @@ interface Stat {
 }
 
 export function FarmStats() {
+  const { isRTL } = useTranslation();
   const [stats, setStats] = useState<Stat[]>([
-    { icon: Layers, label: 'Fields', value: '—', color: '#16a34a' },
-    { icon: MapPin, label: 'Total area', value: '—', color: '#0891b2' },
-    { icon: Droplets, label: 'Irrigation zones', value: '—', color: '#0ea5e9' },
-    { icon: FlaskConical, label: 'Schedules', value: '—', color: '#8b5cf6' },
+    { icon: Layers, label: isRTL ? 'الحقول' : 'Fields', value: '—', color: '#16a34a' },
+    { icon: MapPin, label: isRTL ? 'المساحة الكلية' : 'Total area', value: '—', color: '#0891b2' },
+    { icon: Droplets, label: isRTL ? 'مناطق الري' : 'Irrigation zones', value: '—', color: '#0ea5e9' },
+    { icon: FlaskConical, label: isRTL ? 'الجداول' : 'Schedules', value: '—', color: '#8b5cf6' },
   ]);
 
   useEffect(() => {
@@ -66,10 +68,10 @@ export function FarmStats() {
       } catch { /* ignore */ }
 
       setStats([
-        { icon: Layers, label: 'Fields', value: String(fieldCount), color: '#16a34a' },
-        { icon: MapPin, label: 'Total area', value: totalArea > 0 ? `${totalArea.toFixed(1)} ha` : '—', color: '#0891b2' },
-        { icon: Droplets, label: 'Irrigation zones', value: String(zoneCount), color: '#0ea5e9' },
-        { icon: FlaskConical, label: 'Schedules', value: String(schedCount), color: '#8b5cf6' },
+        { icon: Layers, label: isRTL ? 'الحقول' : 'Fields', value: String(fieldCount), color: '#16a34a' },
+        { icon: MapPin, label: isRTL ? 'المساحة الكلية' : 'Total area', value: totalArea > 0 ? `${totalArea.toFixed(1)} ha` : '—', color: '#0891b2' },
+        { icon: Droplets, label: isRTL ? 'مناطق الري' : 'Irrigation zones', value: String(zoneCount), color: '#0ea5e9' },
+        { icon: FlaskConical, label: isRTL ? 'الجداول' : 'Schedules', value: String(schedCount), color: '#8b5cf6' },
       ]);
     };
 
@@ -77,7 +79,7 @@ export function FarmStats() {
     // Refresh on window focus (user comes back from another tab)
     window.addEventListener('focus', compute);
     return () => window.removeEventListener('focus', compute);
-  }, []);
+  }, [isRTL]);
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">

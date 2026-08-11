@@ -21,6 +21,7 @@ import {
   AlertTriangle, Snowflake, Sun, CloudRain, Wind, CheckCircle2, X,
 } from 'lucide-react';
 import { type ForecastResult, wmoDescription } from '@/lib/open-meteo';
+import { useTranslation } from '@/lib/language-store';
 
 interface WeatherAlertBannerProps {
   forecast: ForecastResult | null;
@@ -48,7 +49,8 @@ const ALERT_STYLES: Record<AlertType, { color: string; bg: string; border: strin
 };
 
 export function WeatherAlertBanner({ forecast }: WeatherAlertBannerProps) {
-  const alerts = useMemo(() => computeAlerts(forecast), [forecast]);
+  const { isRTL } = useTranslation();
+  const alerts = useMemo(() => computeAlerts(forecast, isRTL), [forecast, isRTL]);
 
   if (alerts.length === 0) return null;
 
@@ -87,7 +89,7 @@ function AlertBanner({ alert }: { alert: Alert }) {
 // Alert computation
 // ============================================================================
 
-function computeAlerts(forecast: ForecastResult | null): Alert[] {
+function computeAlerts(forecast: ForecastResult | null, isRTL: boolean): Alert[] {
   if (!forecast || !forecast.daily || forecast.daily.length === 0) return [];
 
   const alerts: Alert[] = [];
@@ -99,8 +101,12 @@ function computeAlerts(forecast: ForecastResult | null): Alert[] {
       alerts.push({
         type: 'frost',
         severity: day.tempMin < -2 ? 'critical' : 'warning',
-        title: `❄️ Frost warning — ${day.tempMin.toFixed(1)}°C`,
-        message: `Low of ${day.tempMin.toFixed(1)}°C on ${formatDate(day.date)}. Protect sensitive crops: cover, irrigate before nightfall, or run wind machines. Tomatoes, peppers, citrus, and young seedlings are most at risk.`,
+        title: isRTL
+          ? `❄️ تحذير صقيع — ${day.tempMin.toFixed(1)}°C`
+          : `❄️ Frost warning — ${day.tempMin.toFixed(1)}°C`,
+        message: isRTL
+          ? `أدنى ${day.tempMin.toFixed(1)}°C في ${formatDate(day.date)}. احمِ المحاصيل الحساسة: غطّ، اسقِ قبل الغروب، أو شغّل ماكينات الرياح. الطماطم والفلفل والحمضيات والشتلات الصغيرة أكثر عرضة.`
+          : `Low of ${day.tempMin.toFixed(1)}°C on ${formatDate(day.date)}. Protect sensitive crops: cover, irrigate before nightfall, or run wind machines. Tomatoes, peppers, citrus, and young seedlings are most at risk.`,
         icon: Snowflake,
         color: ALERT_STYLES.frost.color,
         bgColor: ALERT_STYLES.frost.bg,
@@ -116,8 +122,12 @@ function computeAlerts(forecast: ForecastResult | null): Alert[] {
       alerts.push({
         type: 'heat',
         severity: day.tempMax > 40 ? 'critical' : 'warning',
-        title: `🔥 Heat stress — ${day.tempMax.toFixed(1)}°C`,
-        message: `High of ${day.tempMax.toFixed(1)}°C on ${formatDate(day.date)}. Increase irrigation, use shade cloth on vegetables, avoid spraying during peak heat (10am–4pm). Livestock need shade + extra water.`,
+        title: isRTL
+          ? `🔥 إجهاد حراري — ${day.tempMax.toFixed(1)}°C`
+          : `🔥 Heat stress — ${day.tempMax.toFixed(1)}°C`,
+        message: isRTL
+          ? `أعلى ${day.tempMax.toFixed(1)}°C في ${formatDate(day.date)}. زيادة الري، استخدم شباك التظليل على الخضروات، تجنّب الرش أثناء ذروة الحر (10ص–4م). الماشية تحتاج ظلاً وماءً إضافياً.`
+          : `High of ${day.tempMax.toFixed(1)}°C on ${formatDate(day.date)}. Increase irrigation, use shade cloth on vegetables, avoid spraying during peak heat (10am–4pm). Livestock need shade + extra water.`,
         icon: Sun,
         color: ALERT_STYLES.heat.color,
         bgColor: ALERT_STYLES.heat.bg,
@@ -133,8 +143,12 @@ function computeAlerts(forecast: ForecastResult | null): Alert[] {
       alerts.push({
         type: 'rain',
         severity: day.precipitationSum > 50 ? 'warning' : 'info',
-        title: `🌧️ Heavy rain — ${day.precipitationSum.toFixed(0)} mm`,
-        message: `${day.precipitationSum.toFixed(0)} mm rain expected on ${formatDate(day.date)}. Delay fertilizer application + spraying. Check drainage in low-lying fields. Drip irrigation can likely be paused for 2–3 days.`,
+        title: isRTL
+          ? `🌧️ أمطار غزيرة — ${day.precipitationSum.toFixed(0)} مم`
+          : `🌧️ Heavy rain — ${day.precipitationSum.toFixed(0)} mm`,
+        message: isRTL
+          ? `${day.precipitationSum.toFixed(0)} مم متوقعة في ${formatDate(day.date)}. أجّل التسميد والرش. تحقّق من الصرف في الحقول المنخفضة. يمكن إيقاف الري بالتنقيط لـ2–3 أيام.`
+          : `${day.precipitationSum.toFixed(0)} mm rain expected on ${formatDate(day.date)}. Delay fertilizer application + spraying. Check drainage in low-lying fields. Drip irrigation can likely be paused for 2–3 days.`,
         icon: CloudRain,
         color: ALERT_STYLES.rain.color,
         bgColor: ALERT_STYLES.rain.bg,
@@ -150,8 +164,12 @@ function computeAlerts(forecast: ForecastResult | null): Alert[] {
       alerts.push({
         type: 'wind',
         severity: 'info',
-        title: `💨 High wind — ${day.windSpeedMax.toFixed(0)} km/h`,
-        message: `Wind up to ${day.windSpeedMax.toFixed(0)} km/h on ${formatDate(day.date)}. Avoid pesticide/herbicide spraying — drift risk. Secure greenhouse vents + young trellised plants.`,
+        title: isRTL
+          ? `💨 رياح قوية — ${day.windSpeedMax.toFixed(0)} كم/س`
+          : `💨 High wind — ${day.windSpeedMax.toFixed(0)} km/h`,
+        message: isRTL
+          ? `الرياح حتى ${day.windSpeedMax.toFixed(0)} كم/س في ${formatDate(day.date)}. تجنّب رش المبيدات/الأعشاب — خطر الانجراف. ثبّت فتحات البيوت المحمية والنباتات الصغيرة المسندة.`
+          : `Wind up to ${day.windSpeedMax.toFixed(0)} km/h on ${formatDate(day.date)}. Avoid pesticide/herbicide spraying — drift risk. Secure greenhouse vents + young trellised plants.`,
         icon: Wind,
         color: ALERT_STYLES.wind.color,
         bgColor: ALERT_STYLES.wind.bg,
@@ -168,8 +186,10 @@ function computeAlerts(forecast: ForecastResult | null): Alert[] {
       alerts.push({
         type: 'good',
         severity: 'success',
-        title: '✅ Conditions are good today',
-        message: `Mild weather (${today.tempMin.toFixed(0)}–${today.tempMax.toFixed(0)}°C), low rain risk. Good day for field work, spraying, and fertilizing. ET₀ is ${today.et0.toFixed(1)} mm/day.`,
+        title: isRTL ? '✅ الظروف جيدة اليوم' : '✅ Conditions are good today',
+        message: isRTL
+          ? `طقس معتدل (${today.tempMin.toFixed(0)}–${today.tempMax.toFixed(0)}°C)، خطر أمطار منخفض. يوم جيد للعمل الحقلي والرش والتسميد. ET₀ هو ${today.et0.toFixed(1)} مم/يوم.`
+          : `Mild weather (${today.tempMin.toFixed(0)}–${today.tempMax.toFixed(0)}°C), low rain risk. Good day for field work, spraying, and fertilizing. ET₀ is ${today.et0.toFixed(1)} mm/day.`,
         icon: CheckCircle2,
         color: ALERT_STYLES.good.color,
         bgColor: ALERT_STYLES.good.bg,

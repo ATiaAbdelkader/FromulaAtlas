@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useWeatherStore, searchLocation, weatherCodeToText, type UserLocation } from '@/lib/weather-store';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/language-store';
 
 const iconMap: Record<string, typeof Sun> = { Sun, Cloud, CloudSun, CloudRain, CloudSnow, CloudLightning, CloudFog, CloudDrizzle };
 
@@ -15,6 +16,7 @@ export function WeatherWidget() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<UserLocation[]>([]);
   const [searching, setSearching] = useState(false);
+  const { isRTL } = useTranslation();
 
   useEffect(() => {
     if (!location) return;
@@ -39,18 +41,18 @@ export function WeatherWidget() {
       <section className="mb-6">
         <div className="rounded-xl border-2 border-dashed border-border bg-card/50 p-6 text-center">
           <div className="flex items-center justify-center h-12 w-12 rounded-full bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 mx-auto mb-3"><MapPin className="h-6 w-6" /></div>
-          <h3 className="text-base font-semibold mb-1">Set your location for live weather</h3>
-          <p className="text-sm text-muted-foreground mb-4 max-w-md mx-auto">Get real-time ET₀, rainfall, temperature, and humidity. Weather data informs your irrigation decisions.</p>
+          <h3 className="text-base font-semibold mb-1">{isRTL ? 'حدّد موقعك للحصول على الطقس المباشر' : 'Set your location for live weather'}</h3>
+          <p className="text-sm text-muted-foreground mb-4 max-w-md mx-auto">{isRTL ? 'احصل على ET₀ والأمطار والحرارة والرطوبة لحظياً. بيانات الطقس تُعلم قرارات الري.' : 'Get real-time ET₀, rainfall, temperature, and humidity. Weather data informs your irrigation decisions.'}</p>
           {!showSearch ? (
-            <Button onClick={() => setShowSearch(true)} className="gap-2 bg-emerald-600 hover:bg-emerald-700"><Search className="h-4 w-4" /> Search for your location</Button>
+            <Button onClick={() => setShowSearch(true)} className="gap-2 bg-emerald-600 hover:bg-emerald-700"><Search className="h-4 w-4" /> {isRTL ? 'ابحث عن موقعك' : 'Search for your location'}</Button>
           ) : (
             <div className="max-w-md mx-auto space-y-3">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input autoFocus type="search" placeholder="Enter city name..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 pr-9" />
+                <Input autoFocus type="search" placeholder={isRTL ? 'أدخل اسم المدينة...' : 'Enter city name...'} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 pr-9" />
                 <button onClick={() => { setShowSearch(false); setSearchQuery(''); }} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>
               </div>
-              {searching && <p className="text-xs text-muted-foreground">Searching...</p>}
+              {searching && <p className="text-xs text-muted-foreground">{isRTL ? 'جارٍ البحث...' : 'Searching...'}</p>}
               {searchResults.length > 0 && (
                 <div className="space-y-1 max-h-60 overflow-y-auto">
                   {searchResults.map((loc, idx) => (
@@ -81,31 +83,31 @@ export function WeatherWidget() {
         <div className="flex items-center justify-between px-5 py-3 border-b border-emerald-200 dark:border-emerald-900 bg-emerald-50/50 dark:bg-emerald-950/20">
           <div className="flex items-center gap-2"><MapPin className="h-4 w-4 text-emerald-600" /><span className="text-sm font-semibold">{location.name}</span>{location.country && <span className="text-xs text-muted-foreground">{location.country}</span>}</div>
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="sm" onClick={() => fetchWeather()} disabled={isLoading} className="h-7 w-7 p-0" title="Refresh"><RefreshCw className={cn('h-3.5 w-3.5', isLoading && 'animate-spin')} /></Button>
-            <Button variant="ghost" size="sm" onClick={() => clearLocation()} className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive" title="Change location"><X className="h-3.5 w-3.5" /></Button>
+            <Button variant="ghost" size="sm" onClick={() => fetchWeather()} disabled={isLoading} className="h-7 w-7 p-0" title={isRTL ? 'تحديث' : 'Refresh'}><RefreshCw className={cn('h-3.5 w-3.5', isLoading && 'animate-spin')} /></Button>
+            <Button variant="ghost" size="sm" onClick={() => clearLocation()} className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive" title={isRTL ? 'تغيير الموقع' : 'Change location'}><X className="h-3.5 w-3.5" /></Button>
           </div>
         </div>
-        {error && <div className="px-5 py-3 text-sm text-red-600">Failed to fetch: {error}. <button onClick={() => fetchWeather()} className="underline">Retry</button></div>}
-        {isLoading && !weather && <div className="px-5 py-8 text-center text-sm text-muted-foreground"><RefreshCw className="h-5 w-5 animate-spin mx-auto mb-2" />Fetching weather...</div>}
+        {error && <div className="px-5 py-3 text-sm text-red-600">{isRTL ? 'فشل الجلب: ' : 'Failed to fetch: '}{error}. <button onClick={() => fetchWeather()} className="underline">{isRTL ? 'إعادة المحاولة' : 'Retry'}</button></div>}
+        {isLoading && !weather && <div className="px-5 py-8 text-center text-sm text-muted-foreground"><RefreshCw className="h-5 w-5 animate-spin mx-auto mb-2" />{isRTL ? 'جارٍ جلب الطقس...' : 'Fetching weather...'}</div>}
         {weather && weatherInfo && (
           <div className="p-5">
             <div className="flex items-center gap-4 mb-4">
               <div className="flex items-center justify-center h-14 w-14 rounded-xl bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 flex-shrink-0"><WeatherIcon className="h-7 w-7" /></div>
               <div><div className="text-3xl font-bold">{weather.current.temperature.toFixed(1)}°C</div><div className="text-sm text-muted-foreground">{weatherInfo.text}</div></div>
-              <div className="ml-auto text-right"><div className="text-xs text-muted-foreground">Today's ET₀</div><div className="text-xl font-bold text-emerald-600 dark:text-emerald-400">{et0.toFixed(1)} mm</div></div>
+              <div className="ml-auto text-right"><div className="text-xs text-muted-foreground">{isRTL ? 'ET₀ اليوم' : 'Today\'s ET₀'}</div><div className="text-xl font-bold text-emerald-600 dark:text-emerald-400">{et0.toFixed(1)} mm</div></div>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div className="rounded-lg border border-border bg-card/50 p-2.5"><div className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground font-semibold mb-1"><Droplets className="h-3 w-3" /> Humidity</div><div className="text-lg font-bold">{weather.current.humidity}%</div></div>
-              <div className="rounded-lg border border-border bg-card/50 p-2.5"><div className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground font-semibold mb-1"><Wind className="h-3 w-3" /> Wind</div><div className="text-lg font-bold">{weather.current.windSpeed.toFixed(1)} <span className="text-xs font-normal">km/h</span></div></div>
-              <div className="rounded-lg border border-border bg-card/50 p-2.5"><div className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground font-semibold mb-1"><CloudRain className="h-3 w-3" /> Rainfall</div><div className="text-lg font-bold">{rainfall.toFixed(1)} <span className="text-xs font-normal">mm</span></div></div>
-              <div className="rounded-lg border border-border bg-card/50 p-2.5"><div className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground font-semibold mb-1"><Thermometer className="h-3 w-3" /> Temp Range</div><div className="text-lg font-bold">{weather.daily.tempMin.toFixed(0)}–{weather.daily.tempMax.toFixed(0)}°</div></div>
+              <div className="rounded-lg border border-border bg-card/50 p-2.5"><div className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground font-semibold mb-1"><Droplets className="h-3 w-3" /> {isRTL ? 'الرطوبة' : 'Humidity'}</div><div className="text-lg font-bold">{weather.current.humidity}%</div></div>
+              <div className="rounded-lg border border-border bg-card/50 p-2.5"><div className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground font-semibold mb-1"><Wind className="h-3 w-3" /> {isRTL ? 'الرياح' : 'Wind'}</div><div className="text-lg font-bold">{weather.current.windSpeed.toFixed(1)} <span className="text-xs font-normal">km/h</span></div></div>
+              <div className="rounded-lg border border-border bg-card/50 p-2.5"><div className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground font-semibold mb-1"><CloudRain className="h-3 w-3" /> {isRTL ? 'الأمطار' : 'Rainfall'}</div><div className="text-lg font-bold">{rainfall.toFixed(1)} <span className="text-xs font-normal">mm</span></div></div>
+              <div className="rounded-lg border border-border bg-card/50 p-2.5"><div className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground font-semibold mb-1"><Thermometer className="h-3 w-3" /> {isRTL ? 'المدى الحراري' : 'Temp Range'}</div><div className="text-lg font-bold">{weather.daily.tempMin.toFixed(0)}–{weather.daily.tempMax.toFixed(0)}°</div></div>
             </div>
             <div className="mt-4 rounded-lg border border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/30 p-3">
-              <div className="flex items-center gap-2 mb-1"><Zap className="h-3.5 w-3.5 text-emerald-600" /><span className="text-xs font-semibold text-emerald-800 dark:text-emerald-300">Today's Irrigation Insight</span></div>
+              <div className="flex items-center gap-2 mb-1"><Zap className="h-3.5 w-3.5 text-emerald-600" /><span className="text-xs font-semibold text-emerald-800 dark:text-emerald-300">{isRTL ? 'رؤية الري اليوم' : 'Today\'s Irrigation Insight'}</span></div>
               {nir > 0 ? (
-                <p className="text-sm text-emerald-900 dark:text-emerald-200">Net irrigation need: <span className="font-bold">{nir.toFixed(1)} mm</span> (ET₀ {et0.toFixed(1)} − rain {rainfall.toFixed(1)}).{thi > 72 && <span className="text-amber-700 dark:text-amber-400"> ⚠ Heat stress risk for livestock (THI {thi.toFixed(0)}).</span>}</p>
+                <p className="text-sm text-emerald-900 dark:text-emerald-200">{isRTL ? 'احتياج الري الصافي: ' : 'Net irrigation need: '}<span className="font-bold">{nir.toFixed(1)} mm</span> {isRTL ? `(ET₀ ${et0.toFixed(1)} − مطر ${rainfall.toFixed(1)}).` : `(ET₀ ${et0.toFixed(1)} − rain ${rainfall.toFixed(1)}).`}{thi > 72 && <span className="text-amber-700 dark:text-amber-400"> {isRTL ? `⚠ خطر إجهاد حراري للماشية (THI ${thi.toFixed(0)}).` : `⚠ Heat stress risk for livestock (THI ${thi.toFixed(0)}).`}</span>}</p>
               ) : (
-                <p className="text-sm text-emerald-900 dark:text-emerald-200">Rainfall ({rainfall.toFixed(1)} mm) covers today's ET₀ ({et0.toFixed(1)} mm). No irrigation needed.</p>
+                <p className="text-sm text-emerald-900 dark:text-emerald-200">{isRTL ? `الأمطار (${rainfall.toFixed(1)} مم) تغطّي ET₀ اليوم (${et0.toFixed(1)} مم). لا حاجة للري.` : `Rainfall (${rainfall.toFixed(1)} mm) covers today's ET₀ (${et0.toFixed(1)} mm). No irrigation needed.`}</p>
               )}
               <div className="flex flex-wrap gap-1.5 mt-2">
                 <Badge variant="outline" className="text-[10px] font-mono">ET₀ = {et0.toFixed(1)} mm</Badge>

@@ -26,6 +26,7 @@ import {
 import {
   getCropLifecycle, stageForDay, type LaborOperation, type CropLifecycle,
 } from '@/lib/crop-lifecycle';
+import { useTranslation } from '@/lib/language-store';
 
 interface TodayTask {
   id: string;
@@ -86,6 +87,7 @@ const PRIORITY_ORDER: Record<TodayTask['priority'], number> = {
 export function TodayTasks({ onOpenTool }: { onOpenTool: (tab: 'farm' | 'insights', storageKey?: string) => void }) {
   const [tasks, setTasks] = useState<TodayTask[]>([]);
   const [loading, setLoading] = useState(true);
+  const { isRTL } = useTranslation();
 
   useEffect(() => {
     const compute = () => {
@@ -105,10 +107,10 @@ export function TodayTasks({ onOpenTool }: { onOpenTool: (tab: 'farm' | 'insight
             const timeStr = ev.start.slice(11, 16);
             collected.push({
               id: `irr-${ev.start}`,
-              title: `Irrigate ${ev.zoneName}`,
+              title: isRTL ? `سقِ ${ev.zoneName}` : `Irrigate ${ev.zoneName}`,
               type: 'irrigation',
               time: timeStr,
-              duration: `${(ev.durationSec / 60).toFixed(0)} min`,
+              duration: `${(ev.durationSec / 60).toFixed(0)} ${isRTL ? 'د' : 'min'}`,
               priority: 'critical',
               source: 'irrigation',
               field: ev.zoneName,
@@ -139,8 +141,16 @@ export function TodayTasks({ onOpenTool }: { onOpenTool: (tab: 'farm' | 'insight
                       id: `labor-${op.day}-${op.type}`,
                       title: op.task,
                       type: op.type === 'irrigation' ? 'irrigation_check' : op.type,
-                      time: diff === 0 ? 'Today' : diff === 1 ? (op.day > dayOfSeason ? 'Tomorrow' : 'Yesterday') : (op.day > dayOfSeason ? `In ${diff} days` : `${diff} days ago`),
-                      duration: `${op.durationDays}-day window`,
+                      time: diff === 0
+                        ? (isRTL ? 'اليوم' : 'Today')
+                        : diff === 1
+                          ? (op.day > dayOfSeason
+                              ? (isRTL ? 'غداً' : 'Tomorrow')
+                              : (isRTL ? 'أمس' : 'Yesterday'))
+                          : (op.day > dayOfSeason
+                              ? (isRTL ? `خلال ${diff} أيام` : `In ${diff} days`)
+                              : (isRTL ? `منذ ${diff} أيام` : `${diff} days ago`)),
+                      duration: `${op.durationDays}-${isRTL ? 'يوم' : 'day'} ${isRTL ? 'نافذة' : 'window'}`,
                       priority: op.priority,
                       source: 'labor',
                       crop: crop.name,
@@ -169,15 +179,15 @@ export function TodayTasks({ onOpenTool }: { onOpenTool: (tab: 'farm' | 'insight
   }, []);
 
   const criticalCount = tasks.filter(t => t.priority === 'critical').length;
-  const todayCount = tasks.filter(t => t.time === 'Today').length;
+  const todayCount = tasks.filter(t => t.time === (isRTL ? 'اليوم' : 'Today')).length;
 
   if (loading) {
     return (
       <div className="rounded-xl border bg-card p-4">
         <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1">
-          <Clock className="h-3 w-3" /> Today's Tasks
+          <Clock className="h-3 w-3" /> {isRTL ? 'مهام اليوم' : 'Today\'s Tasks'}
         </div>
-        <div className="text-xs text-muted-foreground">Loading…</div>
+        <div className="text-xs text-muted-foreground">{isRTL ? 'جارٍ التحميل...' : 'Loading…'}</div>
       </div>
     );
   }
@@ -186,15 +196,17 @@ export function TodayTasks({ onOpenTool }: { onOpenTool: (tab: 'farm' | 'insight
     return (
       <div className="rounded-xl border bg-card p-4">
         <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1">
-          <Clock className="h-3 w-3" /> Today's Tasks
+          <Clock className="h-3 w-3" /> {isRTL ? 'مهام اليوم' : 'Today\'s Tasks'}
         </div>
         <EmptyState
           icon={CalendarIcon}
-          title="No tasks scheduled today"
-          description="Set up your farm profile (crop + planting date) and irrigation schedules to see daily tasks here."
+          title={isRTL ? 'لا مهام مجدولة اليوم' : 'No tasks scheduled today'}
+          description={isRTL
+            ? 'أعدّ ملف مزرعتك (محصول + تاريخ زراعة) وجداول الري لرؤية المهام اليومية هنا.'
+            : 'Set up your farm profile (crop + planting date) and irrigation schedules to see daily tasks here.'}
           color="#0891b2"
           variant="compact"
-          action={{ label: "Set up farm profile", onClick: () => onOpenTool('farm', 'collapse_et_tracker') }}
+          action={{ label: isRTL ? 'إعداد ملف المزرعة' : 'Set up farm profile', onClick: () => onOpenTool('farm', 'collapse_et_tracker') }}
         />
       </div>
     );
@@ -204,13 +216,13 @@ export function TodayTasks({ onOpenTool }: { onOpenTool: (tab: 'farm' | 'insight
     <div className="rounded-xl border bg-card p-4">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-          <Clock className="h-3 w-3" /> Today's Tasks
+          <Clock className="h-3 w-3" /> {isRTL ? 'مهام اليوم' : 'Today\'s Tasks'}
         </div>
         <div className="flex items-center gap-1.5">
           {criticalCount > 0 && (
-            <Badge variant="destructive" className="text-[9px]">{criticalCount} critical</Badge>
+            <Badge variant="destructive" className="text-[9px]">{criticalCount} {isRTL ? 'حرج' : 'critical'}</Badge>
           )}
-          <Badge variant="outline" className="text-[9px]">{tasks.length} total</Badge>
+          <Badge variant="outline" className="text-[9px]">{tasks.length} {isRTL ? 'كل' : 'total'}</Badge>
         </div>
       </div>
 
@@ -251,7 +263,7 @@ export function TodayTasks({ onOpenTool }: { onOpenTool: (tab: 'farm' | 'insight
 
       {todayCount > 0 && (
         <div className="mt-2 pt-2 border-t text-[10px] text-muted-foreground text-center">
-          {todayCount} task{todayCount === 1 ? '' : 's'} due today · {tasks.length - todayCount} upcoming
+          {todayCount} {isRTL ? 'مهمة مستحقة اليوم' : (todayCount === 1 ? 'task' : 'tasks') + ' due today'} · {tasks.length - todayCount} {isRTL ? 'قادمة' : 'upcoming'}
         </div>
       )}
     </div>
