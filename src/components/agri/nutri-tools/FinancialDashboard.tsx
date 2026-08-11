@@ -14,6 +14,7 @@ import {
   getEntries, addEntry, removeEntry, computeSummary, scenarioImpact, SEED_ENTRIES,
   CATEGORY_META, type FinancialEntry, type FinancialSummary,
 } from '@/lib/financial-store';
+import { useTranslation } from '@/lib/language-store';
 
 export function FinancialDashboard() {
   const [entries, setEntries] = useState<FinancialEntry[]>([]);
@@ -22,6 +23,7 @@ export function FinancialDashboard() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newEntry, setNewEntry] = useState({ category: 'fertilizer' as FinancialEntry['category'], label: '', amount: '' });
   const [scenario, setScenario] = useState({ costDeltaPct: 0, priceDeltaPct: 0, yieldDeltaPct: 0 });
+  const { isRTL } = useTranslation();
 
   useEffect(() => {
     let e = getEntries();
@@ -86,45 +88,45 @@ export function FinancialDashboard() {
     <div className="space-y-4">
       {/* Yield + price inputs */}
       <div className="grid grid-cols-3 gap-2">
-        <div><Label className="text-[10px]">Yield (t/ha)</Label><Input value={yieldT} onChange={e => setYieldT(e.target.value)} type="number" className="h-8 text-xs mt-0.5" /></div>
-        <div><Label className="text-[10px]">Price ($/t)</Label><Input value={pricePerT} onChange={e => setPricePerT(e.target.value)} type="number" className="h-8 text-xs mt-0.5" /></div>
+        <div><Label className="text-[10px]">{isRTL ? 'الإنتاج (ط/هـ)' : 'Yield (t/ha)'}</Label><Input value={yieldT} onChange={e => setYieldT(e.target.value)} type="number" className="h-8 text-xs mt-0.5" /></div>
+        <div><Label className="text-[10px]">{isRTL ? 'السعر ($/ط)' : 'Price ($/t)'}</Label><Input value={pricePerT} onChange={e => setPricePerT(e.target.value)} type="number" className="h-8 text-xs mt-0.5" /></div>
         <div className="flex items-end gap-1">
           <Button size="sm" variant="outline" onClick={exportPdf} className="gap-1 text-xs h-8"><Download className="h-3 w-3" /> PDF</Button>
-          <Button size="sm" variant="ghost" onClick={loadSeedData} className="text-[10px] h-8" title="Load sample data">Sample</Button>
+          <Button size="sm" variant="ghost" onClick={loadSeedData} className="text-[10px] h-8" title={isRTL ? 'تحميل بيانات نموذجية' : 'Load sample data'}>{isRTL ? 'نموذج' : 'Sample'}</Button>
         </div>
       </div>
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        <StatCard label="Total Costs" value={`$${summary.totalCosts.toFixed(0)}`} sub="/ha" icon={TrendingDown} color="#dc2626" />
-        <StatCard label="Total Revenue" value={`$${summary.totalRevenue.toFixed(0)}`} sub="/ha" icon={TrendingUp} color="#16a34a" />
-        <StatCard label="Gross Margin" value={`$${summary.grossMargin.toFixed(0)}`} sub={`${summary.grossMarginPct.toFixed(0)}%`} icon={PiggyBank} color={summary.grossMargin >= 0 ? '#16a34a' : '#dc2626'} />
-        <StatCard label="ROI" value={`${summary.roi.toFixed(0)}%`} sub="return on costs" icon={Percent} color={summary.roi >= 0 ? '#16a34a' : '#dc2626'} />
+        <StatCard label={isRTL ? 'إجمالي التكاليف' : 'Total Costs'} value={`$${summary.totalCosts.toFixed(0)}`} sub="/ha" icon={TrendingDown} color="#dc2626" />
+        <StatCard label={isRTL ? 'إجمالي الإيرادات' : 'Total Revenue'} value={`$${summary.totalRevenue.toFixed(0)}`} sub="/ha" icon={TrendingUp} color="#16a34a" />
+        <StatCard label={isRTL ? 'الهامش الإجمالي' : 'Gross Margin'} value={`$${summary.grossMargin.toFixed(0)}`} sub={`${summary.grossMarginPct.toFixed(0)}%`} icon={PiggyBank} color={summary.grossMargin >= 0 ? '#16a34a' : '#dc2626'} />
+        <StatCard label={isRTL ? 'العائد' : 'ROI'} value={`${summary.roi.toFixed(0)}%`} sub={isRTL ? 'عائد على التكاليف' : 'return on costs'} icon={Percent} color={summary.roi >= 0 ? '#16a34a' : '#dc2626'} />
       </div>
 
       {/* Break-even cards */}
       <div className="grid grid-cols-3 gap-2">
-        <MiniStat label="Break-even yield" value={`${summary.breakEvenYield.toFixed(2)} t/ha`} icon={Target} good={parseFloat(yieldT) > summary.breakEvenYield} />
-        <MiniStat label="Break-even price" value={`$${summary.breakEvenPrice.toFixed(0)}/t`} icon={Target} good={parseFloat(pricePerT) > summary.breakEvenPrice} />
-        <MiniStat label="Cost per tonne" value={`$${summary.costPerTonne.toFixed(0)}/t`} icon={Layers} good={summary.costPerTonne < parseFloat(pricePerT)} />
+        <MiniStat label={isRTL ? 'إنتاج التعادل' : 'Break-even yield'} value={`${summary.breakEvenYield.toFixed(2)} t/ha`} icon={Target} good={parseFloat(yieldT) > summary.breakEvenYield} />
+        <MiniStat label={isRTL ? 'سعر التعادل' : 'Break-even price'} value={`$${summary.breakEvenPrice.toFixed(0)}/t`} icon={Target} good={parseFloat(pricePerT) > summary.breakEvenPrice} />
+        <MiniStat label={isRTL ? 'تكلفة الطن' : 'Cost per tonne'} value={`$${summary.costPerTonne.toFixed(0)}/t`} icon={Layers} good={summary.costPerTonne < parseFloat(pricePerT)} />
       </div>
 
       {/* Profitability indicator */}
       <div className={`rounded-lg p-3 border ${summary.grossMargin >= 0 ? 'border-emerald-200 bg-emerald-50/50 dark:bg-emerald-950/20 dark:border-emerald-900' : 'border-red-200 bg-red-50/50 dark:bg-red-950/20 dark:border-red-900'}`}>
         <div className="flex items-center gap-2">
           {summary.grossMargin >= 0 ? <CheckCircle2 className="h-4 w-4 text-emerald-600" /> : <AlertTriangle className="h-4 w-4 text-red-600" />}
-          <span className="text-sm font-bold">{summary.grossMargin >= 0 ? 'Profitable' : 'Operating at a loss'}</span>
+          <span className="text-sm font-bold">{summary.grossMargin >= 0 ? (isRTL ? 'ربحي' : 'Profitable') : (isRTL ? 'يعمل بخسارة' : 'Operating at a loss')}</span>
           <span className="text-xs text-muted-foreground ml-auto">
             {summary.grossMargin >= 0
-              ? `Every $1 invested returns $${(1 + summary.roi / 100).toFixed(2)}`
-              : `Losing $${Math.abs(summary.grossMargin).toFixed(0)}/ha — reduce costs or increase yield`}
+              ? (isRTL ? `كل $1 مُستثمر يُعيد $${(1 + summary.roi / 100).toFixed(2)}` : `Every $1 invested returns $${(1 + summary.roi / 100).toFixed(2)}`)
+              : (isRTL ? `خسارة $${Math.abs(summary.grossMargin).toFixed(0)}/هـ — قلّل التكاليف أو زيادة الإنتاج` : `Losing $${Math.abs(summary.grossMargin).toFixed(0)}/ha — reduce costs or increase yield`)}
           </span>
         </div>
       </div>
 
       {/* Cost breakdown chart */}
       <div>
-        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1"><DollarSign className="h-3.5 w-3.5" /> Cost Breakdown</div>
+        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1"><DollarSign className="h-3.5 w-3.5" /> {isRTL ? 'تفصيل التكاليف' : 'Cost Breakdown'}</div>
         <div className="space-y-1">
           {costs.sort((a, b) => b.amount - a.amount).map(e => {
             const pct = summary.totalCosts > 0 ? (e.amount / summary.totalCosts) * 100 : 0;
@@ -151,26 +153,26 @@ export function FinancialDashboard() {
             <select value={newEntry.category} onChange={e => setNewEntry({ ...newEntry, category: e.target.value as FinancialEntry['category'] })} className="h-8 text-xs rounded-md border border-input bg-background px-2">
               {(Object.keys(CATEGORY_META) as FinancialEntry['category'][]).map(c => <option key={c} value={c}>{CATEGORY_META[c].emoji} {CATEGORY_META[c].label}</option>)}
             </select>
-            <Input value={newEntry.label} onChange={e => setNewEntry({ ...newEntry, label: e.target.value })} placeholder="Description" className="h-8 text-xs" />
-            <Input value={newEntry.amount} onChange={e => setNewEntry({ ...newEntry, amount: e.target.value })} type="number" placeholder="$ amount/ha" className="h-8 text-xs" />
+            <Input value={newEntry.label} onChange={e => setNewEntry({ ...newEntry, label: e.target.value })} placeholder={isRTL ? 'الوصف' : 'Description'} className="h-8 text-xs" />
+            <Input value={newEntry.amount} onChange={e => setNewEntry({ ...newEntry, amount: e.target.value })} type="number" placeholder={isRTL ? '$ المبلغ/هـ' : '$ amount/ha'} className="h-8 text-xs" />
           </div>
           <div className="flex gap-2 justify-end">
-            <Button size="sm" variant="ghost" onClick={() => setShowAddForm(false)}>Cancel</Button>
-            <Button size="sm" onClick={handleAdd} disabled={!newEntry.label.trim() || !newEntry.amount} className="gap-1"><Plus className="h-3 w-3" /> Add</Button>
+            <Button size="sm" variant="ghost" onClick={() => setShowAddForm(false)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+            <Button size="sm" onClick={handleAdd} disabled={!newEntry.label.trim() || !newEntry.amount} className="gap-1"><Plus className="h-3 w-3" /> {isRTL ? 'أضف' : 'Add'}</Button>
           </div>
         </div>
       ) : (
-        <Button size="sm" variant="outline" onClick={() => setShowAddForm(true)} className="gap-1.5 w-full"><Plus className="h-3.5 w-3.5" /> Add Cost or Revenue Item</Button>
+        <Button size="sm" variant="outline" onClick={() => setShowAddForm(true)} className="gap-1.5 w-full"><Plus className="h-3.5 w-3.5" /> {isRTL ? 'أضف تكلفة أو إيراد' : 'Add Cost or Revenue Item'}</Button>
       )}
 
       {/* Scenario analysis */}
       <div className="rounded-lg p-3 border border-violet-200 dark:border-violet-900 bg-violet-50/50 dark:bg-violet-950/20">
-        <div className="text-xs font-semibold text-violet-700 dark:text-violet-400 uppercase tracking-wide mb-2 flex items-center gap-1"><TrendingUp className="h-3.5 w-3.5" /> What-If Scenario Analysis</div>
+        <div className="text-xs font-semibold text-violet-700 dark:text-violet-400 uppercase tracking-wide mb-2 flex items-center gap-1"><TrendingUp className="h-3.5 w-3.5" /> {isRTL ? 'تحليل سيناريو ماذا لو' : 'What-If Scenario Analysis'}</div>
         <div className="grid grid-cols-3 gap-2 mb-2">
           {[
-            { key: 'costDeltaPct', label: 'Costs change %', icon: '📉' },
-            { key: 'priceDeltaPct', label: 'Price change %', icon: '💲' },
-            { key: 'yieldDeltaPct', label: 'Yield change %', icon: '🌾' },
+            { key: 'costDeltaPct', label: isRTL ? 'تغيير التكاليف %' : 'Costs change %', icon: '📉' },
+            { key: 'priceDeltaPct', label: isRTL ? 'تغيير السعر %' : 'Price change %', icon: '💲' },
+            { key: 'yieldDeltaPct', label: isRTL ? 'تغيير الإنتاج %' : 'Yield change %', icon: '🌾' },
           ].map(f => (
             <div key={f.key}>
               <Label className="text-[10px]">{f.icon} {f.label}</Label>
@@ -180,30 +182,30 @@ export function FinancialDashboard() {
         </div>
         <div className="grid grid-cols-4 gap-2 text-xs">
           <div className="rounded p-2 bg-background/60 border border-border">
-            <div className="text-[9px] text-muted-foreground">Scenario margin</div>
+            <div className="text-[9px] text-muted-foreground">{isRTL ? 'هامش السيناريو' : 'Scenario margin'}</div>
             <div className="font-bold" style={{ color: scenarioResult.grossMargin >= 0 ? '#16a34a' : '#dc2626' }}>${scenarioResult.grossMargin.toFixed(0)}</div>
             <div className="text-[9px]" style={{ color: scenarioResult.grossMargin > summary.grossMargin ? '#16a34a' : '#dc2626' }}>
-              {scenarioResult.grossMargin > summary.grossMargin ? '▲' : '▼'} ${Math.abs(scenarioResult.grossMargin - summary.grossMargin).toFixed(0)} vs current
+              {scenarioResult.grossMargin > summary.grossMargin ? '▲' : '▼'} ${Math.abs(scenarioResult.grossMargin - summary.grossMargin).toFixed(0)} {isRTL ? 'مقابل الحالي' : 'vs current'}
             </div>
           </div>
           <div className="rounded p-2 bg-background/60 border border-border">
-            <div className="text-[9px] text-muted-foreground">Scenario ROI</div>
+            <div className="text-[9px] text-muted-foreground">{isRTL ? 'عائد السيناريو' : 'Scenario ROI'}</div>
             <div className="font-bold" style={{ color: scenarioResult.roi >= 0 ? '#16a34a' : '#dc2626' }}>{scenarioResult.roi.toFixed(0)}%</div>
           </div>
           <div className="rounded p-2 bg-background/60 border border-border">
-            <div className="text-[9px] text-muted-foreground">Cost/tonne</div>
+            <div className="text-[9px] text-muted-foreground">{isRTL ? 'تكلفة/طن' : 'Cost/tonne'}</div>
             <div className="font-bold">${scenarioResult.costPerTonne.toFixed(0)}</div>
           </div>
           <div className="rounded p-2 bg-background/60 border border-border">
-            <div className="text-[9px] text-muted-foreground">Break-even yield</div>
+            <div className="text-[9px] text-muted-foreground">{isRTL ? 'إنتاج التعادل' : 'Break-even yield'}</div>
             <div className="font-bold">{scenarioResult.breakEvenYield.toFixed(2)} t/ha</div>
           </div>
         </div>
         <div className="flex gap-1 mt-2">
-          <Button size="sm" variant="ghost" onClick={() => setScenario({ costDeltaPct: 20, priceDeltaPct: 0, yieldDeltaPct: 0 })} className="text-[10px] h-7">Costs +20%</Button>
-          <Button size="sm" variant="ghost" onClick={() => setScenario({ costDeltaPct: 0, priceDeltaPct: -15, yieldDeltaPct: 0 })} className="text-[10px] h-7">Price -15%</Button>
-          <Button size="sm" variant="ghost" onClick={() => setScenario({ costDeltaPct: 0, priceDeltaPct: 0, yieldDeltaPct: 10 })} className="text-[10px] h-7">Yield +10%</Button>
-          <Button size="sm" variant="ghost" onClick={() => setScenario({ costDeltaPct: 0, priceDeltaPct: 0, yieldDeltaPct: 0 })} className="text-[10px] h-7">Reset</Button>
+          <Button size="sm" variant="ghost" onClick={() => setScenario({ costDeltaPct: 20, priceDeltaPct: 0, yieldDeltaPct: 0 })} className="text-[10px] h-7">{isRTL ? 'تكاليف +20%' : 'Costs +20%'}</Button>
+          <Button size="sm" variant="ghost" onClick={() => setScenario({ costDeltaPct: 0, priceDeltaPct: -15, yieldDeltaPct: 0 })} className="text-[10px] h-7">{isRTL ? 'سعر -15%' : 'Price -15%'}</Button>
+          <Button size="sm" variant="ghost" onClick={() => setScenario({ costDeltaPct: 0, priceDeltaPct: 0, yieldDeltaPct: 10 })} className="text-[10px] h-7">{isRTL ? 'إنتاج +10%' : 'Yield +10%'}</Button>
+          <Button size="sm" variant="ghost" onClick={() => setScenario({ costDeltaPct: 0, priceDeltaPct: 0, yieldDeltaPct: 0 })} className="text-[10px] h-7">{isRTL ? 'إعادة تعيين' : 'Reset'}</Button>
         </div>
       </div>
     </div>

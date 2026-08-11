@@ -18,22 +18,25 @@ import {
 } from '@/lib/soil-history-store';
 import { getEntries, computeSummary } from '@/lib/financial-store';
 import { CROP_IRRIGATION_DATA } from '@/lib/irrigation-crop-data';
+import { useTranslation } from '@/lib/language-store';
 
-const SECTION_LABELS: { key: keyof ReportConfig['includeSections']; label: string; emoji: string }[] = [
-  { key: 'farmSummary', label: 'Farm Summary', emoji: '📋' },
-  { key: 'soilAnalysis', label: 'Soil Analysis & Trends', emoji: '🧪' },
-  { key: 'irrigationPlan', label: 'Irrigation Plan', emoji: '💧' },
-  { key: 'seasonPlan', label: 'Season Plan', emoji: '📅' },
-  { key: 'scoutingLog', label: 'Scouting Summary', emoji: '🔍' },
-  { key: 'financialSummary', label: 'Financial Summary', emoji: '💰' },
-  { key: 'sustainabilityScore', label: 'Sustainability Scorecard', emoji: '🌿' },
-  { key: 'weatherForecast', label: 'Weather Forecast', emoji: '🌤️' },
-  { key: 'recommendations', label: 'AI Recommendations', emoji: '💡' },
+const SECTION_LABELS: { key: keyof ReportConfig['includeSections']; label: string; label_ar: string; emoji: string }[] = [
+  { key: 'farmSummary', label: 'Farm Summary', label_ar: 'ملخّص المزرعة', emoji: '📋' },
+  { key: 'soilAnalysis', label: 'Soil Analysis & Trends', label_ar: 'تحليل التربة والاتجاهات', emoji: '🧪' },
+  { key: 'irrigationPlan', label: 'Irrigation Plan', label_ar: 'خطة الري', emoji: '💧' },
+  { key: 'seasonPlan', label: 'Season Plan', label_ar: 'خطة الموسم', emoji: '📅' },
+  { key: 'scoutingLog', label: 'Scouting Summary', label_ar: 'ملخّص الكشف', emoji: '🔍' },
+  { key: 'financialSummary', label: 'Financial Summary', label_ar: 'ملخّص مالي', emoji: '💰' },
+  { key: 'sustainabilityScore', label: 'Sustainability Scorecard', label_ar: 'بطاقة الاستدامة', emoji: '🌿' },
+  { key: 'weatherForecast', label: 'Weather Forecast', label_ar: 'توقعات الطقس', emoji: '🌤️' },
+  { key: 'recommendations', label: 'AI Recommendations', label_ar: 'توصيات بالذكاء', emoji: '💡' },
 ];
 
 export function ReportGenerator() {
   const [config, setConfig] = useState<ReportConfig>(DEFAULT_CONFIG);
   const [preview, setPreview] = useState<string | null>(null);
+  const { isRTL } = useTranslation();
+  const sectionLabel = (s: typeof SECTION_LABELS[number]) => isRTL ? s.label_ar : s.label;
 
   useEffect(() => {
     // Auto-fill farm name from profile if available
@@ -135,40 +138,49 @@ export function ReportGenerator() {
       {/* Report config */}
       <div className="grid grid-cols-3 gap-2">
         <div>
-          <Label className="text-[10px]">Farm name</Label>
+          <Label className="text-[10px]">{isRTL ? 'اسم المزرعة' : 'Farm name'}</Label>
           <Input value={config.farmName} onChange={e => setConfig({ ...config, farmName: e.target.value })} className="h-8 text-xs mt-0.5" />
         </div>
         <div>
-          <Label className="text-[10px]">Farmer name</Label>
+          <Label className="text-[10px]">{isRTL ? 'اسم المزارع' : 'Farmer name'}</Label>
           <Input value={config.farmerName} onChange={e => setConfig({ ...config, farmerName: e.target.value })} className="h-8 text-xs mt-0.5" />
         </div>
         <div>
-          <Label className="text-[10px]">Report date</Label>
+          <Label className="text-[10px]">{isRTL ? 'تاريخ التقرير' : 'Report date'}</Label>
           <Input type="date" value={config.reportDate} onChange={e => setConfig({ ...config, reportDate: e.target.value })} className="h-8 text-xs mt-0.5" />
         </div>
       </div>
 
       {/* Report type */}
       <div className="flex gap-1.5 flex-wrap">
-        {(['comprehensive', 'season_plan', 'soil_analysis', 'financial', 'irrigation'] as const).map(t => (
-          <button
-            key={t}
-            onClick={() => setConfig({ ...config, reportType: t })}
-            className={`text-[10px] px-2.5 py-1.5 rounded-md border transition-all ${config.reportType === t ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-background border-border text-muted-foreground hover:border-emerald-300'}`}
-          >
-            {t === 'comprehensive' ? 'Comprehensive' : t === 'season_plan' ? 'Season Plan' : t === 'soil_analysis' ? 'Soil Analysis' : t === 'financial' ? 'Financial' : 'Irrigation'}
-          </button>
-        ))}
+        {(['comprehensive', 'season_plan', 'soil_analysis', 'financial', 'irrigation'] as const).map(t => {
+          const labelMap: Record<string, { en: string; ar: string }> = {
+            comprehensive: { en: 'Comprehensive', ar: 'شامل' },
+            season_plan: { en: 'Season Plan', ar: 'خطة الموسم' },
+            soil_analysis: { en: 'Soil Analysis', ar: 'تحليل التربة' },
+            financial: { en: 'Financial', ar: 'مالي' },
+            irrigation: { en: 'Irrigation', ar: 'ري' },
+          };
+          return (
+            <button
+              key={t}
+              onClick={() => setConfig({ ...config, reportType: t })}
+              className={`text-[10px] px-2.5 py-1.5 rounded-md border transition-all ${config.reportType === t ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-background border-border text-muted-foreground hover:border-emerald-300'}`}
+            >
+              {isRTL ? labelMap[t].ar : labelMap[t].en}
+            </button>
+          );
+        })}
       </div>
 
       {/* Section toggles */}
       <div>
-        <div className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold mb-2">Include Sections ({enabledCount} selected)</div>
+        <div className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold mb-2">{isRTL ? `تضمين الأقسام (${enabledCount} مُختار)` : `Include Sections (${enabledCount} selected)`}</div>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
           {SECTION_LABELS.map(s => (
             <label key={s.key} className="flex items-center gap-2 p-2 rounded-lg border border-border hover:bg-muted/40 cursor-pointer transition-colors">
               <Checkbox checked={config.includeSections[s.key]} onCheckedChange={() => toggleSection(s.key)} />
-              <span className="text-xs">{s.emoji} {s.label}</span>
+              <span className="text-xs">{s.emoji} {sectionLabel(s)}</span>
             </label>
           ))}
         </div>
@@ -177,10 +189,10 @@ export function ReportGenerator() {
       {/* Actions */}
       <div className="flex gap-2">
         <Button onClick={generate} variant="outline" size="sm" className="gap-1.5 text-xs flex-1">
-          <Eye className="h-3.5 w-3.5" /> Preview Report
+          <Eye className="h-3.5 w-3.5" /> {isRTL ? 'معاينة التقرير' : 'Preview Report'}
         </Button>
         <Button onClick={printReport} size="sm" className="gap-1.5 text-xs flex-1 bg-emerald-600 hover:bg-emerald-700">
-          <Download className="h-3.5 w-3.5" /> Generate PDF
+          <Download className="h-3.5 w-3.5" /> {isRTL ? 'تصدير PDF' : 'Generate PDF'}
         </Button>
       </div>
 
@@ -189,11 +201,11 @@ export function ReportGenerator() {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
-              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /> Report Ready ({enabledCount} sections)
+              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /> {isRTL ? `التقرير جاهز (${enabledCount} أقسام)` : `Report Ready (${enabledCount} sections)`}
             </span>
             <Badge variant="outline" className="text-[9px]">{config.reportType}</Badge>
           </div>
-          <iframe srcDoc={preview} className="w-full h-[500px] rounded-lg border border-border" title="Report Preview" />
+          <iframe srcDoc={preview} className="w-full h-[500px] rounded-lg border border-border" title={isRTL ? 'معاينة التقرير' : 'Report Preview'} />
         </div>
       )}
 
@@ -202,10 +214,9 @@ export function ReportGenerator() {
         <div className="flex items-start gap-2 text-xs text-sky-700 dark:text-sky-400">
           <Sparkles className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
           <div>
-            <strong>How it works:</strong> The report generator pulls data from all your saved tools —
-            soil test history, financial dashboard, scouting log, season plan, irrigation program, and
-            sustainability scorecard. It combines them into a branded multi-page PDF with cover page,
-            data tables, and AI recommendations. Click "Generate PDF" to open the print dialog.
+            <strong>{isRTL ? 'كيف يعمل:' : 'How it works:'}</strong> {isRTL
+              ? 'مولّد التقارير يسحب البيانات من كل أدواتك المحفوظة — سجل تحاليل التربة، اللوحة المالية، سجل الكشف، خطة الموسم، برنامج الري، وبطاقة الاستدامة. يجمعها في PDF متعدّد الصفحات بهوية مع صفحة غلاف وجداول بيانات وتوصيات بالذكاء الاصطناعي. اضغط «تصدير PDF» لفتح حوار الطباعة.'
+              : 'The report generator pulls data from all your saved tools — soil test history, financial dashboard, scouting log, season plan, irrigation program, and sustainability scorecard. It combines them into a branded multi-page PDF with cover page, data tables, and AI recommendations. Click "Generate PDF" to open the print dialog.'}
           </div>
         </div>
       </div>

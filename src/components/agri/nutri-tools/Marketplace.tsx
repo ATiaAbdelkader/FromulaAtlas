@@ -13,6 +13,16 @@ import {
   PRODUCTS, CATEGORY_LABELS, CATEGORY_COLORS, searchProducts, bestPrice, cartTotal,
   type ProductCategory, type Product, type CartItem,
 } from '@/lib/marketplace-data';
+import { useTranslation } from '@/lib/language-store';
+
+const CATEGORY_LABEL_AR: Record<ProductCategory, string> = {
+  fertilizer: 'أسمدة',
+  amendment: 'معدّلات',
+  micronutrient: 'عناصر صغرى',
+  pesticide: 'مبيدات',
+  seed: 'بذور',
+  irrigation: 'ري',
+};
 
 const CART_KEY = 'nutriplant_marketplace_cart_v1';
 
@@ -21,6 +31,12 @@ export function Marketplace() {
   const [searchQuery, setSearchQuery] = useState('');
   const [cart, setCart] = useState<CartItem[]>([]);
   const [showCart, setShowCart] = useState(false);
+  const { isRTL } = useTranslation();
+
+  const categoryLabel = (cat: ProductCategory | 'all') => {
+    if (cat === 'all') return isRTL ? 'كل المنتجات' : 'All Products';
+    return isRTL ? CATEGORY_LABEL_AR[cat] : CATEGORY_LABELS[cat];
+  };
 
   useEffect(() => {
     try {
@@ -72,17 +88,22 @@ export function Marketplace() {
     const rows = cart.map((c, i) =>
       `<tr><td>${i + 1}</td><td>${c.emoji} ${c.productName}</td><td>${c.supplierName}</td><td style="text-align:right">${c.quantity}</td><td>${c.unit}</td><td style="text-align:right">$${c.price}</td><td style="text-align:right">$${(c.price * c.quantity).toFixed(2)}</td></tr>`
     ).join('');
-    win.document.write(`<!DOCTYPE html><html><head><title>Purchase Order</title><style>
+    const titleText = isRTL ? 'أمر شراء مزرعة' : 'Farm Purchase Order';
+    const dateText = isRTL ? 'التاريخ' : 'Date';
+    const itemsText = isRTL ? 'عناصر' : 'items';
+    const thText = isRTL ? ['#', 'المنتج', 'المورد', 'الكمية', 'الوحدة', 'سعر الوحدة', 'المجموع'] : ['#', 'Product', 'Supplier', 'Qty', 'Unit', 'Unit Price', 'Subtotal'];
+    const totalText = isRTL ? 'الإجمالي' : 'Total';
+    win.document.write(`<!DOCTYPE html><html><head><title>${titleText}</title><style>
       body{font-family:system-ui,sans-serif;margin:24px;color:#0f172a}
       h1{color:#16a34a;font-size:20px} .meta{color:#475569;font-size:12px;margin-bottom:16px}
       table{width:100%;border-collapse:collapse;font-size:11px} th{background:#ecfdf5;color:#047857;padding:6px;border:1px solid #a7f3d0;text-align:left}
       td{padding:4px 6px;border:1px solid #d1fae5} .total{font-size:16px;font-weight:bold;text-align:right;margin-top:12px;color:#16a34a}
       @page{size:landscape;margin:12mm}
     </style></head><body>
-      <h1>🌱 Farm Purchase Order</h1>
-      <div class="meta">Date: ${new Date().toLocaleDateString()} · ${cart.length} items</div>
-      <table><thead><tr><th>#</th><th>Product</th><th>Supplier</th><th>Qty</th><th>Unit</th><th>Unit Price</th><th>Subtotal</th></tr></thead><tbody>${rows}</tbody></table>
-      <div class="total">Total: $${total.toFixed(2)}</div>
+      <h1>🌱 ${titleText}</h1>
+      <div class="meta">${dateText}: ${new Date().toLocaleDateString(isRTL ? 'ar' : undefined)} · ${cart.length} ${itemsText}</div>
+      <table><thead><tr>${thText.map(t => `<th>${t}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>
+      <div class="total">${totalText}: $${total.toFixed(2)}</div>
     </body></html>`);
     win.document.close();
     setTimeout(() => win.print(), 300);
@@ -94,11 +115,11 @@ export function Marketplace() {
       <div className="flex gap-2 items-center">
         <div className="relative flex-1">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-          <Input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search fertilizers, amendments, pesticides..." className="h-9 pl-8 text-sm" />
+          <Input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder={isRTL ? 'ابحث عن أسمدة، معدّلات، مبيدات...' : 'Search fertilizers, amendments, pesticides...'} className="h-9 pl-8 text-sm" />
         </div>
         <Button variant={cart.length > 0 ? 'default' : 'outline'} size="sm" onClick={() => setShowCart(!showCart)} className="gap-1.5">
           <ShoppingCart className="h-4 w-4" />
-          {cart.length > 0 ? `Cart (${cart.length})` : 'Cart'}
+          {cart.length > 0 ? `${isRTL ? 'السلة' : 'Cart'} (${cart.length})` : (isRTL ? 'السلة' : 'Cart')}
           {total > 0 && <span className="ml-1 font-mono">${total.toFixed(0)}</span>}
         </Button>
       </div>
@@ -111,7 +132,7 @@ export function Marketplace() {
             onClick={() => setActiveCategory(cat)}
             className={`text-xs px-3 py-1.5 rounded-md border transition-all ${activeCategory === cat ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-background border-border text-muted-foreground hover:border-emerald-300'}`}
           >
-            {cat === 'all' ? 'All Products' : CATEGORY_LABELS[cat]}
+            {categoryLabel(cat)}
           </button>
         ))}
       </div>
@@ -120,9 +141,9 @@ export function Marketplace() {
       {showCart && cart.length > 0 && (
         <div className="rounded-xl border-2 border-emerald-300 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/20 p-4 space-y-2">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-bold flex items-center gap-1.5"><ShoppingCart className="h-4 w-4 text-emerald-600" /> Shopping Cart ({cart.length})</span>
+            <span className="text-sm font-bold flex items-center gap-1.5"><ShoppingCart className="h-4 w-4 text-emerald-600" /> {isRTL ? `سلة التسوق (${cart.length})` : `Shopping Cart (${cart.length})`}</span>
             <div className="flex gap-2">
-              <Button size="sm" variant="outline" onClick={exportOrder} className="gap-1.5 text-xs"><Download className="h-3 w-3" /> Export Order</Button>
+              <Button size="sm" variant="outline" onClick={exportOrder} className="gap-1.5 text-xs"><Download className="h-3 w-3" /> {isRTL ? 'تصدير الطلب' : 'Export Order'}</Button>
               <Button size="sm" variant="ghost" onClick={() => setShowCart(false)} className="text-xs"><X className="h-3 w-3" /></Button>
             </div>
           </div>
@@ -143,7 +164,7 @@ export function Marketplace() {
             </div>
           ))}
           <div className="flex items-center justify-between pt-2 border-t border-emerald-200 dark:border-emerald-800">
-            <span className="text-sm font-bold">Total</span>
+            <span className="text-sm font-bold">{isRTL ? 'الإجمالي' : 'Total'}</span>
             <span className="text-xl font-bold text-emerald-600">${total.toFixed(2)}</span>
           </div>
         </div>
@@ -180,7 +201,7 @@ export function Marketplace() {
                 <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">{product.description}</p>
                 {product.applicationRate && (
                   <div className="text-[10px] bg-muted/30 rounded p-1.5">
-                    <span className="font-semibold">Rate:</span> {product.applicationRate}
+                    <span className="font-semibold">{isRTL ? 'المعدل:' : 'Rate:'}</span> {product.applicationRate}
                   </div>
                 )}
 
@@ -194,8 +215,8 @@ export function Marketplace() {
                           <div className="font-medium truncate">{s.name}</div>
                           <div className="flex items-center gap-1 text-[9px] text-muted-foreground">
                             <Star className="h-2 w-2 text-amber-400" fill="currentColor" />
-                            {s.rating} · <Truck className="h-2 w-2" /> {s.deliveryDays}d
-                            {!s.inStock && <span className="text-red-500">Out of stock</span>}
+                            {s.rating} · <Truck className="h-2 w-2" /> {s.deliveryDays}{isRTL ? 'ي' : 'd'}
+                            {!s.inStock && <span className="text-red-500">{isRTL ? 'غير متوفّر' : 'Out of stock'}</span>}
                           </div>
                         </div>
                       </div>
@@ -203,7 +224,7 @@ export function Marketplace() {
                         <span className="font-mono font-bold">${s.price}</span>
                         <span className="text-[9px] text-muted-foreground">/{s.unit}</span>
                         <Button size="sm" variant={s.price === best.price ? 'default' : 'outline'} onClick={() => addToCart(product, si)} disabled={!s.inStock}
-                          className="h-6 w-6 p-0" title="Add to cart">
+                          className="h-6 w-6 p-0" title={isRTL ? 'أضف إلى السلة' : 'Add to cart'}>
                           <Plus className="h-3 w-3" />
                         </Button>
                       </div>
@@ -215,7 +236,7 @@ export function Marketplace() {
                 {savings > 0 && (
                   <div className="text-[10px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                     <CheckCircle2 className="h-3 w-3" />
-                    Save {savingsPct}% (${savings.toFixed(2)}) by choosing best price
+                    {isRTL ? `وفّر ${savingsPct}% ($${savings.toFixed(2)}) باختيار أفضل سعر` : `Save ${savingsPct}% ($${savings.toFixed(2)}) by choosing best price`}
                   </div>
                 )}
               </div>
@@ -227,7 +248,7 @@ export function Marketplace() {
       {filtered.length === 0 && (
         <div className="text-center py-8">
           <Search className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
-          <div className="text-sm text-muted-foreground">No products match your search.</div>
+          <div className="text-sm text-muted-foreground">{isRTL ? 'لا توجد منتجات مطابقة لبحثك.' : 'No products match your search.'}</div>
         </div>
       )}
     </div>

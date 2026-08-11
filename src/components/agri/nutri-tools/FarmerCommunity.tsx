@@ -16,13 +16,14 @@ import {
   getBenchmarks, addBenchmark, getBenchmarkForCrop,
   type Post, type Reply, type UserProfile, type PostType, type BenchmarkEntry,
 } from '@/lib/community-store';
+import { useTranslation } from '@/lib/language-store';
 
-const POST_TYPE_CONFIG: Record<PostType, { label: string; color: string; icon: string }> = {
-  question:      { label: 'Question',       color: '#3b82f6', icon: '❓' },
-  experience:    { label: 'Experience',     color: '#16a34a', icon: '💡' },
-  success_story: { label: 'Success Story',  color: '#f59e0b', icon: '🏆' },
-  tip:           { label: 'Tip',            color: '#8b5cf6', icon: '⚡' },
-  market_info:   { label: 'Market Info',    color: '#0891b2', icon: '📈' },
+const POST_TYPE_CONFIG: Record<PostType, { label: string; label_ar: string; color: string; icon: string }> = {
+  question:      { label: 'Question',       label_ar: 'سؤال',           color: '#3b82f6', icon: '❓' },
+  experience:    { label: 'Experience',     label_ar: 'تجربة',          color: '#16a34a', icon: '💡' },
+  success_story: { label: 'Success Story',  label_ar: 'قصة نجاح',      color: '#f59e0b', icon: '🏆' },
+  tip:           { label: 'Tip',            label_ar: 'نصيحة',          color: '#8b5cf6', icon: '⚡' },
+  market_info:   { label: 'Market Info',    label_ar: 'معلومات السوق',  color: '#0891b2', icon: '📈' },
 };
 
 const BENCHMARK_CROPS = ['Tomato', 'Maize', 'Wheat', 'Potato', 'Rice', 'Soybean', 'Avocado'];
@@ -36,6 +37,8 @@ export function FarmerCommunity() {
   const [searchQuery, setSearchQuery] = useState('');
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
+  const { isRTL } = useTranslation();
+  const typeLabel = (t: PostType) => isRTL ? POST_TYPE_CONFIG[t].label_ar : POST_TYPE_CONFIG[t].label;
 
   // New post form
   const [newPost, setNewPost] = useState({ type: 'question' as PostType, title: '', body: '', crop: '', region: '', tags: '' });
@@ -129,9 +132,9 @@ export function FarmerCommunity() {
     <div className="space-y-4">
       {/* Tab bar */}
       <div className="flex gap-1 border-b border-border">
-        <TabBtn active={tab === 'feed'} onClick={() => setTab('feed')} icon={MessageCircle} label="Community Feed" />
-        <TabBtn active={tab === 'benchmark'} onClick={() => setTab('benchmark')} icon={TrendingUp} label="Benchmark" />
-        <TabBtn active={tab === 'profile'} onClick={() => setTab('profile')} icon={Users} label="My Profile" />
+        <TabBtn active={tab === 'feed'} onClick={() => setTab('feed')} icon={MessageCircle} label={isRTL ? 'المجتمع' : 'Community Feed'} />
+        <TabBtn active={tab === 'benchmark'} onClick={() => setTab('benchmark')} icon={TrendingUp} label={isRTL ? 'المقارنة' : 'Benchmark'} />
+        <TabBtn active={tab === 'profile'} onClick={() => setTab('profile')} icon={Users} label={isRTL ? 'ملفي' : 'My Profile'} />
       </div>
 
       {/* === FEED TAB === */}
@@ -141,10 +144,10 @@ export function FarmerCommunity() {
           <div className="flex gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-              <Input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search posts..." className="h-9 pl-8 text-sm" />
+              <Input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder={isRTL ? 'ابحث في المنشورات...' : 'Search posts...'} className="h-9 pl-8 text-sm" />
             </div>
             <Button size="sm" onClick={() => setShowNewPost(!showNewPost)} className="gap-1.5">
-              <Plus className="h-4 w-4" /> Post
+              <Plus className="h-4 w-4" /> {isRTL ? 'منشور' : 'Post'}
             </Button>
           </div>
 
@@ -156,21 +159,21 @@ export function FarmerCommunity() {
                   <button key={t} onClick={() => setNewPost({ ...newPost, type: t })}
                     className={`text-[10px] px-2 py-1 rounded border ${newPost.type === t ? '' : 'border-border bg-background'}`}
                     style={newPost.type === t ? { background: `${POST_TYPE_CONFIG[t].color}20`, color: POST_TYPE_CONFIG[t].color, borderColor: `${POST_TYPE_CONFIG[t].color}60` } : {}}>
-                    {POST_TYPE_CONFIG[t].icon} {POST_TYPE_CONFIG[t].label}
+                    {POST_TYPE_CONFIG[t].icon} {typeLabel(t)}
                   </button>
                 ))}
               </div>
-              <Input value={newPost.title} onChange={e => setNewPost({ ...newPost, title: e.target.value })} placeholder="Title..." className="h-8 text-sm" />
-              <Textarea value={newPost.body} onChange={e => setNewPost({ ...newPost, body: e.target.value })} placeholder="Share your question, experience, or tip..." className="text-sm min-h-[80px]" />
+              <Input value={newPost.title} onChange={e => setNewPost({ ...newPost, title: e.target.value })} placeholder={isRTL ? 'العنوان...' : 'Title...'} className="h-8 text-sm" />
+              <Textarea value={newPost.body} onChange={e => setNewPost({ ...newPost, body: e.target.value })} placeholder={isRTL ? 'شارك سؤالك أو تجربتك أو نصيحتك...' : 'Share your question, experience, or tip...'} className="text-sm min-h-[80px]" />
               <div className="grid grid-cols-3 gap-2">
-                <Input value={newPost.crop} onChange={e => setNewPost({ ...newPost, crop: e.target.value })} placeholder="Crop (optional)" className="h-8 text-xs" />
-                <Input value={newPost.region} onChange={e => setNewPost({ ...newPost, region: e.target.value })} placeholder="Region (optional)" className="h-8 text-xs" />
-                <Input value={newPost.tags} onChange={e => setNewPost({ ...newPost, tags: e.target.value })} placeholder="tags, comma, sep" className="h-8 text-xs" />
+                <Input value={newPost.crop} onChange={e => setNewPost({ ...newPost, crop: e.target.value })} placeholder={isRTL ? 'المحصول (اختياري)' : 'Crop (optional)'} className="h-8 text-xs" />
+                <Input value={newPost.region} onChange={e => setNewPost({ ...newPost, region: e.target.value })} placeholder={isRTL ? 'المنطقة (اختياري)' : 'Region (optional)'} className="h-8 text-xs" />
+                <Input value={newPost.tags} onChange={e => setNewPost({ ...newPost, tags: e.target.value })} placeholder={isRTL ? 'وسوم، بفاصلة' : 'tags, comma, sep'} className="h-8 text-xs" />
               </div>
               <div className="flex gap-2 justify-end">
-                <Button size="sm" variant="ghost" onClick={() => setShowNewPost(false)}>Cancel</Button>
+                <Button size="sm" variant="ghost" onClick={() => setShowNewPost(false)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
                 <Button size="sm" onClick={handlePost} disabled={!newPost.title.trim() || !newPost.body.trim()} className="gap-1.5">
-                  <Send className="h-3.5 w-3.5" /> Publish
+                  <Send className="h-3.5 w-3.5" /> {isRTL ? 'نشر' : 'Publish'}
                 </Button>
               </div>
             </div>
@@ -178,9 +181,9 @@ export function FarmerCommunity() {
 
           {/* Filter chips */}
           <div className="flex gap-1.5 flex-wrap">
-            <Chip active={filterType === 'all'} onClick={() => setFilterType('all')} label="All" />
+            <Chip active={filterType === 'all'} onClick={() => setFilterType('all')} label={isRTL ? 'الكل' : 'All'} />
             {(Object.keys(POST_TYPE_CONFIG) as PostType[]).map(t => (
-              <Chip key={t} active={filterType === t} onClick={() => setFilterType(t)} label={`${POST_TYPE_CONFIG[t].icon} ${POST_TYPE_CONFIG[t].label}`} />
+              <Chip key={t} active={filterType === t} onClick={() => setFilterType(t)} label={`${POST_TYPE_CONFIG[t].icon} ${typeLabel(t)}`} />
             ))}
           </div>
 
@@ -207,7 +210,7 @@ export function FarmerCommunity() {
                     </div>
                   </div>
                   <Badge variant="outline" className="text-[9px]" style={{ color: config.color, borderColor: `${config.color}60` }}>
-                    {config.label}
+                    {typeLabel(post.type)}
                   </Badge>
                 </div>
 
@@ -240,7 +243,7 @@ export function FarmerCommunity() {
                       <div key={r.id} className="text-xs">
                         <div className="flex items-center gap-1.5">
                           <span className="font-medium">{r.author}</span>
-                          {r.isExpert && <Badge variant="outline" className="text-[8px] text-emerald-600 border-emerald-300 px-1 py-0 gap-0.5"><Star className="h-2 w-2" fill="currentColor" /> Expert</Badge>}
+                          {r.isExpert && <Badge variant="outline" className="text-[8px] text-emerald-600 border-emerald-300 px-1 py-0 gap-0.5"><Star className="h-2 w-2" fill="currentColor" /> {isRTL ? 'خبير' : 'Expert'}</Badge>}
                           <span className="text-[9px] text-muted-foreground">{timeAgo(r.createdAt)}</span>
                         </div>
                         <p className="text-muted-foreground mt-0.5">{r.body}</p>
@@ -252,7 +255,7 @@ export function FarmerCommunity() {
                 {/* Reply input */}
                 {replyingTo === post.id && (
                   <div className="flex gap-1.5 pl-4">
-                    <Input value={replyText} onChange={e => setReplyText(e.target.value)} placeholder="Write a reply..." className="h-7 text-xs"
+                    <Input value={replyText} onChange={e => setReplyText(e.target.value)} placeholder={isRTL ? 'اكتب ردّاً...' : 'Write a reply...'} className="h-7 text-xs"
                       onKeyDown={e => { if (e.key === 'Enter') handleReply(post.id); }} />
                     <Button size="sm" onClick={() => handleReply(post.id)} disabled={!replyText.trim()} className="h-7 px-2">
                       <Send className="h-3 w-3" />
@@ -266,7 +269,7 @@ export function FarmerCommunity() {
           {filteredPosts.length === 0 && (
             <div className="text-center py-8 text-sm text-muted-foreground">
               <MessageCircle className="h-8 w-8 mx-auto mb-2 opacity-40" />
-              No posts yet. Be the first to share!
+              {isRTL ? 'لا منشورات بعد. كن أول من يشارك!' : 'No posts yet. Be the first to share!'}
             </div>
           )}
         </div>
@@ -277,41 +280,41 @@ export function FarmerCommunity() {
         <div className="space-y-4">
           <div className="rounded-lg p-3 bg-indigo-50/50 dark:bg-indigo-950/20 border border-indigo-200 dark:border-indigo-900">
             <div className="flex items-center gap-1.5 text-xs font-semibold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide mb-2">
-              <TrendingUp className="h-3.5 w-3.5" /> Benchmark Your Farm
+              <TrendingUp className="h-3.5 w-3.5" /> {isRTL ? 'قارن مزرعتك' : 'Benchmark Your Farm'}
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <div>
-                <Label className="text-[10px]">Crop</Label>
+                <Label className="text-[10px]">{isRTL ? 'المحصول' : 'Crop'}</Label>
                 <select value={benchCrop} onChange={e => setBenchCrop(e.target.value)} className="h-8 text-xs w-full rounded-md border border-input bg-background px-2 mt-0.5">
                   {BENCHMARK_CROPS.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
               <div>
-                <Label className="text-[10px]">Yield (t/ha)</Label>
+                <Label className="text-[10px]">{isRTL ? 'الإنتاج (ط/هـ)' : 'Yield (t/ha)'}</Label>
                 <Input value={benchYield} onChange={e => setBenchYield(e.target.value)} type="number" className="h-8 text-xs mt-0.5" />
               </div>
               <div>
-                <Label className="text-[10px]">NUE (%)</Label>
+                <Label className="text-[10px]">{isRTL ? 'كفاءة N (%)' : 'NUE (%)'}</Label>
                 <Input value={benchNue} onChange={e => setBenchNue(e.target.value)} type="number" className="h-8 text-xs mt-0.5" />
               </div>
               <div>
-                <Label className="text-[10px]">Water Prod (kg/m³)</Label>
+                <Label className="text-[10px]">{isRTL ? 'إنتاجية الماء (كغ/م³)' : 'Water Prod (kg/m³)'}</Label>
                 <Input value={benchWp} onChange={e => setBenchWp(e.target.value)} type="number" className="h-8 text-xs mt-0.5" />
               </div>
             </div>
             <Button onClick={submitBenchmark} size="sm" className="w-full mt-2 gap-1.5">
-              <Award className="h-3.5 w-3.5" /> Submit My Numbers
+              <Award className="h-3.5 w-3.5" /> {isRTL ? 'أرسل أرقامي' : 'Submit My Numbers'}
             </Button>
           </div>
 
           {/* Comparison */}
           {benchmark.avg && benchmark.top && (
             <div className="space-y-2">
-              <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{benchCrop} — How do you compare?</div>
+              <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{benchCrop} — {isRTL ? 'كيف تقارن؟' : 'How do you compare?'}</div>
               {[
-                { label: 'Yield (t/ha)', avg: benchmark.avg.yield, top: benchmark.top.yield, user: userBench?.yield },
-                { label: 'NUE (%)', avg: benchmark.avg.nUe, top: benchmark.top.nUe, user: userBench?.nUe },
-                { label: 'Water Prod (kg/m³)', avg: benchmark.avg.waterProductivity, top: benchmark.top.waterProductivity, user: userBench?.waterProductivity },
+                { label: isRTL ? 'الإنتاج (ط/هـ)' : 'Yield (t/ha)', avg: benchmark.avg.yield, top: benchmark.top.yield, user: userBench?.yield },
+                { label: isRTL ? 'كفاءة N (%)' : 'NUE (%)', avg: benchmark.avg.nUe, top: benchmark.top.nUe, user: userBench?.nUe },
+                { label: isRTL ? 'إنتاجية الماء (كغ/م³)' : 'Water Prod (kg/m³)', avg: benchmark.avg.waterProductivity, top: benchmark.top.waterProductivity, user: userBench?.waterProductivity },
               ].map(metric => {
                 const maxVal = Math.max(metric.avg, metric.top, metric.user || 0, 0.1);
                 return (
@@ -320,14 +323,14 @@ export function FarmerCommunity() {
                       <span className="text-xs font-medium">{metric.label}</span>
                       {metric.user != null && (
                         <span className="text-[10px] font-mono">
-                          You: <strong>{metric.user}</strong> · Avg: {metric.avg} · Top 25%: {metric.top}
+                          {isRTL ? 'أنت: ' : 'You: '}<strong>{metric.user}</strong> · {isRTL ? 'المتوسط: ' : 'Avg: '}{metric.avg} · {isRTL ? 'أعلى 25%: ' : 'Top 25%: '}{metric.top}
                         </span>
                       )}
                     </div>
                     <div className="space-y-1">
-                      <BenchBar label="Global avg" value={metric.avg} max={maxVal} color="#94a3b8" />
-                      <BenchBar label="Top 25%" value={metric.top} max={maxVal} color="#16a34a" />
-                      {metric.user != null && <BenchBar label="You" value={metric.user} max={maxVal} color="#6366f1" />}
+                      <BenchBar label={isRTL ? 'متوسط عالمي' : 'Global avg'} value={metric.avg} max={maxVal} color="#94a3b8" />
+                      <BenchBar label={isRTL ? 'أعلى 25%' : 'Top 25%'} value={metric.top} max={maxVal} color="#16a34a" />
+                      {metric.user != null && <BenchBar label={isRTL ? 'أنت' : 'You'} value={metric.user} max={maxVal} color="#6366f1" />}
                     </div>
                   </div>
                 );
@@ -336,9 +339,9 @@ export function FarmerCommunity() {
               {userBench && (
                 <div className="rounded-lg p-3 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900">
                   <div className="text-xs">
-                    {userBench.yield >= benchmark.top.yield ? '🏆 You\'re in the top 25% for yield!' :
-                     userBench.yield >= benchmark.avg.yield ? '✅ You\'re above the global average. Room to improve to reach top 25%.' :
-                     '⚠️ You\'re below the global average. Check the Yield Gap Analysis tool for recommendations.'}
+                    {userBench.yield >= benchmark.top.yield ? (isRTL ? '🏆 أنت ضمن أعلى 25% في الإنتاج!' : '🏆 You\'re in the top 25% for yield!') :
+                     userBench.yield >= benchmark.avg.yield ? (isRTL ? '✅ أنت فوق المتوسط العالمي. لديك مساحة للوصول لأعلى 25%.' : '✅ You\'re above the global average. Room to improve to reach top 25%.') :
+                     (isRTL ? '⚠️ أنت تحت المتوسط العالمي. تحقّق من أداة تحليل فجوة الإنتاج لتوصيات.' : '⚠️ You\'re below the global average. Check the Yield Gap Analysis tool for recommendations.')}
                   </div>
                 </div>
               )}
@@ -350,36 +353,36 @@ export function FarmerCommunity() {
       {/* === PROFILE TAB === */}
       {tab === 'profile' && (
         <div className="space-y-3 max-w-md">
-          <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Your Community Profile</div>
+          <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{isRTL ? 'ملفك في المجتمع' : 'Your Community Profile'}</div>
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <Label className="text-[10px]">Name</Label>
-              <Input value={profile?.name || ''} onChange={e => { const p = { ...profile, name: e.target.value } as UserProfile; setProfile(p); saveProfile(p); }} className="h-8 text-xs mt-0.5" placeholder="Your name" />
+              <Label className="text-[10px]">{isRTL ? 'الاسم' : 'Name'}</Label>
+              <Input value={profile?.name || ''} onChange={e => { const p = { ...profile, name: e.target.value } as UserProfile; setProfile(p); saveProfile(p); }} className="h-8 text-xs mt-0.5" placeholder={isRTL ? 'اسمك' : 'Your name'} />
             </div>
             <div>
-              <Label className="text-[10px]">Role</Label>
+              <Label className="text-[10px]">{isRTL ? 'الدور' : 'Role'}</Label>
               <select value={profile?.role || 'grower'} onChange={e => { const p = { ...profile, role: e.target.value as UserProfile['role'] } as UserProfile; setProfile(p); saveProfile(p); }} className="h-8 text-xs w-full rounded-md border border-input bg-background px-2 mt-0.5">
-                <option value="grower">Grower</option>
-                <option value="agronomist">Agronomist</option>
-                <option value="consultant">Consultant</option>
-                <option value="student">Student</option>
-                <option value="other">Other</option>
+                <option value="grower">{isRTL ? 'مزارع' : 'Grower'}</option>
+                <option value="agronomist">{isRTL ? 'مهندس زراعي' : 'Agronomist'}</option>
+                <option value="consultant">{isRTL ? 'استشاري' : 'Consultant'}</option>
+                <option value="student">{isRTL ? 'طالب' : 'Student'}</option>
+                <option value="other">{isRTL ? 'أخرى' : 'Other'}</option>
               </select>
             </div>
             <div>
-              <Label className="text-[10px]">Farm name</Label>
-              <Input value={profile?.farm || ''} onChange={e => { const p = { ...profile, farm: e.target.value } as UserProfile; setProfile(p); saveProfile(p); }} className="h-8 text-xs mt-0.5" placeholder="Farm name" />
+              <Label className="text-[10px]">{isRTL ? 'اسم المزرعة' : 'Farm name'}</Label>
+              <Input value={profile?.farm || ''} onChange={e => { const p = { ...profile, farm: e.target.value } as UserProfile; setProfile(p); saveProfile(p); }} className="h-8 text-xs mt-0.5" placeholder={isRTL ? 'اسم المزرعة' : 'Farm name'} />
             </div>
             <div>
-              <Label className="text-[10px]">Region</Label>
-              <Input value={profile?.region || ''} onChange={e => { const p = { ...profile, region: e.target.value } as UserProfile; setProfile(p); saveProfile(p); }} className="h-8 text-xs mt-0.5" placeholder="Your region" />
+              <Label className="text-[10px]">{isRTL ? 'المنطقة' : 'Region'}</Label>
+              <Input value={profile?.region || ''} onChange={e => { const p = { ...profile, region: e.target.value } as UserProfile; setProfile(p); saveProfile(p); }} className="h-8 text-xs mt-0.5" placeholder={isRTL ? 'منطقتك' : 'Your region'} />
             </div>
           </div>
           <div>
-            <Label className="text-[10px]">Crops you grow (comma-separated)</Label>
+            <Label className="text-[10px]">{isRTL ? 'محاصيل تزرعها (بفاصلة)' : 'Crops you grow (comma-separated)'}</Label>
             <Input value={(profile?.crops || []).join(', ')} onChange={e => { const p = { ...profile, crops: e.target.value.split(',').map(c => c.trim()).filter(Boolean) } as UserProfile; setProfile(p); saveProfile(p); }} className="h-8 text-xs mt-0.5" placeholder="tomato, maize, avocado" />
           </div>
-          <div className="text-[10px] text-muted-foreground text-center pt-2">Your profile is stored locally and attached to your community posts.</div>
+          <div className="text-[10px] text-muted-foreground text-center pt-2">{isRTL ? 'ملفك مخزّن محلياً ومرفق بمنشوراتك في المجتمع.' : 'Your profile is stored locally and attached to your community posts.'}</div>
         </div>
       )}
     </div>
