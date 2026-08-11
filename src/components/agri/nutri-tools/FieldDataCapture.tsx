@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Camera, Upload, Loader2, CheckCircle2, AlertCircle, X, FileText, ScanLine } from 'lucide-react';
 import { sendToBridge } from '@/lib/tool-bridge';
+import { useTranslation } from '@/lib/language-store';
 
 interface ParsedReport {
   type: 'soil' | 'water' | 'fertilizer_bag' | 'lab_report' | 'unknown';
@@ -108,6 +109,7 @@ export function FieldDataCapture() {
   const [parsed, setParsed] = useState<ParsedReport | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  const { isRTL } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFile = async (file: File) => {
@@ -181,10 +183,10 @@ export function FieldDataCapture() {
       <button
         onClick={() => setOpen(true)}
         className="fixed bottom-6 left-6 z-50 flex items-center gap-2 px-4 py-3 rounded-full bg-gradient-to-br from-violet-600 to-purple-700 text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all"
-        title="Capture lab report or fertilizer label"
+        title={isRTL ? 'التقط تقرير مختبر أو ملصق سماد' : 'Capture lab report or fertilizer label'}
       >
         <ScanLine className="h-5 w-5" />
-        <span className="text-sm font-semibold hidden sm:inline">Scan report</span>
+        <span className="text-sm font-semibold hidden sm:inline">{isRTL ? 'مسح تقرير' : 'Scan report'}</span>
       </button>
 
       {/* Modal */}
@@ -201,8 +203,8 @@ export function FieldDataCapture() {
                   <Camera className="h-4 w-4" />
                 </div>
                 <div>
-                  <div className="text-sm font-semibold">Field Data Capture</div>
-                  <div className="text-[10px] text-violet-100/90">Photo → AI extraction → auto-fill tool</div>
+                  <div className="text-sm font-semibold">{isRTL ? 'التقاط بيانات الحقل' : 'Field Data Capture'}</div>
+                  <div className="text-[10px] text-violet-100/90">{isRTL ? 'صورة ← استخراج بالذكاء ← ملء تلقائي للأداة' : 'Photo → AI extraction → auto-fill tool'}</div>
                 </div>
               </div>
               <button onClick={() => setOpen(false)} className="text-violet-100 hover:text-white p-1 rounded hover:bg-white/10">
@@ -218,9 +220,9 @@ export function FieldDataCapture() {
                   className="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:border-violet-400 hover:bg-violet-50/30 dark:hover:bg-violet-950/10 transition-colors"
                 >
                   <Upload className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
-                  <div className="text-sm font-medium">Click to upload a photo</div>
+                  <div className="text-sm font-medium">{isRTL ? 'اضغط لرفع صورة' : 'Click to upload a photo'}</div>
                   <div className="text-xs text-muted-foreground mt-1">
-                    Soil lab report, water analysis, or fertilizer bag label — PNG/JPG, max 10 MB
+                    {isRTL ? 'تقرير تربة، تحليل مياه، أو ملصق كيس سماد — PNG/JPG، حد أقصى 10 ميغابايت' : 'Soil lab report, water analysis, or fertilizer bag label — PNG/JPG, max 10 MB'}
                   </div>
                 </div>
               )}
@@ -243,7 +245,7 @@ export function FieldDataCapture() {
                     <button
                       onClick={reset}
                       className="absolute top-2 right-2 p-1.5 rounded-full bg-background/80 backdrop-blur hover:bg-background border border-border"
-                      title="Remove image"
+                      title={isRTL ? 'إزالة الصورة' : 'Remove image'}
                     >
                       <X className="h-3.5 w-3.5" />
                     </button>
@@ -253,7 +255,7 @@ export function FieldDataCapture() {
                   {loading && (
                     <div className="flex items-center justify-center gap-2 py-6 text-sm text-muted-foreground">
                       <Loader2 className="h-5 w-5 animate-spin" />
-                      Extracting values with AI vision...
+                      {isRTL ? 'جارٍ استخراج القيم برؤية الذكاء...' : 'Extracting values with AI vision...'}
                     </div>
                   )}
 
@@ -279,7 +281,7 @@ export function FieldDataCapture() {
                         </Badge>
                         <div className="flex items-center gap-1 text-xs text-muted-foreground">
                           <CheckCircle2 className="h-3 w-3 text-emerald-500" />
-                          Confidence: {Math.round(parsed.confidence * 100)}%
+                          {isRTL ? 'الثقة: ' : 'Confidence: '}{Math.round(parsed.confidence * 100)}%
                         </div>
                       </div>
 
@@ -287,7 +289,7 @@ export function FieldDataCapture() {
                       {valueEntries.length > 0 ? (
                         <div className="rounded-lg border border-border overflow-hidden">
                           <div className="bg-muted/40 px-3 py-2 text-[11px] uppercase tracking-wide font-semibold text-muted-foreground flex items-center gap-1.5">
-                            <FileText className="h-3 w-3" /> Extracted values ({valueEntries.length})
+                            <FileText className="h-3 w-3" /> {isRTL ? `القيم المستخرجة (${valueEntries.length})` : `Extracted values (${valueEntries.length})`}
                           </div>
                           <div className="grid grid-cols-2 gap-x-4 gap-y-1 p-3 text-sm">
                             {valueEntries.map(([k, v]) => (
@@ -300,7 +302,7 @@ export function FieldDataCapture() {
                         </div>
                       ) : (
                         <div className="text-sm text-amber-600 bg-amber-50 dark:bg-amber-950/30 dark:text-amber-400 rounded p-2 text-center">
-                          No values could be extracted from this image.
+                          {isRTL ? 'تعذّر استخراج أي قيم من هذه الصورة.' : 'No values could be extracted from this image.'}
                         </div>
                       )}
 
@@ -315,11 +317,11 @@ export function FieldDataCapture() {
                       {parsed.suggestedTool && parsed.suggestedTool !== 'unknown' && valueEntries.length > 0 && (
                         <div className="flex items-center justify-between gap-3 p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900">
                           <div className="text-sm">
-                            <div className="text-[10px] uppercase tracking-wide text-emerald-700 dark:text-emerald-300 font-semibold">Suggested tool</div>
+                            <div className="text-[10px] uppercase tracking-wide text-emerald-700 dark:text-emerald-300 font-semibold">{isRTL ? 'الأداة المقترحة' : 'Suggested tool'}</div>
                             <div className="font-medium">{TOOL_LABELS[parsed.suggestedTool] || parsed.suggestedTool}</div>
                           </div>
                           <Button onClick={sendToTool} size="sm" className="bg-emerald-600 hover:bg-emerald-700">
-                            Send to tool →
+                            {isRTL ? 'إرسال إلى الأداة ←' : 'Send to tool →'}
                           </Button>
                         </div>
                       )}
@@ -330,7 +332,7 @@ export function FieldDataCapture() {
 
               {/* Privacy note */}
               <div className="text-[10px] text-muted-foreground text-center border-t border-border pt-3">
-                Images are processed by AI vision to extract numbers only. They are not stored or sent to any third party.
+                {isRTL ? 'تتم معالجة الصور برؤية الذكاء لاستخراج الأرقام فقط. لا تُخزَّن ولا تُرسَل إلى أي طرف ثالث.' : 'Images are processed by AI vision to extract numbers only. They are not stored or sent to any third party.'}
               </div>
             </div>
           </div>

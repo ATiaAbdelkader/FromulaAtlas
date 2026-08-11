@@ -34,6 +34,7 @@ import {
   type UnitCategoryId,
 } from '@/lib/unit-conversions';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/language-store';
 
 interface UnitConverterDialogProps {
   open: boolean;
@@ -57,6 +58,8 @@ export function UnitConverterDialog({
   onOpenChange,
 }: UnitConverterDialogProps) {
   const [categoryId, setCategoryId] = useState<UnitCategoryId>('area');
+  const { isRTL } = useTranslation();
+  const categoryLabel = (cat: typeof unitCategories[number]) => isRTL ? ((cat as any).label_ar ?? cat.label) : cat.label;
   const category = useMemo(
     () => unitCategories.find((c) => c.id === categoryId)!,
     [categoryId],
@@ -107,11 +110,12 @@ export function UnitConverterDialog({
             <span className="flex items-center justify-center h-8 w-8 rounded-md bg-gradient-to-br from-emerald-500 to-green-700 text-white">
               <Ruler className="h-4 w-4" />
             </span>
-            Unit Converter
+            {isRTL ? 'محوّل الوحدات' : 'Unit Converter'}
           </DialogTitle>
           <DialogDescription className="text-xs">
-            Convert between area, length, weight, volume, temperature, water
-            depth, yield, and pressure units.
+            {isRTL
+              ? 'حوّل بين وحدات المساحة والطول والوزن والحجم والحرارة وعمق المياه والإنتاج والضغط.'
+              : 'Convert between area, length, weight, volume, temperature, water depth, yield, and pressure units.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -127,7 +131,7 @@ export function UnitConverterDialog({
                 value={cat.id}
                 className="text-xs h-7 px-2.5"
               >
-                {cat.label}
+                {categoryLabel(cat)}
               </TabsTrigger>
             ))}
           </TabsList>
@@ -143,7 +147,7 @@ export function UnitConverterDialog({
             <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] gap-3 items-end">
               {/* From */}
               <div className="space-y-1.5">
-                <Label className="text-xs">From</Label>
+                <Label className="text-xs">{isRTL ? 'من' : 'From'}</Label>
                 <Input
                   type="number"
                   value={input}
@@ -170,14 +174,14 @@ export function UnitConverterDialog({
                 size="icon"
                 onClick={swap}
                 className="h-10 w-10 mb-1 sm:mb-7 mx-auto"
-                title="Swap units"
+                title={isRTL ? 'تبديل الوحدات' : 'Swap units'}
               >
                 <ArrowLeftRight className="h-4 w-4" />
               </Button>
 
               {/* To */}
               <div className="space-y-1.5">
-                <Label className="text-xs">To</Label>
+                <Label className="text-xs">{isRTL ? 'إلى' : 'To'}</Label>
                 <div
                   className={cn(
                     'h-10 rounded-md border-2 border-emerald-200 dark:border-emerald-900',
@@ -220,7 +224,7 @@ export function UnitConverterDialog({
             {/* Quick reference panel */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-xs font-semibold">Quick Reference</h3>
+                <h3 className="text-xs font-semibold">{isRTL ? 'مرجع سريع' : 'Quick Reference'}</h3>
                 <Badge variant="outline" className="text-[10px] font-normal">
                   {fromUnit?.label} · {fromUnit?.symbol}
                 </Badge>

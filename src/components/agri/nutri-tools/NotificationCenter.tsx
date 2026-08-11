@@ -9,6 +9,7 @@ import {
   Bell, Loader2, AlertTriangle, AlertCircle, Info, CheckCircle2,
   CloudRain, Thermometer, Bug, Calendar, X, MapPin, RefreshCw,
 } from 'lucide-react';
+import { useTranslation } from '@/lib/language-store';
 
 interface Alert {
   id: string;
@@ -50,6 +51,7 @@ export function NotificationCenter() {
   const [loading, setLoading] = useState(false);
   const [alerts, setAlerts] = useState<AlertsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { isRTL } = useTranslation();
 
   // Form state
   const [lat, setLat] = useState('19.4326');
@@ -113,7 +115,7 @@ export function NotificationCenter() {
         onClick={() => setOpen(v => !v)}
         className="fixed bottom-6 right-6 z-40 flex items-center justify-center h-12 w-12 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all"
         style={{ bottom: open ? 'auto' : '6rem' }}
-        title="Predictive alerts"
+        title={isRTL ? 'تنبيهات تنبؤية' : 'Predictive alerts'}
       >
         <Bell className="h-5 w-5" />
         {alertCount > 0 && (
@@ -133,8 +135,8 @@ export function NotificationCenter() {
                 <Bell className="h-4 w-4" />
               </div>
               <div>
-                <div className="text-sm font-semibold leading-tight">Predictive Alerts</div>
-                <div className="text-[10px] text-amber-100/90 leading-tight">Weather + disease + phenology</div>
+                <div className="text-sm font-semibold leading-tight">{isRTL ? 'التنبيهات التنبؤية' : 'Predictive Alerts'}</div>
+                <div className="text-[10px] text-amber-100/90 leading-tight">{isRTL ? 'الطقس + الأمراض + الفينولوجيا' : 'Weather + disease + phenology'}</div>
               </div>
             </div>
             <button onClick={() => setOpen(false)} className="text-amber-100 hover:text-white p-1 rounded hover:bg-white/10">
@@ -146,21 +148,21 @@ export function NotificationCenter() {
           <div className="p-3 border-b border-border space-y-2 bg-muted/20">
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="text-[10px] text-muted-foreground uppercase tracking-wide">Latitude</label>
+                <label className="text-[10px] text-muted-foreground uppercase tracking-wide">{isRTL ? 'خط العرض' : 'Latitude'}</label>
                 <Input value={lat} onChange={e => setLat(e.target.value)} className="h-8 text-xs" />
               </div>
               <div>
-                <label className="text-[10px] text-muted-foreground uppercase tracking-wide">Longitude</label>
+                <label className="text-[10px] text-muted-foreground uppercase tracking-wide">{isRTL ? 'خط الطول' : 'Longitude'}</label>
                 <Input value={lng} onChange={e => setLng(e.target.value)} className="h-8 text-xs" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="text-[10px] text-muted-foreground uppercase tracking-wide">Crop</label>
+                <label className="text-[10px] text-muted-foreground uppercase tracking-wide">{isRTL ? 'المحصول' : 'Crop'}</label>
                 <Input value={crop} onChange={e => setCrop(e.target.value)} className="h-8 text-xs" />
               </div>
               <div>
-                <label className="text-[10px] text-muted-foreground uppercase tracking-wide">Planting date</label>
+                <label className="text-[10px] text-muted-foreground uppercase tracking-wide">{isRTL ? 'تاريخ الزراعة' : 'Planting date'}</label>
                 <Input type="date" value={plantingDate} onChange={e => setPlantingDate(e.target.value)} className="h-8 text-xs" />
               </div>
             </div>
@@ -170,7 +172,7 @@ export function NotificationCenter() {
               </Button>
               <Button size="sm" onClick={fetchAlerts} disabled={loading} className="gap-1.5 text-xs h-8 flex-1">
                 {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
-                Check alerts
+                {isRTL ? 'تحقّق من التنبيهات' : 'Check alerts'}
               </Button>
             </div>
           </div>
@@ -186,14 +188,14 @@ export function NotificationCenter() {
 
             {loading && (
               <div className="flex items-center justify-center gap-2 py-6 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" /> Fetching forecast + running disease models...
+                <Loader2 className="h-4 w-4 animate-spin" /> {isRTL ? 'جلب التوقعات + تشغيل نماذج الأمراض...' : 'Fetching forecast + running disease models...'}
               </div>
             )}
 
             {!loading && !alerts && !error && (
               <div className="text-center py-6 text-sm text-muted-foreground">
                 <Bell className="h-8 w-8 mx-auto mb-2 opacity-40" />
-                Enter your location and crop, then click "Check alerts" to get proactive warnings for the next 7 days.
+                {isRTL ? 'أدخل موقعك ومحصولك، ثم اضغط «تحقّق من التنبيهات» للحصول على تحذيرات استباقية للأيام الـ7 القادمة.' : 'Enter your location and crop, then click "Check alerts" to get proactive warnings for the next 7 days.'}
               </div>
             )}
 
@@ -202,18 +204,18 @@ export function NotificationCenter() {
                 {/* Summary */}
                 <div className="flex items-center gap-2 flex-wrap text-xs mb-2">
                   <Badge variant="outline" className="text-[10px]">
-                    Week {alerts.currentWeek}/{alerts.totalWeeks}
+                    {isRTL ? `أسبوع ${alerts.currentWeek}/${alerts.totalWeeks}` : `Week ${alerts.currentWeek}/${alerts.totalWeeks}`}
                   </Badge>
                   <Badge variant="outline" className="text-[10px] capitalize">
                     {alerts.currentStage}
                   </Badge>
-                  <span className="text-muted-foreground ml-auto">{alerts.summary.total} alerts</span>
+                  <span className="text-muted-foreground ml-auto">{alerts.summary.total} {isRTL ? 'تنبيهات' : 'alerts'}</span>
                 </div>
 
                 {alerts.alerts.length === 0 ? (
                   <div className="flex items-center gap-2 p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900 text-sm">
                     <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                    <span>No alerts — conditions look good for the next 7 days.</span>
+                    <span>{isRTL ? 'لا تنبيهات — تبدو الظروف جيدة للأيام الـ7 القادمة.' : 'No alerts — conditions look good for the next 7 days.'}</span>
                   </div>
                 ) : (
                   alerts.alerts.map(a => {
@@ -233,7 +235,7 @@ export function NotificationCenter() {
                             <div className="flex items-center gap-2">
                               <span className="text-xs font-semibold" style={{ color: style.color }}>{a.title}</span>
                               {a.forecastDays != null && a.forecastDays >= 0 && (
-                                <span className="text-[9px] text-muted-foreground">in {a.forecastDays}d</span>
+                                <span className="text-[9px] text-muted-foreground">{isRTL ? `خلال ${a.forecastDays}ي` : `in ${a.forecastDays}d`}</span>
                               )}
                             </div>
                             <p className="text-xs text-foreground mt-0.5 leading-snug">{a.message}</p>

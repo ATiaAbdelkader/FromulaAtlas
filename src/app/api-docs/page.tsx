@@ -10,6 +10,7 @@ import {
   Code, Copy, Check, Play, Terminal, Webhook, Zap, BookOpen,
   ArrowRight, ChevronRight,
 } from 'lucide-react';
+import { useTranslation } from '@/lib/language-store';
 
 const ENDPOINTS = [
   {
@@ -183,6 +184,7 @@ export default function ApiDocsPage() {
   const [copied, setCopied] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<string | null>(null);
   const [testing, setTesting] = useState(false);
+  const { isRTL } = useTranslation();
 
   const copy = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
@@ -214,18 +216,18 @@ export default function ApiDocsPage() {
   const ep = ENDPOINTS[activeEndpoint];
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="max-w-5xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl bg-gradient-to-br from-slate-700 to-slate-900 text-white mb-3">
             <Code className="h-7 w-7" />
           </div>
-          <h1 className="text-2xl font-bold">Formula Atlas API</h1>
-          <p className="text-sm text-muted-foreground mt-1">REST API for 332 formulas, 218 calculators, 35 crops, 39 diseases, and AI agronomist</p>
+          <h1 className="text-2xl font-bold">{isRTL ? 'واجهة برمجة تطبيقات أطلس المعادلات' : 'Formula Atlas API'}</h1>
+          <p className="text-sm text-muted-foreground mt-1">{isRTL ? 'REST API لـ 500 معادلة، 91 حاسبة، 35 محصولاً، 39 مرضاً، ومهندس زراعي بالذكاء' : 'REST API for 500 formulas, 91 calculators, 35 crops, 39 diseases, and AI agronomist'}</p>
           <div className="flex justify-center gap-2 mt-3">
             <Badge variant="outline" className="text-xs">v1.0</Badge>
-            <Badge variant="outline" className="text-xs text-emerald-700 dark:text-emerald-400 border-emerald-300">No API key required</Badge>
+            <Badge variant="outline" className="text-xs text-emerald-700 dark:text-emerald-400 border-emerald-300">{isRTL ? 'بدون مفتاح API' : 'No API key required'}</Badge>
             <Badge variant="outline" className="text-xs text-blue-700 dark:text-blue-400 border-blue-300">JSON</Badge>
           </div>
         </div>
@@ -233,10 +235,10 @@ export default function ApiDocsPage() {
         {/* Quick stats */}
         <div className="grid grid-cols-4 gap-3 mb-6">
           {[
-            { label: 'Formulas', value: '332' },
-            { label: 'Calculators', value: '218' },
-            { label: 'Crops', value: '35' },
-            { label: 'Diseases', value: '39' },
+            { label: isRTL ? 'معادلات' : 'Formulas', value: '500' },
+            { label: isRTL ? 'حاسبات' : 'Calculators', value: '91' },
+            { label: isRTL ? 'محاصيل' : 'Crops', value: '35' },
+            { label: isRTL ? 'أمراض' : 'Diseases', value: '39' },
           ].map(s => (
             <div key={s.label} className="rounded-lg p-3 border border-border bg-card text-center">
               <div className="text-xl font-bold text-emerald-600">{s.value}</div>
@@ -249,11 +251,11 @@ export default function ApiDocsPage() {
         <div className="grid grid-cols-3 gap-3 mb-6">
           <div className="rounded-lg p-3 border border-border bg-card flex items-center gap-2">
             <Zap className="h-5 w-5 text-amber-500" />
-            <div><div className="text-xs font-semibold">Zapier</div><div className="text-[10px] text-muted-foreground">Connect to 5000+ apps</div></div>
+            <div><div className="text-xs font-semibold">Zapier</div><div className="text-[10px] text-muted-foreground">{isRTL ? 'اربط بأكثر من 5000 تطبيق' : 'Connect to 5000+ apps'}</div></div>
           </div>
           <div className="rounded-lg p-3 border border-border bg-card flex items-center gap-2">
             <Webhook className="h-5 w-5 text-blue-500" />
-            <div><div className="text-xs font-semibold">Webhooks</div><div className="text-[10px] text-muted-foreground">Push results to your system</div></div>
+            <div><div className="text-xs font-semibold">{isRTL ? 'ويب هوك' : 'Webhooks'}</div><div className="text-[10px] text-muted-foreground">{isRTL ? 'ادفع النتائج إلى نظامك' : 'Push results to your system'}</div></div>
           </div>
           <div className="rounded-lg p-3 border border-border bg-card flex items-center gap-2">
             <Terminal className="h-5 w-5 text-slate-500" />
@@ -288,7 +290,7 @@ export default function ApiDocsPage() {
             {/* Parameters */}
             {ep.params.length > 0 && (
               <div>
-                <div className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold mb-1.5">Query Parameters</div>
+                <div className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold mb-1.5">{isRTL ? 'معامّلات الاستعلام' : 'Query Parameters'}</div>
                 <div className="space-y-1">
                   {ep.params.map(p => (
                     <div key={p.name} className="flex items-center gap-2 text-xs font-mono">
@@ -304,7 +306,7 @@ export default function ApiDocsPage() {
             {/* Request body */}
             {ep.body && (
               <div>
-                <div className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold mb-1.5">Request Body</div>
+                <div className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold mb-1.5">{isRTL ? 'هيئة الطلب' : 'Request Body'}</div>
                 <div className="relative rounded-lg bg-slate-900 p-3 overflow-x-auto">
                   <button onClick={() => copy(ep.body!, 'body')} className="absolute top-2 right-2 text-slate-400 hover:text-white">
                     {copied === 'body' ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
@@ -316,7 +318,7 @@ export default function ApiDocsPage() {
 
             {/* cURL example */}
             <div>
-              <div className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold mb-1.5">cURL Example</div>
+              <div className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold mb-1.5">{isRTL ? 'مثال cURL' : 'cURL Example'}</div>
               <div className="relative rounded-lg bg-slate-900 p-3 overflow-x-auto">
                 <button onClick={() => copy(ep.example, 'curl')} className="absolute top-2 right-2 text-slate-400 hover:text-white">
                   {copied === 'curl' ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
@@ -327,7 +329,7 @@ export default function ApiDocsPage() {
 
             {/* Response example */}
             <div>
-              <div className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold mb-1.5">Response Example</div>
+              <div className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold mb-1.5">{isRTL ? 'مثال الاستجابة' : 'Response Example'}</div>
               <div className="rounded-lg bg-slate-900 p-3 overflow-x-auto">
                 <pre className="text-xs text-sky-300 font-mono"><code>{ep.response}</code></pre>
               </div>
@@ -336,7 +338,7 @@ export default function ApiDocsPage() {
             {/* Try it */}
             <div className="flex items-center gap-2 pt-2 border-t border-border">
               <Button onClick={testEndpoint} disabled={testing} size="sm" className="gap-1.5 text-xs">
-                {testing ? <span className="animate-pulse">Testing...</span> : <><Play className="h-3.5 w-3.5" /> Try it live</>}
+                {testing ? <span className="animate-pulse">{isRTL ? 'جارٍ الاختبار...' : 'Testing...'}</span> : <><Play className="h-3.5 w-3.5" /> {isRTL ? 'جرّبه مباشرة' : 'Try it live'}</>}
               </Button>
               {testResult && (
                 <div className="flex-1 rounded-lg bg-slate-900 p-2 overflow-x-auto max-h-48 overflow-y-auto">
@@ -350,7 +352,7 @@ export default function ApiDocsPage() {
         {/* JavaScript SDK example */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm flex items-center gap-2"><BookOpen className="h-4 w-4" /> JavaScript SDK Example</CardTitle>
+            <CardTitle className="text-sm flex items-center gap-2"><BookOpen className="h-4 w-4" /> {isRTL ? 'مثال JavaScript SDK' : 'JavaScript SDK Example'}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="relative rounded-lg bg-slate-900 p-3 overflow-x-auto">
@@ -363,7 +365,7 @@ export default function ApiDocsPage() {
         </Card>
 
         <div className="text-center mt-6">
-          <Button variant="ghost" size="sm" onClick={() => window.history.back()}>← Back to app</Button>
+          <Button variant="ghost" size="sm" onClick={() => window.history.back()}>{isRTL ? '← العودة إلى التطبيق' : '← Back to app'}</Button>
         </div>
       </div>
     </div>

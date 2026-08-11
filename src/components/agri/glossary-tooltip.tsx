@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { BookText } from 'lucide-react';
 import { findGlossaryTerm, type GlossaryCategory } from '@/lib/glossary';
 import { cn } from '@/lib/utils';
+import { useLanguageStore } from '@/lib/language-store';
 
 const categoryTone: Record<GlossaryCategory, string> = {
   soil: 'bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300',
@@ -41,6 +42,8 @@ export function GlossaryTooltip({
   underline = true,
 }: GlossaryTooltipProps) {
   const [open, setOpen] = useState(false);
+  const language = useLanguageStore(s => s.language);
+  const isRTL = language === 'ar';
 
   const entry = useMemo(() => findGlossaryTerm(term), [term]);
 
@@ -59,7 +62,7 @@ export function GlossaryTooltip({
             'rounded-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30',
             underline && 'border-b border-dashed border-emerald-400 dark:border-emerald-700',
           )}
-          title={`Glossary: ${entry.term}`}
+          title={isRTL ? `المسرد: ${entry.term}` : `Glossary: ${entry.term}`}
         >
           {children ?? term}
         </button>
@@ -87,13 +90,13 @@ export function GlossaryTooltip({
         <p className="leading-relaxed text-muted-foreground">{entry.definition}</p>
         {entry.aliases && entry.aliases.length > 0 && (
           <div className="text-[10px] text-muted-foreground">
-            <span className="font-medium">Also: </span>
+            <span className="font-medium">{isRTL ? 'أيضاً: ' : 'Also: '}</span>
             {entry.aliases.join(', ')}
           </div>
         )}
         {entry.relatedFormulas && entry.relatedFormulas.length > 0 && (
           <div className="flex items-center gap-1 flex-wrap pt-1">
-            <span className="text-[10px] text-muted-foreground font-medium">Related:</span>
+            <span className="text-[10px] text-muted-foreground font-medium">{isRTL ? 'مرتبط:' : 'Related:'}</span>
             {entry.relatedFormulas.map((code) => (
               <Badge
                 key={code}

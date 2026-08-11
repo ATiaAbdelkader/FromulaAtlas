@@ -12,19 +12,26 @@ import {
   getGamificationState, getLeaderboard, ALL_BADGES, LEVELS,
   type Badge as GameBadge, type AchievementStats, type LeaderboardEntry,
 } from '@/lib/gamification-store';
+import { useTranslation } from '@/lib/language-store';
 
-const CATEGORY_META: Record<string, { label: string; color: string; emoji: string }> = {
-  tools:         { label: 'Tools',         color: '#16a34a', emoji: '🔧' },
-  sustainability:{ label: 'Sustainability', color: '#0ea5e9', emoji: '🌿' },
-  community:     { label: 'Community',     color: '#3b82f6', emoji: '👥' },
-  planning:      { label: 'Planning',      color: '#f59e0b', emoji: '📅' },
-  milestone:     { label: 'Milestones',    color: '#8b5cf6', emoji: '🏆' },
+const CATEGORY_META: Record<string, { label: string; label_ar: string; color: string; emoji: string }> = {
+  tools:         { label: 'Tools',         label_ar: 'الأدوات',      color: '#16a34a', emoji: '🔧' },
+  sustainability:{ label: 'Sustainability', label_ar: 'الاستدامة',    color: '#0ea5e9', emoji: '🌿' },
+  community:     { label: 'Community',     label_ar: 'المجتمع',      color: '#3b82f6', emoji: '👥' },
+  planning:      { label: 'Planning',      label_ar: 'التخطيط',      color: '#f59e0b', emoji: '📅' },
+  milestone:     { label: 'Milestones',    label_ar: 'محطات',       color: '#8b5cf6', emoji: '🏆' },
 };
 
 export function GamificationPanel() {
   const [badges, setBadges] = useState<GameBadge[]>([]);
   const [stats, setStats] = useState<AchievementStats | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>('all');
+  const { isRTL } = useTranslation();
+  const categoryLabel = (cat: string) => {
+    if (cat === 'all') return isRTL ? '🏆 كل الأوسمة' : '🏆 All Badges';
+    const m = CATEGORY_META[cat];
+    return `${m.emoji} ${isRTL ? m.label_ar : m.label}`;
+  };
 
   useEffect(() => {
     // Load state + auto-detect achievements from other stores
@@ -103,20 +110,20 @@ export function GamificationPanel() {
             </div>
             <div>
               <div className="text-lg font-bold">{stats.levelTitle}</div>
-              <div className="text-xs text-violet-100">Level {stats.level} · {stats.totalPoints} points</div>
+              <div className="text-xs text-violet-100">{isRTL ? `المستوى ${stats.level} · ${stats.totalPoints} نقطة` : `Level ${stats.level} · ${stats.totalPoints} points`}</div>
             </div>
           </div>
           <div className="text-right">
             <div className="text-2xl font-bold">{earnedCount}<span className="text-sm font-normal text-violet-200">/{stats.totalBadges}</span></div>
-            <div className="text-xs text-violet-100">Badges earned</div>
+            <div className="text-xs text-violet-100">{isRTL ? 'أوسمة مكتسبة' : 'Badges earned'}</div>
           </div>
         </div>
         {/* Level progress bar */}
         <div className="mt-3">
           <div className="flex justify-between text-[10px] text-violet-100 mb-1">
-            <span>Lvl {stats.level}</span>
-            <span>{stats.progressToNext}% to Lvl {stats.level + 1}</span>
-            <span>{stats.nextLevelPoints} pts</span>
+            <span>{isRTL ? `مستوى ${stats.level}` : `Lvl ${stats.level}`}</span>
+            <span>{isRTL ? `${stats.progressToNext}% للمستوى ${stats.level + 1}` : `${stats.progressToNext}% to Lvl ${stats.level + 1}`}</span>
+            <span>{stats.nextLevelPoints} {isRTL ? 'نقطة' : 'pts'}</span>
           </div>
           <div className="h-2 rounded-full bg-white/20 overflow-hidden">
             <div className="h-full rounded-full bg-white" style={{ width: `${stats.progressToNext}%` }} />
@@ -126,10 +133,10 @@ export function GamificationPanel() {
 
       {/* Quick stats */}
       <div className="grid grid-cols-4 gap-2">
-        <QuickStat icon={Trophy} label="Rank" value={`#${userRank}`} color="#f59e0b" />
-        <QuickStat icon={Flame} label="Streak" value={`${stats.streak}d`} color="#dc2626" />
-        <QuickStat icon={Zap} label="Tools used" value={String(stats.toolsUsed)} color="#16a34a" />
-        <QuickStat icon={Target} label="Points" value={String(stats.totalPoints)} color="#7c3aed" />
+        <QuickStat icon={Trophy} label={isRTL ? 'الترتيب' : 'Rank'} value={`#${userRank}`} color="#f59e0b" />
+        <QuickStat icon={Flame} label={isRTL ? 'السلسلة' : 'Streak'} value={`${stats.streak}${isRTL ? 'ي' : 'd'}`} color="#dc2626" />
+        <QuickStat icon={Zap} label={isRTL ? 'أدوات مستخدمة' : 'Tools used'} value={String(stats.toolsUsed)} color="#16a34a" />
+        <QuickStat icon={Target} label={isRTL ? 'نقاط' : 'Points'} value={String(stats.totalPoints)} color="#7c3aed" />
       </div>
 
       {/* Category filter */}
@@ -140,7 +147,7 @@ export function GamificationPanel() {
             onClick={() => setActiveCategory(cat)}
             className={`text-[10px] px-2.5 py-1 rounded-md border transition-all ${activeCategory === cat ? 'bg-violet-600 text-white border-violet-600' : 'bg-background border-border text-muted-foreground hover:border-violet-300'}`}
           >
-            {cat === 'all' ? '🏆 All Badges' : `${CATEGORY_META[cat].emoji} ${CATEGORY_META[cat].label}`}
+            {categoryLabel(cat)}
           </button>
         ))}
       </div>
@@ -161,7 +168,7 @@ export function GamificationPanel() {
               <div className="text-[9px] text-muted-foreground mt-0.5 leading-tight">{badge.description}</div>
               {badge.earned ? (
                 <Badge variant="outline" className="text-[8px] mt-1 text-amber-600 border-amber-300 gap-0.5">
-                  <CheckCircle2 className="h-2 w-2" /> Earned
+                  <CheckCircle2 className="h-2 w-2" /> {isRTL ? 'مكتسبة' : 'Earned'}
                 </Badge>
               ) : badge.progress != null && badge.progress > 0 ? (
                 <div className="mt-1">
@@ -172,7 +179,7 @@ export function GamificationPanel() {
                 </div>
               ) : (
                 <Badge variant="outline" className="text-[8px] mt-1 text-muted-foreground gap-0.5">
-                  <Lock className="h-2 w-2" /> {getPoints(badge.id)} pts
+                  <Lock className="h-2 w-2" /> {getPoints(badge.id)} {isRTL ? 'نقطة' : 'pts'}
                 </Badge>
               )}
             </div>
@@ -183,7 +190,7 @@ export function GamificationPanel() {
       {/* Leaderboard */}
       <div>
         <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1.5">
-          <Crown className="h-3.5 w-3.5 text-amber-500" /> Global Leaderboard
+          <Crown className="h-3.5 w-3.5 text-amber-500" /> {isRTL ? 'لوحة المتصدّرين العالمية' : 'Global Leaderboard'}
         </div>
         <div className="space-y-1">
           {leaderboard.slice(0, 10).map(entry => (
@@ -202,10 +209,10 @@ export function GamificationPanel() {
               <div className="flex-1 min-w-0">
                 <div className="text-xs font-semibold flex items-center gap-1">
                   {entry.name}
-                  {entry.isYou && <Badge variant="outline" className="text-[8px] px-1 py-0 text-violet-600 border-violet-300">You</Badge>}
+                  {entry.isYou && <Badge variant="outline" className="text-[8px] px-1 py-0 text-violet-600 border-violet-300">{isRTL ? 'أنت' : 'You'}</Badge>}
                 </div>
                 <div className="text-[9px] text-muted-foreground">
-                  Lvl {entry.level} · {entry.badgeCount} badges{entry.crop && ` · ${entry.crop}`}{entry.region && ` · ${entry.region}`}
+                  {isRTL ? `مستوى ${entry.level} · ${entry.badgeCount} أوسمة` : `Lvl ${entry.level} · ${entry.badgeCount} badges`}{entry.crop && ` · ${entry.crop}`}{entry.region && ` · ${entry.region}`}
                 </div>
               </div>
               <div className="text-right">
