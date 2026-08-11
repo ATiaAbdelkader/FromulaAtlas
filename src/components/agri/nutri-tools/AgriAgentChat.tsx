@@ -23,6 +23,7 @@ import {
   AI_AGENTS, AGENT_CATEGORIES, getAgent,
   type AIAgent, type AgentCategory,
 } from '@/lib/ai-agents';
+import { useTranslation } from '@/lib/language-store';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -42,6 +43,7 @@ export function AgriAgentChat() {
   const [selectedAgentId, setSelectedAgentId] = useState<string>('agronomist');
   const [conversations, setConversations] = useState<Record<string, Conversation>>({});
   const [input, setInput] = useState('');
+  const { isRTL } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showAgentPicker, setShowAgentPicker] = useState(false);
@@ -154,13 +156,15 @@ export function AgriAgentChat() {
       <div className="rounded-lg border bg-gradient-to-br from-indigo-50/60 to-violet-50/40 dark:from-indigo-950/20 dark:to-violet-950/10 p-3">
         <div className="flex items-center gap-2 mb-2">
           <Sparkles className="h-4 w-4 text-indigo-600" />
-          <span className="text-xs font-semibold">AI Specialists</span>
-          <Badge variant="outline" className="text-[9px] ml-auto">{AI_AGENTS.length} agents</Badge>
+          <span className="text-xs font-semibold">{isRTL ? 'وكلاء الذكاء التخصصيون' : 'AI Specialists'}</span>
+          <Badge variant="outline" className="text-[9px] ml-auto">{AI_AGENTS.length} {isRTL ? 'وكلاء' : 'agents'}</Badge>
         </div>
         {/* Horizontal scroll of agent cards */}
         <div className="flex gap-1.5 overflow-x-auto pb-1">
           {AI_AGENTS.map(agent => {
             const active = agent.id === selectedAgentId;
+            const localizedName = isRTL && agent.name_ar ? agent.name_ar : agent.name;
+            const localizedVibe = isRTL && agent.vibe_ar ? agent.vibe_ar : agent.vibe;
             return (
               <button
                 key={agent.id}
@@ -171,10 +175,10 @@ export function AgriAgentChat() {
                     : 'bg-background border-border hover:bg-muted/50 text-foreground'
                 }`}
                 style={active ? { backgroundColor: agent.color, borderColor: agent.color } : undefined}
-                title={agent.vibe}
+                title={localizedVibe}
               >
                 <span className="text-sm">{agent.emoji}</span>
-                <span>{agent.name}</span>
+                <span>{localizedName}</span>
               </button>
             );
           })}
@@ -198,18 +202,22 @@ export function AgriAgentChat() {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 flex-wrap">
             <span className="text-sm font-semibold" style={{ color: selectedAgent.color }}>
-              {selectedAgent.name}
+              {isRTL && selectedAgent.name_ar ? selectedAgent.name_ar : selectedAgent.name}
             </span>
             <Badge variant="outline" className="text-[9px] uppercase">{selectedAgent.category}</Badge>
             {currentConversation.length > 0 && (
-              <Badge variant="outline" className="text-[9px]">{currentConversation.length} msgs</Badge>
+              <Badge variant="outline" className="text-[9px]">{currentConversation.length} {isRTL ? 'رسائل' : 'msgs'}</Badge>
             )}
           </div>
-          <div className="text-[11px] text-muted-foreground italic mt-0.5">{selectedAgent.vibe}</div>
-          <div className="text-[11px] text-foreground/80 mt-1">{selectedAgent.description}</div>
+          <div className="text-[11px] text-muted-foreground italic mt-0.5">
+            {isRTL && selectedAgent.vibe_ar ? selectedAgent.vibe_ar : selectedAgent.vibe}
+          </div>
+          <div className="text-[11px] text-foreground/80 mt-1">
+            {isRTL && selectedAgent.description_ar ? selectedAgent.description_ar : selectedAgent.description}
+          </div>
           {selectedAgent.suggestedTools.length > 0 && (
             <div className="text-[10px] text-muted-foreground mt-1.5 flex items-center gap-1 flex-wrap">
-              <span>Recommends:</span>
+              <span>{isRTL ? 'يوصي بـ:' : 'Recommends:'}</span>
               {selectedAgent.suggestedTools.map(t => (
                 <Badge key={t} variant="secondary" className="text-[9px]">{t}</Badge>
               ))}
@@ -218,7 +226,7 @@ export function AgriAgentChat() {
         </div>
         {currentConversation.length > 0 && (
           <Button size="sm" variant="ghost" onClick={clearConversation} className="text-[10px] gap-1 h-7 shrink-0">
-            <RotateCcw className="h-3 w-3" /> Clear
+            <RotateCcw className="h-3 w-3" /> {isRTL ? 'مسح' : 'Clear'}
           </Button>
         )}
       </div>
@@ -267,7 +275,11 @@ export function AgriAgentChat() {
               </div>
               <div className="bg-muted/30 rounded-lg px-3 py-2 text-xs flex items-center gap-1.5">
                 <Loader2 className="h-3 w-3 animate-spin" />
-                <span className="text-muted-foreground">{selectedAgent.name} is thinking…</span>
+                <span className="text-muted-foreground">
+                  {isRTL
+                    ? `${selectedAgent.name_ar ?? selectedAgent.name} يفكّر…`
+                    : `${selectedAgent.name} is thinking…`}
+                </span>
               </div>
             </div>
           )}
@@ -276,8 +288,14 @@ export function AgriAgentChat() {
         <div className="rounded-lg border bg-background p-4 space-y-3">
           <div className="text-center text-xs text-muted-foreground">
             <span className="text-2xl block mb-2">{selectedAgent.emoji}</span>
-            <strong className="text-foreground">Start a conversation with {selectedAgent.name}.</strong>
-            <div className="text-[10px] mt-1">Pick a sample question or type your own below.</div>
+            <strong className="text-foreground">
+              {isRTL
+                ? `ابدأ محادثة مع ${selectedAgent.name_ar ?? selectedAgent.name}.`
+                : `Start a conversation with ${selectedAgent.name}.`}
+            </strong>
+            <div className="text-[10px] mt-1">
+              {isRTL ? 'اختر سؤالاً نموذجياً أو اكتب سؤالك أدناه.' : 'Pick a sample question or type your own below.'}
+            </div>
           </div>
           <div className="space-y-1.5">
             {selectedAgent.sampleQuestions.map((q, i) => (
@@ -310,18 +328,22 @@ export function AgriAgentChat() {
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
-          placeholder={`Ask ${selectedAgent.name}…`}
+          placeholder={isRTL
+            ? `اسأل ${selectedAgent.name_ar ?? selectedAgent.name}…`
+            : `Ask ${selectedAgent.name}…`}
           disabled={loading}
           className="flex-1 text-xs"
         />
         <Button size="sm" onClick={() => send()} disabled={loading || !input.trim()} className="gap-1.5">
           {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
-          Send
+          {isRTL ? 'إرسال' : 'Send'}
         </Button>
       </div>
 
       <div className="text-[10px] text-muted-foreground bg-muted/20 rounded p-2">
-        💡 Each specialist has its own expertise + conversation history. Switch agents using the bar above. All chats persist in your browser's localStorage. The agent's persona shapes the LLM's responses — try the same question with two different specialists to compare.
+        {isRTL
+          ? '💡 لكل تخصصي خبرته الخاصة + سجل محادثة. بدّل الوكلاء باستخدام الشريط أعلاه. كل المحادثات تُحفظ في localStorage متصفحك. شخصية الوكيل تشكّل ردود نموذج اللغة — جرّب نفس السؤال مع تخصصيين مختلفين للمقارنة.'
+          : '💡 Each specialist has its own expertise + conversation history. Switch agents using the bar above. All chats persist in your browser\'s localStorage. The agent\'s persona shapes the LLM\'s responses — try the same question with two different specialists to compare.'}
       </div>
     </div>
   );

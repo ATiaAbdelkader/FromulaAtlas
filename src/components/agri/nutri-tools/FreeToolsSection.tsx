@@ -60,6 +60,19 @@ export interface ToolMeta {
   category: ToolCategory;
   icon: React.ComponentType<{ className?: string }>;
   Component: React.ComponentType;
+  /** Optional Arabic translations. When the active language is 'ar',
+   * these replace the English `name`/`description`/`benefit`/`howToUse`
+   * fields in the rendered UI. Fall back to English when undefined. */
+  name_ar?: string;
+  description_ar?: string;
+  benefit_ar?: string;
+  howToUse_ar?: string[];
+}
+
+/** Picks the right localized string from a ToolMeta field. Falls back
+ * to the English source when the Arabic variant isn't provided. */
+function trField<T>(en: T, ar: T | undefined, isRTL: boolean): T {
+  return isRTL && ar !== undefined ? ar : en;
 }
 
 const TOOLS: ToolMeta[] = [
@@ -74,6 +87,14 @@ const TOOLS: ToolMeta[] = [
       'The opposite field updates instantly with the converted value.',
       'Use "Clear all" to reset every row at once.',
     ],
+    name_ar: 'محوّل الأكاسيد ↔ العناصر',
+    description_ar: 'تحويل ثنائي CaO↔Ca، K₂O↔K، P₂O₅↔P وغيرها (أكثر من 30 زوجاً).',
+    benefit_ar: 'يتفادى اللبس بين المختبر والملصق عند مقارنة تحاليل التربة (صيغة الأكسيد) مع ضمانات السماد (الصيغة العنصرية).',
+    howToUse_ar: [
+      'اكتب قيمة في حقل الأكسيد أو العنصر.',
+      'يتحدّث الحقل المقابل فوراً بالقيمة المحوّلة.',
+      'استخدم «مسح الكل» لإعادة ضبط كل الصفوف دفعة واحدة.',
+    ],
     category: 'Converters', icon: Calculator, Component: ConversionCalculator,
   },
   {
@@ -86,6 +107,14 @@ const TOOLS: ToolMeta[] = [
       'Type into ppm, mmol (or µmol for micros), or meq/L — the other two update live.',
       'Equivalent weights and valences are pre-loaded, so conversions are exact.',
     ],
+    name_ar: 'محوّل وحدات العناصر الغذائية',
+    description_ar: 'ppm ↔ mmol ↔ meq/L لـ 22 عنصراً وأيون.',
+    benefit_ar: 'يوافق بين وصفات الزراعة المائية (meq/L) وتقارير المختبر (ppm) والأدبيات العلمية (mmol/L) بنقرة واحدة.',
+    howToUse_ar: [
+      'اختر أي صف عنصر غذائي.',
+      'اكتب في ppm أو mmol (أو µmol للعناصر الصغرى) أو meq/L — يتحدّث الآخران مباشرة.',
+      'الأوزان المعادلة والتكافؤات محمّلة مسبقاً، فالتحويلات دقيقة.',
+    ],
     category: 'Converters', icon: FlaskConical, Component: NutrientUnitsConverter,
   },
   {
@@ -97,6 +126,14 @@ const TOOLS: ToolMeta[] = [
       'Choose a category (length, area, temperature, ionic, etc.).',
       'Enter the value, pick the source and target units.',
       'Result appears instantly; soil↔solution ionic mismatches are flagged.',
+    ],
+    name_ar: 'محوّل الوحدات الفيزيائية',
+    description_ar: 'الطول، المساحة، الحجم، الكتلة، الحرارة، الضغط، التركيز، الأيونات.',
+    benefit_ar: 'محوّل واحد للمقادير الفيزيائية الثمانية التي يتنقّل بينها المهندس الزراعي يومياً — بلا تبديل بين مواقع الوحدات.',
+    howToUse_ar: [
+      'اختر فئة (طول، مساحة، حرارة، أيوني، إلخ).',
+      'أدخل القيمة، اختر الوحدتين المصدر والهدف.',
+      'تظهر النتيجة فوراً؛ عدم تطابق الأيونات بين التربة والمحلول يُعلام عنه.',
     ],
     category: 'Converters', icon: Ruler, Component: MeasureUnitsConverter,
   },
@@ -112,6 +149,14 @@ const TOOLS: ToolMeta[] = [
       'CE and ppm update automatically; the ternary diagram shows your anion split.',
       'Compare your % distribution against the green equilibrium polygon.',
     ],
+    name_ar: 'مصمّم محلول الزراعة المائية',
+    description_ar: 'صمّم محلولاً غذائياً عبر meq/L، ppm، CE، ومخطط ثلاثي للأنيونات.',
+    benefit_ar: 'يصوّر التوازن الأيوني لوصفة الزراعة المائية مقابل منطقة توازن شتاينر — اكشف اختلال K/Ca/Mg قبل الخلط.',
+    howToUse_ar: [
+      'حرّر meq/L للأيونات الثمانية (أو استخدم إعداداً مسبقاً مثل شتاينر / هوغلاند).',
+      'يتحدّث CE و ppm تلقائياً؛ المخطط الثلاثي يعرض توزيع الأنيون.',
+      'قارن نسبتك المئوية مع مضلّع التوازن الأخضر.',
+    ],
     category: 'Solution & Water', icon: Droplets, Component: HydroSolutionDesigner,
   },
   {
@@ -124,6 +169,14 @@ const TOOLS: ToolMeta[] = [
       'Section 2: enter lab Ca and Mg to compute total hardness as CaCO₃.',
       'Section 3: enter HCO₃⁻/CO₃²⁻, residual target, water volume, and acid choice — dose appears.',
     ],
+    name_ar: 'تشخيص صالبة المياه',
+    description_ar: 'وحدات الصالبة، صالبة Ca+Mg، وجرعة حمض لمعادلة HCO₃⁻/CO₃²⁻.',
+    benefit_ar: 'يخبرك بالضبط بكمية حمض النيتريك/الكبريتيك/الفوسفوريك لكل م³ لخفض HCO₃⁻ إلى بقايا آمنة — حماية لرؤوس الريب واستقرار pH.',
+    howToUse_ar: [
+      'القسم 1: اكتب أي وحدة صالبة؛ كل الوحدات الخمس + التصنيف تتحدّث.',
+      'القسم 2: أدخل Ca و Mg من المختبر لحساب الصالبة الكلية كـ CaCO₃.',
+      'القسم 3: أدخل HCO₃⁻/CO₃²⁻، الهدف المتبقي، حجم الماء، واختيار الحمض — تظهر الجرعة.',
+    ],
     category: 'Solution & Water', icon: Waves, Component: WaterHardnessDiagnostic,
   },
   {
@@ -135,6 +188,14 @@ const TOOLS: ToolMeta[] = [
       'Enter air temperature and relative humidity.',
       'Pick leaf-temperature mode (you measured it) or solar-radiation mode (estimated).',
       'Read VPD (kPa) + humidity deficit (g/m³) + status (Low / Optimal / High).',
+    ],
+    name_ar: 'مقدّر عجز ضغط البخار (VPD)',
+    description_ar: 'عجز ضغط البخار (kPa) وعجز الرطوبة (g/m³) من الحرارة والرطوبة.',
+    benefit_ar: 'يقدّر «عطش الهواء» الحقيقي — الرقم الذي يقود النتح، نقل Ca، والإجهاد في البيوت المحمية.',
+    howToUse_ar: [
+      'أدخل حرارة الهواء والرطوبة النسبية.',
+      'اختر وضع حرارة الورقة (قسته) أو وضع الإشعاع الشمسي (مقدّر).',
+      'اقرأ VPD (kPa) + عجز الرطوبة (g/m³) + الحالة (منخفض / مثالي / مرتفع).',
     ],
     category: 'Solution & Water', icon: Thermometer, Component: VpdEstimator,
   },
@@ -150,6 +211,14 @@ const TOOLS: ToolMeta[] = [
       'Set bulk density, depth, pH, and root-reach %.',
       'Read the recommended amendment strategy with doses already adjusted by root-reach factor.',
     ],
+    name_ar: 'توازن المعدلات حسب CEC',
+    description_ar: 'تحليل كاتيونات التربة → جرعات معدّلات (جبس، جير، دولوميت، SOP، MgSO₄).',
+    benefit_ar: 'يحوّل مخطط كاتيونات تحليل التربة إلى kg/ha من الجبس/الجير/الدولوميت/SOP — يسد الفجوة بين تقرير المختبر والتطبيق الحقلي.',
+    howToUse_ar: [
+      'أدخل الكاتيونات المتبادلة الستة (K، Ca، Mg، H، Na، Al) بـ meq/100g.',
+      'حدد الكثافة الظاهرية، العمق، pH، ونسبة وصول الجذور.',
+      'اقرأ استراتيجية المعدّلات الموصى بها بجرعات معدّلة بعامل وصول الجذور.',
+    ],
     category: 'Fertilizers', icon: Tractor, Component: AmendmentBalanceCec,
   },
   {
@@ -161,6 +230,14 @@ const TOOLS: ToolMeta[] = [
       'Add fertilizers from the 24-product library and enter each one\'s % by tonne.',
       'Set the blend dose (kg/ha).',
       'Read the live blend analysis, NPK ratio, and per-nutrient kg/ha.',
+    ],
+    name_ar: 'صياغة الخلطة الحبيبية',
+    description_ar: 'ابنِ خلطة حبيبية من 24 سماداً → تحليل NPK و kg/ha.',
+    benefit_ar: 'يعاين تحليل NPK + العناصر الثانوية والصغرى لخلطة مخصّصة قبل توريد الأطنان — ويحسب kg/ha لكل عنصر عند معدل تطبيقك.',
+    howToUse_ar: [
+      'أضف أسمدة من مكتبة الـ24 منتجاً وأدخل % لكل منها بالطن.',
+      'حدد جرعة الخلطة (kg/ha).',
+      'اقرأ تحليل الخلطة الحي، نسبة NPK، و kg/ha لكل عنصر.',
     ],
     category: 'Fertilizers', icon: Package, Component: GranularMixFormulation,
   },
@@ -174,6 +251,14 @@ const TOOLS: ToolMeta[] = [
       'Click Calculate (or press Enter).',
       'Read elemental %, oxide %, NPK tag, and MW; click any example chip to try one.',
     ],
+    name_ar: 'تركيب السماد (%)',
+    description_ar: 'حلّ صيغة كيميائية → % عنصرية، مكافئات الأكسيد، الوزن الجزيئي، تقسيم N.',
+    benefit_ar: 'اكتب أي صيغة كيميائية (مثل Ca(NO₃)₂·4H₂O) لترى فوراً % العناصر، مكافئات الأكسيد، تقسيم N-NO₃/N-NH₄، والوزن الجزيئي — بلا جداول بحث.',
+    howToUse_ar: [
+      'اكتب صيغة (يدعم المميهات ·، الأملاح المزدوجة +، الأقواس، الحروف السفلية اليونيكود).',
+      'اضغط احسب (أو Enter).',
+      'اقرأ % العنصري، % الأكسيد، علامة NPK، والوزن الجزيئي؛ اضغط أي مثال للتجربة.',
+    ],
     category: 'Fertilizers', icon: Atom, Component: FertilizerComposition,
   },
   {
@@ -185,6 +270,14 @@ const TOOLS: ToolMeta[] = [
       'Set total seasonal extraction (kg/ha) per nutrient.',
       'Adjust the % split across phenological stages (or use defaults).',
       'Read kg/ha per stage per nutrient on the chart and table.',
+    ],
+    name_ar: 'توزيع العناصر حسب المرحلة',
+    description_ar: 'وزّع استخلاص العناصر (kg/ha) عبر مراحل فينولوجية مع رسم بياني.',
+    benefit_ar: 'يوافق العرض مع طلب المحصول أسبوعياً — يمنع كل من نقص منتصف الدورة واستهلاك الفاخر نهاية الموسم.',
+    howToUse_ar: [
+      'حدد الاستخلاص الموسمي الكلي (kg/ha) لكل عنصر.',
+      'اضبط النسبة المئوية عبر المراحل الفينولوجية (أو استخدم الافتراضية).',
+      'اقرأ kg/ha لكل مرحلة لكل عنصر على الرسم والجدول.',
     ],
     category: 'Fertilizers', icon: BarChart3, Component: NutrientDistributionByStage,
   },
@@ -198,6 +291,14 @@ const TOOLS: ToolMeta[] = [
       'Click any cell to see the chemistry explanation and recommended action.',
       'Green C = compatible · Yellow R = caution · Red I = never in the same stock tank.',
     ],
+    name_ar: 'مصفوفة توافق الأسمدة',
+    description_ar: 'مصفوفة 32×32 مثلثية سفلية للتوافق (C/R/I) للتسميد بالري.',
+    benefit_ar: 'يمنع خطأ التسميد بالري رقم 1 — إذابة Ca²⁺ مع الكبريتات أو الفوسفات — بعرض الأزواج التي تترسّب قبل خلط الخزّان.',
+    howToUse_ar: [
+      'صفِّ المصفوفة باسم السماد إن لزم.',
+      'اضغط أي خلية لرؤية شرح الكيمياء والإجراء الموصى به.',
+      'C أخضر = متوافق · R أصفر = حذر · I أحمر = لا تجمع في خزّان المخزون نفسه أبداً.',
+    ],
     category: 'Fertilizers', icon: Grid3x3, Component: FertilizerCompatibility,
   },
   {
@@ -210,6 +311,14 @@ const TOOLS: ToolMeta[] = [
       'Click any column header to sort (default: salt index descending).',
       'Coloured dots classify solubility as High / Medium / Low at a glance.',
     ],
+    name_ar: 'الذوبانية ومؤشر الملح',
+    description_ar: 'جدول قابل للفرز والتصفية للذوبانية (g/L) ومؤشر الملح (NaNO₃=100).',
+    benefit_ar: 'يخبرك أي الأسمدة ستذوب في خزّانات باردة وأيها سيحرق الجذور — الذوبانية لتصميم الخزّان، مؤشر الملح لسلامة الموضع.',
+    howToUse_ar: [
+      'استخدم مربع البحث للتصفية بالاسم أو الصيغة.',
+      'اضغط رأس أي عمود للفرز (الافتراضي: مؤشر الملح تنازلي).',
+      'نقاط ملوّنة تصنّف الذوبانية كـ عالية / متوسطة / منخفضة بنظرة.',
+    ],
     category: 'Fertilizers', icon: Beaker, Component: SolubilitySaltIndex,
   },
   {
@@ -221,6 +330,14 @@ const TOOLS: ToolMeta[] = [
       'In each scenario, add up to 5 fertilizers with rate (kg/ha) and transport legs.',
       'Read per-row emissions split into manufacturing, transport, and field N₂O.',
       'Compare totals — the bar shows which program is lower and by how many kg CO₂e/ha.',
+    ],
+    name_ar: 'الأثر الكربوني للسماد',
+    description_ar: 'قارن برنامجَي تسميد حسب التصنيع + النقل + انبعاثات N₂O.',
+    benefit_ar: 'يقدّر فرق kg CO₂e/ha بين البرنامج أ والبرنامج ب — يحوّل «مستدام» من شعار إلى رقم قابل للدفاع.',
+    howToUse_ar: [
+      'في كل سيناريو، أضف حتى 5 أسمدة بمعدل (kg/ha) ومراحل نقل.',
+      'اقرأ انبعاثات كل صف مقسّمة إلى تصنيع، نقل، و N₂O حقلي.',
+      'قارن المجاميع — يعرض الشريط أي برنامج أقل وبكم kg CO₂e/ha.',
     ],
     category: 'Fertilizers', icon: Globe2, Component: FertilizerCarbonFootprint,
   },
@@ -236,6 +353,14 @@ const TOOLS: ToolMeta[] = [
       'Pick a mineralization rate T_min preset (1 % conservative · 2 % medium · 3 % high).',
       'Read annual mineralizable N in kg/ha/yr — orientative, validate in field.',
     ],
+    name_ar: 'تقدير النيتروجين المعدّني',
+    description_ar: 'إطلاق نيتروجين سنوي (kg N/ha/yr) من المادة العضوية للتربة مع إعدادات T_min.',
+    benefit_ar: 'يقدّر كم نيتروجين «مجاني» ستطلقه تربتك هذا الموسم — لتطرحه من ميزانية السماد وتتفادى الإفراط.',
+    howToUse_ar: [
+      'أدخل % المادة العضوية، الكثافة الظاهرية، العمق، ونسبة وصول الجذور.',
+      'اختر إعداد معدل التمعدن T_min (1 % محافظ · 2 % متوسط · 3 % مرتفع).',
+      'اقرأ النيتروجين المعدّني السنوي بـ kg/ha/yr — توجيهي، تحقّق في الحقل.',
+    ],
     category: 'Soil & Irrigation', icon: Sprout, Component: MineralizableNEstimator,
   },
   {
@@ -248,6 +373,14 @@ const TOOLS: ToolMeta[] = [
       'The USDA triangle highlights your texture class.',
       'Set CC, PMP, depth, bulk density, area, and root efficiency to get available water (m³) and irrigation sheet to CC (mm).',
     ],
+    name_ar: 'ماء التربة والنسجة (USDA)',
+    description_ar: 'مثلث نسجة USDA + الماء المتاح وحاسبة الري إلى السعة الحقلية.',
+    benefit_ar: 'يصنّف نسجة تربتك من % طين/طين/رمل ويحسب كمية الماء المتاح بين نقطة الذبول الدائم والسعة الحقلية.',
+    howToUse_ar: [
+      'أدخل أي اثنين من % طين / طين / رمل — الثالث يوازن تلقائياً.',
+      'يبرز مثلث USDA فئة نسجتك.',
+      'حدد CC، PMP، العمق، الكثافة الظاهرية، المساحة، وكفاءة الجذور للحصول على الماء المتاح (م³) وجدول الري إلى CC (مم).',
+    ],
     category: 'Soil & Irrigation', icon: Mountain, Component: SoilWaterTexture,
   },
   {
@@ -259,6 +392,14 @@ const TOOLS: ToolMeta[] = [
       'Enter ETo (mm) and Kc for your crop and stage; toggle 1-day or 7-day period.',
       'Enter rain (mm) and applied irrigation (m³) on the irrigated area.',
       'Read ETc, irrigation mm, balance (deficit/surplus), and total volume needed (m³).',
+    ],
+    name_ar: 'جدول الري وميزان المياه',
+    description_ar: 'FAO-56 ETc = Kc × ETo، عجز/فائض، تحويلات م³ لفترات 1 أو 7 أيام.',
+    benefit_ar: 'يستبدل التخمين بـ FAO-56 — يعرف بالضبط كم استهلك محصولك (ETc) وما إذا كان ريّك + المطر غطّاه.',
+    howToUse_ar: [
+      'أدخل ETo (مم) و Kc لمحصولك ومرحلته؛ بدّل فترة 1-يوم أو 7-أيام.',
+      'أدخل المطر (مم) والري المطبّق (م³) على المساحة المروية.',
+      'اقرأ ETc، ريّ مم، الميزان (عجز/فائض)، والحجم الكلي المطلوب (م³).',
     ],
     category: 'Soil & Irrigation', icon: CloudRain, Component: IrrigationBalance,
   },
@@ -274,6 +415,14 @@ const TOOLS: ToolMeta[] = [
       'Switch to the Mol-weight tab and type a formula (e.g. KNO₃) to compute MW and elemental %.',
       'Use the "Use in molecular calculator" button to push an element into the formula.',
     ],
+    name_ar: 'الجدول الدوري للعناصر النباتية',
+    description_ar: 'جدول 118 عنصراً تفاعلي مع أدوار زراعية + حاسبة الوزن الجزيئي.',
+    benefit_ar: 'شاشة واحدة لـ «أي العناصر أساسية / مفيدة / بنيوية» بالإضافة إلى حاسبة الوزن الجزيئي — مفيدة للتدريس وللبحث السريع.',
+    howToUse_ar: [
+      'اضغط أي عنصر لرؤية وزنه الذري، تكافؤه، كهروسالبيته، ودوره الزراعي.',
+      'بدّل إلى تبويب الوزن الجزيئي واكتب صيغة (مثل KNO₃) لحساب MW و % العنصري.',
+      'استخدم زر «استخدم في الحاسبة الجزيئية» لدفع عنصر إلى الصيغة.',
+    ],
     category: 'Reference', icon: TableProperties, Component: PeriodicTableNutrients,
   },
   {
@@ -287,6 +436,15 @@ const TOOLS: ToolMeta[] = [
       'Mobility tab: click an element pill for symptom location + functions + tip.',
       'pH tab: click any nutrient to read why availability changes with pH.',
     ],
+    name_ar: 'تفاعلات العناصر وحيودها',
+    description_ar: 'مخطط مولدر، آليات وصول الجذور، الحيودة، ومنحنيات التوافر حسب pH.',
+    benefit_ar: 'مرجع 4-في-1 يشرح لماذا يثبّت P العالي Zn، ولماذا ينافس K⁺ أيون Mg²⁺، وكيف يحرّك pH توافر كل عنصر — يدعم التشخيص وليس مجرد بيانات.',
+    howToUse_ar: [
+      'تبويب مولدر: اضغط أي أيون لإبراز خصومه (أحمر) وأ增效اته (أزرق).',
+      'تبويب وصول الجذور: اضغط صفًا لرؤية كيف يصل كل عنصر إلى الجذر.',
+      'تبويب الحيودة: اضغط بطاقة عنصر لموقع الأعراض + الوظائف + نصيحة.',
+      'تبويب pH: اضغط أي عنصر لقراءة لماذا يتغيّر التوافر مع pH.',
+    ],
     category: 'Reference', icon: Network, Component: NutrientInteractions,
   },
   {
@@ -298,6 +456,14 @@ const TOOLS: ToolMeta[] = [
       'Pick your crop, then the problem (disease / pest / weed) — or type symptoms like “taches brunes”.',
       'Optionally set temperature, humidity and pressure to refine the ranking.',
       'Read the ranked cards: confidence, dose, DAR, restrictions and alternatives; browse the full catalogue in the second tab.',
+    ],
+    name_ar: 'منتقي المادة الفعالة — الجزائر',
+    description_ar: 'مساعد قرار: رتّب المواد الفعالة ضد الأمراض والآفات والأعشاب (حسب المحصول، بيانات INPV 2017 + E-Phy).',
+    benefit_ar: 'من المحصول + الأعراض الملاحظة إلى قائمة مرتّبة من المواد الفعالة المسجّلة بجرعات وDAR وسلامة وقيود — بلا تخمين عند الرشّاشة.',
+    howToUse_ar: [
+      'اختر محصولك، ثم المشكلة (مرض / آفة / عشبة) — أو اكتب أعراضاً مثل «بقع بنية».',
+      'اختيارياً حدد الحرارة والرطوبة والضغط لتحسين الترتيب.',
+      'اقرأ البطاقات المرتّبة: الثقة، الجرعة، DAR، القيود والبدائل؛ تصفّح الفهرس الكامل في التبويب الثاني.',
     ],
     category: 'Reference', icon: ShieldCheck, Component: ActiveMatterSelector,
   },
@@ -626,6 +792,7 @@ export function FreeToolsSection() {
               icon={<Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />}
               ids={favorites}
               onOpen={openToolById}
+              isRTL={isRTL}
             />
           )}
           {recent.length > 0 && (
@@ -634,6 +801,7 @@ export function FreeToolsSection() {
               icon={<Clock className="h-3.5 w-3.5 text-emerald-600" />}
               ids={recent}
               onOpen={openToolById}
+              isRTL={isRTL}
             />
           )}
         </div>
@@ -674,7 +842,7 @@ export function FreeToolsSection() {
           <div key={group.category} className="space-y-3">
             <div className="flex items-center gap-2">
               <div className="w-2 h-6 rounded-sm" style={{ background: CATEGORY_DOT_COLORS[group.category] }} />
-              <h3 className="text-base font-bold tracking-tight">{group.category}</h3>
+              <h3 className="text-base font-bold tracking-tight">{categoryLabel(group.category, isRTL)}</h3>
               <Badge variant="secondary" className="text-[10px] font-mono">{group.tools.length}</Badge>
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
@@ -688,6 +856,7 @@ export function FreeToolsSection() {
                   isInCompareTray={compareTray.includes(tool.id)}
                   compareTrayFull={compareTray.length >= 2}
                   onToggleCompare={() => toggleCompare(tool.id)}
+                  isRTL={isRTL}
                 />
               ))}
             </div>
@@ -700,8 +869,8 @@ export function FreeToolsSection() {
           <div className="rounded-full bg-muted p-4 inline-flex mb-3">
             <Search className="h-8 w-8 text-muted-foreground" />
           </div>
-          <h3 className="text-base font-semibold mb-1">No tools match</h3>
-          <p className="text-sm text-muted-foreground">Try a different search or category.</p>
+          <h3 className="text-base font-semibold mb-1">{isRTL ? 'لا توجد أدوات مطابقة' : 'No tools match'}</h3>
+          <p className="text-sm text-muted-foreground">{isRTL ? 'جرّب بحثاً أو فئة مختلفة.' : 'Try a different search or category.'}</p>
         </div>
       )}
 
@@ -720,10 +889,10 @@ export function FreeToolsSection() {
                     <openTool.icon className="h-4 w-4" />
                   </span>
                 )}
-                {openTool?.name}
+                {openTool ? trField(openTool.name, openTool.name_ar, isRTL) : null}
                 {openTool && (
                   <Badge variant="outline" className={`text-[10px] ml-1 ${CATEGORY_COLORS[openTool.category]}`}>
-                    {openTool.category}
+                    {categoryLabel(openTool.category, isRTL)}
                   </Badge>
                 )}
               </DialogTitle>
@@ -735,27 +904,31 @@ export function FreeToolsSection() {
                   onClick={() => setShowHints(v => !v)}
                 >
                   <HelpCircle className="h-3.5 w-3.5" />
-                  {showHints ? 'Hide guide' : 'Show guide'}
+                  {showHints ? (isRTL ? 'إخفاء الدليل' : 'Hide guide') : (isRTL ? 'إظهار الدليل' : 'Show guide')}
                 </Button>
               </div>
             </div>
-            <DialogDescription className="text-xs mt-1">{openTool?.description}</DialogDescription>
+            <DialogDescription className="text-xs mt-1">
+              {openTool ? trField(openTool.description, openTool.description_ar, isRTL) : null}
+            </DialogDescription>
 
             {/* Collapsible benefit + how-to bar — inline, doesn't steal horizontal space from the tool */}
             {openTool && showHints && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
                 <div className="rounded-md px-3 py-2 border border-emerald-200 dark:border-emerald-900 bg-emerald-50/60 dark:bg-emerald-950/20">
                   <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-emerald-700 dark:text-emerald-300 font-semibold mb-0.5">
-                    <Lightbulb className="h-3 w-3" /> Benefit
+                    <Lightbulb className="h-3 w-3" /> {isRTL ? 'الفائدة' : 'Benefit'}
                   </div>
-                  <p className="text-xs leading-snug text-foreground">{openTool.benefit}</p>
+                  <p className="text-xs leading-snug text-foreground">
+                    {trField(openTool.benefit, openTool.benefit_ar, isRTL)}
+                  </p>
                 </div>
                 <div className="rounded-md px-3 py-2 border border-blue-200 dark:border-blue-900 bg-blue-50/60 dark:bg-blue-950/20">
                   <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-blue-700 dark:text-blue-300 font-semibold mb-0.5">
-                    <HelpCircle className="h-3 w-3" /> How to use
+                    <HelpCircle className="h-3 w-3" /> {isRTL ? 'كيفية الاستخدام' : 'How to use'}
                   </div>
                   <ol className="text-xs leading-snug text-foreground list-decimal pl-4 space-y-0.5">
-                    {openTool.howToUse.map((step, i) => <li key={i}>{step}</li>)}
+                    {trField(openTool.howToUse, openTool.howToUse_ar, isRTL).map((step, i) => <li key={i}>{step}</li>)}
                   </ol>
                 </div>
               </div>
@@ -784,6 +957,7 @@ export function FreeToolsSection() {
           tools={compareTools}
           onClear={clearCompareTray}
           onOpenCompare={() => setCompareOpen(true)}
+          isRTL={isRTL}
         />
       )}
 
@@ -804,11 +978,12 @@ export function FreeToolsSection() {
 
 /** Sticky bottom bar that shows the current comparison tray state. */
 function CompareTrayBar({
-  tools, onClear, onOpenCompare,
+  tools, onClear, onOpenCompare, isRTL,
 }: {
   tools: ToolMeta[];
   onClear: () => void;
   onOpenCompare: () => void;
+  isRTL: boolean;
 }) {
   const hasTwo = tools.length >= 2;
   return (
@@ -816,18 +991,18 @@ function CompareTrayBar({
       <div className="flex items-center gap-3 rounded-xl border border-emerald-300 dark:border-emerald-800 bg-emerald-50/95 dark:bg-emerald-950/90 backdrop-blur px-3 py-2 shadow-lg">
         <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300 flex-shrink-0">
           <Columns2 className="h-4 w-4" />
-          <span className="text-xs font-semibold uppercase tracking-wide hidden sm:inline">Compare</span>
+          <span className="text-xs font-semibold uppercase tracking-wide hidden sm:inline">{isRTL ? 'مقارنة' : 'Compare'}</span>
         </div>
         <div className="flex-1 min-w-0">
           {hasTwo ? (
             <div className="flex items-center gap-2 text-sm min-w-0">
-              <span className="font-semibold truncate">{tools[0].name}</span>
-              <span className="text-muted-foreground text-xs flex-shrink-0">vs</span>
-              <span className="font-semibold truncate">{tools[1].name}</span>
+              <span className="font-semibold truncate">{trField(tools[0].name, tools[0].name_ar, isRTL)}</span>
+              <span className="text-muted-foreground text-xs flex-shrink-0">{isRTL ? 'مقابل' : 'vs'}</span>
+              <span className="font-semibold truncate">{trField(tools[1].name, tools[1].name_ar, isRTL)}</span>
             </div>
           ) : (
             <div className="text-xs text-emerald-800 dark:text-emerald-200">
-              Select one more tool to compare <span className="font-mono opacity-70">(1/2 selected)</span>
+              {isRTL ? 'اختر أداة أخرى للمقارنة' : 'Select one more tool to compare'} <span className="font-mono opacity-70">(1/2)</span>
             </div>
           )}
         </div>
@@ -839,8 +1014,8 @@ function CompareTrayBar({
               onClick={onOpenCompare}
             >
               <Columns2 className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Open side-by-side</span>
-              <span className="sm:hidden">Compare</span>
+              <span className="hidden sm:inline">{isRTL ? 'افتح جنباً إلى جنب' : 'Open side-by-side'}</span>
+              <span className="sm:hidden">{isRTL ? 'قارن' : 'Compare'}</span>
             </Button>
           )}
           <Button
@@ -850,7 +1025,7 @@ function CompareTrayBar({
             onClick={onClear}
           >
             <X className="h-3.5 w-3.5" />
-            Clear
+            {isRTL ? 'مسح' : 'Clear'}
           </Button>
         </div>
       </div>
@@ -860,7 +1035,7 @@ function CompareTrayBar({
 
 /** Landscape (horizontal) tool card — icon on the left, content on the right, action arrow on the far right. */
 function LandscapeToolCard({
-  tool, onOpen, isFavorite, onToggleFavorite, isInCompareTray, compareTrayFull, onToggleCompare,
+  tool, onOpen, isFavorite, onToggleFavorite, isInCompareTray, compareTrayFull, onToggleCompare, isRTL,
 }: {
   tool: ToolMeta;
   onOpen: () => void;
@@ -869,7 +1044,11 @@ function LandscapeToolCard({
   isInCompareTray: boolean;
   compareTrayFull: boolean;
   onToggleCompare: () => void;
+  isRTL: boolean;
 }) {
+  const localizedName = trField(tool.name, tool.name_ar, isRTL);
+  const localizedDescription = trField(tool.description, tool.description_ar, isRTL);
+  const localizedBenefit = trField(tool.benefit, tool.benefit_ar, isRTL);
   return (
     <div
       role="button"
@@ -882,9 +1061,9 @@ function LandscapeToolCard({
       <button
         type="button"
         onClick={e => { e.stopPropagation(); onToggleCompare(); }}
-        aria-label={isInCompareTray ? `Remove ${tool.name} from comparison` : `Add ${tool.name} to comparison`}
+        aria-label={isInCompareTray ? `Remove ${localizedName} from comparison` : `Add ${localizedName} to comparison`}
         aria-pressed={isInCompareTray}
-        title={compareTrayFull && !isInCompareTray ? 'Comparison tray is full (max 2)' : (isInCompareTray ? 'Remove from comparison' : 'Add to comparison')}
+        title={compareTrayFull && !isInCompareTray ? (isRTL ? 'صينية المقارنة ممتلئة (حد 2)' : 'Comparison tray is full (max 2)') : (isInCompareTray ? (isRTL ? 'إزالة من المقارنة' : 'Remove from comparison') : (isRTL ? 'أضف إلى المقارنة' : 'Add to comparison'))}
         className={`absolute top-3 right-11 z-10 inline-flex items-center justify-center h-7 w-7 rounded-full border transition-all ${
           isInCompareTray
             ? 'bg-emerald-600 border-emerald-600 text-white hover:bg-emerald-700 hover:border-emerald-700'
@@ -903,7 +1082,7 @@ function LandscapeToolCard({
       <button
         type="button"
         onClick={e => { e.stopPropagation(); onToggleFavorite(); }}
-        aria-label={isFavorite ? `Remove ${tool.name} from favorites` : `Add ${tool.name} to favorites`}
+        aria-label={isFavorite ? `Remove ${localizedName} from favorites` : `Add ${localizedName} to favorites`}
         aria-pressed={isFavorite}
         className={`absolute top-3 right-3 z-10 inline-flex items-center justify-center h-7 w-7 rounded-full border transition-all ${
           isFavorite
@@ -926,18 +1105,18 @@ function LandscapeToolCard({
       <div className="flex-1 min-w-0 space-y-1.5 pr-16 sm:pr-0">
         <div className="flex items-center gap-2 flex-wrap">
           <h4 className="text-base font-semibold leading-tight group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
-            {tool.name}
+            {localizedName}
           </h4>
           <Badge variant="outline" className={`text-[10px] ${CATEGORY_COLORS[tool.category]}`}>
-            {tool.category}
+            {categoryLabel(tool.category, isRTL)}
           </Badge>
         </div>
         <p className="text-sm text-muted-foreground leading-relaxed">
-          {tool.description}
+          {localizedDescription}
         </p>
         <p className="text-xs text-foreground/80 leading-relaxed flex gap-1.5">
           <Lightbulb className="h-3.5 w-3.5 text-amber-500 flex-shrink-0 mt-0.5" />
-          <span><span className="font-medium text-amber-700 dark:text-amber-400">Benefit:</span> {tool.benefit}</span>
+          <span><span className="font-medium text-amber-700 dark:text-amber-400">{isRTL ? 'الفائدة:' : 'Benefit:'}</span> {localizedBenefit}</span>
         </p>
       </div>
 
@@ -976,12 +1155,13 @@ function CategoryChip({ active, onClick, label, count }: { active: boolean; onCl
 
 /** Horizontal chip row for Favorites / Recently used — auto-hides when no tools match. */
 function ToolRow({
-  label, icon, ids, onOpen,
+  label, icon, ids, onOpen, isRTL,
 }: {
   label: string;
   icon: React.ReactNode;
   ids: string[];
   onOpen: (id: string) => void;
+  isRTL: boolean;
 }) {
   const tools = ids.map(id => TOOLS.find(t => t.id === id)).filter(Boolean) as ToolMeta[];
   if (tools.length === 0) return null;
@@ -1004,7 +1184,7 @@ function ToolRow({
               <span style={{ color: CATEGORY_DOT_COLORS[t.category] }}>
                 <Icon className="h-3.5 w-3.5" />
               </span>
-              <span className="font-medium">{t.name}</span>
+              <span className="font-medium">{trField(t.name, t.name_ar, isRTL)}</span>
             </button>
           );
         })}

@@ -38,6 +38,12 @@ export interface AIAgent {
   systemPrompt: string;
   sampleQuestions: string[];
   suggestedTools: string[]; // tool names this agent tends to recommend
+  /** Optional Arabic display name (falls back to `name` if undefined). */
+  name_ar?: string;
+  /** Optional Arabic description (falls back to `description` if undefined). */
+  description_ar?: string;
+  /** Optional Arabic vibe line (falls back to `vibe` if undefined). */
+  vibe_ar?: string;
 }
 
 // ============================================================================
@@ -55,6 +61,9 @@ export const AI_AGENTS: AIAgent[] = [
     color: '#16a34a',
     vibe: 'The all-rounder — crops, soil, fertilizer, irrigation in one brain.',
     description: 'General crop + soil + fertilizer diagnostics. Recommends the right tool + inputs.',
+    name_ar: 'المهندس الزراعي',
+    vibe_ar: 'الشامل — محاصيل وتربة وأسمدة وري في عقل واحد.',
+    description_ar: 'تشخيص عام للمحاصيل والتربة والأسمدة. يقترح الأداة والمدخلات المناسبة.',
     category: 'agronomy',
     systemPrompt: `You are the NutriPlant PRO AI Agronomist — an expert assistant embedded in a collection of 50+ free agronomic calculators and GIS tools. You help growers, agronomists, and consultants diagnose problems and recommend which tool(s) to use and with what inputs.
 
@@ -103,6 +112,9 @@ export const AI_AGENTS: AIAgent[] = [
     color: '#84cc16',
     vibe: 'Eyes in the field — pest, disease, and stress identification.',
     description: 'Pest + disease ID from photos. Threshold-based spray recommendations.',
+    name_ar: 'كشّاف المحاصيل',
+    vibe_ar: 'عيون في الحقل — تحديد الآفات والأمراض والإجهاد.',
+    description_ar: 'تحديد الآفات والأمراض من الصور. توصيات رش قائمة على العتبات.',
     category: 'agronomy',
     systemPrompt: `You are **CropScout**, the field pest-and-disease specialist. You diagnose problems from described symptoms (or photos if uploaded), recommend action thresholds, and suggest integrated pest management (IPM) strategies.
 
@@ -149,6 +161,9 @@ export const AI_AGENTS: AIAgent[] = [
     color: '#0ea5e9',
     vibe: 'Water whisperer — every drop to the right place at the right time.',
     description: 'Schedules, pump sizing, drip design, ET₀, fertigation. Weather-aware.',
+    name_ar: 'مهندس الري',
+    vibe_ar: 'وسواس المياه — كل قطرة في مكانها وزمانها.',
+    description_ar: 'جداول، تحديد المضخات، تصميم التنقيط، ET₀، تسميد بالري. واعٍ بالطقس.',
     category: 'agronomy',
     systemPrompt: `You are **IrrigationEngineer**, the water management specialist. You design schedules, size pumps, lay out drip networks, and tune fertigation programs — always grounded in FAO-56 ET₀ math and the actual soil-plant-atmosphere continuum.
 
@@ -195,6 +210,9 @@ export const AI_AGENTS: AIAgent[] = [
     color: '#8b5cf6',
     vibe: 'Reading the dirt like a book — chemistry, biology, structure.',
     description: 'Soil test interpretation, amendment recommendations, CEC + base saturation.',
+    name_ar: 'عالم التربة',
+    vibe_ar: 'يقرأ التربة ككتاب — كيمياء وأحياء وبنية.',
+    description_ar: 'تفسير تحاليل التربة، توصيات المعدّلات، CEC والتشبع القاعدي.',
     category: 'agronomy',
     systemPrompt: `You are **SoilScientist**, the soil chemistry + biology expert. You interpret lab reports, recommend amendments, explain CEC/base-saturation imbalances, and track soil health trends over time.
 
@@ -240,6 +258,9 @@ export const AI_AGENTS: AIAgent[] = [
     color: '#0891b2',
     vibe: 'Keeping tractors running, crews scheduled, and silos full.',
     description: 'Labor scheduling, equipment maintenance, task sequencing by crop stage.',
+    name_ar: 'مدير العمليات',
+    vibe_ar: 'يبقي الجرارات تعمل والفرق مجدولة والصوامع ممتلئة.',
+    description_ar: 'جدولة العمالة، صيانة المعدات، تسلسل المهام حسب مرحلة المحصول.',
     category: 'operations',
     systemPrompt: `You are **FarmOperationsManager**, the labor + equipment + workflow specialist. You sequence field operations by crop phenology, balance labor demand across the season, and plan equipment maintenance to minimize downtime at critical windows.
 
@@ -283,6 +304,9 @@ export const AI_AGENTS: AIAgent[] = [
     color: '#f59e0b',
     vibe: 'Numbers that pay the bills — margins, breakeven, ROI, what-ifs.',
     description: 'Cost/revenue modeling, breakeven, ROI, scenario analysis.',
+    name_ar: 'المحلل المالي',
+    vibe_ar: 'أرقام تدفع الفواتير — هوامش، تعادل، عائد، سيناريوهات.',
+    description_ar: 'نمذجة التكلفة/الإيرادات، التعادل، العائد على الاستثمار، تحليل السيناريوهات.',
     category: 'business',
     systemPrompt: `You are **FarmFinancialAnalyst**, the farm business specialist. You build cost/revenue models, compute breakeven yields + prices, evaluate investment ROI, and run what-if scenarios on input costs and crop prices.
 
@@ -328,6 +352,9 @@ export const AI_AGENTS: AIAgent[] = [
     color: '#10b981',
     vibe: 'Measuring what matters — NUE, water, carbon, soil, pesticides.',
     description: '5-pillar sustainability score + carbon credit + regenerative metrics.',
+    name_ar: 'مسؤول الاستدامة',
+    vibe_ar: 'قياس ما يهم — كفاءة النيتروجين، المياه، الكربون، التربة، المبيدات.',
+    description_ar: 'درجة استدامة من 5 ركائز + أرصدة الكربون + مقاييس التجدّد.',
     category: 'business',
     systemPrompt: `You are **FarmSustainabilityOfficer**, the environmental impact specialist. You score farms across 5 sustainability dimensions, estimate carbon credits, and recommend regenerative practices that are both ecologically sound and economically viable.
 
@@ -373,6 +400,9 @@ export const AI_AGENTS: AIAgent[] = [
     color: '#6366f1',
     vibe: 'Finding free money + writing the application that wins it.',
     description: 'Finds grants, drafts applications, matches farm to program.',
+    name_ar: 'كاتب المنح الزراعية',
+    vibe_ar: 'إيجاد المال المجاني + كتابة الطلب الذي يفوز به.',
+    description_ar: 'يجد المنح، يصوغ الطلبات، يطابق المزرعة مع البرنامج.',
     category: 'business',
     systemPrompt: `You are **AgriGrantWriter**, the agricultural funding specialist. You identify relevant grant + cost-share programs, draft compelling applications, and maximize the chance of funding by aligning farm practices with program priorities.
 
@@ -418,6 +448,9 @@ export const AI_AGENTS: AIAgent[] = [
     color: '#14b8a6',
     vibe: 'Where things are + why it matters — coordinates, boundaries, distance.',
     description: 'Coordinates, field boundaries, distance, elevation, slope, maps.',
+    name_ar: 'محلّل نظم المعلومات الجغرافية',
+    vibe_ar: 'أين تقع الأشياء + لماذا يهم — إحداثيات وحدود ومسافة.',
+    description_ar: 'إحداثيات، حدود الحقول، مسافة، ارتفاع، انحدار، خرائط.',
     category: 'specialist',
     systemPrompt: `You are **GISAnalyst**, the geospatial specialist embedded in our agriculture platform. You help users with coordinate conversions, field boundary management, distance + bearing calculations, and elevation/slope analysis — all using the app's GIS toolset.
 
@@ -464,6 +497,9 @@ export const AI_AGENTS: AIAgent[] = [
     color: '#dc2626',
     vibe: 'Herd health, rations, grazing — keeping animals productive + well.',
     description: 'Livestock nutrition, herd health, grazing management, manure value.',
+    name_ar: 'الطبيب البيطري للماشية',
+    vibe_ar: 'صحة القطيع، العلائق، الرعي — إبقاء الحيوانات منتجة وسليمة.',
+    description_ar: 'تغذية الماشية، صحة القطيع، إدارة الرعي، قيمة السماد العضوي.',
     category: 'specialist',
     systemPrompt: `You are **LivestockVet**, the herd health + nutrition specialist. You advise on rations (NRC 2021 standard), grazing management, manure nutrient value, and preventive health protocols.
 
