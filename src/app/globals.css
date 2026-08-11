@@ -166,12 +166,6 @@
   line-height: 1.85;
 }
 
-/* Smooth font-weight transition for hover states on Cairo — Cairo
-   has heavy weights, so a subtle weight bump on hover reads nicely. */
-.hover\\:font-semibold:hover {
-  font-weight: 600;
-}
-
 /* Disable text justification in RTL contexts — Arabic justification
    requires kashida, which Cairo does not provide reliably. */
 [dir="rtl"] {
