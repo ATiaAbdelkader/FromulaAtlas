@@ -16,6 +16,8 @@ import { useMemo } from 'react';
 interface FormulaCardProps {
   formula: Formula;
   onSelect: (formula: Formula) => void;
+  /** Called when user clicks a tag on the card. Optional. */
+  onTagClick?: (tag: string) => void;
 }
 
 // Determine if a calculator is available for this formula
@@ -45,7 +47,7 @@ export function getPartColor(part: string) {
   return partColors[part] || { bg: 'bg-stone-100', text: 'text-stone-700', border: 'border-stone-300' };
 }
 
-export function FormulaCard({ formula, onSelect }: FormulaCardProps) {
+export function FormulaCard({ formula, onSelect, onTagClick }: FormulaCardProps) {
   const color = getPartColor(formula.part);
   const calcAvailable = hasCalculator(formula.code);
   const language = useLanguageStore(s => s.language);
@@ -119,9 +121,13 @@ export function FormulaCard({ formula, onSelect }: FormulaCardProps) {
             {isRTL ? diffConfig.label_ar : diffConfig.label}
           </span>
           {meta.tags.map(tag => (
-            <span key={tag} className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground border border-border/50">
+            <button
+              key={tag}
+              onClick={(e) => { e.stopPropagation(); onTagClick?.(tag); }}
+              className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground border border-border/50 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300 dark:hover:bg-emerald-950/40 transition-colors cursor-pointer"
+            >
               {tag}
-            </span>
+            </button>
           ))}
         </div>
       </CardHeader>

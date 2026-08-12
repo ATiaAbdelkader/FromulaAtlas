@@ -39,7 +39,7 @@ import { IrrigationBalance } from './IrrigationBalance';
 import { SolubilitySaltIndex } from './SolubilitySaltIndex';
 import { FertilizerCarbonFootprint } from './FertilizerCarbonFootprint';
 import { WhyItMattersPanel } from './WhyItMattersPanel';
-import { WHY_IT_MATTERS } from '@/lib/why-it-matters-data';
+import { getWhyItMatters } from '@/lib/why-it-matters-data';
 import { ToolExportBar, EXPORT_COPY_EVENT } from './ToolExportBar';
 import { KeyboardShortcutsHelp } from './KeyboardShortcutsHelp';
 import { CompareDialog } from './CompareDialog';
@@ -941,10 +941,10 @@ export function FreeToolsSection() {
             <div className={openTool ? 'mt-3' : ''}>
               {openTool && <openTool.Component />}
             </div>
-            {/* Why this matters — collapsible educational panel */}
-            {openTool && WHY_IT_MATTERS[openTool.id] && (
+            {/* Why this matters — collapsible educational panel (always shown, stub if no dedicated entry) */}
+            {openTool && (
               <div className="mt-4">
-                <WhyItMattersPanel content={WHY_IT_MATTERS[openTool.id]} />
+                <WhyItMattersPanel content={getWhyItMatters(openTool.id, openTool.name, openTool.description)} />
               </div>
             )}
           </div>

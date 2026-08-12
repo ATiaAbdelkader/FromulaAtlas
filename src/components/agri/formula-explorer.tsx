@@ -34,6 +34,7 @@ import { getBookmarks } from '@/lib/formula-bookmarks';
 import { useTranslation } from '@/lib/language-store';
 import { cn } from '@/lib/utils';
 import type { Formula } from '@/lib/types';
+import { getFormulaMeta, type FormulaDifficulty } from '@/lib/formula-tags';
 
 type ViewMode = 'explorer' | 'classic' | 'graph';
 type QuickFilter = 'all' | 'calculator' | 'recent' | 'bookmarked';
@@ -159,6 +160,14 @@ export function FormulaExplorer({
             {/* Formula of the Day hero banner */}
             <FormulaOfDayBanner isRTL={isRTL} onSelect={handleSelectFormula} />
 
+            {/* Mini-stats bar */}
+            <MiniStatsBar isRTL={isRTL} bookmarkCount={bookmarks.length} recentCount={recents.length} />
+
+            {/* Recently viewed strip */}
+            {recents.length > 0 && (
+              <RecentlyViewedStrip isRTL={isRTL} recents={recents} onSelect={handleSelectFormula} />
+            )}
+
             {/* Scenario grid */}
             <div className="mb-6">
               <div className="flex items-center gap-2 mb-3">
@@ -230,7 +239,7 @@ export function FormulaExplorer({
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
             {filteredFormulas.map(formula => (
-              <FormulaCard key={`${formula.code}-${formula.part}`} formula={formula} onSelect={handleSelectFormula} />
+              <FormulaCard key={`${formula.code}-${formula.part}`} formula={formula} onSelect={handleSelectFormula} onTagClick={(tag) => onSearchQueryChange(tag)} />
             ))}
           </div>
         )}
@@ -559,4 +568,89 @@ function FormulaGraphLazy({ onSelect }: { onSelect: (f: Formula) => void }) {
   // The FormulaGraph component renders its own interactive node selection.
   // We pass maxNodes=200 to show more of the 500 formulas.
   return <GraphComponent maxNodes={200} className="w-full h-[600px]" />;
+}
+
+// ============================================================================
+// Mini-stats bar — shows quick numbers about the formula library
+// ============================================================================
+
+function MiniStatsBar({ isRTL, bookmarkCount, recentCount }: { isRTL: boolean; bookmarkCount: number; recentCount: number }) {
+  const stats = useMemo(() => {
+    const calcCount = allFormulas.filter(f => hasCalculator(f.code)).length;
+    const arCount = allFormulas.filter(f => (f as any).name_ar).length;
+    const basicCount = allFormulas.filter(f => getFormulaMeta(f).difficulty === 'basic').length;
+    const advancedCount = allFormulas.filter(f => getFormulaMeta(f).difficulty === 'advanced').length;
+    return { calcCount, arCount, basicCount, advancedCount };
+  }, []);
+
+  const items = [
+    { label: isRTL ? 'معادلة' : 'Formulas', value: allFormulas.length, color: '#16a34a', icon: Layers },
+    { label: isRTL ? 'حاسبات' : 'Calculators', value: stats.calcCount, color: '#0891b2', icon: Calculator },
+    { label: isRTL ? 'بالعربية' : 'Bilingual', value: stats.arCount, color: '#8b5cf6', icon: BookOpen },
+    { label: isRTL ? 'مفضّلة' : 'Bookmarks', value: bookmarkCount, color: '#f59e0b', icon: Star },
+    { label: isRTL ? 'شوهدت' : 'Viewed', value: recentCount, color: '#0ea5e9', icon: Clock },
+  ];
+
+  return (
+    <div className="flex flex-wrap items-center gap-2 mb-4">
+      {items.map((s, i) => {
+        const Icon = s.icon;
+        return (
+          <div key={i} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-border bg-card text-xs">
+            <Icon className="h-3 w-3" style={{ color: s.color }} />
+            <span className="font-bold font-mono" style={{ color: s.color }}>{s.value}</span>
+            <span className="text-muted-foreground">{s.label}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ============================================================================
+// Recently Viewed strip — horizontal scroll of recently opened formulas
+// ============================================================================
+
+function RecentlyViewedStrip({ isRTL, recents, onSelect }: {
+  isRTL: boolean;
+  recents: string[];
+  onSelect: (f: Formula) => void;
+}) {
+  const recentFormulas = useMemo(() => {
+    return recents.slice(0, 8)
+      .map(code => allFormulas.find(f => f.code === code))
+      .filter((f): f is Formula => f !== undefined);
+  }, [recents]);
+
+  if (recentFormulas.length === 0) return null;
+
+  return (
+    <div className="mb-4">
+      <div className="flex items-center gap-1.5 mb-2">
+        <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+        <span className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground">
+          {isRTL ? 'شوهد مؤخراً' : 'Recently Viewed'}
+        </span>
+      </div>
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        {recentFormulas.map(f => {
+          const scenario = getPrimaryScenario(f);
+          const calc = hasCalculator(f.code);
+          const name = isRTL && (f as any).name_ar ? (f as any).name_ar : f.name;
+          return (
+            <button
+              key={f.code}
+              onClick={() => onSelect(f)}
+              className="group flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-card hover:shadow-md hover:-translate-y-0.5 transition-all"
+              style={{ borderLeftWidth: 3, borderLeftColor: scenario.color }}
+            >
+              {calc && <Calculator className="h-3 w-3 text-emerald-500 flex-shrink-0" />}
+              <span className="text-[10px] font-mono font-bold flex-shrink-0" style={{ color: scenario.color }}>{f.code}</span>
+              <span className="text-xs font-medium truncate max-w-[140px]">{name}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
 }

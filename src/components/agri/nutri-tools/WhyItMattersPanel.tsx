@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { BookOpen, ChevronDown, ChevronUp, Lightbulb, AlertTriangle, ExternalLink } from 'lucide-react';
+import { GlossaryTooltip } from './GlossaryTooltip';
 
 export interface WhyItMatters {
   example: string;        // real-world scenario
@@ -50,13 +51,13 @@ export function WhyItMattersPanel({ title = 'Why this matters', content }: Props
             <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wide text-emerald-700 dark:text-emerald-300 font-semibold mb-1.5">
               <Lightbulb className="h-3 w-3" /> Real-world example
             </div>
-            <p className="text-xs leading-relaxed text-foreground">{content.example}</p>
+            <GlossaryText text={content.example} />
           </div>
 
           {/* Science */}
           <div className="rounded-md p-3 bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900">
             <div className="text-[11px] uppercase tracking-wide text-blue-700 dark:text-blue-300 font-semibold mb-1.5">The science</div>
-            <p className="text-xs leading-relaxed text-foreground">{content.science}</p>
+            <GlossaryText text={content.science} />
           </div>
 
           {/* Common mistakes */}
@@ -65,7 +66,7 @@ export function WhyItMattersPanel({ title = 'Why this matters', content }: Props
               <AlertTriangle className="h-3 w-3" /> Common mistakes
             </div>
             <ul className="text-xs leading-relaxed text-foreground space-y-1 list-disc pl-4">
-              {content.mistakes.map((m, i) => <li key={i}>{m}</li>)}
+              {content.mistakes.map((m, i) => <li key={i}><GlossaryText text={m} /></li>)}
             </ul>
           </div>
 
@@ -90,4 +91,14 @@ export function WhyItMattersPanel({ title = 'Why this matters', content }: Props
       )}
     </Card>
   );
+}
+
+/**
+ * Renders text with automatic glossary tooltips on known terms.
+ * Delegates to GlossaryTooltip which auto-scans text for jargon.
+ */
+function GlossaryText({ text }: { text: string }) {
+  // The GlossaryTooltip component auto-scans text for known terms
+  // and wraps them in interactive popovers with definitions.
+  return <GlossaryTooltip text={text} className="text-xs leading-relaxed text-foreground" />;
 }

@@ -3,6 +3,9 @@ import type { WhyItMatters } from '@/components/agri/nutri-tools/WhyItMattersPan
 /**
  * Educational content for each of the 18 free tools.
  * Used by the <WhyItMattersPanel> shown below each tool in the dialog.
+ *
+ * For tools without a dedicated entry, use `generateStub()` to create
+ * a basic "Why it matters" from the tool's title + description.
  */
 export const WHY_IT_MATTERS: Record<string, WhyItMatters> = {
   'oxide-conversion': {
@@ -257,3 +260,32 @@ export const WHY_IT_MATTERS: Record<string, WhyItMatters> = {
     ],
   },
 };
+
+/**
+ * Generates a basic "Why it matters" stub from a tool's title + description.
+ * Used when no dedicated entry exists in WHY_IT_MATTERS.
+ * The stub provides a generic but useful educational context.
+ */
+export function generateStub(title: string, description?: string): WhyItMatters {
+  return {
+    example: `When using the ${title} tool, the inputs you enter directly affect the accuracy of the output. ${description ? `This tool ${description.toLowerCase()}.` : ''} Always validate results against field observations before acting on them.`,
+    science: `The ${title} tool applies established agronomic formulas to your inputs. The calculations are based on peer-reviewed research and standard agricultural references (FAO, USDA-NRCS, ASABE). Understanding the underlying science helps you interpret results correctly and recognize when field conditions may require adjustments to the standard approach.`,
+    mistakes: [
+      'Entering values without checking units (e.g., kg/ha vs. t/ha, mm vs. inches).',
+      'Using generic defaults instead of crop-specific or region-specific values.',
+      'Ignoring the interpretation text — it often contains critical context about when the result is valid.',
+    ],
+    references: [
+      { label: 'FAO Agricultural Publications', url: 'https://www.fao.org/publications/' },
+      { label: 'USDA-NRCS Engineering Field Manual', url: 'https://www.nrcs.usda.gov/' },
+    ],
+  };
+}
+
+/**
+ * Returns the WhyItMatters content for a tool — either the dedicated
+ * entry from WHY_IT_MATTERS, or a generated stub if no entry exists.
+ */
+export function getWhyItMatters(toolId: string, title: string, description?: string): WhyItMatters {
+  return WHY_IT_MATTERS[toolId] ?? generateStub(title, description);
+}
