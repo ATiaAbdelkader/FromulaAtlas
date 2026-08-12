@@ -1,0 +1,548 @@
+     1→'use client';
+     2→
+     3→import { useState, useMemo } from 'react';
+     4→import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+     5→import { Input } from '@/components/ui/input';
+     6→import { Label } from '@/components/ui/label';
+     7→import { Button } from '@/components/ui/button';
+     8→import { Badge } from '@/components/ui/badge';
+     9→import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+    10→import {
+    11→  Settings, Droplets, Plus, Trash2, Download, Gauge, Sun, Trees,
+    12→  Activity, Zap,
+    13→} from 'lucide-react';
+    14→import {
+    15→  NOZZLES, ARC_ANGLES, getNozzle, recommendValve, recommendPipeSize,
+    16→  PLANT_WATER_NEEDS, DRIP_DEFAULTS, sizePump,
+    17→  precipitationRate,
+    18→  gpmToLpm, psiToBar, psiToKpa, hpToKw,
+    19→} from '@/lib/irrigation-design-data';
+    20→
+    21→type ZoneType = 'sprinkler' | 'drip' | 'bubbler';
+    22→
+    23→interface SprinklerRow {
+    24→  id: string;
+    25→  code: string;
+    26→  arc: number;
+    27→  count: number;
+    28→  spacing_ft: number;
+    29→}
+    30→
+    31→interface DripState {
+    32→  lineLength_ft: number;
+    33→  emitterSpacing_inch: number;
+    34→  flowPerEmitter_gph: number;
+    35→  area_ft2: number;
+    36→}
+    37→
+    38→interface BubblerRow {
+    39→  id: string;
+    40→  plantType: string;
+    41→  count: number;
+    42→  runMinutes: number;
+    43→}
+    44→
+    45→interface Zone {
+    46→  id: string;
+    47→  name: string;
+    48→  type: ZoneType;
+    49→  sprinklers: SprinklerRow[];
+    50→  drip: DripState;
+    51→  bubblers: BubblerRow[];
+    52→}
+    53→
+    54→const uid = () => Math.random().toString(36).slice(2, 9);
+    55→
+    56→const DEFAULT_DRIP: DripState = {
+    57→  lineLength_ft: DRIP_DEFAULTS.lineLength_ft,
+    58→  emitterSpacing_inch: DRIP_DEFAULTS.emitterSpacing_inch,
+    59→  flowPerEmitter_gph: DRIP_DEFAULTS.flowPerEmitter_gph,
+    60→  area_ft2: 100,
+    61→};
+    62→
+    63→// --------------------------------------------------------------------
+    64→// Zone-level calculations
+    65→// --------------------------------------------------------------------
+    66→function sprinklerZoneGpm(rows: SprinklerRow[]): number {
+    67→  return rows.reduce((sum, r) => {
+    68→    const n = getNozzle(r.code);
+    69→    if (!n) return sum;
+    70→    return sum + (n.flows[r.arc] || 0) * (r.count || 0);
+    71→  }, 0);
+    72→}
+    73→
+    74→function sprinklerZoneArea(rows: SprinklerRow[]): number {
+    75→  // rectangular grid approximation: area = spacing² × heads (square spacing)
+    76→  return rows.reduce((sum, r) => sum + Math.pow(r.spacing_ft || 0, 2) * (r.count || 0), 0);
+    77→}
+    78→
+    79→function dripZoneCalc(d: DripState) {
+    80→  const lineFt = Math.max(0, d.lineLength_ft);
+    81→  const spacingIn = Math.max(1, d.emitterSpacing_inch);
+    82→  const spacingFt = spacingIn / 12;
+    83→  const emitters = Math.floor(lineFt / spacingFt);
+    84→  const totalGph = emitters * Math.max(0, d.flowPerEmitter_gph);
+    85→  const totalGpm = totalGph / 60;
+    86→  const area = Math.max(0, d.area_ft2);
+    87→  const pr = precipitationRate(totalGpm, area);
+    88→  return { emitters, totalGph, totalGpm, pr };
+    89→}
+    90→
+    91→function bubblerZoneCalc(rows: BubblerRow[]) {
+    92→  // gallons per week (plant demand) → GPM (delivered in runMinutes per week)
+    93→  let totalGal = 0;
+    94→  rows.forEach(r => {
+    95→    const need = PLANT_WATER_NEEDS[r.plantType] || 0;
+    96→    totalGal += need * (r.count || 0);
+    97→  });
+    98→  // Use min(runMinutes) → worst case; otherwise weighted average
+    99→  const avgMin = rows.length
+   100→    ? rows.reduce((s, r) => s + Math.max(1, r.runMinutes), 0) / rows.length
+   101→    : 1;
+   102→  const gpm = avgMin > 0 ? totalGal / avgMin : 0;
+   103→  return { totalGal, gpm };
+   104→}
+   105→
+   106→function zoneGpm(z: Zone): number {
+   107→  if (z.type === 'sprinkler') return sprinklerZoneGpm(z.sprinklers);
+   108→  if (z.type === 'drip')      return dripZoneCalc(z.drip).totalGpm;
+   109→  return bubblerZoneCalc(z.bubblers).gpm;
+   110→}
+   111→
+   112→// --------------------------------------------------------------------
+   113→// Sample zones
+   114→// --------------------------------------------------------------------
+   115→function sampleZones(): Zone[] {
+   116→  return [
+   117→    {
+   118→      id: uid(),
+   119→      name: 'Lawn — North',
+   120→      type: 'sprinkler',
+   121→      sprinklers: [
+   122→        { id: uid(), code: '10A', arc: 90,  count: 6, spacing_ft: 10 },
+   123→        { id: uid(), code: '12A', arc: 180, count: 4, spacing_ft: 12 },
+   124→      ],
+   125→      drip: { ...DEFAULT_DRIP },
+   126→      bubblers: [],
+   127→    },
+   128→    {
+   129→      id: uid(),
+   130→      name: 'Orchard — Drip',
+   131→      type: 'drip',
+   132→      sprinklers: [],
+   133→      drip: { lineLength_ft: 240, emitterSpacing_inch: 24, flowPerEmitter_gph: 1, area_ft2: 600 },
+   134→      bubblers: [],
+   135→    },
+   136→    {
+   137→      id: uid(),
+   138→      name: 'Trees — Bubbler',
+   139→      type: 'bubbler',
+   140→      sprinklers: [],
+   141→      drip: { ...DEFAULT_DRIP },
+   142→      bubblers: [
+   143→        { id: uid(), plantType: 'Large Tree', count: 4, runMinutes: 30 },
+   144→        { id: uid(), plantType: 'Palm Tree',  count: 6, runMinutes: 25 },
+   145→      ],
+   146→    },
+   147→  ];
+   148→}
+   149→
+   150→const ZONE_BADGES: Record<ZoneType, { label: string; cls: string }> = {
+   151→  sprinkler: { label: 'Sprinkler', cls: 'bg-sky-100 text-sky-700 border-sky-300 dark:bg-sky-950/40 dark:text-sky-300' },
+   152→  drip:      { label: 'Drip',      cls: 'bg-emerald-100 text-emerald-700 border-emerald-300 dark:bg-emerald-950/40 dark:text-emerald-300' },
+   153→  bubbler:   { label: 'Bubbler',   cls: 'bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-950/40 dark:text-amber-300' },
+   154→};
+   155→
+   156→// ====================================================================
+   157→export function IrrigationSystemDesigner() {
+   158→  const [zones, setZones] = useState<Zone[]>(sampleZones);
+   159→  const [pumpInput, setPumpInput] = useState({
+   160→    maxStationFlow_gpm: '0',
+   161→    staticHead_m: '15',
+   162→    maxDistance_m: '120',
+   163→    numberOfDutyPumps: '1',
+   164→    numberOfStandbyPumps: '1',
+   165→  });
+   166→
+   167→  const zoneFlows = zones.map(zoneGpm);
+   168→  const totalFlow = zoneFlows.reduce((a, b) => a + b, 0);
+   169→  const maxZoneFlow = zoneFlows.length ? Math.max(...zoneFlows) : 0;
+   170→  const pumpResult = useMemo(() => {
+   171→    return sizePump({
+   172→      maxStationFlow_gpm: parseFloat(pumpInput.maxStationFlow_gpm) || maxZoneFlow,
+   173→      staticHead_m: parseFloat(pumpInput.staticHead_m) || 0,
+   174→      maxDistance_m: parseFloat(pumpInput.maxDistance_m) || 0,
+   175→      numberOfDutyPumps: parseInt(pumpInput.numberOfDutyPumps) || 1,
+   176→      numberOfStandbyPumps: parseInt(pumpInput.numberOfStandbyPumps) || 0,
+   177→    });
+   178→  }, [pumpInput, maxZoneFlow]);
+   179→
+   180→  // Mutators ---------------------------------------------------------
+   181→  const addZone = (type: ZoneType) => {
+   182→    setZones(prev => [...prev, {
+   183→      id: uid(),
+   184→      name: `${type[0].toUpperCase()}${type.slice(1)} Zone ${prev.length + 1}`,
+   185→      type,
+   186→      sprinklers: type === 'sprinkler' ? [{ id: uid(), code: '8A', arc: 180, count: 4, spacing_ft: 8 }] : [],
+   187→      drip: type === 'drip' ? { ...DEFAULT_DRIP } : { ...DEFAULT_DRIP },
+   188→      bubblers: type === 'bubbler' ? [{ id: uid(), plantType: 'Small Tree', count: 2, runMinutes: 20 }] : [],
+   189→    }]);
+   190→  };
+   191→  const removeZone = (id: string) => setZones(prev => prev.filter(z => z.id !== id));
+   192→  const updateZone = (id: string, patch: Partial<Zone>) =>
+   193→    setZones(prev => prev.map(z => z.id === id ? { ...z, ...patch } : z));
+   194→
+   195→  const updateSprinkler = (zid: string, rid: string, patch: Partial<SprinklerRow>) =>
+   196→    setZones(prev => prev.map(z => z.id === zid ? {
+   197→      ...z, sprinklers: z.sprinklers.map(r => r.id === rid ? { ...r, ...patch } : r),
+   198→    } : z));
+   199→  const addSprinkler = (zid: string) =>
+   200→    setZones(prev => prev.map(z => z.id === zid ? {
+   201→      ...z, sprinklers: [...z.sprinklers, { id: uid(), code: '8A', arc: 180, count: 1, spacing_ft: 8 }],
+   202→    } : z));
+   203→  const removeSprinkler = (zid: string, rid: string) =>
+   204→    setZones(prev => prev.map(z => z.id === zid ? {
+   205→      ...z, sprinklers: z.sprinklers.filter(r => r.id !== rid),
+   206→    } : z));
+   207→
+   208→  const updateBubbler = (zid: string, rid: string, patch: Partial<BubblerRow>) =>
+   209→    setZones(prev => prev.map(z => z.id === zid ? {
+   210→      ...z, bubblers: z.bubblers.map(r => r.id === rid ? { ...r, ...patch } : r),
+   211→    } : z));
+   212→  const addBubbler = (zid: string) =>
+   213→    setZones(prev => prev.map(z => z.id === zid ? {
+   214→      ...z, bubblers: [...z.bubblers, { id: uid(), plantType: 'Small Tree', count: 1, runMinutes: 20 }],
+   215→    } : z));
+   216→  const removeBubbler = (zid: string, rid: string) =>
+   217→    setZones(prev => prev.map(z => z.id === zid ? {
+   218→      ...z, bubblers: z.bubblers.filter(r => r.id !== rid),
+   219→    } : z));
+   220→
+   221→  // PDF export -------------------------------------------------------
+   222→  const handleExport = () => {
+   223→    const w = window.open('', '_blank', 'noopener,noreferrer');
+   224→    if (!w) return;
+   225→    const zoneRows = zones.map((z, i) => {
+   226→      const gpm = zoneFlows[i].toFixed(2);
+   227→      if (z.type === 'sprinkler') {
+   228→        const area = sprinklerZoneArea(z.sprinklers);
+   229→        const pr = precipitationRate(zoneFlows[i], area).toFixed(2);
+   230→        const valve = recommendValve(zoneFlows[i]);
+   231→        const pipe = recommendPipeSize(zoneFlows[i]);
+   232→        return `<tr><td>${z.name}</td><td>Sprinkler</td><td>${z.sprinklers.length}</td><td>${gpm}</td><td>${pr}</td><td>${valve.model} ${valve.size}</td><td>${pipe}</td></tr>`;
+   233→      }
+   234→      if (z.type === 'drip') {
+   235→        const d = dripZoneCalc(z.drip);
+   236→        return `<tr><td>${z.name}</td><td>Drip</td><td>${d.emitters}</td><td>${gpm}</td><td>${d.pr.toFixed(2)}</td><td>${recommendValve(zoneFlows[i]).model}</td><td>${recommendPipeSize(zoneFlows[i])}</td></tr>`;
+   237→      }
+   238→      const b = bubblerZoneCalc(z.bubblers);
+   239→      return `<tr><td>${z.name}</td><td>Bubbler</td><td>${z.bubblers.reduce((s, r) => s + r.count, 0)}</td><td>${gpm}</td><td>—</td><td>${recommendValve(zoneFlows[i]).model}</td><td>${recommendPipeSize(zoneFlows[i])}</td></tr>`;
+   240→    }).join('');
+   241→    w.document.write(`<!doctype html><html><head><title>Irrigation System Design</title>
+   242→<style>body{font-family:system-ui;padding:24px;color:#0f172a}h1{color:#4338ca;margin:0 0 4px}
+   243→.stat{display:inline-block;padding:10px 14px;border:1px solid #cbd5e1;border-radius:8px;margin:4px 4px 0 0;min-width:120px}
+   244→.stat .l{font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:.04em}
+   245→.stat .v{font-size:18px;font-weight:700;color:#4338ca}
+   246→table{width:100%;border-collapse:collapse;margin-top:12px}td,th{border:1px solid #cbd5e1;padding:6px 10px;font-size:12px;text-align:left}
+   247→h3{color:#4338ca;margin-top:18px}</style></head><body>
+   248→<h1>Irrigation System Design</h1>
+   249→<p style="font-size:11px;color:#64748b;margin:0 0 8px">Generated ${new Date().toLocaleString()}</p>
+   250→<div>
+   251→<div class="stat"><div class="l">Zones</div><div class="v">${zones.length}</div></div>
+   252→<div class="stat"><div class="l">Total flow</div><div class="v">${totalFlow.toFixed(2)} GPM</div></div>
+   253→<div class="stat"><div class="l">Max zone</div><div class="v">${maxZoneFlow.toFixed(2)} GPM</div></div>
+   254→<div class="stat"><div class="l">Pump power</div><div class="v">${pumpResult.pumpPower_hp.toFixed(2)} HP</div></div>
+   255→</div>
+   256→<h3>Zones</h3>
+   257→<table><thead><tr><th>Name</th><th>Type</th><th>Heads/Emitters</th><th>GPM</th><th>Precip. (in/h)</th><th>Valve</th><th>Pipe</th></tr></thead><tbody>${zoneRows}</tbody></table>
+   258→<h3>Pump sizing</h3>
+   259→<table>
+   260→<tr><td>Total head</td><td>${pumpResult.totalHead_m.toFixed(2)} m</td></tr>
+   261→<tr><td>Pressure</td><td>${pumpResult.pressure_psi.toFixed(1)} psi (${psiToBar(pumpResult.pressure_psi).toFixed(2)} bar)</td></tr>
+   262→<tr><td>Flow per pump</td><td>${pumpResult.pumpFlow_gpm.toFixed(2)} GPM</td></tr>
+   263→<tr><td>Power</td><td>${pumpResult.pumpPower_hp.toFixed(2)} HP (${hpToKw(pumpResult.pumpPower_hp).toFixed(2)} kW)</td></tr>
+   264→</table>
+   265→</body></html>`);
+   266→    w.document.close();
+   267→    setTimeout(() => w.print(), 300);
+   268→  };
+   269→
+   270→  // Render -----------------------------------------------------------
+   271→  return (
+   272→    <Card>
+   273→      <CardHeader className="pb-3">
+   274→        <CardTitle className="flex items-center gap-2 text-base">
+   275→          <Settings className="h-4 w-4 text-indigo-600" /> Irrigation System Designer
+   276→        </CardTitle>
+   277→        <CardDescription className="text-xs">
+   278→          Multi-zone sprinkler / drip / bubbler designer with valve &amp; pipe sizing, pump selection, and PDF export.
+   279→        </CardDescription>
+   280→      </CardHeader>
+   281→      <CardContent className="space-y-4">
+   282→        {/* Summary cards */}
+   283→        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+   284→          {[
+   285→            { icon: Settings,    label: 'Zones',      value: String(zones.length),                                   unit: '',    color: 'text-indigo-700 dark:text-indigo-300' },
+   286→            { icon: Droplets,    label: 'Total flow', value: totalFlow.toFixed(2),                                   unit: 'GPM', color: 'text-emerald-700 dark:text-emerald-300' },
+   287→            { icon: Gauge,       label: 'Max zone',   value: maxZoneFlow.toFixed(2),                                 unit: 'GPM', color: 'text-sky-700 dark:text-sky-300' },
+   288→            { icon: Zap,         label: 'Pump power', value: pumpResult.pumpPower_hp.toFixed(2),                     unit: 'HP',  color: 'text-amber-700 dark:text-amber-300' },
+   289→          ].map(s => (
+   290→            <div key={s.label} className="rounded-lg border p-3 bg-indigo-50/30 dark:bg-indigo-950/20">
+   291→              <div className="text-[10px] uppercase tracking-wide text-muted-foreground flex items-center gap-1">
+   292→                <s.icon className="h-3 w-3" /> {s.label}
+   293→              </div>
+   294→              <div className={`text-2xl font-bold mt-1 ${s.color}`}>{s.value}</div>
+   295→              <div className="text-[10px] text-muted-foreground">{s.unit}</div>
+   296→            </div>
+   297→          ))}
+   298→        </div>
+   299→
+   300→        {/* Add-zone buttons */}
+   301→        <div className="flex flex-wrap gap-2">
+   302→          <Button size="sm" variant="outline" onClick={() => addZone('sprinkler')}><Plus className="h-3.5 w-3.5 mr-1" />Sprinkler zone</Button>
+   303→          <Button size="sm" variant="outline" onClick={() => addZone('drip')}><Plus className="h-3.5 w-3.5 mr-1" />Drip zone</Button>
+   304→          <Button size="sm" variant="outline" onClick={() => addZone('bubbler')}><Plus className="h-3.5 w-3.5 mr-1" />Bubbler zone</Button>
+   305→        </div>
+   306→
+   307→        {/* Zone cards */}
+   308→        <div className="space-y-3">
+   309→          {zones.map((z, zi) => {
+   310→            const gpm = zoneFlows[zi];
+   311→            const valve = recommendValve(gpm);
+   312→            const pipe = recommendPipeSize(gpm);
+   313→            return (
+   314→              <div key={z.id} className="rounded-lg border p-3 space-y-3 bg-card">
+   315→                <div className="flex items-center gap-2 flex-wrap">
+   316→                  <Input value={z.name} onChange={e => updateZone(z.id, { name: e.target.value })}
+   317→                    className="h-8 text-sm font-semibold flex-1 min-w-[160px]" />
+   318→                  <Badge variant="outline" className={ZONE_BADGES[z.type].cls}>{ZONE_BADGES[z.type].label}</Badge>
+   319→                  <Badge variant="secondary" className="font-mono text-xs">{gpm.toFixed(2)} GPM</Badge>
+   320→                  <Button size="sm" variant="ghost" onClick={() => removeZone(z.id)} className="h-7 px-2 text-red-600 hover:text-red-700">
+   321→                    <Trash2 className="h-3.5 w-3.5" />
+   322→                  </Button>
+   323→                </div>
+   324→
+   325→                {/* Per-type editor */}
+   326→                {z.type === 'sprinkler' && (
+   327→                  <SprinklerEditor zone={z}
+   328→                    onAdd={() => addSprinkler(z.id)}
+   329→                    onUpdate={(rid, p) => updateSprinkler(z.id, rid, p)}
+   330→                    onRemove={(rid) => removeSprinkler(z.id, rid)} />
+   331→                )}
+   332→                {z.type === 'drip' && (
+   333→                  <DripEditor zone={z} onUpdate={(p) => updateZone(z.id, { drip: { ...z.drip, ...p } })} />
+   334→                )}
+   335→                {z.type === 'bubbler' && (
+   336→                  <BubblerEditor zone={z}
+   337→                    onAdd={() => addBubbler(z.id)}
+   338→                    onUpdate={(rid, p) => updateBubbler(z.id, rid, p)}
+   339→                    onRemove={(rid) => removeBubbler(z.id, rid)} />
+   340→                )}
+   341→
+   342→                {/* Recommendation footer */}
+   343→                <div className="flex flex-wrap items-center gap-2 text-[11px] pt-1 border-t border-border">
+   344→                  <Badge variant="outline" className="gap-1"><Gauge className="h-3 w-3" />Valve: {valve.model} {valve.size}</Badge>
+   345→                  <Badge variant="outline" className="gap-1"><Activity className="h-3 w-3" />Pipe: {pipe}</Badge>
+   346→                  {z.type === 'sprinkler' && (() => {
+   347→                    const area = sprinklerZoneArea(z.sprinklers);
+   348→                    const pr = precipitationRate(gpm, area);
+   349→                    return <Badge variant="outline" className="gap-1"><Sun className="h-3 w-3" />PR: {pr.toFixed(2)} in/h</Badge>;
+   350→                  })()}
+   351→                  {z.type === 'drip' && (() => {
+   352→                    const d = dripZoneCalc(z.drip);
+   353→                    return <Badge variant="outline" className="gap-1"><Sun className="h-3 w-3" />PR: {d.pr.toFixed(2)} in/h · {d.emitters} emitters</Badge>;
+   354→                  })()}
+   355→                  {z.type === 'bubbler' && (() => {
+   356→                    const b = bubblerZoneCalc(z.bubblers);
+   357→                    return <Badge variant="outline" className="gap-1"><Trees className="h-3 w-3" />{b.totalGal.toFixed(1)} gal/wk</Badge>;
+   358→                  })()}
+   359→                </div>
+   360→              </div>
+   361→            );
+   362→          })}
+   363→          {zones.length === 0 && (
+   364→            <div className="text-center text-xs text-muted-foreground py-6 border-2 border-dashed rounded-lg">
+   365→              No zones yet — add a sprinkler, drip, or bubbler zone above.
+   366→            </div>
+   367→          )}
+   368→        </div>
+   369→
+   370→        {/* Pump sizing panel */}
+   371→        <div className="rounded-lg border p-3 bg-indigo-50/30 dark:bg-indigo-950/20 space-y-3">
+   372→          <div className="text-xs font-semibold flex items-center gap-1.5"><Zap className="h-3.5 w-3.5 text-indigo-600" />Pump Sizing</div>
+   373→          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+   374→            <div>
+   375→              <Label className="text-[10px]">Max station flow (GPM)</Label>
+   376→              <Input type="number" value={pumpInput.maxStationFlow_gpm}
+   377→                placeholder={`auto = ${maxZoneFlow.toFixed(2)}`}
+   378→                onChange={e => setPumpInput(p => ({ ...p, maxStationFlow_gpm: e.target.value }))} className="h-8 mt-1 text-xs" />
+   379→            </div>
+   380→            <div>
+   381→              <Label className="text-[10px]">Static head (m)</Label>
+   382→              <Input type="number" value={pumpInput.staticHead_m}
+   383→                onChange={e => setPumpInput(p => ({ ...p, staticHead_m: e.target.value }))} className="h-8 mt-1 text-xs" />
+   384→            </div>
+   385→            <div>
+   386→              <Label className="text-[10px]">Max distance (m)</Label>
+   387→              <Input type="number" value={pumpInput.maxDistance_m}
+   388→                onChange={e => setPumpInput(p => ({ ...p, maxDistance_m: e.target.value }))} className="h-8 mt-1 text-xs" />
+   389→            </div>
+   390→            <div>
+   391→              <Label className="text-[10px]">Duty pumps</Label>
+   392→              <Input type="number" min="1" value={pumpInput.numberOfDutyPumps}
+   393→                onChange={e => setPumpInput(p => ({ ...p, numberOfDutyPumps: e.target.value }))} className="h-8 mt-1 text-xs" />
+   394→            </div>
+   395→            <div>
+   396→              <Label className="text-[10px]">Standby pumps</Label>
+   397→              <Input type="number" min="0" value={pumpInput.numberOfStandbyPumps}
+   398→                onChange={e => setPumpInput(p => ({ ...p, numberOfStandbyPumps: e.target.value }))} className="h-8 mt-1 text-xs" />
+   399→            </div>
+   400→          </div>
+   401→          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+   402→            <Stat label="Total head" value={`${pumpResult.totalHead_m.toFixed(2)} m`} />
+   403→            <Stat label="Pressure" value={`${pumpResult.pressure_psi.toFixed(1)} psi`} sub={`${psiToBar(pumpResult.pressure_psi).toFixed(2)} bar · ${psiToKpa(pumpResult.pressure_psi).toFixed(0)} kPa`} />
+   404→            <Stat label="Pump flow" value={`${pumpResult.pumpFlow_gpm.toFixed(2)} GPM`} sub={`${gpmToLpm(pumpResult.pumpFlow_gpm).toFixed(1)} L/min`} />
+   405→            <Stat label="Power" value={`${pumpResult.pumpPower_hp.toFixed(2)} HP`} sub={`${hpToKw(pumpResult.pumpPower_hp).toFixed(2)} kW`} />
+   406→          </div>
+   407→        </div>
+   408→
+   409→        <Button onClick={handleExport} variant="outline" size="sm" className="w-full">
+   410→          <Download className="h-4 w-4 mr-1" /> Export Design to PDF
+   411→        </Button>
+   412→      </CardContent>
+   413→    </Card>
+   414→  );
+   415→}
+   416→
+   417→// ====================================================================
+   418→// Sub-components
+   419→// ====================================================================
+   420→function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
+   421→  return (
+   422→    <div className="rounded border p-2 bg-card">
+   423→      <div className="text-[9px] uppercase tracking-wide text-muted-foreground">{label}</div>
+   424→      <div className="text-sm font-bold text-indigo-700 dark:text-indigo-300">{value}</div>
+   425→      {sub && <div className="text-[10px] text-muted-foreground">{sub}</div>}
+   426→    </div>
+   427→  );
+   428→}
+   429→
+   430→function SprinklerEditor({ zone, onAdd, onUpdate, onRemove }: {
+   431→  zone: Zone;
+   432→  onAdd: () => void;
+   433→  onUpdate: (id: string, patch: Partial<SprinklerRow>) => void;
+   434→  onRemove: (id: string) => void;
+   435→}) {
+   436→  return (
+   437→    <div className="space-y-2">
+   438→      <div className="text-[10px] uppercase tracking-wide text-muted-foreground flex items-center justify-between">
+   439→        <span>Nozzle selections</span>
+   440→        <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={onAdd}><Plus className="h-3 w-3 mr-1" />Add</Button>
+   441→      </div>
+   442→      <div className="space-y-1.5">
+   443→        {zone.sprinklers.map(r => {
+   444→          const n = getNozzle(r.code);
+   445→          const flowPer = n?.flows[r.arc] || 0;
+   446→          return (
+   447→            <div key={r.id} className="grid grid-cols-12 gap-1.5 items-center text-xs">
+   448→              <div className="col-span-3">
+   449→                <Select value={r.code} onValueChange={v => onUpdate(r.id, { code: v })}>
+   450→                  <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
+   451→                  <SelectContent>
+   452→                    {NOZZLES.map(nn => <SelectItem key={nn.code} value={nn.code} className="text-xs">{nn.code} ({nn.radius_ft}&apos;)</SelectItem>)}
+   453→                  </SelectContent>
+   454→                </Select>
+   455→              </div>
+   456→              <div className="col-span-2">
+   457→                <Select value={String(r.arc)} onValueChange={v => onUpdate(r.id, { arc: parseInt(v) })}>
+   458→                  <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
+   459→                  <SelectContent>
+   460→                    {ARC_ANGLES.map(a => <SelectItem key={a} value={String(a)} className="text-xs">{a}°</SelectItem>)}
+   461→                  </SelectContent>
+   462→                </Select>
+   463→              </div>
+   464→              <Input type="number" min="0" value={r.count} onChange={e => onUpdate(r.id, { count: parseInt(e.target.value) || 0 })} className="col-span-2 h-7 text-xs" title="Count" />
+   465→              <Input type="number" min="0" value={r.spacing_ft} onChange={e => onUpdate(r.id, { spacing_ft: parseFloat(e.target.value) || 0 })} className="col-span-2 h-7 text-xs" title="Spacing ft" />
+   466→              <div className="col-span-2 text-right text-[10px] text-muted-foreground">{flowPer.toFixed(2)} × {r.count} = <span className="font-semibold text-emerald-700 dark:text-emerald-300">{(flowPer * r.count).toFixed(2)}</span></div>
+   467→              <Button size="sm" variant="ghost" className="col-span-1 h-7 px-0 text-red-600" onClick={() => onRemove(r.id)}><Trash2 className="h-3 w-3" /></Button>
+   468→            </div>
+   469→          );
+   470→        })}
+   471→      </div>
+   472→      <div className="text-[10px] text-muted-foreground">Nozzle · Arc · Count · Spacing(ft) · GPM</div>
+   473→    </div>
+   474→  );
+   475→}
+   476→
+   477→function DripEditor({ zone, onUpdate }: { zone: Zone; onUpdate: (p: Partial<DripState>) => void }) {
+   478→  const d = zone.drip;
+   479→  const calc = dripZoneCalc(d);
+   480→  return (
+   481→    <div className="space-y-2">
+   482→      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+   483→        <div>
+   484→          <Label className="text-[10px]">Line length (ft)</Label>
+   485→          <Input type="number" value={d.lineLength_ft} onChange={e => onUpdate({ lineLength_ft: parseFloat(e.target.value) || 0 })} className="h-8 mt-1 text-xs" />
+   486→        </div>
+   487→        <div>
+   488→          <Label className="text-[10px]">Emitter spacing (in)</Label>
+   489→          <Input type="number" value={d.emitterSpacing_inch} onChange={e => onUpdate({ emitterSpacing_inch: parseFloat(e.target.value) || 0 })} className="h-8 mt-1 text-xs" />
+   490→        </div>
+   491→        <div>
+   492→          <Label className="text-[10px]">Flow/emitter (gph)</Label>
+   493→          <Input type="number" value={d.flowPerEmitter_gph} onChange={e => onUpdate({ flowPerEmitter_gph: parseFloat(e.target.value) || 0 })} className="h-8 mt-1 text-xs" />
+   494→        </div>
+   495→        <div>
+   496→          <Label className="text-[10px]">Area (ft²)</Label>
+   497→          <Input type="number" value={d.area_ft2} onChange={e => onUpdate({ area_ft2: parseFloat(e.target.value) || 0 })} className="h-8 mt-1 text-xs" />
+   498→        </div>
+   499→      </div>
+   500→      <div className="grid grid-cols-3 gap-2 text-xs">
+   501→        <Stat label="Emitters" value={String(calc.emitters)} />
+   502→        <Stat label="Total flow" value={`${calc.totalGpm.toFixed(2)} GPM`} sub={`${calc.totalGph.toFixed(0)} gph`} />
+   503→        <Stat label="Precip. rate" value={`${calc.pr.toFixed(2)} in/h`} />
+   504→      </div>
+   505→    </div>
+   506→  );
+   507→}
+   508→
+   509→function BubblerEditor({ zone, onAdd, onUpdate, onRemove }: {
+   510→  zone: Zone;
+   511→  onAdd: () => void;
+   512→  onUpdate: (id: string, patch: Partial<BubblerRow>) => void;
+   513→  onRemove: (id: string) => void;
+   514→}) {
+   515→  return (
+   516→    <div className="space-y-2">
+   517→      <div className="text-[10px] uppercase tracking-wide text-muted-foreground flex items-center justify-between">
+   518→        <span>Plant selections</span>
+   519→        <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={onAdd}><Plus className="h-3 w-3 mr-1" />Add</Button>
+   520→      </div>
+   521→      <div className="space-y-1.5">
+   522→        {zone.bubblers.map(r => {
+   523→          const need = PLANT_WATER_NEEDS[r.plantType] || 0;
+   524→          return (
+   525→            <div key={r.id} className="grid grid-cols-12 gap-1.5 items-center text-xs">
+   526→              <div className="col-span-5">
+   527→                <Select value={r.plantType} onValueChange={v => onUpdate(r.id, { plantType: v })}>
+   528→                  <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
+   529→                  <SelectContent>
+   530→                    {Object.keys(PLANT_WATER_NEEDS).map(p => <SelectItem key={p} value={p} className="text-xs">{p}</SelectItem>)}
+   531→                  </SelectContent>
+   532→                </Select>
+   533→              </div>
+   534→              <Input type="number" min="0" value={r.count} onChange={e => onUpdate(r.id, { count: parseInt(e.target.value) || 0 })} className="col-span-2 h-7 text-xs" title="Count" />
+   535→              <Input type="number" min="1" value={r.runMinutes} onChange={e => onUpdate(r.id, { runMinutes: parseInt(e.target.value) || 1 })} className="col-span-2 h-7 text-xs" title="Run min/wk" />
+   536→              <div className="col-span-2 text-right text-[10px] text-muted-foreground">{need} × {r.count} = <span className="font-semibold text-amber-700 dark:text-amber-300">{(need * r.count).toFixed(1)}</span></div>
+   537→              <Button size="sm" variant="ghost" className="col-span-1 h-7 px-0 text-red-600" onClick={() => onRemove(r.id)}><Trash2 className="h-3 w-3" /></Button>
+   538→            </div>
+   539→          );
+   540→        })}
+   541→      </div>
+   542→      <div className="text-[10px] text-muted-foreground">Plant · Count · Run min/wk · Gallons/wk</div>
+   543→    </div>
+   544→  );
+   545→}
+   546→
+   547→
+   548→
