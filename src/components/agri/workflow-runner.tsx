@@ -5,7 +5,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Check, ChevronRight, ChevronLeft, X, RotateCcw, Sparkles, Target, ArrowRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -81,8 +80,8 @@ export function WorkflowRunner({ workflow, open, onOpenChange }: WorkflowRunnerP
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-3xl max-h-[92vh] flex flex-col p-0 gap-0">
-        <DialogHeader className="p-6 pb-4 border-b border-border bg-gradient-to-r from-emerald-50 via-background to-background dark:from-emerald-950/40 dark:via-background dark:to-background">
+      <DialogContent className="max-w-3xl !max-h-[92vh] h-[92vh] flex flex-col p-0 gap-0 overflow-hidden">
+        <DialogHeader className="p-6 pb-4 border-b border-border bg-gradient-to-r from-emerald-50 via-background to-background dark:from-emerald-950/40 dark:via-background dark:to-background flex-shrink-0">
           <div className="flex items-start justify-between gap-3 mb-2">
             <div className="flex items-center gap-3 min-w-0">
               <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-gradient-to-br from-emerald-500 to-green-700 text-white flex-shrink-0 shadow-sm">
@@ -103,7 +102,7 @@ export function WorkflowRunner({ workflow, open, onOpenChange }: WorkflowRunnerP
         </DialogHeader>
 
         {/* Progress bar */}
-        <div className="px-6 py-3 border-b border-border bg-muted/30">
+        <div className="px-6 py-3 border-b border-border bg-muted/30 flex-shrink-0">
           <div className="flex items-center justify-between gap-2 mb-2">
             <span className="text-xs font-medium text-muted-foreground">Step {currentStep + 1} of {workflow.steps.length}</span>
           </div>
@@ -119,7 +118,9 @@ export function WorkflowRunner({ workflow, open, onOpenChange }: WorkflowRunnerP
           </div>
         </div>
 
-        <ScrollArea className="flex-1 min-h-0">
+        {/* Scrollable content — using plain overflow-y-auto instead of ScrollArea
+            for reliable flex height behavior */}
+        <div className="flex-1 min-h-0 overflow-y-auto">
           <div className="p-6 space-y-5">
             {activeFormula && activeConfig && (
               <>
@@ -179,9 +180,10 @@ export function WorkflowRunner({ workflow, open, onOpenChange }: WorkflowRunnerP
               </>
             )}
           </div>
-        </ScrollArea>
+        </div>
 
-        <div className="p-4 border-t border-border bg-muted/30 flex items-center justify-between gap-2">
+        {/* Footer — fixed at bottom, never scrolls away */}
+        <div className="p-4 border-t border-border bg-muted/30 flex items-center justify-between gap-2 flex-shrink-0">
           <div className="flex items-center gap-2">
             {currentStep > 0 && <Button variant="outline" size="sm" onClick={handleBack} className="gap-1.5"><ChevronLeft className="h-4 w-4" />Back</Button>}
             {currentStep > 0 && <Button variant="ghost" size="sm" onClick={handleRestart} className="gap-1.5 text-xs"><RotateCcw className="h-3.5 w-3.5" />Restart</Button>}
