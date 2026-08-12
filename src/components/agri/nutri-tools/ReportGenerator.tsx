@@ -134,7 +134,7 @@ export function ReportGenerator() {
   const enabledCount = Object.values(config.includeSections).filter(Boolean).length;
 
   return (
-    <div className="space-y-4">
+    <Card>
       {/* Report config */}
       <div className="grid grid-cols-3 gap-2">
         <div>
@@ -220,6 +220,6 @@ export function ReportGenerator() {
           </div>
         </div>
       </div>
-    </div>
+    </Card>
   );
 }

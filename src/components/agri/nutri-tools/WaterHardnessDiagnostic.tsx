@@ -106,7 +106,7 @@ export function WaterHardnessDiagnostic() {
   const kgTotal = totalL * acid.densityKgL;
 
   return (
-    <div className="space-y-4">
+    <Card>
       {/* Section 1 */}
       <Card>
         <CardHeader className="pb-3">
@@ -251,7 +251,7 @@ export function WaterHardnessDiagnostic() {
           </div>
         </CardContent>
       </Card>
-    </div>
+    </Card>
   );
 }
 

@@ -78,7 +78,7 @@ export function WeatherRadar() {
   };
 
   return (
-    <div className="space-y-4">
+    <Card>
       {/* Location input */}
       <div className="flex gap-2 items-end">
         <div className="flex-1 grid grid-cols-2 gap-2">
@@ -173,7 +173,7 @@ export function WeatherRadar() {
           </div>
         </>
       )}
-    </div>
+    </Card>
   );
 }
 

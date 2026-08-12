@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, RotateCcw } from 'lucide-react';
 import { ToolExportLite } from './ToolExportLite';
 
 interface CollapsibleSectionProps {
@@ -46,20 +46,32 @@ export function CollapsibleSection({
 
   return (
     <div className="rounded-xl border border-border overflow-hidden bg-card">
-      <button onClick={toggle} className="w-full flex items-center gap-3 p-3 hover:bg-muted/40 transition-colors text-left">
-        {Icon && (
-          <div className="flex items-center justify-center h-9 w-9 rounded-lg flex-shrink-0" style={{ background: `${color}20`, color }}>
-            <Icon className="h-4 w-4" />
+      <div className="flex items-center gap-3 p-3 hover:bg-muted/40 transition-colors">
+        <button onClick={toggle} className="flex-1 flex items-center gap-3 text-left min-w-0">
+          {Icon && (
+            <div className="flex items-center justify-center h-9 w-9 rounded-lg flex-shrink-0" style={{ background: `${color}20`, color }}>
+              <Icon className="h-4 w-4" />
+            </div>
+          )}
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-semibold leading-tight">{title}</div>
+            {description && <div className="text-[11px] text-muted-foreground leading-tight mt-0.5 truncate">{description}</div>}
           </div>
+          <div className="flex items-center justify-center h-7 w-7 rounded-md flex-shrink-0 text-muted-foreground hover:bg-muted transition-colors" style={open ? { color } : undefined}>
+            {open ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </div>
+        </button>
+        {onReset && open && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onReset(); }}
+            className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors flex-shrink-0"
+            title="Reset to defaults"
+          >
+            <RotateCcw className="h-3 w-3" />
+            <span className="hidden sm:inline">Reset</span>
+          </button>
         )}
-        <div className="flex-1 min-w-0">
-          <div className="text-sm font-semibold leading-tight">{title}</div>
-          {description && <div className="text-[11px] text-muted-foreground leading-tight mt-0.5 truncate">{description}</div>}
-        </div>
-        <div className="flex items-center justify-center h-7 w-7 rounded-md flex-shrink-0 text-muted-foreground hover:bg-muted transition-colors" style={open ? { color } : undefined}>
-          {open ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-        </div>
-      </button>
+      </div>
       {mounted && open && (
         <div className="border-t border-border">
           {enableExport && (

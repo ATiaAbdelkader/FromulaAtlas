@@ -142,7 +142,7 @@ export function EvapotranspirationTracker() {
   const today = plan?.[0];
 
   return (
-    <div className="space-y-4">
+    <Card>
       {/* Location + crop controls */}
       <Card>
         <CardHeader className="pb-3">
@@ -342,7 +342,7 @@ export function EvapotranspirationTracker() {
           </CardContent>
         </Card>
       )}
-    </div>
+    </Card>
   );
 }
 

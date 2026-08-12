@@ -85,7 +85,7 @@ export function FinancialDashboard() {
   };
 
   return (
-    <div className="space-y-4">
+    <Card>
       {/* Yield + price inputs */}
       <div className="grid grid-cols-3 gap-2">
         <div><Label className="text-[10px]">{isRTL ? 'الإنتاج (ط/هـ)' : 'Yield (t/ha)'}</Label><Input value={yieldT} onChange={e => setYieldT(e.target.value)} type="number" className="h-8 text-xs mt-0.5" /></div>
@@ -208,7 +208,7 @@ export function FinancialDashboard() {
           <Button size="sm" variant="ghost" onClick={() => setScenario({ costDeltaPct: 0, priceDeltaPct: 0, yieldDeltaPct: 0 })} className="text-[10px] h-7">{isRTL ? 'إعادة تعيين' : 'Reset'}</Button>
         </div>
       </div>
-    </div>
+    </Card>
   );
 }
 

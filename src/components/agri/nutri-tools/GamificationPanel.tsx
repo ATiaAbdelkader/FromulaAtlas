@@ -100,7 +100,7 @@ export function GamificationPanel() {
   const userRank = leaderboard.find(e => e.isYou)?.rank || '—';
 
   return (
-    <div className="space-y-4">
+    <Card>
       {/* Level + Points header */}
       <div className="rounded-xl p-4 bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-600 text-white">
         <div className="flex items-center justify-between">
@@ -241,7 +241,7 @@ export function GamificationPanel() {
         </div>
         <div className="text-[10px] text-muted-foreground mt-2 italic">Badges auto-award when you use the corresponding features. Keep farming to level up! 🌱</div>
       </div>
-    </div>
+    </Card>
   );
 }
 

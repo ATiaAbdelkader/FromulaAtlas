@@ -79,7 +79,7 @@ export function CropRotationPlanner() {
   };
 
   return (
-    <div className="space-y-4">
+    <Card>
       {/* Summary cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         <StatCard label="Soil Health" value={`${analysis.soilHealthScore}/100`} icon={Leaf} color={analysis.soilHealthScore >= 75 ? '#16a34a' : analysis.soilHealthScore >= 50 ? '#f59e0b' : '#dc2626'} />
@@ -191,7 +191,7 @@ export function CropRotationPlanner() {
           <span>Poor</span><span>Moderate</span><span>Excellent</span>
         </div>
       </div>
-    </div>
+    </Card>
   );
 }
 

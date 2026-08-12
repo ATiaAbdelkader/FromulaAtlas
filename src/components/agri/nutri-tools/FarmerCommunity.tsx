@@ -129,7 +129,7 @@ export function FarmerCommunity() {
   };
 
   return (
-    <div className="space-y-4">
+    <Card>
       {/* Tab bar */}
       <div className="flex gap-1 border-b border-border">
         <TabBtn active={tab === 'feed'} onClick={() => setTab('feed')} icon={MessageCircle} label={isRTL ? 'المجتمع' : 'Community Feed'} />
@@ -385,7 +385,7 @@ export function FarmerCommunity() {
           <div className="text-[10px] text-muted-foreground text-center pt-2">{isRTL ? 'ملفك مخزّن محلياً ومرفق بمنشوراتك في المجتمع.' : 'Your profile is stored locally and attached to your community posts.'}</div>
         </div>
       )}
-    </div>
+    </Card>
   );
 }
 

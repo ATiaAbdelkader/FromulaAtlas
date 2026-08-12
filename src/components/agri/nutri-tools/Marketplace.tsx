@@ -110,7 +110,7 @@ export function Marketplace() {
   };
 
   return (
-    <div className="space-y-4">
+    <Card>
       {/* Search + Cart bar */}
       <div className="flex gap-2 items-center">
         <div className="relative flex-1">
@@ -251,6 +251,6 @@ export function Marketplace() {
           <div className="text-sm text-muted-foreground">{isRTL ? 'لا توجد منتجات مطابقة لبحثك.' : 'No products match your search.'}</div>
         </div>
       )}
-    </div>
+    </Card>
   );
 }

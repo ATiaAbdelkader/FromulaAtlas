@@ -86,7 +86,7 @@ export function SoilTestHistoryTracker() {
   };
 
   return (
-    <div className="space-y-4">
+    <Card>
       {/* Field selector + actions */}
       <div className="flex items-center gap-2 flex-wrap">
         <Select value={selectedField} onValueChange={setSelectedField}>
@@ -232,7 +232,7 @@ export function SoilTestHistoryTracker() {
           </table>
         </div>
       </div>
-    </div>
+    </Card>
   );
 }
 
