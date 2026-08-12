@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ToolExportLite } from './ToolExportLite';
 
 interface CollapsibleSectionProps {
   title: string;
@@ -10,12 +11,17 @@ interface CollapsibleSectionProps {
   color?: string;
   defaultOpen?: boolean;
   storageKey?: string;
+  /** When true, shows Copy/CSV/PDF/Share buttons inside the section body. */
+  enableExport?: boolean;
+  /** When provided, shows a Reset button that calls this callback. */
+  onReset?: () => void;
   children: React.ReactNode;
 }
 
 export function CollapsibleSection({
   title, description, icon: Icon, color = '#16a34a',
-  defaultOpen = false, storageKey, children,
+  defaultOpen = false, storageKey, enableExport = false, onReset,
+  children,
 }: CollapsibleSectionProps) {
   const [open, setOpen] = useState(defaultOpen);
   const [mounted, setMounted] = useState(false);
@@ -54,7 +60,18 @@ export function CollapsibleSection({
           {open ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
         </div>
       </button>
-      {mounted && open && <div className="border-t border-border">{children}</div>}
+      {mounted && open && (
+        <div className="border-t border-border">
+          {enableExport && (
+            <div className="px-4 pt-3">
+              <ToolExportLite title={title} description={description} />
+            </div>
+          )}
+          <div className="collapsible-body">
+            {children}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
