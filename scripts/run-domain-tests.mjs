@@ -15,6 +15,7 @@ const suites = [
   'scripts/test-ipm-action-planner.ts',
   'scripts/test-gross-margin-planner.ts',
   'scripts/test-harvest-forecast.ts',
+  'scripts/test-soil-health-planner.ts',
 ];
 
 if (!existsSync(tsx)) {
