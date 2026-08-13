@@ -37,6 +37,7 @@ import { TodayTasks } from '@/components/agri/today-tasks';
 import { FarmProfileWizard, needsFarmProfileSetup } from '@/components/agri/farm-profile-wizard';
 import { useTranslation } from '@/lib/language-store';
 import { FREE_TOOL_COUNT, FORMULA_COUNT } from '@/lib/catalog-stats';
+import { localizeToolEntry } from '@/lib/tool-registry';
 
 const FARM_PROFILE_KEY = 'farm_profile_v1';
 const LAST_LOC_KEY = 'et_tracker_last_loc_v1';
@@ -161,7 +162,7 @@ export function HomeDashboard({ onNavigate, onOpenTool, onOpenSearch }: HomeDash
               <Sprout className="h-3.5 w-3.5" /> {profile.name ? `${profile.name}` : t.appSubtitle}
             </div>
             <h2 className="text-xl sm:text-2xl font-bold leading-tight">
-              {greeting(language)}, {isRTL ? 'أيها المزارع' : 'farmer'} 👋
+              {greeting(language)}, {language === 'ar' ? 'أيها المزارع' : language === 'fr' ? 'agriculteur' : 'farmer'} 👋
             </h2>
             <p className="text-emerald-100 text-xs mt-1">
               {today
@@ -437,6 +438,7 @@ export function HomeDashboard({ onNavigate, onOpenTool, onOpenSearch }: HomeDash
           <div className="flex gap-2 overflow-x-auto pb-1">
             {recent.map(tool => {
               const Icon = tool.icon;
+              const localizedTool = localizeToolEntry(tool, language);
               return (
                 <button
                   key={tool.id}
@@ -451,8 +453,8 @@ export function HomeDashboard({ onNavigate, onOpenTool, onOpenSearch }: HomeDash
                     <Icon className="h-3.5 w-3.5" style={{ color: tool.color }} />
                   </div>
                   <div className="min-w-0">
-                    <div className="text-xs font-medium leading-tight truncate max-w-[140px]">{tool.title}</div>
-                    <div className="text-[10px] text-muted-foreground truncate max-w-[140px]">{tool.description}</div>
+                    <div className="text-xs font-medium leading-tight truncate max-w-[140px]">{localizedTool.title}</div>
+                    <div className="text-[10px] text-muted-foreground truncate max-w-[140px]">{localizedTool.description}</div>
                   </div>
                 </button>
               );
@@ -471,6 +473,7 @@ export function HomeDashboard({ onNavigate, onOpenTool, onOpenSearch }: HomeDash
           <div className="flex gap-2 overflow-x-auto pb-1">
             {pinned.map(tool => {
               const Icon = tool.icon;
+              const localizedTool = localizeToolEntry(tool, language);
               return (
                 <button
                   key={tool.id}
@@ -482,8 +485,8 @@ export function HomeDashboard({ onNavigate, onOpenTool, onOpenSearch }: HomeDash
                     <Icon className="h-3.5 w-3.5" style={{ color: tool.color }} />
                   </div>
                   <div className="min-w-0">
-                    <div className="max-w-[160px] truncate text-xs font-medium leading-tight">{tool.title}</div>
-                    <div className="max-w-[160px] truncate text-[10px] text-muted-foreground">{tool.description}</div>
+                    <div className="max-w-[160px] truncate text-xs font-medium leading-tight">{localizedTool.title}</div>
+                    <div className="max-w-[160px] truncate text-[10px] text-muted-foreground">{localizedTool.description}</div>
                   </div>
                 </button>
               );
@@ -774,12 +777,17 @@ function NavCard({ icon: Icon, label, desc, color, onClick }: {
   );
 }
 
-function greeting(lang?: 'en' | 'ar'): string {
+function greeting(lang?: 'en' | 'fr' | 'ar'): string {
   const h = new Date().getHours();
   if (lang === 'ar') {
     if (h < 12) return 'صباح الخير';
     if (h < 18) return 'مساء الخير';
     return 'مساء الخير';
+  }
+  if (lang === 'fr') {
+    if (h < 12) return 'Bonjour';
+    if (h < 18) return 'Bon après-midi';
+    return 'Bonsoir';
   }
   if (h < 12) return 'Good morning';
   if (h < 18) return 'Good afternoon';

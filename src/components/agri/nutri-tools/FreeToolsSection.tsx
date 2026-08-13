@@ -45,7 +45,7 @@ import { KeyboardShortcutsHelp } from './KeyboardShortcutsHelp';
 import { CompareDialog } from './CompareDialog';
 import { SeasonPlanGenerator } from './SeasonPlanGenerator';
 import { ActiveMatterSelector } from '../active-matter-selector/ActiveMatterSelector';
-import { useTranslation } from '@/lib/language-store';
+import { useTranslation, type Language } from '@/lib/language-store';
 
 type ToolCategory = 'Converters' | 'Solution & Water' | 'Fertilizers' | 'Soil & Irrigation' | 'Reference';
 
@@ -60,19 +60,49 @@ export interface ToolMeta {
   category: ToolCategory;
   icon: React.ComponentType<{ className?: string }>;
   Component: React.ComponentType;
-  /** Optional Arabic translations. When the active language is 'ar',
-   * these replace the English `name`/`description`/`benefit`/`howToUse`
-   * fields in the rendered UI. Fall back to English when undefined. */
+  /** Optional translations for the discovery surface. */
   name_ar?: string;
   description_ar?: string;
   benefit_ar?: string;
   howToUse_ar?: string[];
+  name_fr?: string;
+  description_fr?: string;
+  benefit_fr?: string;
+  howToUse_fr?: string[];
 }
 
-/** Picks the right localized string from a ToolMeta field. Falls back
- * to the English source when the Arabic variant isn't provided. */
-function trField<T>(en: T, ar: T | undefined, isRTL: boolean): T {
-  return isRTL && ar !== undefined ? ar : en;
+/** French labels for the free-tools discovery catalog. */
+const FRENCH_TOOL_FIELDS: Record<string, Partial<Record<'name' | 'description' | 'benefit' | 'howToUse', string | string[]>>> = {
+  'oxide-conversion': { name: 'Convertisseur oxyde ↔ élément' },
+  'nutrient-units': { name: 'Convertisseur d’unités nutritives' },
+  'measure-units': { name: 'Convertisseur d’unités physiques' },
+  'hydro-solution': { name: 'Concepteur de solutions hydroponiques' },
+  'water-hardness': { name: 'Diagnostic de la dureté de l’eau' },
+  'vpd': { name: 'Estimateur de VPD' },
+  'amendment-balance': { name: 'Équilibre des amendements par CEC' },
+  'granular-mix': { name: 'Formulation de mélange granulaire' },
+  'fertilizer-composition': { name: 'Composition des engrais (%)' },
+  'nutrient-distribution': { name: 'Répartition des éléments par stade' },
+  'fertilizer-compatibility': { name: 'Matrice de compatibilité des engrais' },
+  'solubility-salt-index': { name: 'Solubilité et indice de salinité' },
+  'fertilizer-carbon': { name: 'Empreinte carbone des engrais' },
+  'n-mineralizable': { name: 'Estimation de l’azote minéralisable' },
+  'soil-water-texture': { name: 'Eau et texture du sol (USDA)' },
+  'irrigation-balance': { name: 'Bilan hydrique et feuille d’irrigation' },
+  'periodic-table': { name: 'Tableau périodique des éléments nutritifs' },
+  'nutrient-interactions': { name: 'Interactions et mobilité des éléments' },
+  'active-matter-selector': { name: 'Sélecteur de matières actives — Algérie' },
+};
+
+/** Picks Arabic or French metadata and safely falls back to English. */
+function localizeToolField<T extends 'name' | 'description' | 'benefit' | 'howToUse'>(tool: ToolMeta, field: T, language: Language): ToolMeta[T] {
+  if (language === 'ar') return (tool[`${field}_ar` as keyof ToolMeta] ?? tool[field]) as ToolMeta[T];
+  if (language === 'fr') return (tool[`${field}_fr` as keyof ToolMeta] ?? FRENCH_TOOL_FIELDS[tool.id]?.[field] ?? tool[field]) as ToolMeta[T];
+  return tool[field];
+}
+
+function copy(en: string, ar: string, fr: string, language: Language): string {
+  return language === 'ar' ? ar : language === 'fr' ? fr : en;
 }
 
 const TOOLS: ToolMeta[] = [
@@ -482,10 +512,17 @@ const CATEGORY_LABEL_AR: Record<ToolCategory, string> = {
   'Reference':          'مراجع',
 };
 
-/** Returns the localized display label for a category given the active
- * language flag. */
-export function categoryLabel(c: ToolCategory, isRTL: boolean): string {
-  return isRTL ? CATEGORY_LABEL_AR[c] : c;
+const CATEGORY_LABEL_FR: Record<ToolCategory, string> = {
+  'Converters': 'Convertisseurs',
+  'Solution & Water': 'Solutions et eau',
+  'Fertilizers': 'Engrais',
+  'Soil & Irrigation': 'Sol et irrigation',
+  'Reference': 'Références',
+};
+
+/** Returns the localized display label for a category. */
+export function categoryLabel(c: ToolCategory, language: Language): string {
+  return language === 'ar' ? CATEGORY_LABEL_AR[c] : language === 'fr' ? CATEGORY_LABEL_FR[c] : c;
 }
 
 export const CATEGORY_COLORS: Record<ToolCategory, string> = {
@@ -510,7 +547,7 @@ export function FreeToolsSection() {
   const [openTool, setOpenTool] = useState<ToolMeta | null>(null);
   const [showHints, setShowHints] = useState(false);
   const [seasonPlanOpen, setSeasonPlanOpen] = useState(false);
-  const { isRTL } = useTranslation();
+  const { language } = useTranslation();
 
   // Comparison tray — holds up to 2 tool IDs for side-by-side comparison.
   // Persists across tool-dialog opens/closes but not across page reloads (v1).
@@ -607,9 +644,12 @@ export function FreeToolsSection() {
     return TOOLS.filter(t => {
       if (activeCategory !== 'All' && t.category !== activeCategory) return false;
       if (!q) return true;
-      return (t.name + ' ' + t.description + ' ' + t.benefit + ' ' + t.category).toLowerCase().includes(q);
+      const localizedName = localizeToolField(t, 'name', language);
+      const localizedDescription = localizeToolField(t, 'description', language);
+      const localizedBenefit = localizeToolField(t, 'benefit', language);
+      return (t.name + ' ' + t.description + ' ' + t.benefit + ' ' + localizedName + ' ' + localizedDescription + ' ' + localizedBenefit + ' ' + t.category).toLowerCase().includes(q);
     });
-  }, [search, activeCategory]);
+  }, [search, activeCategory, language]);
 
   // Group filtered tools by category for the landscape grid
   const grouped = useMemo(() => {
@@ -698,15 +738,13 @@ export function FreeToolsSection() {
       {/* Hero header */}
       <div className="rounded-xl p-5 sm:p-6 bg-gradient-to-br from-emerald-700 via-green-700 to-teal-800 text-white">
         <div className="flex items-center gap-2 mb-2 text-emerald-100 text-xs font-medium uppercase tracking-wide">
-          <Sparkles className="h-3.5 w-3.5" /> {isRTL ? '19 أداة زراعية مجانية' : '19 Free Agronomic Tools'}
+          <Sparkles className="h-3.5 w-3.5" /> {copy('19 Free Agronomic Tools', '19 أداة زراعية مجانية', '19 outils agronomiques gratuits', language)}
         </div>
         <h2 className="text-xl sm:text-2xl font-bold leading-tight mb-1">
-          {isRTL ? 'أدوات NutriPlant PRO المجانية' : 'NutriPlant PRO Free Tools'}
+          {copy('NutriPlant PRO Free Tools', 'أدوات NutriPlant PRO المجانية', 'Outils gratuits NutriPlant PRO', language)}
         </h2>
         <p className="text-sm text-emerald-100/90 max-w-2xl">
-          {isRTL
-            ? 'إعادة تنفيذ أصيلة لمجموعة الأدوات المجانية العامة من NutriPlant PRO — محوّلات، تشخيص محاليل ومياه، حاسبات أسمدة، أدوات تربة وري، ومصفوفات مرجعية. كل الحسابات تعمل في المتصفح، لا شيء يُرسل إلى خادم.'
-            : 'A native reimplementation of NutriPlant PRO\'s public free-tools collection — converters, solution & water diagnostics, fertilizer calculators, soil & irrigation tools, and quick-reference matrices. All calculations run client-side; nothing is sent to a server.'}
+          {copy('A native reimplementation of NutriPlant PRO\'s public free-tools collection — converters, solution & water diagnostics, fertilizer calculators, soil & irrigation tools, and quick-reference matrices. All calculations run client-side; nothing is sent to a server.', 'إعادة تنفيذ أصيلة لمجموعة الأدوات المجانية العامة من NutriPlant PRO — محوّلات، تشخيص محاليل ومياه، حاسبات أسمدة، أدوات تربة وري، ومصفوفات مرجعية. كل الحسابات تعمل في المتصفح، لا شيء يُرسل إلى خادم.', 'Une réimplémentation native de la collection publique d’outils gratuits de NutriPlant PRO — conversions, diagnostics des solutions et de l’eau, calculateurs d’engrais, outils sol et irrigation, et tableaux de référence. Tous les calculs s’exécutent dans le navigateur ; rien n’est envoyé à un serveur.', language)}
         </p>
         <div className="flex flex-wrap gap-3 mt-3 text-xs">
           {CATEGORIES.map(c => {
@@ -714,7 +752,7 @@ export function FreeToolsSection() {
             return (
               <div key={c} className="bg-white/10 backdrop-blur rounded px-2 py-1 border border-white/20 flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full" style={{ background: CATEGORY_DOT_COLORS[c] }} />
-                <span className="text-emerald-100">{categoryLabel(c, isRTL)}</span> <span className="font-bold ml-0.5">{count}</span>
+                <span className="text-emerald-100">{categoryLabel(c, language)}</span> <span className="font-bold ml-0.5">{count}</span>
               </div>
             );
           })}
@@ -726,26 +764,20 @@ export function FreeToolsSection() {
         <IntroCard
           icon={Info}
           color="#0891b2"
-          title={isRTL ? 'ما هذه الأدوات' : 'What these tools are'}
-          body={isRTL
-            ? 'مجموعة منتقاة من 19 حاسبة وجدول مرجعي تغطي العمل اليومي للمهندسين الزراعيين والمزارعين والاستشاريين: تحويل الوحدات، تشخيص المياه والمحاليل الغذائية، صياغة الأسمدة، تخطيط التربة والري، بيانات تغذية المحاصيل المرجعية، ومنتقي المادة الفعالة للجزائر.'
-            : 'A curated set of 19 calculators and reference tables covering the day-to-day workflow of agronomists, growers, and consultants: unit conversions, water & nutrient solution diagnostics, fertilizer formulation, soil & irrigation planning, crop-nutrition reference data, and an Algeria-focused active-matter selector.'}
+          title={copy('What these tools are', 'ما هذه الأدوات', 'À propos de ces outils', language)}
+          body={copy('A curated set of 19 calculators and reference tables covering the day-to-day workflow of agronomists, growers, and consultants: unit conversions, water & nutrient solution diagnostics, fertilizer formulation, soil & irrigation planning, crop-nutrition reference data, and an Algeria-focused active-matter selector.', 'مجموعة منتقاة من 19 حاسبة وجدول مرجعي تغطي العمل اليومي للمهندسين الزراعيين والمزارعين والاستشاريين: تحويل الوحدات، تشخيص المياه والمحاليل الغذائية، صياغة الأسمدة، تخطيط التربة والري، بيانات تغذية المحاصيل المرجعية، ومنتقي المادة الفعالة للجزائر.', 'Une sélection de 19 calculateurs et tableaux de référence pour le travail quotidien des agronomes, producteurs et consultants : conversions, diagnostics de l’eau et des solutions nutritives, formulation des engrais, planification du sol et de l’irrigation, données de nutrition des cultures et sélection de matières actives pour l’Algérie.', language)}
         />
         <IntroCard
           icon={BookOpen}
           color="#16a34a"
-          title={isRTL ? 'كيف تستخدمها' : 'How to use them'}
-          body={isRTL
-            ? 'تصفّح البطاقات أدناه، صفِّ حسب الفئة، أو ابحث بالاسم. اضغط أي بطاقة لفتح الأداة في نافذة — أدخل قيمك والنتيجة تتحدّث مباشرة. تعرض نافذة كل أداة فائدة قصيرة وخطوات استخدام.'
-            : 'Browse the cards below, filter by category, or search by name. Click any card to open the tool in a dialog — enter your inputs and the result updates live. Each tool\'s dialog also shows a short benefit and step-by-step usage hint.'}
+          title={copy('How to use them', 'كيف تستخدمها', 'Comment les utiliser', language)}
+          body={copy('Browse the cards below, filter by category, or search by name. Click any card to open the tool in a dialog — enter your inputs and the result updates live. Each tool\'s dialog also shows a short benefit and step-by-step usage hint.', 'تصفّح البطاقات أدناه، صفِّ حسب الفئة، أو ابحث بالاسم. اضغط أي بطاقة لفتح الأداة في نافذة — أدخل قيمك والنتيجة تتحدّث مباشرة. تعرض نافذة كل أداة فائدة قصيرة وخطوات استخدام.', 'Parcourez les cartes, filtrez par catégorie ou recherchez par nom. Cliquez sur une carte pour ouvrir l’outil dans une fenêtre ; saisissez vos valeurs et le résultat se met à jour en direct. Chaque fenêtre présente aussi un bénéfice et des étapes d’utilisation.', language)}
         />
         <IntroCard
           icon={Lightbulb}
           color="#d97706"
-          title={isRTL ? 'لماذا تستخدمها' : 'Why use them'}
-          body={isRTL
-            ? 'تستبدل التخمين بالحساب: جرعات حمض دقيقة، خلطات NPK مضبوطة، جداول ري وفق FAO-56، خطط تعديل قائمة على CEC، وأثر كربوني للتسميد — تحوّل تقارير المختبر والملاحظات الحقلية إلى قرارات قابلة للدفاع.'
-            : 'They replace guesswork with calculation: precise acid doses, exact NPK blends, FAO-56 irrigation sheets, CEC-based amendment plans, and fertilization carbon footprints — turning lab reports and field observations into defensible decisions.'}
+          title={copy('Why use them', 'لماذا تستخدمها', 'Pourquoi les utiliser', language)}
+          body={copy('They replace guesswork with calculation: precise acid doses, exact NPK blends, FAO-56 irrigation sheets, CEC-based amendment plans, and fertilization carbon footprints — turning lab reports and field observations into defensible decisions.', 'تستبدل التخمين بالحساب: جرعات حمض دقيقة، خلطات NPK مضبوطة، جداول ري وفق FAO-56، خطط تعديل قائمة على CEC، وأثر كربوني للتسميد — تحوّل تقارير المختبر والملاحظات الحقلية إلى قرارات قابلة للدفاع.', 'Ils remplacent les approximations par des calculs : doses d’acide précises, mélanges NPK exacts, fiches d’irrigation FAO-56, plans d’amendement fondés sur la CEC et empreinte carbone de la fertilisation — pour transformer les analyses et observations en décisions défendables.', language)}
         />
       </div>
 
@@ -758,7 +790,7 @@ export function FreeToolsSection() {
               ref={searchInputRef}
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder={isRTL ? 'ابحث عن أداة بالاسم أو الوصف أو الفائدة... (Ctrl+K)' : 'Search tools by name, description, or benefit... (Ctrl+K)'}
+              placeholder={copy('Search tools by name, description, or benefit... (Ctrl+K)', 'ابحث عن أداة بالاسم أو الوصف أو الفائدة... (Ctrl+K)', 'Rechercher un outil par nom, description ou bénéfice… (Ctrl+K)', language)}
               className="pl-9 pr-8 h-10"
             />
             {search && (
@@ -768,13 +800,13 @@ export function FreeToolsSection() {
             )}
           </div>
           <div className="flex flex-wrap gap-1">
-            <CategoryChip active={activeCategory === 'All'} onClick={() => setActiveCategory('All')} label={isRTL ? 'الكل' : 'All'} count={TOOLS.length} />
+            <CategoryChip active={activeCategory === 'All'} onClick={() => setActiveCategory('All')} label={copy('All', 'الكل', 'Tous', language)} count={TOOLS.length} />
             {CATEGORIES.map(c => (
               <CategoryChip
                 key={c}
                 active={activeCategory === c}
                 onClick={() => setActiveCategory(c)}
-                label={categoryLabel(c, isRTL)}
+                label={categoryLabel(c, language)}
                 count={TOOLS.filter(t => t.category === c).length}
               />
             ))}
@@ -788,20 +820,20 @@ export function FreeToolsSection() {
         <div className="space-y-3">
           {favorites.length > 0 && (
             <ToolRow
-              label={isRTL ? 'المفضّلة' : 'Favorites'}
+              label={copy('Favorites', 'المفضّلة', 'Favoris', language)}
               icon={<Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />}
               ids={favorites}
               onOpen={openToolById}
-              isRTL={isRTL}
+              language={language}
             />
           )}
           {recent.length > 0 && (
             <ToolRow
-              label={isRTL ? 'المستخدمة مؤخراً' : 'Recently used'}
+              label={copy('Recently used', 'المستخدمة مؤخراً', 'Récemment utilisés', language)}
               icon={<Clock className="h-3.5 w-3.5 text-emerald-600" />}
               ids={recent}
               onOpen={openToolById}
-              isRTL={isRTL}
+              language={language}
             />
           )}
         </div>
@@ -814,20 +846,19 @@ export function FreeToolsSection() {
         className="group relative w-full text-left rounded-xl p-5 bg-gradient-to-br from-emerald-600 via-green-600 to-teal-700 text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
       >
         <div className="absolute top-3 right-3">
-          <Badge className="bg-amber-400/90 text-amber-950 hover:bg-amber-400 text-[10px] font-bold">✨ Pro feature</Badge>
+                  <Badge className="bg-amber-400/90 text-amber-950 hover:bg-amber-400 text-[10px] font-bold">{copy('Pro feature', 'ميزة احترافية', 'Fonctionnalité Pro', language)}</Badge>
         </div>
         <div className="flex items-start gap-4 pr-24">
           <div className="flex-shrink-0 flex items-center justify-center h-14 w-14 rounded-lg bg-white/20 backdrop-blur">
             <Sparkles className="h-7 w-7" />
           </div>
           <div className="flex-1 min-w-0 space-y-1">
-            <h3 className="text-lg font-bold leading-tight">Season Plan Generator</h3>
+            <h3 className="text-lg font-bold leading-tight">{copy('Season Plan Generator', 'مولّد خطة الموسم', 'Générateur de plan de saison', language)}</h3>
             <p className="text-sm text-emerald-50/90 leading-relaxed">
-              Generate a 52-week PDF agronomic plan for your crop — NPK demand, irrigation,
-              fertigation recipes, and management notes per week, tailored to your soil &amp; water test.
+              {copy('Generate a 52-week PDF agronomic plan for your crop — NPK demand, irrigation, fertigation recipes, and management notes per week, tailored to your soil & water test.', 'أنشئ خطة زراعية بصيغة PDF لمدة 52 أسبوعاً لمحصولك — احتياجات NPK والري ووصفات التسميد وملاحظات الإدارة أسبوعياً، وفق تحليل التربة والمياه.', 'Générez un plan agronomique PDF de 52 semaines — besoins NPK, irrigation, recettes de fertigation et notes de gestion adaptés à vos analyses de sol et d’eau.', language)}
             </p>
             <div className="flex items-center gap-1.5 text-xs text-emerald-50/80 mt-1">
-              <span>Powered by AI · covers establishment → vegetative → flowering → filling → maturation</span>
+              <span>{copy('Powered by AI · covers establishment → vegetative → flowering → filling → maturation', 'مدعوم بالذكاء الاصطناعي · من الإنبات إلى النضج', 'Propulsé par l’IA · de l’implantation à la maturation', language)}</span>
             </div>
           </div>
           <div className="hidden sm:flex flex-shrink-0 self-center items-center justify-center h-8 w-8 rounded-full border border-white/30 group-hover:bg-white/20 transition-all">
@@ -842,7 +873,7 @@ export function FreeToolsSection() {
           <div key={group.category} className="space-y-3">
             <div className="flex items-center gap-2">
               <div className="w-2 h-6 rounded-sm" style={{ background: CATEGORY_DOT_COLORS[group.category] }} />
-              <h3 className="text-base font-bold tracking-tight">{categoryLabel(group.category, isRTL)}</h3>
+              <h3 className="text-base font-bold tracking-tight">{categoryLabel(group.category, language)}</h3>
               <Badge variant="secondary" className="text-[10px] font-mono">{group.tools.length}</Badge>
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
@@ -856,7 +887,7 @@ export function FreeToolsSection() {
                   isInCompareTray={compareTray.includes(tool.id)}
                   compareTrayFull={compareTray.length >= 2}
                   onToggleCompare={() => toggleCompare(tool.id)}
-                  isRTL={isRTL}
+                  language={language}
                 />
               ))}
             </div>
@@ -869,8 +900,8 @@ export function FreeToolsSection() {
           <div className="rounded-full bg-muted p-4 inline-flex mb-3">
             <Search className="h-8 w-8 text-muted-foreground" />
           </div>
-          <h3 className="text-base font-semibold mb-1">{isRTL ? 'لا توجد أدوات مطابقة' : 'No tools match'}</h3>
-          <p className="text-sm text-muted-foreground">{isRTL ? 'جرّب بحثاً أو فئة مختلفة.' : 'Try a different search or category.'}</p>
+          <h3 className="text-base font-semibold mb-1">{copy('No tools match', 'لا توجد أدوات مطابقة', 'Aucun outil ne correspond', language)}</h3>
+          <p className="text-sm text-muted-foreground">{copy('Try a different search or category.', 'جرّب بحثاً أو فئة مختلفة.', 'Essayez une autre recherche ou catégorie.', language)}</p>
         </div>
       )}
 
@@ -889,10 +920,10 @@ export function FreeToolsSection() {
                     <openTool.icon className="h-4 w-4" />
                   </span>
                 )}
-                {openTool ? trField(openTool.name, openTool.name_ar, isRTL) : null}
+                {openTool ? localizeToolField(openTool, 'name', language) : null}
                 {openTool && (
                   <Badge variant="outline" className={`text-[10px] ml-1 ${CATEGORY_COLORS[openTool.category]}`}>
-                    {categoryLabel(openTool.category, isRTL)}
+                    {categoryLabel(openTool.category, language)}
                   </Badge>
                 )}
               </DialogTitle>
@@ -904,12 +935,12 @@ export function FreeToolsSection() {
                   onClick={() => setShowHints(v => !v)}
                 >
                   <HelpCircle className="h-3.5 w-3.5" />
-                  {showHints ? (isRTL ? 'إخفاء الدليل' : 'Hide guide') : (isRTL ? 'إظهار الدليل' : 'Show guide')}
+                  {showHints ? copy('Hide guide', 'إخفاء الدليل', 'Masquer le guide', language) : copy('Show guide', 'إظهار الدليل', 'Afficher le guide', language)}
                 </Button>
               </div>
             </div>
             <DialogDescription className="text-xs mt-1">
-              {openTool ? trField(openTool.description, openTool.description_ar, isRTL) : null}
+              {openTool ? localizeToolField(openTool, 'description', language) : null}
             </DialogDescription>
 
             {/* Collapsible benefit + how-to bar — inline, doesn't steal horizontal space from the tool */}
@@ -917,18 +948,18 @@ export function FreeToolsSection() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
                 <div className="rounded-md px-3 py-2 border border-emerald-200 dark:border-emerald-900 bg-emerald-50/60 dark:bg-emerald-950/20">
                   <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-emerald-700 dark:text-emerald-300 font-semibold mb-0.5">
-                    <Lightbulb className="h-3 w-3" /> {isRTL ? 'الفائدة' : 'Benefit'}
+                    <Lightbulb className="h-3 w-3" /> {copy('Benefit', 'الفائدة', 'Bénéfice', language)}
                   </div>
                   <p className="text-xs leading-snug text-foreground">
-                    {trField(openTool.benefit, openTool.benefit_ar, isRTL)}
+                    {localizeToolField(openTool, 'benefit', language)}
                   </p>
                 </div>
                 <div className="rounded-md px-3 py-2 border border-blue-200 dark:border-blue-900 bg-blue-50/60 dark:bg-blue-950/20">
                   <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-blue-700 dark:text-blue-300 font-semibold mb-0.5">
-                    <HelpCircle className="h-3 w-3" /> {isRTL ? 'كيفية الاستخدام' : 'How to use'}
+                    <HelpCircle className="h-3 w-3" /> {copy('How to use', 'كيفية الاستخدام', 'Comment utiliser', language)}
                   </div>
                   <ol className="text-xs leading-snug text-foreground list-decimal pl-4 space-y-0.5">
-                    {trField(openTool.howToUse, openTool.howToUse_ar, isRTL).map((step, i) => <li key={i}>{step}</li>)}
+                    {localizeToolField(openTool, 'howToUse', language).map((step, i) => <li key={i}>{step}</li>)}
                   </ol>
                 </div>
               </div>
@@ -957,7 +988,7 @@ export function FreeToolsSection() {
           tools={compareTools}
           onClear={clearCompareTray}
           onOpenCompare={() => setCompareOpen(true)}
-          isRTL={isRTL}
+          language={language}
         />
       )}
 
@@ -978,12 +1009,12 @@ export function FreeToolsSection() {
 
 /** Sticky bottom bar that shows the current comparison tray state. */
 function CompareTrayBar({
-  tools, onClear, onOpenCompare, isRTL,
+  tools, onClear, onOpenCompare, language,
 }: {
   tools: ToolMeta[];
   onClear: () => void;
   onOpenCompare: () => void;
-  isRTL: boolean;
+  language: Language;
 }) {
   const hasTwo = tools.length >= 2;
   return (
@@ -991,18 +1022,18 @@ function CompareTrayBar({
       <div className="flex items-center gap-3 rounded-xl border border-emerald-300 dark:border-emerald-800 bg-emerald-50/95 dark:bg-emerald-950/90 backdrop-blur px-3 py-2 shadow-lg">
         <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300 flex-shrink-0">
           <Columns2 className="h-4 w-4" />
-          <span className="text-xs font-semibold uppercase tracking-wide hidden sm:inline">{isRTL ? 'مقارنة' : 'Compare'}</span>
+          <span className="text-xs font-semibold uppercase tracking-wide hidden sm:inline">{copy('Compare', 'مقارنة', 'Comparer', language)}</span>
         </div>
         <div className="flex-1 min-w-0">
           {hasTwo ? (
             <div className="flex items-center gap-2 text-sm min-w-0">
-              <span className="font-semibold truncate">{trField(tools[0].name, tools[0].name_ar, isRTL)}</span>
-              <span className="text-muted-foreground text-xs flex-shrink-0">{isRTL ? 'مقابل' : 'vs'}</span>
-              <span className="font-semibold truncate">{trField(tools[1].name, tools[1].name_ar, isRTL)}</span>
+              <span className="font-semibold truncate">{localizeToolField(tools[0], 'name', language)}</span>
+              <span className="text-muted-foreground text-xs flex-shrink-0">{copy('vs', 'مقابل', 'vs', language)}</span>
+              <span className="font-semibold truncate">{localizeToolField(tools[1], 'name', language)}</span>
             </div>
           ) : (
             <div className="text-xs text-emerald-800 dark:text-emerald-200">
-              {isRTL ? 'اختر أداة أخرى للمقارنة' : 'Select one more tool to compare'} <span className="font-mono opacity-70">(1/2)</span>
+              {copy('Select one more tool to compare', 'اختر أداة أخرى للمقارنة', 'Sélectionnez un autre outil à comparer', language)} <span className="font-mono opacity-70">(1/2)</span>
             </div>
           )}
         </div>
@@ -1014,8 +1045,8 @@ function CompareTrayBar({
               onClick={onOpenCompare}
             >
               <Columns2 className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">{isRTL ? 'افتح جنباً إلى جنب' : 'Open side-by-side'}</span>
-              <span className="sm:hidden">{isRTL ? 'قارن' : 'Compare'}</span>
+              <span className="hidden sm:inline">{copy('Open side-by-side', 'افتح جنباً إلى جنب', 'Ouvrir côte à côte', language)}</span>
+              <span className="sm:hidden">{copy('Compare', 'قارن', 'Comparer', language)}</span>
             </Button>
           )}
           <Button
@@ -1025,7 +1056,7 @@ function CompareTrayBar({
             onClick={onClear}
           >
             <X className="h-3.5 w-3.5" />
-            {isRTL ? 'مسح' : 'Clear'}
+            {copy('Clear', 'مسح', 'Effacer', language)}
           </Button>
         </div>
       </div>
@@ -1035,7 +1066,7 @@ function CompareTrayBar({
 
 /** Landscape (horizontal) tool card — icon on the left, content on the right, action arrow on the far right. */
 function LandscapeToolCard({
-  tool, onOpen, isFavorite, onToggleFavorite, isInCompareTray, compareTrayFull, onToggleCompare, isRTL,
+  tool, onOpen, isFavorite, onToggleFavorite, isInCompareTray, compareTrayFull, onToggleCompare, language,
 }: {
   tool: ToolMeta;
   onOpen: () => void;
@@ -1044,11 +1075,11 @@ function LandscapeToolCard({
   isInCompareTray: boolean;
   compareTrayFull: boolean;
   onToggleCompare: () => void;
-  isRTL: boolean;
+  language: Language;
 }) {
-  const localizedName = trField(tool.name, tool.name_ar, isRTL);
-  const localizedDescription = trField(tool.description, tool.description_ar, isRTL);
-  const localizedBenefit = trField(tool.benefit, tool.benefit_ar, isRTL);
+  const localizedName = localizeToolField(tool, 'name', language);
+  const localizedDescription = localizeToolField(tool, 'description', language);
+  const localizedBenefit = localizeToolField(tool, 'benefit', language);
   return (
     <div
       role="button"
@@ -1063,7 +1094,7 @@ function LandscapeToolCard({
         onClick={e => { e.stopPropagation(); onToggleCompare(); }}
         aria-label={isInCompareTray ? `Remove ${localizedName} from comparison` : `Add ${localizedName} to comparison`}
         aria-pressed={isInCompareTray}
-        title={compareTrayFull && !isInCompareTray ? (isRTL ? 'صينية المقارنة ممتلئة (حد 2)' : 'Comparison tray is full (max 2)') : (isInCompareTray ? (isRTL ? 'إزالة من المقارنة' : 'Remove from comparison') : (isRTL ? 'أضف إلى المقارنة' : 'Add to comparison'))}
+        title={compareTrayFull && !isInCompareTray ? copy('Comparison tray is full (max 2)', 'صينية المقارنة ممتلئة (حد 2)', 'La barre de comparaison est pleine (2 max.)', language) : (isInCompareTray ? copy('Remove from comparison', 'إزالة من المقارنة', 'Retirer de la comparaison', language) : copy('Add to comparison', 'أضف إلى المقارنة', 'Ajouter à la comparaison', language))}
         className={`absolute top-3 right-11 z-10 inline-flex items-center justify-center h-7 w-7 rounded-full border transition-all ${
           isInCompareTray
             ? 'bg-emerald-600 border-emerald-600 text-white hover:bg-emerald-700 hover:border-emerald-700'
@@ -1108,7 +1139,7 @@ function LandscapeToolCard({
             {localizedName}
           </h4>
           <Badge variant="outline" className={`text-[10px] ${CATEGORY_COLORS[tool.category]}`}>
-            {categoryLabel(tool.category, isRTL)}
+            {categoryLabel(tool.category, language)}
           </Badge>
         </div>
         <p className="text-sm text-muted-foreground leading-relaxed">
@@ -1116,7 +1147,7 @@ function LandscapeToolCard({
         </p>
         <p className="text-xs text-foreground/80 leading-relaxed flex gap-1.5">
           <Lightbulb className="h-3.5 w-3.5 text-amber-500 flex-shrink-0 mt-0.5" />
-          <span><span className="font-medium text-amber-700 dark:text-amber-400">{isRTL ? 'الفائدة:' : 'Benefit:'}</span> {localizedBenefit}</span>
+          <span><span className="font-medium text-amber-700 dark:text-amber-400">{copy('Benefit:', 'الفائدة:', 'Bénéfice :', language)}</span> {localizedBenefit}</span>
         </p>
       </div>
 
@@ -1155,13 +1186,13 @@ function CategoryChip({ active, onClick, label, count }: { active: boolean; onCl
 
 /** Horizontal chip row for Favorites / Recently used — auto-hides when no tools match. */
 function ToolRow({
-  label, icon, ids, onOpen, isRTL,
+  label, icon, ids, onOpen, language,
 }: {
   label: string;
   icon: React.ReactNode;
   ids: string[];
   onOpen: (id: string) => void;
-  isRTL: boolean;
+  language: Language;
 }) {
   const tools = ids.map(id => TOOLS.find(t => t.id === id)).filter(Boolean) as ToolMeta[];
   if (tools.length === 0) return null;
@@ -1184,7 +1215,7 @@ function ToolRow({
               <span style={{ color: CATEGORY_DOT_COLORS[t.category] }}>
                 <Icon className="h-3.5 w-3.5" />
               </span>
-              <span className="font-medium">{trField(t.name, t.name_ar, isRTL)}</span>
+              <span className="font-medium">{localizeToolField(t, 'name', language)}</span>
             </button>
           );
         })}

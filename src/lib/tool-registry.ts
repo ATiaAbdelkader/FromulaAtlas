@@ -19,6 +19,7 @@ import {
   Calculator, Network, TableProperties, Star, Columns2,
 } from 'lucide-react';
 import { FORMULA_COUNT, FREE_TOOL_COUNT } from './catalog-stats';
+import type { Language } from './language-store';
 
 export type TabId = 'home' | 'formulas' | 'tools' | 'farm' | 'insights';
 
@@ -38,6 +39,49 @@ export interface ToolEntry {
   category: 'farm' | 'tools' | 'insights' | 'formulas' | 'agents';
   /** Accent color. */
   color: string;
+}
+
+const FRENCH_TOOL_COPY: Record<string, string> = {
+  'Multi-Field Dashboard': 'Tableau multi-parcelles',
+  'Track every field, crop stage and irrigation demand': 'Suivez chaque parcelle, stade de culture et besoin d’irrigation',
+  'Coordinate Converter': 'Convertisseur de coordonnées',
+  'Field Boundary Importer': 'Importateur de limites de parcelle',
+  'Distance & Bearing Calculator': 'Calculateur de distance et de relèvement',
+  'Elevation & Slope Analyzer': 'Analyseur d’altitude et de pente',
+  'Crop Rotation Planner': 'Planificateur de rotation des cultures',
+  'Season Plan Generator': 'Générateur de plan de saison',
+  'Fertilization Generator': 'Générateur de fertilisation',
+  'Labor Calendar': 'Calendrier de la main-d’œuvre',
+  'Yield Gap Analysis': 'Analyse de l’écart de rendement',
+  'Field Scouting Log': 'Journal de prospection au champ',
+  'Soil Test History Tracker': 'Suivi historique des analyses de sol',
+  'Livestock Management': 'Gestion de l’élevage',
+  'Irrigation Program Generator': 'Générateur de programme d’irrigation',
+  'Irrigation System Designer': 'Concepteur de système d’irrigation',
+  'Seasonal Irrigation Planner': 'Planificateur d’irrigation saisonnière',
+  'Evapotranspiration Tracker': 'Suivi de l’évapotranspiration',
+  'Irrigation Scheduler': 'Planificateur d’irrigation',
+  'NDVI Satellite Field Maps': 'Cartes NDVI des parcelles par satellite',
+  'Weather Radar + Frost Maps': 'Radar météo et cartes du gel',
+  'Smart Agriculture Suite': 'Suite d’agriculture intelligente',
+  'AI Specialists (Multi-Agent Chat)': 'Spécialistes IA (chat multi-agents)',
+  'Financial Dashboard': 'Tableau de bord financier',
+  'Marketplace — Buy Fertilizers': 'Marché — acheter des engrais',
+  'Sustainability Scorecard': 'Tableau de bord de durabilité',
+  'Farmer Community': 'Communauté agricole',
+  'Professional Report Generator': 'Générateur de rapports professionnels',
+  'Service Integrations': 'Intégrations de services',
+  'Home Dashboard': 'Tableau de bord d’accueil',
+};
+
+/** Return the registry entry with a localized display title and description. */
+export function localizeToolEntry(entry: ToolEntry, language: Language): ToolEntry {
+  if (language !== 'fr') return entry;
+  return {
+    ...entry,
+    title: FRENCH_TOOL_COPY[entry.title] ?? entry.title,
+    description: FRENCH_TOOL_COPY[entry.description] ?? entry.description,
+  };
 }
 
 export const TOOL_REGISTRY: ToolEntry[] = [
