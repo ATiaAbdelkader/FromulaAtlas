@@ -19,7 +19,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Cloud, Sun, Droplets, MapPin, RefreshCw, AlertTriangle, CheckCircle2,
-  Sprout, Clock, Sparkles, Tractor, BookOpen, Wrench,
+  Sprout, Clock, Sparkles, Tractor, BookOpen, Wrench, Pin,
   ArrowRight, Zap, Calendar,
 } from 'lucide-react';
 import { CROP_LIFECYCLES } from '@/lib/crop-lifecycle';
@@ -27,7 +27,8 @@ import {
   getForecast, wmoDescription, type ForecastResult,
 } from '@/lib/open-meteo';
 import {
-  getRecentTools, recordToolUse,
+  getRecentTools, getPinnedTools, recordToolUse,
+  TOOL_PINS_CHANGED_EVENT,
   type ToolEntry,
 } from '@/lib/tool-registry';
 import { WeatherAlertBanner } from '@/components/agri/weather-alert-banner';
@@ -65,6 +66,7 @@ export function HomeDashboard({ onNavigate, onOpenTool, onOpenSearch }: HomeDash
   const [weatherLoading, setWeatherLoading] = useState(false);
   const [weatherError, setWeatherError] = useState<string | null>(null);
   const [recent, setRecent] = useState<ToolEntry[]>([]);
+  const [pinned, setPinned] = useState<ToolEntry[]>([]);
   const [wizardOpen, setWizardOpen] = useState(false);
   const [refreshToken, setRefreshToken] = useState(0);
   const { t, isRTL, language } = useTranslation();
@@ -76,10 +78,14 @@ export function HomeDashboard({ onNavigate, onOpenTool, onOpenSearch }: HomeDash
       if (saved) setProfile(JSON.parse(saved));
     } catch { /* ignore */ }
     setRecent(getRecentTools());
+    setPinned(getPinnedTools());
+    const syncPinned = () => setPinned(getPinnedTools());
+    window.addEventListener(TOOL_PINS_CHANGED_EVENT, syncPinned);
     // Auto-open the wizard on first visit (when no profile exists)
     if (needsFarmProfileSetup()) {
       setTimeout(() => setWizardOpen(true), 1500);  // slight delay so the dashboard renders first
     }
+    return () => window.removeEventListener(TOOL_PINS_CHANGED_EVENT, syncPinned);
   }, []);
 
   // Fetch weather using saved location from ET Tracker
@@ -429,6 +435,37 @@ export function HomeDashboard({ onNavigate, onOpenTool, onOpenSearch }: HomeDash
                   <div className="min-w-0">
                     <div className="text-xs font-medium leading-tight truncate max-w-[140px]">{tool.title}</div>
                     <div className="text-[10px] text-muted-foreground truncate max-w-[140px]">{tool.description}</div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* Pinned tools — shared with the global command palette */}
+      {pinned.length > 0 && (
+        <section>
+          <div className="mb-2 flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <Pin className="h-3 w-3 fill-amber-400 text-amber-500" />
+            {isRTL ? 'أدواتي المثبّتة' : 'My pinned tools'}
+          </div>
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {pinned.map(tool => {
+              const Icon = tool.icon;
+              return (
+                <button
+                  key={tool.id}
+                  onClick={() => { recordToolUse(tool.id); onOpenTool(tool.tab, tool.storageKey); }}
+                  className="flex shrink-0 items-center gap-2 rounded-lg border bg-card px-3 py-2 text-left transition-colors hover:bg-muted/50"
+                  style={{ borderLeftWidth: 3, borderLeftColor: tool.color }}
+                >
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md" style={{ backgroundColor: tool.color + '20' }}>
+                    <Icon className="h-3.5 w-3.5" style={{ color: tool.color }} />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="max-w-[160px] truncate text-xs font-medium leading-tight">{tool.title}</div>
+                    <div className="max-w-[160px] truncate text-[10px] text-muted-foreground">{tool.description}</div>
                   </div>
                 </button>
               );

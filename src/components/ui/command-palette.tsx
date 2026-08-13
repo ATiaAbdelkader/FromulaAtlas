@@ -30,10 +30,11 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import {
-  CornerDownLeft, Search, Sparkles, ArrowRight,
+  CornerDownLeft, Search, Sparkles, ArrowRight, Pin,
 } from 'lucide-react';
 import {
-  TOOL_REGISTRY, searchTools, recordToolUse,
+  TOOL_REGISTRY, searchTools, recordToolUse, getPinnedToolIds, toggleToolPin,
+  TOOL_PINS_CHANGED_EVENT,
   type ToolEntry, type TabId,
 } from '@/lib/tool-registry';
 import { useTranslation } from '@/lib/language-store';
@@ -47,12 +48,25 @@ interface CommandPaletteProps {
 
 export function CommandPalette({ open, onOpenChange, onSelect }: CommandPaletteProps) {
   const [query, setQuery] = useState('');
+  const [pinnedIds, setPinnedIds] = useState<string[]>([]);
+  const [showPinnedOnly, setShowPinnedOnly] = useState(false);
   const { isRTL } = useTranslation();
 
-  // Reset query when opening
+  // Reset query and scope when opening
   useEffect(() => {
-    if (open) setQuery('');
+    if (open) {
+      setQuery('');
+      setShowPinnedOnly(false);
+    }
   }, [open]);
+
+  // Keep pinned shortcuts in sync with changes made from any discovery surface.
+  useEffect(() => {
+    const syncPins = () => setPinnedIds(getPinnedToolIds());
+    syncPins();
+    window.addEventListener(TOOL_PINS_CHANGED_EVENT, syncPins);
+    return () => window.removeEventListener(TOOL_PINS_CHANGED_EVENT, syncPins);
+  }, []);
 
   // Global keyboard shortcut: Cmd+K / Ctrl+K
   useEffect(() => {
@@ -67,17 +81,28 @@ export function CommandPalette({ open, onOpenChange, onSelect }: CommandPaletteP
   }, [open, onOpenChange]);
 
   const results = useMemo(() => searchTools(query, 20), [query]);
+  const visibleResults = useMemo(() => {
+    if (!showPinnedOnly) return results;
+    const pinned = new Set(pinnedIds);
+    return results.filter(result => pinned.has(result.entry.id));
+  }, [pinnedIds, results, showPinnedOnly]);
 
   // Group results by category
   const grouped = useMemo(() => {
     const groups: Record<string, ToolEntry[]> = {};
-    for (const r of results) {
+    for (const r of visibleResults) {
       const cat = r.entry.category;
       if (!groups[cat]) groups[cat] = [];
       groups[cat].push(r.entry);
     }
     return groups;
-  }, [results]);
+  }, [visibleResults]);
+
+  const handleTogglePin = useCallback((event: React.MouseEvent, entry: ToolEntry) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setPinnedIds(toggleToolPin(entry.id));
+  }, []);
 
   const handleSelect = useCallback((entry: ToolEntry) => {
     recordToolUse(entry.id);
@@ -120,12 +145,30 @@ export function CommandPalette({ open, onOpenChange, onSelect }: CommandPaletteP
               ESC
             </kbd>
           </div>
+          <div className="flex items-center gap-1 border-b px-3 py-2">
+            <button
+              type="button"
+              onClick={() => setShowPinnedOnly(false)}
+              className={`rounded-md px-2 py-1 text-[10px] font-medium transition-colors ${!showPinnedOnly ? 'bg-muted text-foreground' : 'text-muted-foreground hover:bg-muted/60'}`}
+            >
+              {isRTL ? 'كل الأدوات' : 'All tools'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowPinnedOnly(true)}
+              className={`flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-medium transition-colors ${showPinnedOnly ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300' : 'text-muted-foreground hover:bg-muted/60'}`}
+            >
+              <Pin className="h-3 w-3" /> {isRTL ? 'المثبّتة' : 'Pinned'} <span className="font-mono">{pinnedIds.length}</span>
+            </button>
+          </div>
           <CommandList className="max-h-[400px] overflow-y-auto">
             <CommandEmpty className="py-6 text-center text-sm text-muted-foreground">
-              {isRTL ? `لا نتائج لـ «${query}»` : `No results for "${query}"`}
+              {showPinnedOnly
+                ? (isRTL ? 'لم تثبّت أي أداة بعد' : 'No pinned tools yet')
+                : (isRTL ? `لا نتائج لـ «${query}»` : `No results for "${query}"`)}
             </CommandEmpty>
 
-            {!query && (
+            {!query && !showPinnedOnly && (
               <div className="px-3 py-2 text-[10px] text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
                 <Sparkles className="h-3 w-3" /> {isRTL ? 'مقترح — ابدأ الكتابة أو اختر من الأسفل' : 'Suggested — start typing or pick from below'}
               </div>
@@ -155,6 +198,20 @@ export function CommandPalette({ open, onOpenChange, onSelect }: CommandPaletteP
                           <div className="text-sm font-medium leading-tight">{entry.title}</div>
                           <div className="text-[10px] text-muted-foreground truncate">{entry.description}</div>
                         </div>
+                        <button
+                          type="button"
+                          aria-label={pinnedIds.includes(entry.id)
+                            ? (isRTL ? 'إلغاء تثبيت الأداة' : 'Unpin tool')
+                            : (isRTL ? 'تثبيت الأداة' : 'Pin tool')}
+                          aria-pressed={pinnedIds.includes(entry.id)}
+                          title={pinnedIds.includes(entry.id)
+                            ? (isRTL ? 'إلغاء التثبيت' : 'Unpin')
+                            : (isRTL ? 'تثبيت' : 'Pin')}
+                          onClick={event => handleTogglePin(event, entry)}
+                          className={`ml-2 rounded p-1 transition-colors hover:bg-muted ${pinnedIds.includes(entry.id) ? 'text-amber-500' : 'text-muted-foreground/40 hover:text-muted-foreground'}`}
+                        >
+                          <Pin className={`h-3.5 w-3.5 ${pinnedIds.includes(entry.id) ? 'fill-current' : ''}`} />
+                        </button>
                         <ArrowRight className="h-3 w-3 text-muted-foreground opacity-0 group-aria-selected:opacity-100" />
                       </CommandItem>
                     );

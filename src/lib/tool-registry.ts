@@ -154,7 +154,20 @@ export function searchTools(query: string, limit = 8): SearchResult[] {
 // ============================================================================
 
 const RECENT_KEY = 'recent_tools_v1';
+const PINNED_KEY = 'pinned_tools_v1';
+const TOOL_PINS_CHANGED_EVENT = 'formula-atlas-tool-pins-changed';
 const MAX_RECENT = 6;
+
+function readIds(key: string): string[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const saved = localStorage.getItem(key);
+    const ids = saved ? JSON.parse(saved) : [];
+    return Array.isArray(ids) ? ids.filter((id): id is string => typeof id === 'string') : [];
+  } catch {
+    return [];
+  }
+}
 
 export function getRecentTools(): ToolEntry[] {
   try {
@@ -171,10 +184,34 @@ export function getRecentTools(): ToolEntry[] {
 
 export function recordToolUse(toolId: string): void {
   try {
-    const saved = localStorage.getItem(RECENT_KEY);
-    const ids: string[] = saved ? JSON.parse(saved) : [];
+    const ids = readIds(RECENT_KEY);
     // Remove if already present, then prepend
     const next = [toolId, ...ids.filter(id => id !== toolId)].slice(0, MAX_RECENT);
     localStorage.setItem(RECENT_KEY, JSON.stringify(next));
   } catch { /* ignore */ }
 }
+
+export function getPinnedToolIds(): string[] {
+  return readIds(PINNED_KEY);
+}
+
+export function getPinnedTools(): ToolEntry[] {
+  const pinned = new Set(getPinnedToolIds());
+  return TOOL_REGISTRY.filter(entry => pinned.has(entry.id));
+}
+
+export function isToolPinned(toolId: string): boolean {
+  return getPinnedToolIds().includes(toolId);
+}
+
+export function toggleToolPin(toolId: string): string[] {
+  const ids = getPinnedToolIds();
+  const next = ids.includes(toolId) ? ids.filter(id => id !== toolId) : [toolId, ...ids];
+  try {
+    localStorage.setItem(PINNED_KEY, JSON.stringify(next));
+    window.dispatchEvent(new CustomEvent(TOOL_PINS_CHANGED_EVENT, { detail: next }));
+  } catch { /* ignore */ }
+  return next;
+}
+
+export { TOOL_PINS_CHANGED_EVENT };
