@@ -69,6 +69,7 @@ import { FrostProtectionCalculator } from '@/components/agri/nutri-tools/FrostPr
 import { BufferStripDesigner } from '@/components/agri/nutri-tools/BufferStripDesigner';
 import { HailDamageEstimator } from '@/components/agri/nutri-tools/HailDamageEstimator';
 import { PestThresholdCalculator } from '@/components/agri/nutri-tools/PestThresholdCalculator';
+import { IpmActionPlanner } from '@/components/agri/nutri-tools/IpmActionPlanner';
 import { YieldMonitorCalibrator } from '@/components/agri/nutri-tools/YieldMonitorCalibrator';
 import { ManureManagementPlanner } from '@/components/agri/nutri-tools/ManureManagementPlanner';
 import { MachineryCostCalculator } from '@/components/agri/nutri-tools/MachineryCostCalculator';
@@ -130,6 +131,8 @@ const FRENCH_TOOL_COPY: Record<string, string> = {
   'Crop Calendar Generator': 'Générateur de calendrier cultural',
   'Field Scouting Log': 'Journal de prospection au champ',
   'Pest Threshold Calculator': 'Calculateur de seuil des ravageurs',
+  'IPM Action Planner': 'Planificateur d’action de lutte intégrée',
+  'Scouting evidence · action thresholds · lower-risk controls · responsible treatment review': 'Observations · seuils d’action · moyens à moindre risque · revue du traitement responsable',
   'Pesticide Dose + PHI Calculator': 'Calculateur de dose de pesticide et DAR',
   'Spray Drift Risk Assessor': 'Évaluateur du risque de dérive',
   'Disease Forecast Dashboard': 'Tableau de prévision des maladies',
@@ -446,6 +449,7 @@ export default function Page() {
           <div className="space-y-3">
             <SubHeader emoji="🛡️" label={t.plantProtection} />
             <CollapsibleSection title={tr('Field Scouting Log', 'سجل الكشف الحقلي', language)} description={tr('Voice + photo field observations with severity tagging', 'ملاحظات حقلية بالصوت والصورة مع وسم درجة الخطورة', language)} icon={Sprout} color="#84cc16" storageKey="collapse_scouting" defaultOpen={false} enableExport><div className="p-4"><FieldScoutingLog /></div></CollapsibleSection>
+            <CollapsibleSection title={tr('IPM Action Planner', 'مخطّط عمل الإدارة المتكاملة للآفات', language)} description={tr('Scouting evidence · action thresholds · lower-risk controls · responsible treatment review', 'أدلة الكشف · عتبات التدخل · وسائل المكافحة الأقل خطراً · مراجعة المعالجة المسؤولة', language)} icon={Bug} color="#e11d48" storageKey="collapse_ipm_action" defaultOpen={false} enableExport><div className="p-4"><IpmActionPlanner /></div></CollapsibleSection>
             <CollapsibleSection title={tr('Pest Threshold Calculator', 'حاسبة عتبة الآفات', language)} description={tr('EIL · action threshold · sequential sampling — 5 pest types', 'عتبة الإضرار الاقتصادي · عتبة التدخل · أخذ عينات تسلسلي — 5 أنواع آفات', language)} icon={Bug} color="#dc2626" storageKey="collapse_pest_threshold" defaultOpen={false} enableExport><div className="p-4"><PestThresholdCalculator /></div></CollapsibleSection>
             <CollapsibleSection title={tr('Pesticide Dose + PHI Calculator', 'حاسبة جرعة المبيد + فترة ما قبل الحصاد', language)} description={tr('AI rate → product rate · Tank mix · Rainfast · Pre-harvest interval countdown · 5 herbicides', 'معدل المادة الفعالة → معدل المنتج · خلط الخزّان · مقاومة المطر · عدّ فترة ما قبل الحصاد · 5 مبيدات أعشاب', language)} icon={FlaskConical} color="#dc2626" storageKey="collapse_pesticide" defaultOpen={false} enableExport><div className="p-4"><PesticideDoseCalculator /></div></CollapsibleSection>
             <CollapsibleSection title={tr('Spray Drift Risk Assessor', 'مقيّم خطر انجراف الرش', language)} description={tr('Wind · Delta-T · Droplet size · Boom height → drift score + buffer distance', 'الرياح · دلتا-T · حجم القطرة · ارتفاع الذراع → درجة الانجراف + مسافة الحاجز', language)} icon={Wind} color="#0ea5e9" storageKey="collapse_drift" defaultOpen={false} enableExport><div className="p-4"><SprayDriftAssessor /></div></CollapsibleSection>

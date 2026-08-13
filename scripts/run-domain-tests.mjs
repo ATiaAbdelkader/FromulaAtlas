@@ -12,6 +12,7 @@ const suites = [
   'scripts/test-nutrient-budget.ts',
   'scripts/test-field-workbench.ts',
   'scripts/test-water-budget.ts',
+  'scripts/test-ipm-action-planner.ts',
 ];
 
 if (!existsSync(tsx)) {
