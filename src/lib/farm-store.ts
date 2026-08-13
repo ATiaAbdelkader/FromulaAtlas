@@ -22,6 +22,7 @@ interface FarmState {
   addFarmCalc: (entry: Omit<FarmCalcEntry, 'id' | 'timestamp'>) => void;
   removeFarmCalc: (id: string) => void;
   clearFarmCalcs: (farmId: string) => void;
+  replaceFarmData: (data: { farms: Farm[]; activeFarmId: string | null; farmCalcs: FarmCalcEntry[] }) => void;
 }
 
 export const useFarmStore = create<FarmState>()(
@@ -41,6 +42,7 @@ export const useFarmStore = create<FarmState>()(
       },
       removeFarmCalc: (id) => set(state => ({ farmCalcs: state.farmCalcs.filter(c => c.id !== id) })),
       clearFarmCalcs: (farmId) => set(state => ({ farmCalcs: state.farmCalcs.filter(c => c.farmId !== farmId) })),
+      replaceFarmData: (data) => set(data),
     }),
     { name: 'agri-atlas-farms', version: 1 }
   )

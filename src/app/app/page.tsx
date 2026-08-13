@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useMemo, useState, useEffect, useRef } from 'react';
-import { Search, Sprout, Layers, BookOpen, Calculator, X, Leaf, Filter, Home, Wrench, Bug, TrendingUp, Droplets, Settings, Calendar, Satellite, ShoppingCart, Users, DollarSign, RefreshCw, Beef, FlaskConical, CloudRain, FileText, Trophy, Tractor, Sparkles, Download, CheckCircle2, MapPin, Shapes, Compass, Sun, Mountain, FlaskConical as Flask, CalendarDays, Clock, Warehouse, Recycle, Wind, Flame, Snowflake, Gauge, Shield, Moon, Microscope } from 'lucide-react';
+import { Search, Sprout, Layers, BookOpen, Calculator, X, Leaf, Filter, Home, Wrench, Bug, TrendingUp, Droplets, Settings, Calendar, Satellite, ShoppingCart, Users, DollarSign, RefreshCw, Beef, FlaskConical, CloudRain, FileText, Trophy, Tractor, Sparkles, Download, Database, CheckCircle2, MapPin, Shapes, Compass, Sun, Mountain, FlaskConical as Flask, CalendarDays, Clock, Warehouse, Recycle, Wind, Flame, Snowflake, Gauge, Shield, Moon, Microscope } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -101,6 +101,7 @@ import { cn } from '@/lib/utils';
 import { FormulaExplorer } from '@/components/agri/formula-explorer';
 import { MobileFieldCaptureButton } from '@/components/agri/mobile-field-capture';
 import { FieldModeButton } from '@/components/agri/field-mode';
+import { DataExportDialog } from '@/components/agri/data-export-dialog';
 
 type TabId = 'home' | 'formulas' | 'tools' | 'farm' | 'insights' | 'about';
 
@@ -131,6 +132,7 @@ export default function Page() {
   const [bookmarks, setBookmarks] = useState<string[]>([]);
   const [installPromptEvent, setInstallPromptEvent] = useState<any>(null);
   const [isInstalled, setIsInstalled] = useState(false);
+  const [backupOpen, setBackupOpen] = useState(false);
 
   useEffect(() => { setBookmarks(getBookmarks()); }, []);
 
@@ -235,6 +237,10 @@ export default function Page() {
               <TelegramConnectButton />
               <FieldModeButton />
               <MobileFieldCaptureButton />
+              <Button variant="outline" size="sm" onClick={() => setBackupOpen(true)} className="gap-1.5 h-9" title="Backup & Restore">
+                <Database className="h-3.5 w-3.5" />
+                <span className="hidden lg:inline">Backup</span>
+              </Button>
               {installPromptEvent && !isInstalled && (
                 <Button size="sm" onClick={handleInstall} className="gap-1.5 text-xs h-9 bg-emerald-600 hover:bg-emerald-700" title={t.installApp}>
                   <Download className="h-3.5 w-3.5" />
@@ -493,6 +499,7 @@ export default function Page() {
       {/* Dialogs */}
       <FormulaDetailDialog formula={selectedFormula} open={dialogOpen} onOpenChange={setDialogOpen} />
       <WorkflowRunner workflow={activeWorkflow} open={workflowOpen} onOpenChange={setWorkflowOpen} />
+      <DataExportDialog open={backupOpen} onOpenChange={setBackupOpen} />
 
       {/* AI Agronomist Assistant — floating chat, available on all tabs */}
       <AgronomistAssistant />

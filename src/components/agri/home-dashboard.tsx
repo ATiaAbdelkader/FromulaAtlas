@@ -128,6 +128,23 @@ export function HomeDashboard({ onNavigate, onOpenTool, onOpenSearch }: HomeDash
 
   useEffect(() => { fetchWeather(); }, [fetchWeather]);
 
+  useEffect(() => {
+    const syncAfterRestore = () => {
+      try {
+        const saved = localStorage.getItem(FARM_PROFILE_KEY);
+        setProfile(saved ? JSON.parse(saved) : {});
+      } catch {
+        setProfile({});
+      }
+      setRecent(getRecentTools());
+      setPinned(getPinnedTools());
+      setRefreshToken(token => token + 1);
+      void fetchWeather();
+    };
+    window.addEventListener('formula-atlas-backup-restored', syncAfterRestore);
+    return () => window.removeEventListener('formula-atlas-backup-restored', syncAfterRestore);
+  }, [fetchWeather]);
+
   const today = forecast?.daily[0];
   const current = forecast?.current;
 

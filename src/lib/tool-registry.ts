@@ -214,4 +214,13 @@ export function toggleToolPin(toolId: string): string[] {
   return next;
 }
 
+export function setPinnedToolIds(toolIds: string[]): string[] {
+  const validIds = [...new Set(toolIds)].filter(id => TOOL_REGISTRY.some(tool => tool.id === id));
+  try {
+    localStorage.setItem(PINNED_KEY, JSON.stringify(validIds));
+    window.dispatchEvent(new CustomEvent(TOOL_PINS_CHANGED_EVENT, { detail: validIds }));
+  } catch { /* ignore */ }
+  return validIds;
+}
+
 export { TOOL_PINS_CHANGED_EVENT };
