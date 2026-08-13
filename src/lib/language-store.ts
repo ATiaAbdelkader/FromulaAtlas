@@ -421,6 +421,22 @@ export type TranslationKey = keyof typeof allUiStrings.en;
 export type TranslationDict = typeof allUiStrings.en;
 
 /**
+ * Localize component-specific copy without adding domain labels to the shared
+ * UI dictionary. Keep the English string as the source-of-truth fallback and
+ * provide concise, natural Arabic (and optional French) copy at the call site.
+ */
+export function copyFor(
+  language: Language,
+  english: string,
+  arabic: string,
+  french = english,
+): string {
+  if (language === 'ar') return arabic;
+  if (language === 'fr') return french;
+  return english;
+}
+
+/**
  * Returns the translation dictionary for the active language + the
  * language code and a boolean `isRTL` flag for direction switching.
  *

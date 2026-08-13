@@ -11,6 +11,7 @@ import {
   CalendarDays, Sparkles, Download, Edit3, Check, Plus, Trash2,
   Sprout, Droplets, FlaskConical, Bug, Users, FileText,
 } from 'lucide-react';
+import { copyFor, useTranslation } from '@/lib/language-store';
 import {
   CROP_LIFECYCLES,
 } from '@/lib/crop-lifecycle';
@@ -20,6 +21,7 @@ import {
 } from '@/lib/crop-calendar-generator';
 
 export function CropCalendarGenerator() {
+  const { language } = useTranslation();
   const [cropId, setCropId] = useState('maize');
   const [plantingDate, setPlantingDate] = useState(new Date().toISOString().slice(0, 10));
   const [area, setArea] = useState('1');
@@ -108,48 +110,48 @@ export function CropCalendarGenerator() {
     </body></html>`);
     win.document.close();
     setTimeout(() => win.print(), 400);
-  }, [result, customNotes, avgET0]);
+  }, [result, customNotes, avgET0, language]);
 
   return (
     <Card className="overflow-hidden border-emerald-200/60 shadow-sm dark:border-emerald-900/60">
       <CardHeader className="border-b bg-gradient-to-r from-emerald-50 via-background to-teal-50/50 pb-4 dark:from-emerald-950/30 dark:via-background dark:to-teal-950/20">
         <CardTitle className="text-base flex items-center gap-2">
-          <CalendarDays className="h-4 w-4 text-emerald-600" /> Crop Calendar Generator
+          <CalendarDays className="h-4 w-4 text-emerald-600" /> {copyFor(language, 'Crop Calendar Generator', 'مولّد تقويم المحصول')}
         </CardTitle>
-        <p className="text-xs leading-relaxed text-muted-foreground">One-click complete farm calendar: planting + fertilization + irrigation + pest control + labor · editable · PDF export</p>
+        <p className="text-xs leading-relaxed text-muted-foreground">{copyFor(language, 'One-click complete farm calendar: planting + fertilization + irrigation + pest control + labor · editable · PDF export', 'تقويم زراعي كامل بنقرة واحدة: الزراعة + التسميد + الري + مكافحة الآفات + العمالة · قابل للتعديل · تصدير PDF')}</p>
       </CardHeader>
       <CardContent className="space-y-5 p-4 sm:p-5">
         {/* Inputs */}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
-            <Label className="text-xs font-medium">Crop</Label>
-            <select aria-label="Crop" value={cropId} onChange={e => setCropId(e.target.value)} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
+            <Label className="text-xs font-medium">{copyFor(language, 'Crop', 'المحصول')}</Label>
+            <select aria-label={copyFor(language, 'Crop', 'المحصول')} value={cropId} onChange={e => setCropId(e.target.value)} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
               {CROP_LIFECYCLES.map(c => <option key={c.id} value={c.id}>{c.emoji} {c.name}</option>)}
             </select>
           </div>
           <div>
-            <Label className="text-xs font-medium">Planting date</Label>
-            <Input aria-label="Planting date" type="date" value={plantingDate} onChange={e => setPlantingDate(e.target.value)} className="mt-1 h-10 text-sm" />
+            <Label className="text-xs font-medium">{copyFor(language, 'Planting date', 'تاريخ الزراعة')}</Label>
+            <Input aria-label={copyFor(language, 'Planting date', 'تاريخ الزراعة')} type="date" value={plantingDate} onChange={e => setPlantingDate(e.target.value)} className="mt-1 h-10 text-sm" />
           </div>
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <div>
-            <Label className="text-xs font-medium">Area (ha)</Label>
-            <Input aria-label="Field area in hectares" value={area} onChange={e => setArea(e.target.value)} type="number" step="0.1" className="mt-1 h-10 text-sm" />
+            <Label className="text-xs font-medium">{copyFor(language, 'Area (ha)', 'المساحة (هكتار)')}</Label>
+            <Input aria-label={copyFor(language, 'Field area in hectares', 'مساحة الحقل بالهكتار')} value={area} onChange={e => setArea(e.target.value)} type="number" step="0.1" className="mt-1 h-10 text-sm" />
           </div>
           <div>
-            <Label className="text-xs font-medium">Irrigation system</Label>
-            <select aria-label="Irrigation system" value={irrigationSystem} onChange={e => setIrrigationSystem(e.target.value)} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
+            <Label className="text-xs font-medium">{copyFor(language, 'Irrigation system', 'نظام الري')}</Label>
+            <select aria-label={copyFor(language, 'Irrigation system', 'نظام الري')} value={irrigationSystem} onChange={e => setIrrigationSystem(e.target.value)} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
               {getIrrigationSystems().map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
             </select>
           </div>
           <div>
-            <Label className="text-xs font-medium">Avg ET₀ (mm/day)</Label>
-            <Input aria-label="Average reference evapotranspiration" value={avgET0} onChange={e => setAvgET0(e.target.value)} type="number" step="0.5" className="mt-1 h-10 text-sm" />
+            <Label className="text-xs font-medium">{copyFor(language, 'Avg ET₀ (mm/day)', 'متوسط ET₀ (مم/يوم)')}</Label>
+            <Input aria-label={copyFor(language, 'Average reference evapotranspiration', 'متوسط البخر-نتح المرجعي')} value={avgET0} onChange={e => setAvgET0(e.target.value)} type="number" step="0.5" className="mt-1 h-10 text-sm" />
           </div>
         </div>
         <Button size="sm" onClick={generate} className="h-11 w-full gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700">
-          <Sparkles className="h-3.5 w-3.5" /> Generate Complete Calendar
+          <Sparkles className="h-3.5 w-3.5" /> {copyFor(language, 'Generate Complete Calendar', 'إنشاء التقويم الكامل')}
         </Button>
 
         {/* Results */}
@@ -161,21 +163,21 @@ export function CropCalendarGenerator() {
                 <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white/15 text-2xl">{result.crop.emoji}</span>
                 <div>
                   <div className="text-sm font-bold">{result.crop.name}</div>
-                  <div className="text-[10px] text-emerald-100">{result.weeks.length} weeks · {result.crop.seasonLength} days</div>
+                  <div className="text-[10px] text-emerald-100">{result.weeks.length} {copyFor(language, 'weeks', 'أسابيع')} · {result.crop.seasonLength} {copyFor(language, 'days', 'أيام')}</div>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2 text-center text-xs sm:grid-cols-4">
-                <div><div className="text-[9px] text-emerald-200 uppercase">Seed</div><div className="font-mono font-bold">{result.seedRate.kgPerHa.toFixed(0)} kg/ha</div></div>
+                <div><div className="text-[9px] text-emerald-200 uppercase">{copyFor(language, 'Seed', 'البذور')}</div><div className="font-mono font-bold">{result.seedRate.kgPerHa.toFixed(0)} kg/ha</div></div>
                 <div><div className="text-[9px] text-emerald-200 uppercase">N-P-K</div><div className="font-mono font-bold">{result.totalSeason.n.toFixed(0)}-{result.totalSeason.p.toFixed(0)}-{result.totalSeason.k.toFixed(0)}</div></div>
-                <div><div className="text-[9px] text-emerald-200 uppercase">Irrigation</div><div className="font-mono font-bold">{result.totalSeason.irrigationM3.toFixed(0)} m³</div></div>
-                <div><div className="text-[9px] text-emerald-200 uppercase">Labor</div><div className="font-mono font-bold">{result.totalSeason.laborDays.toFixed(0)} days</div></div>
+                <div><div className="text-[9px] text-emerald-200 uppercase">{copyFor(language, 'Irrigation', 'الري')}</div><div className="font-mono font-bold">{result.totalSeason.irrigationM3.toFixed(0)} m³</div></div>
+                <div><div className="text-[9px] text-emerald-200 uppercase">{copyFor(language, 'Labor', 'العمالة')}</div><div className="font-mono font-bold">{result.totalSeason.laborDays.toFixed(0)} days</div></div>
               </div>
             </div>
 
             {/* Seed rate info */}
             <div className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-3 text-sm dark:border-emerald-900 dark:bg-emerald-950/10">
               <Sprout className="h-3 w-3 inline mr-1 text-emerald-600" />
-              <strong>Seed rate:</strong> {result.seedRate.kgPerHa.toFixed(0)} kg/ha · {result.seedRate.plantsPerM2.toFixed(0)} plants/m² · spacing {result.seedRate.plantSpacing.toFixed(1)}cm × {result.seedRate.rowSpacing}cm
+              <strong>{copyFor(language, 'Seed rate:', 'معدل البذور:')}</strong> {result.seedRate.kgPerHa.toFixed(0)} kg/ha · {result.seedRate.plantsPerM2.toFixed(0)} plants/m² · {copyFor(language, 'spacing', 'التباعد')} {result.seedRate.plantSpacing.toFixed(1)}cm × {result.seedRate.rowSpacing}cm
             </div>
 
             {/* Calendar table */}
@@ -183,14 +185,14 @@ export function CropCalendarGenerator() {
               <table className="w-full min-w-[980px] text-xs">
                 <thead className="sticky top-0 bg-muted/80 backdrop-blur z-10">
                   <tr className="text-left text-[9px] text-muted-foreground uppercase">
-                    <th className="px-3 py-2">Wk</th>
-                    <th className="px-3 py-2">Date</th>
-                    <th className="px-3 py-2">Stage</th>
-                    <th className="px-3 py-2">Travaux / Labor</th>
-                    <th className="px-3 py-2">Fertilisation</th>
-                    <th className="px-3 py-2">Irrigation</th>
-                    <th className="px-3 py-2">Sanitaire / Risks</th>
-                    <th className="px-3 py-2">Notes</th>
+                    <th className="px-3 py-2">{copyFor(language, 'Wk', 'أسبوع')}</th>
+                    <th className="px-3 py-2">{copyFor(language, 'Date', 'التاريخ')}</th>
+                    <th className="px-3 py-2">{copyFor(language, 'Stage', 'المرحلة')}</th>
+                    <th className="px-3 py-2">{copyFor(language, 'Travaux / Labor', 'الأعمال / العمالة')}</th>
+                    <th className="px-3 py-2">{copyFor(language, 'Fertilisation', 'التسميد')}</th>
+                    <th className="px-3 py-2">{copyFor(language, 'Irrigation', 'الري')}</th>
+                    <th className="px-3 py-2">{copyFor(language, 'Sanitaire / Risks', 'الحماية / المخاطر')}</th>
+                    <th className="px-3 py-2">{copyFor(language, 'Notes', 'ملاحظات')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -211,11 +213,11 @@ export function CropCalendarGenerator() {
 
             {/* Export */}
             <Button size="sm" onClick={exportPDF} className="h-11 w-full gap-2">
-              <FileText className="h-3.5 w-3.5" /> Export Complete Calendar (PDF)
+              <FileText className="h-3.5 w-3.5" /> {copyFor(language, 'Export Complete Calendar (PDF)', 'تصدير التقويم الكامل (PDF)')}
             </Button>
 
             <div className="rounded-xl border bg-muted/20 p-3 text-xs leading-relaxed text-muted-foreground">
-              💡 Click ✏️ on any row to add custom notes. The calendar combines FAO-56 crop coefficients, INPV 2017 pest control data, NRC 2021 feed standards, and crop lifecycle phenology. Edit notes before exporting to PDF.
+              💡 {copyFor(language, 'Click ✏️ on any row to add custom notes. The calendar combines FAO-56 crop coefficients, INPV 2017 pest control data, NRC 2021 feed standards, and crop lifecycle phenology. Edit notes before exporting to PDF.', 'اضغط على ✏️ في أي صف لإضافة ملاحظات مخصصة. يجمع التقويم معاملات المحصول من FAO-56 وبيانات مكافحة الآفات من INPV 2017 ومعايير الأعلاف من NRC 2021 ومراحل نمو المحصول. عدّل الملاحظات قبل التصدير إلى PDF.')}
             </div>
           </div>
         )}
@@ -236,6 +238,7 @@ function CalendarRow({ entry, area, note, isEditing, onEdit, onSave }: {
   onEdit: () => void;
   onSave: (note: string) => void;
 }) {
+  const { language } = useTranslation();
   const [noteDraft, setNoteDraft] = useState(note);
 
   const laborText = entry.labor.length > 0
@@ -301,19 +304,19 @@ function CalendarRow({ entry, area, note, isEditing, onEdit, onSave }: {
         {isEditing ? (
           <div className="flex gap-1">
             <Textarea
-              aria-label={`Note for week ${entry.week}`}
+              aria-label={`${copyFor(language, 'Note for week', 'ملاحظة للأسبوع')} ${entry.week}`}
               value={noteDraft}
               onChange={e => setNoteDraft(e.target.value)}
               className="min-h-[44px] h-11 text-xs"
-              placeholder="Add note…"
+              placeholder={copyFor(language, 'Add note…', 'أضف ملاحظة…')}
               autoFocus
             />
-              <Button size="sm" variant="ghost" aria-label={`Save note for week ${entry.week}`} onClick={() => onSave(noteDraft)} className="h-9 w-9 shrink-0 p-0"><Check className="h-4 w-4 text-emerald-600" /></Button>
+              <Button size="sm" variant="ghost" aria-label={`${copyFor(language, 'Save note for week', 'حفظ ملاحظة الأسبوع')} ${entry.week}`} onClick={() => onSave(noteDraft)} className="h-9 w-9 shrink-0 p-0"><Check className="h-4 w-4 text-emerald-600" /></Button>
           </div>
         ) : (
           <div className="flex items-center gap-1">
             <span className="text-[10px] italic text-muted-foreground truncate max-w-[80px]">{note || ''}</span>
-            <button type="button" aria-label={`Edit note for week ${entry.week}`} onClick={() => { setNoteDraft(note); onEdit(); }} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"><Edit3 className="h-3.5 w-3.5" /></button>
+            <button type="button" aria-label={`${copyFor(language, 'Edit note for week', 'تعديل ملاحظة الأسبوع')} ${entry.week}`} onClick={() => { setNoteDraft(note); onEdit(); }} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"><Edit3 className="h-3.5 w-3.5" /></button>
           </div>
         )}
       </td>

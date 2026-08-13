@@ -23,7 +23,7 @@ import {
   AI_AGENTS, AGENT_CATEGORIES, getAgent,
   type AIAgent, type AgentCategory,
 } from '@/lib/ai-agents';
-import { useTranslation } from '@/lib/language-store';
+import { copyFor, useTranslation } from '@/lib/language-store';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -43,7 +43,7 @@ export function AgriAgentChat() {
   const [selectedAgentId, setSelectedAgentId] = useState<string>('agronomist');
   const [conversations, setConversations] = useState<Record<string, Conversation>>({});
   const [input, setInput] = useState('');
-  const { isRTL } = useTranslation();
+  const { isRTL, language } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showAgentPicker, setShowAgentPicker] = useState(false);
@@ -156,8 +156,8 @@ export function AgriAgentChat() {
       <div className="rounded-lg border bg-gradient-to-br from-indigo-50/60 to-violet-50/40 dark:from-indigo-950/20 dark:to-violet-950/10 p-3">
         <div className="flex items-center gap-2 mb-2">
           <Sparkles className="h-4 w-4 text-indigo-600" />
-          <span className="text-xs font-semibold">{isRTL ? 'وكلاء الذكاء التخصصيون' : 'AI Specialists'}</span>
-          <Badge variant="outline" className="text-[9px] ml-auto">{AI_AGENTS.length} {isRTL ? 'وكلاء' : 'agents'}</Badge>
+          <span className="text-xs font-semibold">{copyFor(language, 'AI Specialists', 'وكلاء الذكاء التخصصيون')}</span>
+          <Badge variant="outline" className="text-[9px] ml-auto">{AI_AGENTS.length} {copyFor(language, 'agents', 'وكلاء')}</Badge>
         </div>
         {/* Horizontal scroll of agent cards */}
         <div className="flex gap-1.5 overflow-x-auto pb-1">
@@ -217,7 +217,7 @@ export function AgriAgentChat() {
           </div>
           {selectedAgent.suggestedTools.length > 0 && (
             <div className="text-[10px] text-muted-foreground mt-1.5 flex items-center gap-1 flex-wrap">
-              <span>{isRTL ? 'يوصي بـ:' : 'Recommends:'}</span>
+              <span>{copyFor(language, 'Recommends:', 'يوصي بـ:')}</span>
               {selectedAgent.suggestedTools.map(t => (
                 <Badge key={t} variant="secondary" className="text-[9px]">{t}</Badge>
               ))}
@@ -226,7 +226,7 @@ export function AgriAgentChat() {
         </div>
         {currentConversation.length > 0 && (
           <Button size="sm" variant="ghost" onClick={clearConversation} className="text-[10px] gap-1 h-7 shrink-0">
-            <RotateCcw className="h-3 w-3" /> {isRTL ? 'مسح' : 'Clear'}
+            <RotateCcw className="h-3 w-3" /> {copyFor(language, 'Clear', 'مسح')}
           </Button>
         )}
       </div>
@@ -294,7 +294,7 @@ export function AgriAgentChat() {
                 : `Start a conversation with ${selectedAgent.name}.`}
             </strong>
             <div className="text-[10px] mt-1">
-              {isRTL ? 'اختر سؤالاً نموذجياً أو اكتب سؤالك أدناه.' : 'Pick a sample question or type your own below.'}
+              {copyFor(language, 'Pick a sample question or type your own below.', 'اختر سؤالاً نموذجياً أو اكتب سؤالك أدناه.')}
             </div>
           </div>
           <div className="space-y-1.5">
@@ -336,14 +336,12 @@ export function AgriAgentChat() {
         />
         <Button size="sm" onClick={() => send()} disabled={loading || !input.trim()} className="gap-1.5">
           {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
-          {isRTL ? 'إرسال' : 'Send'}
+          {copyFor(language, 'Send', 'إرسال')}
         </Button>
       </div>
 
       <div className="text-[10px] text-muted-foreground bg-muted/20 rounded p-2">
-        {isRTL
-          ? '💡 لكل تخصصي خبرته الخاصة + سجل محادثة. بدّل الوكلاء باستخدام الشريط أعلاه. كل المحادثات تُحفظ في localStorage متصفحك. شخصية الوكيل تشكّل ردود نموذج اللغة — جرّب نفس السؤال مع تخصصيين مختلفين للمقارنة.'
-          : '💡 Each specialist has its own expertise + conversation history. Switch agents using the bar above. All chats persist in your browser\'s localStorage. The agent\'s persona shapes the LLM\'s responses — try the same question with two different specialists to compare.'}
+        {copyFor(language, '💡 Each specialist has its own expertise + conversation history. Switch agents using the bar above. All chats persist in your browser\'s localStorage. The agent\'s persona shapes the LLM\'s responses — try the same question with two different specialists to compare.', '💡 لكل تخصص خبرته الخاصة وسجل محادثة مستقل. بدّل الوكلاء باستخدام الشريط أعلاه. تُحفظ جميع المحادثات في localStorage بمتصفحك. تؤثر شخصية الوكيل في ردود نموذج اللغة؛ جرّب السؤال نفسه مع تخصصين مختلفين للمقارنة.')}
       </div>
     </div>
   );
@@ -355,16 +353,17 @@ export function AgriAgentChat() {
 
 export function AgriAgentChatFloating() {
   const [open, setOpen] = useState(false);
+  const { language } = useTranslation();
   return (
     <>
       {!open && (
         <button
           onClick={() => setOpen(true)}
           className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-full bg-gradient-to-br from-indigo-600 to-violet-700 text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all"
-          title="Ask an AI Specialist"
+          title={copyFor(language, 'Ask an AI Specialist', 'اسأل متخصصًا بالذكاء الاصطناعي')}
         >
           <Sparkles className="h-5 w-5" />
-          <span className="text-sm font-medium hidden sm:inline">AI Specialists</span>
+          <span className="text-sm font-medium hidden sm:inline">{copyFor(language, 'AI Specialists', 'متخصصو الذكاء الاصطناعي')}</span>
         </button>
       )}
       {open && (
@@ -375,7 +374,7 @@ export function AgriAgentChatFloating() {
           >
             <div className="sticky top-0 bg-background border-b px-4 py-2 flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-indigo-600" />
-              <span className="text-sm font-semibold">AI Specialists</span>
+              <span className="text-sm font-semibold">{copyFor(language, 'AI Specialists', 'متخصصو الذكاء الاصطناعي')}</span>
               <Button size="sm" variant="ghost" onClick={() => setOpen(false)} className="ml-auto h-7 w-7 p-0">
                 <X className="h-4 w-4" />
               </Button>

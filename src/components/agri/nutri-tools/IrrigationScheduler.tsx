@@ -17,6 +17,7 @@
  */
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { copyFor, useTranslation } from '@/lib/language-store';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
@@ -43,6 +44,7 @@ const STORAGE_KEY = 'irrigation_scheduler_v1';
 type Tab = 'zones' | 'schedules' | 'calendar';
 
 export function IrrigationScheduler() {
+  const { language } = useTranslation();
   const [tab, setTab] = useState<Tab>('zones');
   const [system, setSystem] = useState<IrrigationSystem | null>(null);
 
@@ -165,12 +167,12 @@ export function IrrigationScheduler() {
   return (
     <Card className="overflow-hidden border-cyan-100 shadow-sm dark:border-cyan-900/60">
       <CardHeader className="border-b border-border/60 bg-cyan-50/40 pb-4 dark:bg-cyan-950/10">
-        <CardTitle className="flex items-center gap-2 text-base"><span className="rounded-lg bg-cyan-100 p-2 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300"><Clock className="h-4 w-4" /></span> Irrigation Scheduler</CardTitle>
-        <p className="text-[10px] text-muted-foreground">Controllers · Zones · Schedules · Sequences · Cycle-and-soak · YAML/CSV/JSON export</p>
+        <CardTitle className="flex items-center gap-2 text-base"><span className="rounded-lg bg-cyan-100 p-2 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300"><Clock className="h-4 w-4" /></span> {copyFor(language, 'Irrigation Scheduler', 'جدولة الري')}</CardTitle>
+        <p className="text-[10px] text-muted-foreground">{copyFor(language, 'Controllers · Zones · Schedules · Sequences · Cycle-and-soak · YAML/CSV/JSON export', 'وحدات التحكم · المناطق · الجداول · التسلسلات · الدورات والنقع · تصدير YAML/CSV/JSON')}</p>
         <div className="mt-3 grid grid-cols-1 gap-1 rounded-xl border border-border/70 bg-background/70 p-1 sm:grid-cols-3">
-          <TabBtn active={tab === 'zones'} onClick={() => setTab('zones')} icon={Settings} label="Zones" />
-          <TabBtn active={tab === 'schedules'} onClick={() => setTab('schedules')} icon={CalendarIcon} label="Schedules" />
-          <TabBtn active={tab === 'calendar'} onClick={() => setTab('calendar')} icon={Layers} label="Calendar & Export" />
+          <TabBtn active={tab === 'zones'} onClick={() => setTab('zones')} icon={Settings} label={copyFor(language, 'Zones', 'المناطق')} />
+          <TabBtn active={tab === 'schedules'} onClick={() => setTab('schedules')} icon={CalendarIcon} label={copyFor(language, 'Schedules', 'الجداول')} />
+          <TabBtn active={tab === 'calendar'} onClick={() => setTab('calendar')} icon={Layers} label={copyFor(language, 'Calendar & Export', 'التقويم والتصدير')} />
         </div>
       </CardHeader>
       <CardContent>
@@ -210,6 +212,7 @@ function ZonesTab({ system, onUpdateController, onAddZone, onUpdateZone, onDelet
   onUpdateZone: (controllerId: string, zoneId: string, patch: Partial<Zone>) => void;
   onDeleteZone: (controllerId: string, zoneId: string) => void;
 }) {
+  const { language } = useTranslation();
   return (
     <div className="space-y-3">
       {system.controllers.map(c => (
@@ -217,7 +220,7 @@ function ZonesTab({ system, onUpdateController, onAddZone, onUpdateZone, onDelet
           {/* Controller header */}
           <div className="flex items-center gap-2 flex-wrap">
             <Settings className="h-4 w-4 text-cyan-600" />
-            <Input aria-label="Controller name"
+            <Input aria-label={copyFor(language, 'Controller name', 'اسم وحدة التحكم')}
               value={c.name}
               onChange={e => onUpdateController(c.id, { name: e.target.value })}
               className="h-10 min-w-[140px] flex-1 text-sm font-semibold"
@@ -228,7 +231,7 @@ function ZonesTab({ system, onUpdateController, onAddZone, onUpdateZone, onDelet
           {/* Controller settings */}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div>
-              <Label className="text-xs font-medium">Preamble (pump prime)</Label>
+              <Label className="text-xs font-medium">{copyFor(language, 'Preamble (pump prime)', 'التهيئة (تشغيل المضخة)')}</Label>
               <Input
                 value={formatDuration(c.preamble)}
                 onChange={e => onUpdateController(c.id, { preamble: parseDuration(e.target.value) })}
@@ -236,7 +239,7 @@ function ZonesTab({ system, onUpdateController, onAddZone, onUpdateZone, onDelet
               />
             </div>
             <div>
-              <Label className="text-xs font-medium">Postamble (drain)</Label>
+              <Label className="text-xs font-medium">{copyFor(language, 'Postamble (drain)', 'الختام (تصريف المياه)')}</Label>
               <Input
                 value={formatDuration(c.postamble)}
                 onChange={e => onUpdateController(c.id, { postamble: parseDuration(e.target.value) })}
@@ -244,7 +247,7 @@ function ZonesTab({ system, onUpdateController, onAddZone, onUpdateZone, onDelet
               />
             </div>
             <div>
-              <Label className="text-xs font-medium">Master valve entity</Label>
+              <Label className="text-xs font-medium">{copyFor(language, 'Master valve entity', 'معرّف الصمام الرئيسي')}</Label>
               <Input
                 value={c.entityId ?? ''}
                 onChange={e => onUpdateController(c.id, { entityId: e.target.value })}
@@ -257,7 +260,7 @@ function ZonesTab({ system, onUpdateController, onAddZone, onUpdateZone, onDelet
           {/* Zones */}
           <div className="space-y-2">
             <div className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              <Layers className="h-3 w-3" /> Zones ({c.zones.length})
+              <Layers className="h-3 w-3" /> {copyFor(language, 'Zones', 'المناطق')} ({c.zones.length})
             </div>
             {c.zones.map(z => (
               <ZoneRow
@@ -270,13 +273,13 @@ function ZonesTab({ system, onUpdateController, onAddZone, onUpdateZone, onDelet
           </div>
 
           <Button size="sm" variant="outline" onClick={() => onAddZone(c.id)} className="h-10 w-full gap-1.5 text-xs">
-            <Plus className="h-3.5 w-3.5" /> Add Zone
+            <Plus className="h-3.5 w-3.5" /> {copyFor(language, 'Add Zone', 'إضافة منطقة')}
           </Button>
         </div>
       ))}
 
       <div className="rounded-xl border bg-muted/20 p-3 text-[11px] leading-relaxed text-muted-foreground">
-        💡 <strong>Preamble</strong> = master valve opens before any zone (pump prime). <strong>Postamble</strong> = master stays on after zones close (prevents water hammer). <strong>Eco-mode</strong> = cycle-and-soak for clay soils to prevent runoff.
+        💡 <strong>{copyFor(language, 'Preamble', 'التهيئة')}</strong> = {copyFor(language, 'master valve opens before any zone (pump prime)', 'يفتح الصمام الرئيسي قبل أي منطقة لتشغيل المضخة')}. <strong>{copyFor(language, 'Postamble', 'الختام')}</strong> = {copyFor(language, 'master stays on after zones close (prevents water hammer)', 'يبقى الصمام الرئيسي مفتوحًا بعد إغلاق المناطق لمنع المطرقة المائية')}. <strong>{copyFor(language, 'Eco-mode', 'الوضع الاقتصادي')}</strong> = {copyFor(language, 'cycle-and-soak for clay soils to prevent runoff', 'دورات ونقع للتربة الطينية لمنع الجريان السطحي')}.
       </div>
     </div>
   );
@@ -287,32 +290,33 @@ function ZoneRow({ zone, onUpdate, onDelete }: {
   onUpdate: (patch: Partial<Zone>) => void;
   onDelete: () => void;
 }) {
+  const { language } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   return (
     <div className="rounded-xl border bg-background shadow-sm">
       <div className="flex items-center gap-2 p-2.5">
         <button
-          aria-label={expanded ? `Collapse ${zone.name}` : `Expand ${zone.name}`}
+          aria-label={expanded ? `${copyFor(language, 'Collapse', 'طيّ')} ${zone.name}` : `${copyFor(language, 'Expand', 'توسيع')} ${zone.name}`}
           onClick={() => setExpanded(e => !e)}
           className="flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
         >
           <ChevronRight className={`h-3 w-3 transition-transform ${expanded ? 'rotate-90' : ''}`} />
         </button>
         <Input
-          aria-label="Zone name"
+          aria-label={copyFor(language, 'Zone name', 'اسم المنطقة')}
           value={zone.name}
           onChange={e => onUpdate({ name: e.target.value })}
           className="h-10 min-w-0 flex-1 text-sm"
         />
         <Badge variant={zone.enabled ? 'default' : 'outline'} className="text-[9px]">{zone.enabled ? 'ON' : 'OFF'}</Badge>
         <button
-          aria-label={zone.enabled ? `Pause ${zone.name}` : `Enable ${zone.name}`}
+          aria-label={zone.enabled ? `${copyFor(language, 'Pause', 'إيقاف')} ${zone.name}` : `${copyFor(language, 'Enable', 'تفعيل')} ${zone.name}`}
           onClick={() => onUpdate({ enabled: !zone.enabled })}
           className="flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
         >
           {zone.enabled ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
         </button>
-        <button aria-label={`Delete ${zone.name}`} onClick={onDelete} className="flex h-9 w-9 items-center justify-center rounded-md text-rose-500 hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-950/30">
+        <button aria-label={`${copyFor(language, 'Delete', 'حذف')} ${zone.name}`} onClick={onDelete} className="flex h-9 w-9 items-center justify-center rounded-md text-rose-500 hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-950/30">
           <Trash2 className="h-3 w-3" />
         </button>
       </div>
@@ -320,7 +324,7 @@ function ZoneRow({ zone, onUpdate, onDelete }: {
         <div className="space-y-3 border-t bg-muted/10 p-3">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div>
-              <Label className="text-xs font-medium">Min run time</Label>
+              <Label className="text-xs font-medium">{copyFor(language, 'Min run time', 'الحد الأدنى لمدة التشغيل')}</Label>
               <Input
                 value={formatDuration(zone.minimum)}
                 onChange={e => onUpdate({ minimum: parseDuration(e.target.value) })}
@@ -328,7 +332,7 @@ function ZoneRow({ zone, onUpdate, onDelete }: {
               />
             </div>
             <div>
-              <Label className="text-xs font-medium">Default duration</Label>
+              <Label className="text-xs font-medium">{copyFor(language, 'Default duration', 'المدة الافتراضية')}</Label>
               <Input
                 value={formatDuration(zone.duration)}
                 onChange={e => onUpdate({ duration: parseDuration(e.target.value) })}
@@ -336,7 +340,7 @@ function ZoneRow({ zone, onUpdate, onDelete }: {
               />
             </div>
             <div>
-              <Label className="text-xs font-medium">Max run time (opt)</Label>
+              <Label className="text-xs font-medium">{copyFor(language, 'Max run time (opt)', 'الحد الأقصى لمدة التشغيل (اختياري)')}</Label>
               <Input
                 value={zone.maximum ? formatDuration(zone.maximum) : ''}
                 onChange={e => onUpdate({ maximum: e.target.value ? parseDuration(e.target.value) : undefined })}
@@ -350,13 +354,13 @@ function ZoneRow({ zone, onUpdate, onDelete }: {
           <div className="rounded-xl border border-amber-200 bg-amber-50/40 p-3 dark:border-amber-900 dark:bg-amber-950/20">
             <div className="flex items-center gap-1.5 mb-1.5">
               <Zap className="h-3 w-3 text-amber-600" />
-              <span className="text-xs font-semibold uppercase text-amber-700 dark:text-amber-300">Eco-Mode (Cycle & Soak)</span>
+              <span className="text-xs font-semibold uppercase text-amber-700 dark:text-amber-300">{copyFor(language, 'Eco-Mode (Cycle & Soak)', 'الوضع الاقتصادي (دورات ونقع)')}</span>
               <Badge variant={zone.ecoMode ? 'default' : 'outline'} className="text-[9px] ml-auto">{zone.ecoMode ? 'ON' : 'OFF'}</Badge>
             </div>
             {zone.ecoMode ? (
               <div className="grid grid-cols-3 gap-2">
                 <div>
-                  <Label className="text-[9px]">On (sec)</Label>
+                  <Label className="text-[9px]">{copyFor(language, 'On (sec)', 'تشغيل (ثانية)')}</Label>
                   <Input
                     type="number" min={10}
                     value={zone.ecoMode.onSec}
@@ -365,7 +369,7 @@ function ZoneRow({ zone, onUpdate, onDelete }: {
                   />
                 </div>
                 <div>
-                  <Label className="text-[9px]">Off (sec)</Label>
+                  <Label className="text-[9px]">{copyFor(language, 'Off (sec)', 'إيقاف (ثانية)')}</Label>
                   <Input
                     type="number" min={0}
                     value={zone.ecoMode.offSec}
@@ -374,7 +378,7 @@ function ZoneRow({ zone, onUpdate, onDelete }: {
                   />
                 </div>
                 <div>
-                  <Label className="text-[9px]">Repeat</Label>
+                  <Label className="text-[9px]">{copyFor(language, 'Repeat', 'التكرار')}</Label>
                   <Input
                     type="number" min={2}
                     value={zone.ecoMode.repeat}
@@ -385,13 +389,13 @@ function ZoneRow({ zone, onUpdate, onDelete }: {
               </div>
             ) : (
               <Button size="sm" variant="outline" onClick={() => onUpdate({ ecoMode: { onSec: 300, offSec: 120, repeat: 3 } })} className="h-9 gap-1 text-xs">
-                <Plus className="h-3 w-3" /> Enable cycle-and-soak
+                <Plus className="h-3 w-3" /> {copyFor(language, 'Enable cycle-and-soak', 'تفعيل الدورات والنقع')}
               </Button>
             )}
           </div>
 
           <div>
-            <Label className="text-xs font-medium">Valve entity (for YAML export)</Label>
+            <Label className="text-xs font-medium">{copyFor(language, 'Valve entity (for YAML export)', 'معرّف الصمام (لتصدير YAML)')}</Label>
             <Input
               value={zone.entityId ?? ''}
               onChange={e => onUpdate({ entityId: e.target.value })}
@@ -415,6 +419,7 @@ function SchedulesTab({ system, onAddSchedule, onUpdateSchedule, onDeleteSchedul
   onUpdateSchedule: (controllerId: string, zoneId: string, schedId: string, patch: Partial<Schedule>) => void;
   onDeleteSchedule: (controllerId: string, zoneId: string, schedId: string) => void;
 }) {
+  const { language } = useTranslation();
   return (
     <div className="space-y-3">
       {system.controllers.map(c => (
@@ -427,7 +432,7 @@ function SchedulesTab({ system, onAddSchedule, onUpdateSchedule, onDeleteSchedul
               <div className="flex items-center gap-2">
                 <Layers className="h-3 w-3 text-muted-foreground" />
                 <span className="text-xs font-medium flex-1">{z.name}</span>
-                <Badge variant="outline" className="text-[9px]">{z.schedules.length} schedule{z.schedules.length !== 1 ? 's' : ''}</Badge>
+                <Badge variant="outline" className="text-[9px]">{z.schedules.length} {copyFor(language, z.schedules.length === 1 ? 'schedule' : 'schedules', z.schedules.length === 1 ? 'جدول' : 'جداول')}</Badge>
               </div>
               {/* Existing schedules */}
               {z.schedules.map(s => (
@@ -439,14 +444,14 @@ function SchedulesTab({ system, onAddSchedule, onUpdateSchedule, onDeleteSchedul
                 />
               ))}
               <Button size="sm" variant="outline" onClick={() => onAddSchedule(c.id, z.id)} className="h-10 w-full gap-1.5 text-xs">
-                <Plus className="h-3 w-3" /> Add Schedule
+                <Plus className="h-3 w-3" /> {copyFor(language, 'Add Schedule', 'إضافة جدول')}
               </Button>
             </div>
           ))}
         </div>
       ))}
       <div className="rounded-xl border bg-muted/20 p-3 text-[11px] leading-relaxed text-muted-foreground">
-        💡 <strong>Anchor = start</strong> = run begins at the time. <strong>Anchor = finish</strong> = run ends at the time. Sun events use Open-Meteo sunrise/sunset from the ET Tracker's location (configure on the Calendar tab).
+        💡 <strong>{copyFor(language, 'Anchor = start', 'التثبيت = البدء')}</strong> = {copyFor(language, 'run begins at the time', 'يبدأ التشغيل في الوقت المحدد')}. <strong>{copyFor(language, 'Anchor = finish', 'التثبيت = الانتهاء')}</strong> = {copyFor(language, 'run ends at the time', 'ينتهي التشغيل في الوقت المحدد')}. {copyFor(language, "Sun events use Open-Meteo sunrise/sunset from the ET Tracker's location (configure on the Calendar tab).", 'تستخدم أحداث الشمس وقت الشروق والغروب من Open-Meteo وموقع أداة تتبع البخر-نتح (اضبط الموقع في تبويب التقويم).')}
       </div>
     </div>
   );
@@ -457,15 +462,16 @@ function ScheduleRow({ schedule, onUpdate, onDelete }: {
   onUpdate: (patch: Partial<Schedule>) => void;
   onDelete: () => void;
 }) {
+  const { language } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   return (
     <div className="rounded-xl border bg-muted/10 shadow-sm">
       <div className="flex items-center gap-1.5 p-2.5">
-        <button aria-label={expanded ? `Collapse ${schedule.name}` : `Expand ${schedule.name}`} onClick={() => setExpanded(e => !e)} className="flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground">
+        <button aria-label={expanded ? `${copyFor(language, 'Collapse', 'طيّ')} ${schedule.name}` : `${copyFor(language, 'Expand', 'توسيع')} ${schedule.name}`} onClick={() => setExpanded(e => !e)} className="flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground">
           <ChevronRight className={`h-3 w-3 transition-transform ${expanded ? 'rotate-90' : ''}`} />
         </button>
         <Input
-          aria-label="Schedule name"
+          aria-label={copyFor(language, 'Schedule name', 'اسم الجدول')}
           value={schedule.name}
           onChange={e => onUpdate({ name: e.target.value })}
           className="h-10 min-w-0 flex-1 text-sm"
@@ -476,10 +482,10 @@ function ScheduleRow({ schedule, onUpdate, onDelete }: {
           {schedule.time.kind === 'cron' && 'cron'}
         </Badge>
         <Badge variant="outline" className="text-[9px] font-mono">{formatDuration(schedule.duration)}</Badge>
-        <button aria-label={schedule.enabled ? `Pause ${schedule.name}` : `Enable ${schedule.name}`} onClick={() => onUpdate({ enabled: !schedule.enabled })} className="flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground">
+        <button aria-label={schedule.enabled ? `${copyFor(language, 'Pause', 'إيقاف')} ${schedule.name}` : `${copyFor(language, 'Enable', 'تفعيل')} ${schedule.name}`} onClick={() => onUpdate({ enabled: !schedule.enabled })} className="flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground">
           {schedule.enabled ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
         </button>
-        <button aria-label={`Delete ${schedule.name}`} onClick={onDelete} className="flex h-9 w-9 items-center justify-center rounded-md text-rose-500 hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-950/30">
+        <button aria-label={`${copyFor(language, 'Delete', 'حذف')} ${schedule.name}`} onClick={onDelete} className="flex h-9 w-9 items-center justify-center rounded-md text-rose-500 hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-950/30">
           <Trash2 className="h-3 w-3" />
         </button>
       </div>
@@ -497,14 +503,14 @@ function ScheduleRow({ schedule, onUpdate, onDelete }: {
                 }}
                 className={`h-10 rounded-lg border text-xs ${schedule.time.kind === k ? 'border-cyan-600 bg-cyan-600 text-white' : 'border-border bg-background'}`}
               >
-                {k === 'absolute' ? 'Time' : k === 'sun' ? 'Sun' : 'Cron'}
+                {k === 'absolute' ? copyFor(language, 'Time', 'الوقت') : k === 'sun' ? copyFor(language, 'Sun', 'الشمس') : 'Cron'}
               </button>
             ))}
           </div>
 
           {schedule.time.kind === 'absolute' && (
             <div>
-              <Label className="text-[9px]">Time (HH:MM)</Label>
+              <Label className="text-[9px]">{copyFor(language, 'Time (HH:MM)', 'الوقت (HH:MM)')}</Label>
               <Input
                 type="time"
                 value={formatTimeOfDay(schedule.time.time)}
@@ -519,7 +525,7 @@ function ScheduleRow({ schedule, onUpdate, onDelete }: {
           {schedule.time.kind === 'sun' && (
             <div className="grid grid-cols-3 gap-2">
               <div>
-                <Label className="text-[9px]">Event</Label>
+                <Label className="text-[9px]">{copyFor(language, 'Event', 'الحدث')}</Label>
                 <select
                   value={schedule.time.sun}
                   onChange={e => {
@@ -529,12 +535,12 @@ function ScheduleRow({ schedule, onUpdate, onDelete }: {
                   }}
                   className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
                 >
-                  <option value="sunrise">Sunrise</option>
-                  <option value="sunset">Sunset</option>
+                  <option value="sunrise">{copyFor(language, 'Sunrise', 'الشروق')}</option>
+                  <option value="sunset">{copyFor(language, 'Sunset', 'الغروب')}</option>
                 </select>
               </div>
               <div>
-                <Label className="text-[9px]">Before (sec)</Label>
+                <Label className="text-[9px]">{copyFor(language, 'Before (sec)', 'قبل (ثانية)')}</Label>
                 <Input
                   type="number"
                   value={schedule.time.before ?? 0}
@@ -547,7 +553,7 @@ function ScheduleRow({ schedule, onUpdate, onDelete }: {
                 />
               </div>
               <div>
-                <Label className="text-[9px]">After (sec)</Label>
+                <Label className="text-[9px]">{copyFor(language, 'After (sec)', 'بعد (ثانية)')}</Label>
                 <Input
                   type="number"
                   value={schedule.time.after ?? 0}
@@ -563,7 +569,7 @@ function ScheduleRow({ schedule, onUpdate, onDelete }: {
           )}
           {schedule.time.kind === 'cron' && (
             <div>
-              <Label className="text-[9px]">Cron expression (min hour day month weekday)</Label>
+              <Label className="text-[9px]">{copyFor(language, 'Cron expression (min hour day month weekday)', 'تعبير Cron (الدقيقة الساعة اليوم الشهر يوم الأسبوع)')}</Label>
               <Input
                 value={schedule.time.cron}
                 onChange={e => onUpdate({ time: { kind: 'cron', cron: e.target.value } })}
@@ -575,7 +581,7 @@ function ScheduleRow({ schedule, onUpdate, onDelete }: {
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
-              <Label className="text-xs font-medium">Duration</Label>
+              <Label className="text-xs font-medium">{copyFor(language, 'Duration', 'المدة')}</Label>
               <Input
                 value={formatDuration(schedule.duration)}
                 onChange={e => onUpdate({ duration: parseDuration(e.target.value) })}
@@ -583,21 +589,21 @@ function ScheduleRow({ schedule, onUpdate, onDelete }: {
               />
             </div>
             <div>
-              <Label className="text-xs font-medium">Anchor</Label>
+              <Label className="text-xs font-medium">{copyFor(language, 'Anchor', 'التثبيت')}</Label>
               <select
                 value={schedule.anchor}
                 onChange={e => onUpdate({ anchor: e.target.value as 'start' | 'finish' })}
                 className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
               >
-                <option value="start">Start at time</option>
-                <option value="finish">Finish at time</option>
+                <option value="start">{copyFor(language, 'Start at time', 'البدء في الوقت')}</option>
+                <option value="finish">{copyFor(language, 'Finish at time', 'الانتهاء في الوقت')}</option>
               </select>
             </div>
           </div>
 
           {/* Weekday filter */}
           <div>
-            <Label className="text-xs font-medium">Weekdays (none = all)</Label>
+            <Label className="text-xs font-medium">{copyFor(language, 'Weekdays (none = all)', 'أيام الأسبوع (بدون اختيار = الكل)')}</Label>
             <div className="flex gap-0.5 mt-0.5">
               {ALL_WEEKDAYS.map(w => {
                 const active = schedule.weekday?.includes(w) ?? false;
@@ -620,7 +626,7 @@ function ScheduleRow({ schedule, onUpdate, onDelete }: {
 
           {/* Month filter */}
           <div>
-            <Label className="text-xs font-medium">Months (none = all)</Label>
+            <Label className="text-xs font-medium">{copyFor(language, 'Months (none = all)', 'الأشهر (بدون اختيار = الكل)')}</Label>
             <div className="flex flex-wrap gap-0.5 mt-0.5">
               {ALL_MONTHS.map(m => {
                 const active = schedule.month?.includes(m) ?? false;
@@ -644,7 +650,7 @@ function ScheduleRow({ schedule, onUpdate, onDelete }: {
           {/* Seasonal window */}
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <Label className="text-[9px]">From (dd mmm)</Label>
+              <Label className="text-[9px]">{copyFor(language, 'From (dd mmm)', 'من (يوم شهر)')}</Label>
               <Input
                 value={schedule.from ?? ''}
                 onChange={e => onUpdate({ from: e.target.value || undefined })}
@@ -653,7 +659,7 @@ function ScheduleRow({ schedule, onUpdate, onDelete }: {
               />
             </div>
             <div>
-              <Label className="text-[9px]">Until (dd mmm)</Label>
+              <Label className="text-[9px]">{copyFor(language, 'Until (dd mmm)', 'حتى (يوم شهر)')}</Label>
               <Input
                 value={schedule.until ?? ''}
                 onChange={e => onUpdate({ until: e.target.value || undefined })}
@@ -673,6 +679,7 @@ function ScheduleRow({ schedule, onUpdate, onDelete }: {
 // ============================================================================
 
 function CalendarTab({ system }: { system: IrrigationSystem }) {
+  const { language } = useTranslation();
   const [lat, setLat] = useState('37.77');
   const [lng, setLng] = useState('-122.42');
   const [adjustPct, setAdjustPct] = useState<number>(100);
@@ -764,26 +771,26 @@ function CalendarTab({ system }: { system: IrrigationSystem }) {
       {/* Sun times + adjustment */}
       <div className="space-y-3 rounded-xl border border-cyan-200 bg-cyan-50/40 p-4 shadow-sm dark:border-cyan-900 dark:bg-cyan-950/20">
         <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-cyan-700 dark:text-cyan-300">
-          <Sun className="h-3 w-3" /> Sun Times & Weather Adjustment
+          <Sun className="h-3 w-3" /> {copyFor(language, 'Sun Times & Weather Adjustment', 'أوقات الشمس وضبط الطقس')}
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
-            <Label className="text-xs font-medium">Latitude (for sunrise/sunset)</Label>
-            <Input aria-label="Latitude for sunrise and sunset" value={lat} onChange={e => setLat(e.target.value)} type="number" step="0.0001" className="mt-1 h-10 text-sm font-mono" />
+            <Label className="text-xs font-medium">{copyFor(language, 'Latitude (for sunrise/sunset)', 'خط العرض (للشروق والغروب)')}</Label>
+            <Input aria-label={copyFor(language, 'Latitude for sunrise and sunset', 'خط العرض للشروق والغروب')} value={lat} onChange={e => setLat(e.target.value)} type="number" step="0.0001" className="mt-1 h-10 text-sm font-mono" />
           </div>
           <div>
-            <Label className="text-xs font-medium">Longitude</Label>
-            <Input aria-label="Longitude for sunrise and sunset" value={lng} onChange={e => setLng(e.target.value)} type="number" step="0.0001" className="mt-1 h-10 text-sm font-mono" />
+            <Label className="text-xs font-medium">{copyFor(language, 'Longitude', 'خط الطول')}</Label>
+            <Input aria-label={copyFor(language, 'Longitude for sunrise and sunset', 'خط الطول للشروق والغروب')} value={lng} onChange={e => setLng(e.target.value)} type="number" step="0.0001" className="mt-1 h-10 text-sm font-mono" />
           </div>
         </div>
         <div className="flex items-center gap-2">
           <Button size="sm" variant="outline" onClick={fetchSunTimes} disabled={loadingSun} className="h-10 gap-1.5 text-xs">
-            <RefreshCw className={`h-3 w-3 ${loadingSun ? 'animate-spin' : ''}`} /> Fetch sun times
+            <RefreshCw className={`h-3 w-3 ${loadingSun ? 'animate-spin' : ''}`} /> {copyFor(language, 'Fetch sun times', 'جلب أوقات الشمس')}
           </Button>
-          <Badge variant="outline" className="text-[9px]">{Object.keys(sunTimes).length} days loaded</Badge>
+          <Badge variant="outline" className="text-[9px]">{Object.keys(sunTimes).length} {copyFor(language, 'days loaded', 'أيام محمّلة')}</Badge>
         </div>
         <div>
-          <Label className="text-xs font-medium">Weather adjustment: {adjustPct}% of scheduled time</Label>
+          <Label className="text-xs font-medium">{copyFor(language, 'Weather adjustment', 'ضبط الطقس')}: {adjustPct}% {copyFor(language, 'of scheduled time', 'من وقت التشغيل المجدول')}</Label>
           <input
             type="range" min={0} max={150} step={5}
             value={adjustPct}
@@ -791,29 +798,29 @@ function CalendarTab({ system }: { system: IrrigationSystem }) {
             className="w-full h-1.5 mt-1"
           />
           <div className="text-[9px] text-muted-foreground mt-0.5">
-            💡 Lower to 50% if rain forecast. Raise to 120% during heat wave. Clamp = zone min/max.
+            💡 {copyFor(language, 'Lower to 50% if rain forecast. Raise to 120% during heat wave. Clamp = zone min/max.', 'اخفضها إلى 50٪ عند توقع المطر، وارفعها إلى 120٪ أثناء موجة الحر. يلتزم الضبط بالحد الأدنى والأقصى للمنطقة.')}
           </div>
         </div>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-3">
-        <StatCard icon={CalendarIcon} color="cyan" label="Events (7 days)" value={String(stats.totalEvents)} />
-        <StatCard icon={Clock} color="emerald" label="Total run time" value={formatDuration(stats.totalDur)} />
-        <StatCard icon={Zap} color="amber" label="Eco cycles" value={String(stats.ecoCount)} />
+        <StatCard icon={CalendarIcon} color="cyan" label={copyFor(language, 'Events (7 days)', 'الأحداث (7 أيام)')} value={String(stats.totalEvents)} />
+        <StatCard icon={Clock} color="emerald" label={copyFor(language, 'Total run time', 'إجمالي وقت التشغيل')} value={formatDuration(stats.totalDur)} />
+        <StatCard icon={Zap} color="amber" label={copyFor(language, 'Eco cycles', 'الدورات الاقتصادية')} value={String(stats.ecoCount)} />
       </div>
 
       {/* Calendar grid */}
       <div className="rounded-xl border bg-background p-3 shadow-sm">
         <div className="mb-3 flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          <CalendarIcon className="h-3 w-3" /> 7-Day Calendar
+          <CalendarIcon className="h-3 w-3" /> {copyFor(language, '7-Day Calendar', 'تقويم 7 أيام')}
         </div>
         <div className="space-y-1.5">
           {Object.entries(eventsByDay).map(([day, dayEvents]) => (
             <div key={day} className="rounded-lg border-l-4 border-cyan-400 bg-cyan-50/30 py-2 pl-3 dark:bg-cyan-950/10">
               <div className="text-[10px] font-mono text-muted-foreground mb-0.5">
                 {new Date(day + 'T00:00').toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
-                <span className="ml-2 text-foreground">{dayEvents.length} run{dayEvents.length !== 1 ? 's' : ''}</span>
+                <span className="ml-2 text-foreground">{dayEvents.length} {copyFor(language, dayEvents.length === 1 ? 'run' : 'runs', dayEvents.length === 1 ? 'تشغيل' : 'عمليات تشغيل')}</span>
               </div>
               <div className="flex flex-wrap gap-1">
                 {dayEvents.map((e, i) => (
@@ -825,7 +832,7 @@ function CalendarTab({ system }: { system: IrrigationSystem }) {
                       borderColor: e.isEcoCycle ? '#f59e0b' : '#0891b2',
                       color: e.isEcoCycle ? '#92400e' : '#155e75',
                     }}
-                    title={`${e.controllerName} → ${e.zoneName}${e.sequenceName ? ` (${e.sequenceName})` : ''}\n${e.start.slice(11)} → ${e.end.slice(11)}\nDuration: ${formatDuration(e.durationSec)}${e.isEcoCycle ? `\nEco cycle ${(e.ecoCycleIndex ?? 0) + 1}` : ''}`}
+                    title={`${e.controllerName} → ${e.zoneName}${e.sequenceName ? ` (${e.sequenceName})` : ''}\n${e.start.slice(11)} → ${e.end.slice(11)}\n${copyFor(language, 'Duration', 'المدة')}: ${formatDuration(e.durationSec)}${e.isEcoCycle ? `\n${copyFor(language, 'Eco cycle', 'دورة اقتصادية')} ${(e.ecoCycleIndex ?? 0) + 1}` : ''}`}
                   >
                     {e.start.slice(11, 16)} {e.zoneName}
                     {e.isEcoCycle && ` ⚡${(e.ecoCycleIndex ?? 0) + 1}`}
@@ -837,11 +844,11 @@ function CalendarTab({ system }: { system: IrrigationSystem }) {
           {events.length === 0 && (
             <EmptyState
               icon={CalendarIcon}
-              title="No events scheduled"
-              description="Add schedules in the Schedules tab — pick a crop, set a time, and your 7-day calendar will fill in automatically."
+              title={copyFor(language, 'No events scheduled', 'لا توجد أحداث مجدولة')}
+              description={copyFor(language, 'Add schedules in the Schedules tab — pick a crop, set a time, and your 7-day calendar will fill in automatically.', 'أضف جداول في تبويب الجداول، واختر وقتًا، وسيُملأ تقويم الأيام السبعة تلقائيًا.')}
               color="#0ea5e9"
               variant="compact"
-              action={{ label: "Go to Schedules", onClick: () => {/* user switches tabs manually */} }}
+              action={{ label: copyFor(language, 'Go to Schedules', 'الانتقال إلى الجداول'), onClick: () => {/* user switches tabs manually */} }}
             />
           )}
         </div>
@@ -850,7 +857,7 @@ function CalendarTab({ system }: { system: IrrigationSystem }) {
       {/* By-zone breakdown */}
       {Object.keys(stats.byZone).length > 0 && (
         <div className="rounded-xl border bg-muted/20 p-3 shadow-sm">
-          <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Total run time by zone (7 days)</div>
+          <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{copyFor(language, 'Total run time by zone (7 days)', 'إجمالي وقت التشغيل حسب المنطقة (7 أيام)')}</div>
           <div className="space-y-1">
             {Object.entries(stats.byZone).sort((a, b) => b[1] - a[1]).map(([zone, dur]) => {
               const pct = stats.totalDur > 0 ? (dur / stats.totalDur) * 100 : 0;
@@ -870,13 +877,13 @@ function CalendarTab({ system }: { system: IrrigationSystem }) {
 
       {/* Export */}
       <div className="space-y-3">
-        <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Export and backup</div>
+        <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{copyFor(language, 'Export and backup', 'التصدير والنسخ الاحتياطي')}</div>
 
         {/* YAML */}
         <ExportBlock
           icon={FileCode}
           color="cyan"
-          title="YAML (Home Assistant — Irrigation Unlimited)"
+          title={copyFor(language, 'YAML (Home Assistant — Irrigation Unlimited)', 'YAML (Home Assistant — Irrigation Unlimited)')}
           description="Drop into configuration.yaml → irrigation_unlimited: key. Compatible with the popular HA integration."
           text={yaml}
           fmt="yaml"
@@ -890,8 +897,8 @@ function CalendarTab({ system }: { system: IrrigationSystem }) {
         <ExportBlock
           icon={FileSpreadsheet}
           color="emerald"
-          title="CSV Calendar (Google Calendar / Excel)"
-          description="One row per scheduled run. Import to Google Calendar via 'Import CSV' or open in Excel."
+          title={copyFor(language, 'CSV Calendar (Google Calendar / Excel)', 'تقويم CSV (تقويم Google / Excel)')}
+          description={copyFor(language, "One row per scheduled run. Import to Google Calendar via 'Import CSV' or open in Excel.", 'صف واحد لكل عملية تشغيل مجدولة. استورد الملف إلى تقويم Google عبر «استيراد CSV» أو افتحه في Excel.')}
           text={csv}
           fmt="csv"
           mime="text/csv"
@@ -904,8 +911,8 @@ function CalendarTab({ system }: { system: IrrigationSystem }) {
         <ExportBlock
           icon={FileJson}
           color="violet"
-          title="JSON (re-importable backup)"
-          description="Full system definition. Save as backup or transfer to another device."
+          title={copyFor(language, 'JSON (re-importable backup)', 'JSON (نسخة احتياطية قابلة لإعادة الاستيراد)')}
+          description={copyFor(language, 'Full system definition. Save as backup or transfer to another device.', 'تعريف النظام كاملًا. احفظه كنسخة احتياطية أو انقله إلى جهاز آخر.')}
           text={json}
           fmt="json"
           mime="application/json"
@@ -916,7 +923,7 @@ function CalendarTab({ system }: { system: IrrigationSystem }) {
       </div>
 
       <div className="rounded-xl border bg-muted/20 p-3 text-[11px] leading-relaxed text-muted-foreground">
-        💡 All data persists in your browser's localStorage. Use JSON export for backups. The YAML format is compatible with the <a href="https://github.com/rgc99/irrigation_unlimited" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Irrigation Unlimited</a> Home Assistant integration — configure visually here, then deploy to HA.
+        💡 {copyFor(language, "All data persists in your browser's localStorage. Use JSON export for backups. The YAML format is compatible with the Irrigation Unlimited Home Assistant integration — configure visually here, then deploy to HA.", 'تُحفظ جميع البيانات في localStorage بمتصفحك. استخدم تصدير JSON للنسخ الاحتياطية. يتوافق تنسيق YAML مع تكامل Irrigation Unlimited في Home Assistant؛ اضبط النظام بصريًا هنا ثم انشره على HA.')}
       </div>
     </div>
   );

@@ -30,6 +30,7 @@ import {
   CROP_LIFECYCLES, getCropLifecycle, stageForDay, totalLaborDays, peakLaborWeek,
   type CropLifecycle, type LaborOperation, type LaborType,
 } from '@/lib/crop-lifecycle';
+import { copyFor, useTranslation } from '@/lib/language-store';
 
 const LABOR_TYPE_INFO: Record<LaborType, { label: string; color: string; icon: string }> = {
   land_prep:     { label: 'Land Preparation', color: '#92400e', icon: '🚜' },
@@ -56,7 +57,29 @@ const SKILL_INFO: Record<'basic' | 'trained' | 'specialist', { label: string; co
   specialist: { label: 'Specialist', color: '#8b5cf6' },
 };
 
+const LABOR_TYPE_AR: Record<LaborType, string> = {
+  land_prep: 'إعداد الأرض', planting: 'الزراعة', fertilization: 'التسميد',
+  irrigation: 'الري', pest: 'مكافحة الآفات', weed: 'مكافحة الأعشاب',
+  pruning: 'التقليم والتربية', harvest: 'الحصاد', post_harvest: 'ما بعد الحصاد',
+  monitoring: 'المراقبة',
+};
+const PRIORITY_AR = { critical: 'حرج', recommended: 'موصى به', optional: 'اختياري' } as const;
+const SKILL_AR = { basic: 'أساسي', trained: 'مدرّب', specialist: 'متخصص' } as const;
+
+function laborTypeLabel(language: Parameters<typeof copyFor>[0], type: LaborType): string {
+  return copyFor(language, LABOR_TYPE_INFO[type].label, LABOR_TYPE_AR[type]);
+}
+
+function priorityLabel(language: Parameters<typeof copyFor>[0], priority: keyof typeof PRIORITY_INFO): string {
+  return copyFor(language, PRIORITY_INFO[priority].label, PRIORITY_AR[priority]);
+}
+
+function skillLabel(language: Parameters<typeof copyFor>[0], skill: keyof typeof SKILL_INFO): string {
+  return copyFor(language, SKILL_INFO[skill].label, SKILL_AR[skill]);
+}
+
 export function LaborCalendar() {
+  const { language } = useTranslation();
   const [cropId, setCropId] = useState<string>('maize');
   const [areaHa, setAreaHa] = useState<number>(1);
   const [plantingDate, setPlantingDate] = useState<string>(
@@ -125,27 +148,27 @@ export function LaborCalendar() {
         .priority-recommended { background: #fef3c7 !important; color: #92400e; }
         @media print { @page { margin: 1cm; } }
       </style></head><body>
-      <h1>${crop.emoji} Labor Calendar — ${crop.name}</h1>
+      <h1>${crop.emoji} ${copyFor(language, 'Labor Calendar', 'تقويم العمالة')} — ${crop.name}</h1>
       <div class="meta">
-        <strong>Field area:</strong> ${areaHa} ha ·
-        <strong>Planting date:</strong> ${plantingDate} ·
-        <strong>Season length:</strong> ${crop.seasonLength} days (${totalWeeks} weeks) ·
-        <strong>Generated:</strong> ${new Date().toLocaleString()}
+        <strong>${copyFor(language, 'Field area:', 'مساحة الحقل:')}</strong> ${areaHa} ha ·
+        <strong>${copyFor(language, 'Planting date:', 'تاريخ الزراعة:')}</strong> ${plantingDate} ·
+        <strong>${copyFor(language, 'Season length:', 'مدة الموسم:')}</strong> ${crop.seasonLength} days (${totalWeeks} weeks) ·
+        <strong>${copyFor(language, 'Generated:', 'تاريخ الإنشاء:')}</strong> ${new Date().toLocaleString()}
       </div>
       <p style="font-size: 11px; color: #475569;">${crop.notes}</p>
 
       <div class="stats">
-        <div class="stat"><strong>${stats.total.toFixed(1)}</strong> Total person-days (${areaHa} ha)</div>
-        <div class="stat"><strong>Week ${stats.peak.week}</strong> Peak labor demand (${stats.peak.laborDays.toFixed(1)} d)</div>
-        <div class="stat"><strong>${stats.critical}</strong> Critical operations</div>
+        <div class="stat"><strong>${stats.total.toFixed(1)}</strong> ${copyFor(language, 'Total person-days', 'إجمالي أيام العمل')} (${areaHa} ha)</div>
+        <div class="stat"><strong>${copyFor(language, 'Week', 'الأسبوع')} ${stats.peak.week}</strong> ${copyFor(language, 'Peak labor demand', 'ذروة الطلب على العمالة')} (${stats.peak.laborDays.toFixed(1)} d)</div>
+        <div class="stat"><strong>${stats.critical}</strong> ${copyFor(language, 'Critical operations', 'العمليات الحرجة')}</div>
       </div>
 
-      <h2>Operations Schedule</h2>
+      <h2>${copyFor(language, 'Operations Schedule', 'جدول العمليات')}</h2>
       <table>
         <thead>
           <tr>
-            <th>Day</th><th>Date</th><th>Week</th><th>Stage</th><th>Operation</th><th>Type</th>
-            <th>Labor-days</th><th>Skill</th><th>Priority</th><th>Equipment</th><th>Notes</th>
+            <th>${copyFor(language, 'Day', 'اليوم')}</th><th>${copyFor(language, 'Date', 'التاريخ')}</th><th>${copyFor(language, 'Week', 'الأسبوع')}</th><th>${copyFor(language, 'Stage', 'المرحلة')}</th><th>${copyFor(language, 'Operation', 'العملية')}</th><th>${copyFor(language, 'Type', 'النوع')}</th>
+            <th>${copyFor(language, 'Labor-days', 'أيام العمل')}</th><th>${copyFor(language, 'Skill', 'المهارة')}</th><th>${copyFor(language, 'Priority', 'الأولوية')}</th><th>${copyFor(language, 'Equipment', 'المعدات')}</th><th>${copyFor(language, 'Notes', 'ملاحظات')}</th>
           </tr>
         </thead>
         <tbody>
@@ -159,10 +182,10 @@ export function LaborCalendar() {
               <td>${o.week}</td>
               <td>${o.stage}</td>
               <td>${o.task}</td>
-              <td>${LABOR_TYPE_INFO[o.type].icon} ${LABOR_TYPE_INFO[o.type].label}</td>
+              <td>${LABOR_TYPE_INFO[o.type].icon} ${laborTypeLabel(language, o.type)}</td>
               <td>${o.totalLaborDays.toFixed(1)}</td>
-              <td>${o.skill}</td>
-              <td>${o.priority}</td>
+              <td>${skillLabel(language, o.skill)}</td>
+              <td>${priorityLabel(language, o.priority)}</td>
               <td>${o.equipment || '—'}</td>
               <td>${o.notes || ''}</td>
             </tr>
@@ -170,9 +193,9 @@ export function LaborCalendar() {
         </tbody>
       </table>
 
-      <h2>By Operation Type</h2>
+      <h2>${copyFor(language, 'By Operation Type', 'حسب نوع العملية')}</h2>
       <table>
-        <thead><tr><th>Type</th><th>Total labor-days</th><th>% of season</th></tr></thead>
+        <thead><tr><th>${copyFor(language, 'Type', 'النوع')}</th><th>${copyFor(language, 'Total labor-days', 'إجمالي أيام العمل')}</th><th>${copyFor(language, '% of season', 'نسبة الموسم')}</th></tr></thead>
         <tbody>
           ${Object.entries(stats.byType)
             .sort((a, b) => b[1] - a[1])
@@ -187,30 +210,30 @@ export function LaborCalendar() {
       </table>
 
       <p style="font-size: 10px; color: #64748b; margin-top: 24px;">
-        Generated by Formula Atlas — Labor Calendar. Labor requirements are research-based estimates; adjust for mechanization level + worker skill.
+        ${copyFor(language, 'Generated by Formula Atlas — Labor Calendar. Labor requirements are research-based estimates; adjust for mechanization level + worker skill.', 'تم الإنشاء بواسطة Formula Atlas — تقويم العمالة. متطلبات العمالة تقديرات مبنية على الأبحاث؛ اضبطها وفق مستوى الميكنة ومهارة العمال.')}
       </p>
     </body></html>`);
     win.document.close();
     setTimeout(() => win.print(), 300);
-  }, [crop, areaHa, plantingDate, opsWithWeek, stats, totalWeeks]);
+  }, [crop, areaHa, plantingDate, opsWithWeek, stats, totalWeeks, language]);
 
   return (
     <Card className="overflow-hidden border-cyan-200/60 shadow-sm dark:border-cyan-900/60">
       <CardHeader className="border-b bg-gradient-to-r from-cyan-50 via-background to-sky-50/60 pb-4 dark:from-cyan-950/30 dark:via-background dark:to-sky-950/20">
         <CardTitle className="text-base flex items-center gap-2">
-          <CalendarDays className="h-4 w-4 text-cyan-600" /> Labor Calendar
+          <CalendarDays className="h-4 w-4 text-cyan-600" /> {copyFor(language, 'Labor Calendar', 'تقويم العمالة')}
         </CardTitle>
-        <p className="text-xs leading-relaxed text-muted-foreground">Phenology-driven field operations · 20 crops · person-days/ha estimates + peak week detection</p>
+        <p className="text-xs leading-relaxed text-muted-foreground">{copyFor(language, 'Phenology-driven field operations · 20 crops · person-days/ha estimates + peak week detection', 'عمليات حقلية حسب مراحل النمو · 20 محصولاً · تقديرات أيام العمل/هكتار + تحديد أسبوع الذروة')}</p>
       </CardHeader>
       <CardContent className="space-y-5 p-4 sm:p-5">
         {/* Inputs */}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
-            <Label className="text-xs font-medium">Crop</Label>
+            <Label className="text-xs font-medium">{copyFor(language, 'Crop', 'المحصول')}</Label>
             <select
               value={cropId}
               onChange={e => setCropId(e.target.value)}
-              aria-label="Crop"
+              aria-label={copyFor(language, 'Crop', 'المحصول')}
               className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
             >
               {CROP_LIFECYCLES.map(c => (
@@ -219,38 +242,38 @@ export function LaborCalendar() {
             </select>
           </div>
           <div>
-            <Label className="text-xs font-medium">Field area (hectares)</Label>
+            <Label className="text-xs font-medium">{copyFor(language, 'Field area (hectares)', 'مساحة الحقل (هكتار)')}</Label>
             <Input
               type="number" min={0.1} step={0.1}
               value={areaHa}
               onChange={e => setAreaHa(Math.max(0.1, parseFloat(e.target.value) || 1))}
-              aria-label="Field area in hectares"
+              aria-label={copyFor(language, 'Field area in hectares', 'مساحة الحقل بالهكتار')}
               className="mt-1 h-10 text-sm"
             />
           </div>
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
-            <Label className="text-xs font-medium">Planting date</Label>
+            <Label className="text-xs font-medium">{copyFor(language, 'Planting date', 'تاريخ الزراعة')}</Label>
             <Input
               type="date"
               value={plantingDate}
               onChange={e => setPlantingDate(e.target.value)}
-              aria-label="Planting date"
+              aria-label={copyFor(language, 'Planting date', 'تاريخ الزراعة')}
               className="mt-1 h-10 text-sm"
             />
           </div>
           <div>
-            <Label className="text-xs font-medium">Filter by type</Label>
+            <Label className="text-xs font-medium">{copyFor(language, 'Filter by type', 'تصفية حسب النوع')}</Label>
             <select
               value={filterType}
               onChange={e => setFilterType(e.target.value as LaborType | 'all')}
-              aria-label="Filter operations by type"
+              aria-label={copyFor(language, 'Filter operations by type', 'تصفية العمليات حسب النوع')}
               className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
             >
-              <option value="all">All operations ({opsWithWeek.length})</option>
+              <option value="all">{copyFor(language, 'All operations', 'كل العمليات')} ({opsWithWeek.length})</option>
               {(Object.keys(LABOR_TYPE_INFO) as LaborType[]).map(t => (
-                <option key={t} value={t}>{LABOR_TYPE_INFO[t].icon} {LABOR_TYPE_INFO[t].label} ({opsWithWeek.filter(o => o.type === t).length})</option>
+                <option key={t} value={t}>{LABOR_TYPE_INFO[t].icon} {laborTypeLabel(language, t)} ({opsWithWeek.filter(o => o.type === t).length})</option>
               ))}
             </select>
           </div>
@@ -258,9 +281,9 @@ export function LaborCalendar() {
 
         {/* Stats */}
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-          <StatCard icon={Users} color="cyan" label="Total labor" value={`${stats.total.toFixed(1)} d`} sub={`${areaHa} ha`} />
-          <StatCard icon={TrendingUp} color="amber" label="Peak week" value={`Wk ${stats.peak.week}`} sub={`${stats.peak.laborDays.toFixed(1)} d`} />
-          <StatCard icon={AlertTriangle} color="rose" label="Critical ops" value={String(stats.critical)} sub={`${stats.total > 0 ? ((stats.critical / opsWithWeek.length) * 100).toFixed(0) : 0}% of total`} />
+          <StatCard icon={Users} color="cyan" label={copyFor(language, 'Total labor', 'إجمالي العمالة')} value={`${stats.total.toFixed(1)} d`} sub={`${areaHa} ha`} />
+          <StatCard icon={TrendingUp} color="amber" label={copyFor(language, 'Peak week', 'أسبوع الذروة')} value={`Wk ${stats.peak.week}`} sub={`${stats.peak.laborDays.toFixed(1)} d`} />
+          <StatCard icon={AlertTriangle} color="rose" label={copyFor(language, 'Critical ops', 'العمليات الحرجة')} value={String(stats.critical)} sub={`${stats.total > 0 ? ((stats.critical / opsWithWeek.length) * 100).toFixed(0) : 0}% of total`} />
         </div>
 
         {/* Peak week warning */}
@@ -268,7 +291,7 @@ export function LaborCalendar() {
           <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50/60 p-3 text-xs leading-relaxed text-amber-800 dark:border-amber-900 dark:bg-amber-950/20 dark:text-amber-300">
             <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
             <div>
-              <strong>Peak labor bottleneck in week {stats.peak.week}.</strong> {stats.peak.laborDays.toFixed(1)} person-days needed — consider hiring temp workers, mechanizing, or staggering plantings.
+              <strong>{copyFor(language, `Peak labor bottleneck in week ${stats.peak.week}.`, `اختناق ذروة العمالة في الأسبوع ${stats.peak.week}.`)}</strong> {stats.peak.laborDays.toFixed(1)} {copyFor(language, 'person-days needed — consider hiring temp workers, mechanizing, or staggering plantings.', 'يوم عمل مطلوب — فكّر في توظيف عمال مؤقتين أو استخدام الميكنة أو توزيع مواعيد الزراعة.')}
             </div>
           </div>
         )}
@@ -279,7 +302,7 @@ export function LaborCalendar() {
         {/* Operations list */}
         <div className="space-y-2.5">
           <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            <Briefcase className="h-3 w-3" /> Operations ({filtered.length})
+            <Briefcase className="h-3 w-3" /> {copyFor(language, 'Operations', 'العمليات')} ({filtered.length})
           </div>
           {filtered
             .slice()
@@ -301,23 +324,23 @@ export function LaborCalendar() {
                       </Badge>
                     </div>
                     <Badge variant="outline" className="text-[9px]" style={{ color: priorityInfo.color, borderColor: priorityInfo.color + '60' }}>
-                      {priorityInfo.label}
+                      {priorityLabel(language, op.priority)}
                     </Badge>
                   </div>
                   <div className="text-xs font-medium mb-1.5">{op.task}</div>
                   <div className="grid grid-cols-1 gap-2 text-xs mb-2 sm:grid-cols-3">
                     <div>
-                      <span className="text-muted-foreground">Labor: </span>
+                      <span className="text-muted-foreground">{copyFor(language, 'Labor:', 'العمالة:')} </span>
                       <strong className="font-mono">{op.totalLaborDays.toFixed(1)} d</strong>
-                      <span className="text-muted-foreground"> ({op.durationDays}-day window)</span>
+                      <span className="text-muted-foreground"> ({op.durationDays}-{copyFor(language, 'day window', 'أيام')})</span>
                     </div>
                     <div>
-                      <span className="text-muted-foreground">Skill: </span>
-                      <span style={{ color: skillInfo.color }} className="font-medium">{skillInfo.label}</span>
+                      <span className="text-muted-foreground">{copyFor(language, 'Skill:', 'المهارة:')} </span>
+                      <span style={{ color: skillInfo.color }} className="font-medium">{skillLabel(language, op.skill)}</span>
                     </div>
                     <div>
-                      <span className="text-muted-foreground">Equipment: </span>
-                      <span>{op.equipment || 'Hand tools'}</span>
+                      <span className="text-muted-foreground">{copyFor(language, 'Equipment:', 'المعدات:')} </span>
+                      <span>{op.equipment || copyFor(language, 'Hand tools', 'أدوات يدوية')}</span>
                     </div>
                   </div>
                   {op.notes && (
@@ -335,7 +358,7 @@ export function LaborCalendar() {
         <div className="rounded-xl border bg-muted/20 p-3">
           <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             <Activity className="h-3.5 w-3.5 text-cyan-600" />
-            Labor by operation type
+            {copyFor(language, 'Labor by operation type', 'العمالة حسب نوع العملية')}
           </div>
           <div className="space-y-1">
             {Object.entries(stats.byType)
@@ -359,11 +382,11 @@ export function LaborCalendar() {
 
         {/* Export */}
         <Button size="sm" onClick={exportPdf} className="h-11 w-full gap-2">
-          <Download className="h-3.5 w-3.5" /> Export labor calendar (PDF)
+          <Download className="h-3.5 w-3.5" /> {copyFor(language, 'Export labor calendar (PDF)', 'تصدير تقويم العمالة (PDF)')}
         </Button>
 
         <div className="rounded-xl border bg-muted/20 p-3 text-xs leading-relaxed text-muted-foreground">
-          💡 Labor requirements assume smallholder-to-medium mechanization. Highly mechanized farms should reduce estimates by 40–70%. Stagger plantings 1–2 weeks apart to spread peak labor demand.
+          💡 {copyFor(language, 'Labor requirements assume smallholder-to-medium mechanization. Highly mechanized farms should reduce estimates by 40–70%. Stagger plantings 1–2 weeks apart to spread peak labor demand.', 'تفترض متطلبات العمالة مستوى ميكنة من المزارع الصغيرة إلى المتوسطة. ينبغي للمزارع عالية الميكنة خفض التقديرات بنسبة 40–70%. وزّع مواعيد الزراعة بفاصل أسبوع إلى أسبوعين لتخفيف ذروة الطلب على العمالة.')}
         </div>
       </CardContent>
     </Card>
@@ -375,6 +398,7 @@ export function LaborCalendar() {
 // ============================================================================
 
 function CalendarGrid({ weekGrid, totalWeeks }: { weekGrid: { week: number; ops: any[] }[]; totalWeeks: number }) {
+  const { language } = useTranslation();
   const cellW = 320 / Math.min(totalWeeks, 26);  // cap at 26 weeks visible
   const rowH = 14;
 
@@ -389,9 +413,9 @@ function CalendarGrid({ weekGrid, totalWeeks }: { weekGrid: { week: number; ops:
     <div className="rounded-xl border bg-background p-3">
       <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         <CalendarDays className="h-3.5 w-3.5 text-cyan-600" />
-        Weekly calendar
+        {copyFor(language, 'Weekly calendar', 'التقويم الأسبوعي')}
       </div>
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label="Labor calendar">
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label={copyFor(language, 'Labor calendar', 'تقويم العمالة')}>
         {/* Type row labels */}
         {typeRows.map((t, i) => (
           <text key={t} x={2} y={pad + i * rowH + 8} fontSize="6" className="fill-muted-foreground">
@@ -406,7 +430,7 @@ function CalendarGrid({ weekGrid, totalWeeks }: { weekGrid: { week: number; ops:
               {/* Week number on top */}
               {(idx % 4 === 0 || idx === weekGrid.length - 1) && (
                 <text x={x + cellW / 2} y={8} fontSize="6" textAnchor="middle" className="fill-muted-foreground font-mono">
-                  W{wk.week}
+                  {copyFor(language, 'W', 'أ')} {wk.week}
                 </text>
               )}
               {/* Vertical grid line */}
