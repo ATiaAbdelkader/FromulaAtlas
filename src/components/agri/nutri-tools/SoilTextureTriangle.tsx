@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import {
   Mountain, Layers, Droplets, Sprout, Download,
 } from 'lucide-react';
+import { copyFor, useTranslation } from '@/lib/language-store';
 
 // ============================================================================
 // Classification systems
@@ -21,6 +22,32 @@ const SYSTEM_LABELS: Record<System, string> = {
   ssew: 'SSEW (UK/International)',
   intl: 'International (WRB)',
 };
+const SYSTEM_AR: Record<System, string> = { usda: 'USDA (الولايات المتحدة)', ssew: 'SSEW (المملكة المتحدة/دولي)', intl: 'دولي (WRB)' };
+const TEXTURE_AR: Record<string, string> = {
+  Clay: 'طين', 'Sandy Clay': 'طين رملي', 'Sandy Clay Loam': 'طمي طيني رملي', 'Sandy Loam': 'طمي رملي',
+  'Loamy Sand': 'رمل طميي', Sand: 'رمل', 'Clay Loam': 'طمي طيني', Loam: 'طمي', 'Silt Loam': 'طمي غريني',
+  'Silty Clay': 'طين غريني', 'Silty Clay Loam': 'طمي طيني غريني', Silt: 'غرين', 'Heavy Clay': 'طين ثقيل', 'Sandy Silt Loam': 'طمي غريني رملي',
+};
+const DRAINAGE_AR: Record<string, string> = { Excessive: 'مفرط', 'Well-drained': 'جيد الصرف', 'Moderately well': 'جيد بشكل متوسط', 'Somewhat poor': 'ضعيف نسبياً', Poor: 'ضعيف' };
+const PROPERTY_AR: Record<string, string> = {
+  'High OM retention': 'احتفاظ مرتفع بالمادة العضوية', 'Medium OM retention': 'احتفاظ متوسط بالمادة العضوية', 'Low OM retention': 'احتفاظ منخفض بالمادة العضوية',
+  'Difficult — sticky when wet, hard when dry': 'صعب — لزج عند البلل وقاسٍ عند الجفاف', 'Moderate — plow when moisture is right': 'متوسط — احرث عند مستوى الرطوبة المناسب',
+  'Easy but dries fast': 'سهل لكنه يجف بسرعة', 'Good workability': 'قابلية تشغيل جيدة', 'High wind erosion risk': 'خطر مرتفع للتعرية بالرياح',
+  'High water erosion risk (runoff)': 'خطر مرتفع للتعرية المائية (الجريان السطحي)', 'Moderate water erosion': 'تعرية مائية متوسطة', 'Low erosion risk': 'خطر تعرية منخفض',
+  'High compaction risk — avoid wet traffic': 'خطر مرتفع للانضغاط — تجنب المرور عند البلل', 'Moderate — compacts under heavy loads': 'متوسط — ينضغط تحت الأحمال الثقيلة', 'Low compaction risk': 'خطر انضغاط منخفض',
+  'Drip or sprinkler — avoid flood (leaching)': 'تنقيط أو رش — تجنب الغمر (خطر الغسل)', 'All systems suitable': 'جميع الأنظمة مناسبة', 'Sprinkler or drip — avoid flood': 'رش أو تنقيط — تجنب الغمر', 'Drip only — very slow infiltration': 'تنقيط فقط — تسرب بطيء جداً',
+};
+const RECOMMENDATION_AR: Record<string, string> = {
+  'Add gypsum (1-2 t/ha) to improve structure + drainage': 'أضف الجبس (1–2 طن/هكتار) لتحسين البناء والصرف',
+  'Add compost/manure (20-40 t/ha) to improve water holding + CEC': 'أضف الكمبوست أو السماد العضوي (20–40 طن/هكتار) لتحسين الاحتفاظ بالماء وCEC',
+  'Protect from crusting — maintain cover crop or mulch': 'احمِ التربة من تكوّن القشرة — حافظ على محصول تغطية أو غطاء عضوي',
+  'Low CEC — split fertilizer applications (leaching risk)': 'CEC منخفض — قسّم تطبيقات السماد (خطر الغسل)',
+  'Low water holding — irrigate frequently with small doses': 'احتفاظ منخفض بالماء — اروِ بتكرار وبجرعات صغيرة',
+  'High water holding — can irrigate less frequently with larger doses': 'احتفاظ مرتفع بالماء — يمكن الري بتكرار أقل وجرعات أكبر',
+  'Ideal texture for most crops — good balance of drainage + retention': 'قوام مثالي لمعظم المحاصيل — توازن جيد بين الصرف والاحتفاظ',
+};
+type UiLanguage = Parameters<typeof copyFor>[0];
+const soilCopy = (language: UiLanguage, text: string, arabic: Record<string, string>) => copyFor(language, text, arabic[text] || text);
 
 // USDA polygon vertices (clay, sand, silt, label, x, y)
 // x and y are ternary coordinates for the SVG triangle
@@ -195,6 +222,7 @@ const TEXTURE_COLORS: Record<string, string> = {
 };
 
 export function SoilTextureTriangle() {
+  const { language } = useTranslation();
   const [system, setSystem] = useState<System>('usda');
   const [clay, setClay] = useState('20');
   const [sand, setSand] = useState('40');
@@ -218,9 +246,9 @@ export function SoilTextureTriangle() {
   return (
     <Card className="overflow-hidden border-amber-100 shadow-sm dark:border-amber-900/60">
       <CardHeader className="border-b border-border/60 bg-amber-50/50 pb-4 dark:bg-amber-950/10">
-        <CardTitle className="flex items-center gap-2 text-base"><span className="rounded-lg bg-amber-100 p-2 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"><Mountain className="h-4 w-4" /></span> Soil Texture Triangle
+        <CardTitle className="flex items-center gap-2 text-base"><span className="rounded-lg bg-amber-100 p-2 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"><Mountain className="h-4 w-4" /></span> {copyFor(language, 'Soil Texture Triangle', 'مثلث قوام التربة')}
         </CardTitle>
-        <p className="text-[10px] text-muted-foreground">Interactive ternary diagram · 3 classification systems (USDA/SSEW/International) · soil properties · irrigation + management recommendations</p>
+        <p className="text-[10px] text-muted-foreground">{copyFor(language, 'Interactive ternary diagram · 3 classification systems (USDA/SSEW/International) · soil properties · irrigation + management recommendations', 'مخطط ثلاثي تفاعلي · 3 أنظمة تصنيف (USDA/SSEW/دولي) · خصائص التربة · توصيات الري والإدارة')}</p>
       </CardHeader>
       <CardContent className="space-y-3">
         {/* Classification system selector */}
@@ -228,7 +256,7 @@ export function SoilTextureTriangle() {
           {(['usda', 'ssew', 'intl'] as System[]).map(sys => (
             <button type="button" key={sys} aria-pressed={system === sys} onClick={() => setSystem(sys)}
               className={`min-h-11 rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${system === sys ? 'bg-background text-amber-700 shadow-sm dark:text-amber-300' : 'text-muted-foreground hover:text-foreground'}`}>
-              {SYSTEM_LABELS[sys]}
+              {copyFor(language, SYSTEM_LABELS[sys], SYSTEM_AR[sys])}
             </button>
           ))}
         </div>
@@ -236,19 +264,19 @@ export function SoilTextureTriangle() {
         {/* Inputs */}
         <div className="grid grid-cols-1 gap-3 rounded-xl border border-amber-200/70 bg-amber-50/30 p-3 sm:grid-cols-3 dark:border-amber-900/60 dark:bg-amber-950/10">
           <div>
-            <Label className="text-[11px] font-medium">Clay (%)</Label>
+            <Label className="text-[11px] font-medium">{copyFor(language, 'Clay (%)', 'الطين (%)')}</Label>
             <Input value={clay} onChange={e => setClay(e.target.value)} type="number" min="0" max="100" step="1" className="mt-1 h-10 text-sm" />
           </div>
           <div>
-            <Label className="text-[11px] font-medium">Sand (%)</Label>
+            <Label className="text-[11px] font-medium">{copyFor(language, 'Sand (%)', 'الرمل (%)')}</Label>
             <Input value={sand} onChange={e => setSand(e.target.value)} type="number" min="0" max="100" step="1" className="mt-1 h-10 text-sm" />
           </div>
           <div>
-            <Label className="text-[11px] font-medium">Silt (%)</Label>
+            <Label className="text-[11px] font-medium">{copyFor(language, 'Silt (%)', 'الغرين (%)')}</Label>
             <Input value={silt} onChange={e => setSilt(e.target.value)} type="number" min="0" max="100" step="1" className="mt-1 h-10 text-sm" />
           </div>
         </div>
-        <div className={`rounded-lg px-3 py-2 text-center text-xs ${Math.abs(c + s + si - 100) > 0.5 ? 'border border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900 dark:bg-amber-950/20 dark:text-amber-200' : 'bg-muted/30 text-muted-foreground'}`}>Composition total: <span className="font-mono font-semibold">{(c + s + si).toFixed(1)}%</span> {Math.abs(c + s + si - 100) > 0.5 && '· values auto-normalized to 100%'}</div>
+        <div className={`rounded-lg px-3 py-2 text-center text-xs ${Math.abs(c + s + si - 100) > 0.5 ? 'border border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900 dark:bg-amber-950/20 dark:text-amber-200' : 'bg-muted/30 text-muted-foreground'}`}>{copyFor(language, 'Composition total', 'إجمالي التركيب')}: <span className="font-mono font-semibold">{(c + s + si).toFixed(1)}%</span> {Math.abs(c + s + si - 100) > 0.5 && `· ${copyFor(language, 'values auto-normalized to 100%', 'تمت موازنة القيم تلقائياً إلى 100%')}`}</div>
 
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
           {/* SVG Triangle */}
@@ -296,9 +324,9 @@ export function SoilTextureTriangle() {
               })}
 
               {/* Axis labels */}
-              <text x={TRI_PAD + TRI_SIZE / 2} y={TRI_PAD + TRI_HEIGHT + 20} textAnchor="middle" fontSize="11" fontWeight="bold" fill="currentColor" className="text-muted-foreground">Sand (%)</text>
-              <text x={TRI_PAD - 8} y={TRI_PAD + TRI_HEIGHT / 2} textAnchor="middle" fontSize="11" fontWeight="bold" fill="currentColor" className="text-muted-foreground" transform={`rotate(-90 ${TRI_PAD - 8} ${TRI_PAD + TRI_HEIGHT / 2})`}>Clay (%)</text>
-              <text x={TRI_PAD + TRI_SIZE + 8} y={TRI_PAD + TRI_HEIGHT / 2} textAnchor="middle" fontSize="11" fontWeight="bold" fill="currentColor" className="text-muted-foreground" transform={`rotate(90 ${TRI_PAD + TRI_SIZE + 8} ${TRI_PAD + TRI_HEIGHT / 2})`}>Silt (%)</text>
+              <text x={TRI_PAD + TRI_SIZE / 2} y={TRI_PAD + TRI_HEIGHT + 20} textAnchor="middle" fontSize="11" fontWeight="bold" fill="currentColor" className="text-muted-foreground">{copyFor(language, 'Sand (%)', 'الرمل (%)')}</text>
+              <text x={TRI_PAD - 8} y={TRI_PAD + TRI_HEIGHT / 2} textAnchor="middle" fontSize="11" fontWeight="bold" fill="currentColor" className="text-muted-foreground" transform={`rotate(-90 ${TRI_PAD - 8} ${TRI_PAD + TRI_HEIGHT / 2})`}>{copyFor(language, 'Clay (%)', 'الطين (%)')}</text>
+              <text x={TRI_PAD + TRI_SIZE + 8} y={TRI_PAD + TRI_HEIGHT / 2} textAnchor="middle" fontSize="11" fontWeight="bold" fill="currentColor" className="text-muted-foreground" transform={`rotate(90 ${TRI_PAD + TRI_SIZE + 8} ${TRI_PAD + TRI_HEIGHT / 2})`}>{copyFor(language, 'Silt (%)', 'الغرين (%)')}</text>
 
               {/* Tick marks */}
               {[0, 20, 40, 60, 80, 100].map(pct => (
@@ -311,7 +339,7 @@ export function SoilTextureTriangle() {
               {/* User's soil point */}
               <circle cx={pointX} cy={pointY} r="8" fill="#dc2626" stroke="white" strokeWidth="2" />
               <circle cx={pointX} cy={pointY} r="14" fill="none" stroke="#dc2626" strokeWidth="1" opacity="0.4" />
-              <text x={pointX} y={pointY - 14} textAnchor="middle" fontSize="9" fontWeight="bold" fill="#dc2626">Your soil</text>
+              <text x={pointX} y={pointY - 14} textAnchor="middle" fontSize="9" fontWeight="bold" fill="#dc2626">{copyFor(language, 'Your soil', 'تربتك')}</text>
             </svg>
           </div>
 
@@ -319,35 +347,35 @@ export function SoilTextureTriangle() {
           <div className="space-y-3">
             {/* Texture classification */}
             <div className="rounded-xl border-2 p-4 text-center shadow-sm" style={{ borderColor: TEXTURE_COLORS[props.texture] ?? '#999', backgroundColor: (TEXTURE_COLORS[props.texture] ?? '#999') + '15' }}>
-              <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Classification · {SYSTEM_LABELS[system]}</div>
-              <div className="mt-1 text-2xl font-bold" style={{ color: TEXTURE_COLORS[props.texture] ?? '#333' }}>{props.texture}</div>
+              <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{copyFor(language, 'Classification', 'التصنيف')} · {copyFor(language, SYSTEM_LABELS[system], SYSTEM_AR[system])}</div>
+              <div className="mt-1 text-2xl font-bold" style={{ color: TEXTURE_COLORS[props.texture] ?? '#333' }}>{soilCopy(language, props.texture, TEXTURE_AR)}</div>
               <div className="text-[10px] text-muted-foreground">{c.toFixed(0)}% clay · {s.toFixed(0)}% sand · {si.toFixed(0)}% silt</div>
             </div>
 
             {/* Soil properties grid */}
             <div className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-2">
-              <PropCard icon={Droplets} label="Avail. Water" value={`${props.availableWater.taw.toFixed(0)} mm/m`} sub={`FC ${props.availableWater.fc.toFixed(0)}% · PWP ${props.availableWater.pwp.toFixed(0)}%`} color="#0891b2" />
-              <PropCard icon={Layers} label="Infiltration" value={`${props.infiltrationRate} mm/hr`} sub={props.drainageClass} color="#0ea5e9" />
-              <PropCard icon={Mountain} label="Bulk density" value={`${props.bulkDensity.toFixed(2)} g/cm³`} sub={`CEC ${props.cationExchangeCapacity.toFixed(0)} meq/100g`} color="#78716c" />
-              <PropCard icon={Sprout} label="OM holding" value={props.organicMatterHolding} sub={props.workability.split('—')[0].trim()} color="#16a34a" />
+              <PropCard icon={Droplets} label={copyFor(language, 'Avail. Water', 'الماء المتاح')} value={`${props.availableWater.taw.toFixed(0)} mm/m`} sub={`FC ${props.availableWater.fc.toFixed(0)}% · PWP ${props.availableWater.pwp.toFixed(0)}%`} color="#0891b2" />
+              <PropCard icon={Layers} label={copyFor(language, 'Infiltration', 'التسرب')} value={`${props.infiltrationRate} mm/hr`} sub={soilCopy(language, props.drainageClass, DRAINAGE_AR)} color="#0ea5e9" />
+              <PropCard icon={Mountain} label={copyFor(language, 'Bulk density', 'الكثافة الظاهرية')} value={`${props.bulkDensity.toFixed(2)} g/cm³`} sub={`CEC ${props.cationExchangeCapacity.toFixed(0)} meq/100g`} color="#78716c" />
+              <PropCard icon={Sprout} label={copyFor(language, 'OM holding', 'احتفاظ المادة العضوية')} value={soilCopy(language, props.organicMatterHolding, PROPERTY_AR)} sub={soilCopy(language, props.workability, PROPERTY_AR).split('—')[0].trim()} color="#16a34a" />
             </div>
 
             {/* Management flags */}
             <div className="space-y-1">
-              <div><p className="text-sm font-semibold">Management cues</p><p className="text-xs text-muted-foreground">Use these estimates to guide field checks and irrigation planning.</p></div>
-              <div className="rounded-lg border bg-background/70 p-2.5 text-xs leading-relaxed"><span className="text-muted-foreground">💧 Irrigation:</span> {props.irrigationSuitability}</div>
-              <div className="rounded-lg border bg-background/70 p-2.5 text-xs leading-relaxed"><span className="text-muted-foreground">⛏️ Erosion:</span> {props.erosionRisk}</div>
-              <div className="rounded-lg border bg-background/70 p-2.5 text-xs leading-relaxed"><span className="text-muted-foreground">🚜 Compaction:</span> {props.compactionRisk}</div>
-              <div className="rounded-lg border bg-background/70 p-2.5 text-xs leading-relaxed"><span className="text-muted-foreground">🔨 Workability:</span> {props.workability}</div>
+              <div><p className="text-sm font-semibold">{copyFor(language, 'Management cues', 'مؤشرات الإدارة')}</p><p className="text-xs text-muted-foreground">{copyFor(language, 'Use these estimates to guide field checks and irrigation planning.', 'استخدم هذه التقديرات لتوجيه فحوصات الحقل وتخطيط الري.')}</p></div>
+              <div className="rounded-lg border bg-background/70 p-2.5 text-xs leading-relaxed"><span className="text-muted-foreground">💧 {copyFor(language, 'Irrigation:', 'الري:')}</span> {soilCopy(language, props.irrigationSuitability, PROPERTY_AR)}</div>
+              <div className="rounded-lg border bg-background/70 p-2.5 text-xs leading-relaxed"><span className="text-muted-foreground">⛏️ {copyFor(language, 'Erosion:', 'التعرية:')}</span> {soilCopy(language, props.erosionRisk, PROPERTY_AR)}</div>
+              <div className="rounded-lg border bg-background/70 p-2.5 text-xs leading-relaxed"><span className="text-muted-foreground">🚜 {copyFor(language, 'Compaction:', 'الانضغاط:')}</span> {soilCopy(language, props.compactionRisk, PROPERTY_AR)}</div>
+              <div className="rounded-lg border bg-background/70 p-2.5 text-xs leading-relaxed"><span className="text-muted-foreground">🔨 {copyFor(language, 'Workability:', 'قابلية التشغيل:')}</span> {soilCopy(language, props.workability, PROPERTY_AR)}</div>
             </div>
 
             {/* Recommendations */}
             {props.recommendations.length > 0 && (
               <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-3 space-y-2 dark:border-emerald-900 dark:bg-emerald-950/10">
-                <div className="text-[9px] font-semibold text-emerald-700 dark:text-emerald-300 uppercase">Recommendations</div>
+                <div className="text-[9px] font-semibold text-emerald-700 dark:text-emerald-300 uppercase">{copyFor(language, 'Recommendations', 'التوصيات')}</div>
                 {props.recommendations.map((r, i) => (
                   <div key={i} className="text-[10px] text-foreground/80 flex items-start gap-1">
-                    <span className="text-emerald-600 mt-0.5">✓</span> {r}
+                    <span className="text-emerald-600 mt-0.5">✓</span> {soilCopy(language, r, RECOMMENDATION_AR)}
                   </div>
                 ))}
               </div>
@@ -356,7 +384,7 @@ export function SoilTextureTriangle() {
         </div>
 
         <div className="rounded-lg bg-muted/30 p-3 text-xs leading-relaxed text-muted-foreground">
-          💡 Based on ggsoiltexture R package (Acevedo et al. 2025, SoftwareX). Soil properties estimated via Saxton-Rawls pedotransfer functions + USDA-NRCS interpretation guidelines. Click on the triangle to set texture (coming soon).
+          💡 {copyFor(language, 'Based on ggsoiltexture R package (Acevedo et al. 2025, SoftwareX). Soil properties estimated via Saxton-Rawls pedotransfer functions + USDA-NRCS interpretation guidelines. Click on the triangle to set texture (coming soon).', 'مبني على حزمة ggsoiltexture بلغة R (Acevedo وآخرون 2025، SoftwareX). قُدّرت خصائص التربة باستخدام دوال النقل Saxton-Rawls وإرشادات تفسير USDA-NRCS. انقر على المثلث لتحديد القوام (قريباً).')}
         </div>
       </CardContent>
     </Card>
