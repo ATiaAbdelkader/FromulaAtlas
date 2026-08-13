@@ -39,35 +39,35 @@ export function ManureManagementPlanner() {
   }, [manureType, rate, area, incorporation, slope, nearestWater]);
 
   return (
-    <Card>
-      <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><Droplets className="h-4 w-4 text-amber-600" /> Manure Management Planner</CardTitle><p className="text-[10px] text-muted-foreground">N-P-K value · application timing · buffer zone compliance</p></CardHeader>
+    <Card className="overflow-hidden border-violet-100 shadow-sm dark:border-violet-900/60">
+      <CardHeader className="border-b border-border/60 bg-violet-50/50 pb-4 dark:bg-violet-950/10"><CardTitle className="flex items-center gap-2 text-base"><span className="rounded-lg bg-violet-100 p-2 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300"><Droplets className="h-4 w-4" /></span> Manure Management Planner</CardTitle><p className="text-[10px] text-muted-foreground">N-P-K value · application timing · buffer zone compliance</p></CardHeader>
       <CardContent className="space-y-3">
-        <div className="grid grid-cols-2 gap-2">
-          <div><Label className="text-[10px]">Manure type</Label><select value={manureType} onChange={e => setManureType(e.target.value)} className="h-8 text-xs w-full rounded-md border border-input bg-background px-2 mt-0.5">{Object.entries(MANURE_TYPES).map(([k, v]) => <option key={k} value={k}>{v.name} (N:{v.n} P:{v.p} K:{v.k})</option>)}</select></div>
-          <div><Label className="text-[10px]">Application rate (t/ha)</Label><Input value={rate} onChange={e => setRate(e.target.value)} type="number" step="5" className="h-8 text-xs mt-0.5" /></div>
+        <div className="grid grid-cols-1 gap-3 rounded-xl border border-violet-200/70 bg-violet-50/30 p-3 sm:grid-cols-2 dark:border-violet-900/60 dark:bg-violet-950/10">
+          <div><Label className="text-xs font-medium">Manure type</Label><select aria-label="Manure type" value={manureType} onChange={e => setManureType(e.target.value)} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm">{Object.entries(MANURE_TYPES).map(([k, v]) => <option key={k} value={k}>{v.name} (N:{v.n} P:{v.p} K:{v.k})</option>)}</select></div>
+          <div><Label className="text-xs font-medium">Application rate (t/ha)</Label><Input aria-label="Application rate in tonnes per hectare" value={rate} onChange={e => setRate(e.target.value)} type="number" step="5" className="mt-1 h-10 text-sm" /></div>
         </div>
-        <div className="grid grid-cols-3 gap-2">
-          <div><Label className="text-[10px]">Incorporation</Label><select value={incorporation} onChange={e => setIncorporation(e.target.value)} className="h-8 text-xs w-full rounded-md border border-input bg-background px-2 mt-0.5"><option value="immediate">Immediate</option><option value="hours12">Within 12 hr</option><option value="days1">Within 1 day</option><option value="days7">Within 7 days</option><option value="none">Not incorporated</option></select></div>
-          <div><Label className="text-[10px]">Slope (%)</Label><Input value={slope} onChange={e => setSlope(e.target.value)} type="number" step="0.5" className="h-8 text-xs mt-0.5" /></div>
-          <div><Label className="text-[10px]">Nearest water (m)</Label><Input value={nearestWater} onChange={e => setNearestWater(e.target.value)} type="number" step="5" className="h-8 text-xs mt-0.5" /></div>
+        <div className="grid grid-cols-1 gap-3 rounded-xl border border-border/70 bg-muted/20 p-3 sm:grid-cols-3">
+          <div><Label className="text-xs font-medium">Incorporation timing</Label><select aria-label="Incorporation timing" value={incorporation} onChange={e => setIncorporation(e.target.value)} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="immediate">Immediate</option><option value="hours12">Within 12 hr</option><option value="days1">Within 1 day</option><option value="days7">Within 7 days</option><option value="none">Not incorporated</option></select></div>
+          <div><Label className="text-xs font-medium">Field slope (%)</Label><Input aria-label="Field slope percentage" value={slope} onChange={e => setSlope(e.target.value)} type="number" step="0.5" className="mt-1 h-10 text-sm" /></div>
+          <div><Label className="text-xs font-medium">Nearest waterway (m)</Label><Input aria-label="Distance to nearest waterway in meters" value={nearestWater} onChange={e => setNearestWater(e.target.value)} type="number" step="5" className="mt-1 h-10 text-sm" /></div>
         </div>
         {result && (
           <div className="space-y-2">
-            <div className="grid grid-cols-3 gap-2">
-              <div className="rounded-md border border-emerald-200 bg-emerald-50/40 p-2 text-center"><div className="text-[9px] text-muted-foreground uppercase">N (Yr 1)</div><div className="font-mono text-lg font-bold text-emerald-700">{result.nY1.toFixed(0)}</div><div className="text-[9px] text-muted-foreground">kg/ha</div></div>
-              <div className="rounded-md border border-cyan-200 bg-cyan-50/40 p-2 text-center"><div className="text-[9px] text-muted-foreground uppercase">P (Yr 1)</div><div className="font-mono text-lg font-bold text-cyan-700">{result.pY1.toFixed(0)}</div><div className="text-[9px] text-muted-foreground">kg/ha</div></div>
-              <div className="rounded-md border border-amber-200 bg-amber-50/40 p-2 text-center"><div className="text-[9px] text-muted-foreground uppercase">K (Yr 1)</div><div className="font-mono text-lg font-bold text-amber-700">{result.kY1.toFixed(0)}</div><div className="text-[9px] text-muted-foreground">kg/ha</div></div>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-3 text-center shadow-sm"><div className="text-[9px] text-muted-foreground uppercase">N (Yr 1)</div><div className="font-mono text-lg font-bold text-emerald-700">{result.nY1.toFixed(0)}</div><div className="text-[9px] text-muted-foreground">kg/ha</div></div>
+              <div className="rounded-xl border border-cyan-200 bg-cyan-50/40 p-3 text-center shadow-sm"><div className="text-[9px] text-muted-foreground uppercase">P (Yr 1)</div><div className="font-mono text-lg font-bold text-cyan-700">{result.pY1.toFixed(0)}</div><div className="text-[9px] text-muted-foreground">kg/ha</div></div>
+              <div className="rounded-xl border border-amber-200 bg-amber-50/40 p-3 text-center shadow-sm"><div className="text-[9px] text-muted-foreground uppercase">K (Yr 1)</div><div className="font-mono text-lg font-bold text-amber-700">{result.kY1.toFixed(0)}</div><div className="text-[9px] text-muted-foreground">kg/ha</div></div>
             </div>
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="rounded border p-2"><span className="text-muted-foreground">Total N applied:</span> <strong className="font-mono">{result.totalN.toFixed(0)} kg/ha</strong></div>
-              <div className="rounded border p-2"><span className="text-muted-foreground">N availability:</span> <strong>{((result.nY1 / result.totalN) * 100).toFixed(0)}% Yr 1</strong></div>
+            <div className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-2">
+              <div className="rounded-lg border bg-background/60 p-3"><span className="text-muted-foreground">Total N applied:</span> <strong className="font-mono">{result.totalN.toFixed(0)} kg/ha</strong></div>
+              <div className="rounded-lg border bg-background/60 p-3"><span className="text-muted-foreground">N availability:</span> <strong>{((result.nY1 / result.totalN) * 100).toFixed(0)}% Yr 1</strong></div>
             </div>
             {result.bufferOK ? (
-              <div className="rounded-md border border-emerald-200 dark:border-emerald-900 bg-emerald-50/60 p-2 text-xs text-emerald-700 dark:text-emerald-300 flex items-start gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 mt-0.5 shrink-0" /><span><strong>Buffer zone compliant.</strong> {nearestWater}m to nearest waterway exceeds {result.minBuffer}m minimum.</span></div>
+              <div className="rounded-xl border border-emerald-200 dark:border-emerald-900 bg-emerald-50/60 p-3 text-xs text-emerald-700 dark:text-emerald-300 flex items-start gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 mt-0.5 shrink-0" /><span><strong>Buffer zone compliant.</strong> {nearestWater}m to nearest waterway exceeds {result.minBuffer}m minimum.</span></div>
             ) : (
-              <div className="rounded-md border border-rose-200 dark:border-rose-900 bg-rose-50/60 p-2 text-xs text-rose-700 dark:text-rose-300 flex items-start gap-1.5"><AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" /><span><strong>Buffer zone violation!</strong> Need {result.minBuffer}m minimum (you have {nearestWater}m). Do not apply — move setback or use buffer strip.</span></div>
+              <div className="rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50/60 p-3 text-xs text-rose-700 dark:text-rose-300 flex items-start gap-1.5"><AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" /><span><strong>Buffer zone violation!</strong> Need {result.minBuffer}m minimum (you have {nearestWater}m). Do not apply — move setback or use buffer strip.</span></div>
             )}
-            <div className="text-[10px] text-muted-foreground bg-muted/20 rounded p-2">💡 Incorporate within 12 hr to save 30% of N (ammonia volatilization). Don't exceed crop N needs — soil test first. Year 2 releases additional 20-30% of total N.</div>
+            <div className="rounded-lg bg-muted/30 p-3 text-xs leading-relaxed text-muted-foreground">💡 Incorporate within 12 hr to save 30% of N (ammonia volatilization). Don't exceed crop N needs — soil test first. Year 2 releases additional 20-30% of total N.</div>
           </div>
         )}
       </CardContent>

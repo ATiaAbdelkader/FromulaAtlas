@@ -53,16 +53,14 @@ export function LivestockGrowthBenchmark() {
   }, [cattleBreed, cattleBf]);
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2">
-          <Beef className="h-4 w-4 text-amber-600" /> Livestock Growth Benchmarks
-        </CardTitle>
+    <Card className="overflow-hidden border-amber-100 shadow-sm dark:border-amber-900/60">
+      <CardHeader className="border-b border-border/60 bg-amber-50/50 pb-4 dark:bg-amber-950/10">
+        <CardTitle className="flex items-center gap-2 text-base"><span className="rounded-lg bg-amber-100 p-2 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"><Beef className="h-4 w-4" /></span> Livestock Growth Benchmarks</CardTitle>
         <p className="text-[10px] text-muted-foreground">Real trial data from agridatasets-py (gpk R package) · broiler + pig + cattle</p>
-        <div className="flex gap-1 mt-2">
+        <div className="mt-3 grid grid-cols-3 gap-1 rounded-xl bg-amber-100/70 p-1 dark:bg-amber-950/30">
           {(['broiler', 'pig', 'cattle'] as Animal[]).map(a => (
-            <button key={a} onClick={() => setAnimal(a)} className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${animal === a ? 'bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300' : 'text-muted-foreground hover:bg-muted/50'}`}>
-              {a === 'broiler' ? '🐔' : a === 'pig' ? '🐷' : '🐄'} {a.charAt(0).toUpperCase() + a.slice(1)}
+            <button type="button" key={a} aria-pressed={animal === a} onClick={() => setAnimal(a)} className={`flex min-h-11 items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-semibold transition-colors ${animal === a ? 'bg-background text-amber-700 shadow-sm dark:text-amber-300' : 'text-muted-foreground hover:text-foreground'}`}>
+              <span aria-hidden="true">{a === 'broiler' ? '🐔' : a === 'pig' ? '🐷' : '🐄'}</span> {a.charAt(0).toUpperCase() + a.slice(1)}
             </button>
           ))}
         </div>
@@ -70,9 +68,9 @@ export function LivestockGrowthBenchmark() {
       <CardContent className="space-y-3">
         {animal === 'broiler' && (
           <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-2">
-              <div><Label className="text-[10px]">Age (days)</Label><Input value={broilerAge} onChange={e => setBroilerAge(e.target.value)} type="number" step="1" className="h-8 text-xs mt-0.5" /></div>
-              <div><Label className="text-[10px]">Body weight (g)</Label><Input value={broilerWeight} onChange={e => setBroilerWeight(e.target.value)} type="number" step="10" className="h-8 text-xs mt-0.5" /></div>
+            <div className="grid grid-cols-1 gap-3 rounded-xl border border-border/70 bg-muted/20 p-3 sm:grid-cols-2">
+              <div><Label className="text-xs font-medium">Age (days)</Label><Input aria-label="Broiler age in days" value={broilerAge} onChange={e => setBroilerAge(e.target.value)} type="number" step="1" className="mt-1 h-10 text-sm" /></div>
+              <div><Label className="text-xs font-medium">Body weight (g)</Label><Input aria-label="Broiler body weight in grams" value={broilerWeight} onChange={e => setBroilerWeight(e.target.value)} type="number" step="10" className="mt-1 h-10 text-sm" /></div>
             </div>
             <div className="rounded-lg border p-3" style={{ borderColor: broilerResult.pct >= 95 ? '#10b98160' : broilerResult.pct >= 85 ? '#eab30860' : '#dc262660', backgroundColor: broilerResult.pct >= 95 ? '#10b98110' : broilerResult.pct >= 85 ? '#eab30810' : '#dc262610' }}>
               <div className="flex items-center justify-between mb-2">
@@ -85,26 +83,26 @@ export function LivestockGrowthBenchmark() {
                 <div><div className="text-[9px] text-muted-foreground uppercase">Difference</div><div className={`font-mono text-lg font-bold ${broilerResult.diff >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>{broilerResult.diff >= 0 ? '+' : ''}{broilerResult.diff.toFixed(0)}g</div></div>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="rounded border p-2"><span className="text-muted-foreground">Benchmark ADFI:</span> <strong className="font-mono">{broilerResult.bench.adfi} g/day</strong></div>
-              <div className="rounded border p-2"><span className="text-muted-foreground">Benchmark ADG:</span> <strong className="font-mono">{broilerResult.bench.adg} g/day</strong></div>
+            <div className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-2">
+              <div className="rounded-lg border bg-background/60 p-3"><span className="text-muted-foreground">Benchmark ADFI:</span> <strong className="font-mono">{broilerResult.bench.adfi} g/day</strong></div>
+              <div className="rounded-lg border bg-background/60 p-3"><span className="text-muted-foreground">Benchmark ADG:</span> <strong className="font-mono">{broilerResult.bench.adg} g/day</strong></div>
             </div>
             {broilerResult.pct < 85 ? (
-              <div className="rounded-md border border-rose-200 dark:border-rose-900 bg-rose-50/60 dark:bg-rose-950/20 p-2 text-xs text-rose-700 dark:text-rose-300 flex items-start gap-1.5"><AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" /><span><strong>Below target ({broilerResult.pct.toFixed(0)}%).</strong> Check: feed protein (should be 20-23% CP), temperature (21-23°C), stocking density (&lt;33 kg/m²), disease (coccidiosis, ND).</span></div>
+              <div className="rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50/60 dark:bg-rose-950/20 p-3 text-xs leading-relaxed text-rose-700 dark:text-rose-300 flex items-start gap-1.5"><AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" /><span><strong>Below target ({broilerResult.pct.toFixed(0)}%).</strong> Check: feed protein (should be 20-23% CP), temperature (21-23°C), stocking density (&lt;33 kg/m²), disease (coccidiosis, ND).</span></div>
             ) : broilerResult.pct < 95 ? (
-              <div className="rounded-md border border-amber-200 dark:border-amber-900 bg-amber-50/60 dark:bg-amber-950/20 p-2 text-xs text-amber-700 dark:text-amber-300 flex items-start gap-1.5"><AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" /><span><strong>Slightly below target.</strong> Monitor feed intake + adjust lighting program (18hr light improves feed intake).</span></div>
+              <div className="rounded-xl border border-amber-200 dark:border-amber-900 bg-amber-50/60 dark:bg-amber-950/20 p-3 text-xs leading-relaxed text-amber-700 dark:text-amber-300 flex items-start gap-1.5"><AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" /><span><strong>Slightly below target.</strong> Monitor feed intake + adjust lighting program (18hr light improves feed intake).</span></div>
             ) : (
-              <div className="rounded-md border border-emerald-200 dark:border-emerald-900 bg-emerald-50/60 dark:bg-emerald-950/20 p-2 text-xs text-emerald-700 dark:text-emerald-300 flex items-start gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 mt-0.5 shrink-0" /><span><strong>On target or above.</strong> Growth performance excellent. Monitor for leg issues if growing too fast.</span></div>
+              <div className="rounded-xl border border-emerald-200 dark:border-emerald-900 bg-emerald-50/60 dark:bg-emerald-950/20 p-3 text-xs leading-relaxed text-emerald-700 dark:text-emerald-300 flex items-start gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 mt-0.5 shrink-0" /><span><strong>On target or above.</strong> Growth performance excellent. Monitor for leg issues if growing too fast.</span></div>
             )}
-            <div className="text-[10px] text-muted-foreground bg-muted/20 rounded p-2">💡 Source: gpk R package broiler growth trial data (9 age points, days 143-171).</div>
+            <div className="rounded-lg bg-muted/30 p-3 text-xs leading-relaxed text-muted-foreground">💡 Source: gpk R package broiler growth trial data (9 age points, days 143-171).</div>
           </div>
         )}
 
         {animal === 'pig' && (
           <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-2">
-              <div><Label className="text-[10px]">Current weight (kg)</Label><Input value={pigWeight} onChange={e => setPigWeight(e.target.value)} type="number" step="1" className="h-8 text-xs mt-0.5" /></div>
-              <div><Label className="text-[10px]">Days on feed</Label><Input value={pigDays} onChange={e => setPigDays(e.target.value)} type="number" step="1" className="h-8 text-xs mt-0.5" /></div>
+            <div className="grid grid-cols-1 gap-3 rounded-xl border border-border/70 bg-muted/20 p-3 sm:grid-cols-2">
+              <div><Label className="text-xs font-medium">Current weight (kg)</Label><Input aria-label="Pig current weight" value={pigWeight} onChange={e => setPigWeight(e.target.value)} type="number" step="1" className="mt-1 h-10 text-sm" /></div>
+              <div><Label className="text-xs font-medium">Days on feed</Label><Input aria-label="Pig days on feed" value={pigDays} onChange={e => setPigDays(e.target.value)} type="number" step="1" className="mt-1 h-10 text-sm" /></div>
             </div>
             <div className="rounded-lg border border-amber-200 dark:border-amber-900 bg-amber-50/40 p-3">
               <div className="grid grid-cols-3 gap-2 text-center">
@@ -117,15 +115,15 @@ export function LivestockGrowthBenchmark() {
               {pigResult.diff >= 0 ? <CheckCircle2 className="h-3.5 w-3.5 mt-0.5 shrink-0" /> : <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />}
               <span>{pigResult.diff >= 0 ? `Above benchmark by ${pigResult.diff.toFixed(1)} kg — excellent growth.` : `${Math.abs(pigResult.diff).toFixed(1)} kg below expected. Check: feed energy (should be 13-14 MJ DE/kg), protein (16-18% CP), health (mycoplasma, APP), temperature (18-22°C).`}</span>
             </div>
-            <div className="text-[10px] text-muted-foreground bg-muted/20 rounded p-2">💡 Source: gpk R package pig trial (Treatment A vs B, M+F, initial ~48 kg → final ~210 kg, 90-day feeding period).</div>
+            <div className="rounded-lg bg-muted/30 p-3 text-xs leading-relaxed text-muted-foreground">💡 Source: gpk R package pig trial (Treatment A vs B, M+F, initial ~48 kg → final ~210 kg, 90-day feeding period).</div>
           </div>
         )}
 
         {animal === 'cattle' && (
           <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-2">
-              <div><Label className="text-[10px]">Breed</Label><select value={cattleBreed} onChange={e => setCattleBreed(e.target.value)} className="h-8 text-xs w-full rounded-md border border-input bg-background px-2 mt-0.5"><option>Holstein</option><option>Jersey</option><option>Ayrshire</option><option>Guernsey</option></select></div>
-              <div><Label className="text-[10px]">Your butterfat (%)</Label><Input value={cattleBf} onChange={e => setCattleBf(e.target.value)} type="number" step="0.01" className="h-8 text-xs mt-0.5" /></div>
+            <div className="grid grid-cols-1 gap-3 rounded-xl border border-border/70 bg-muted/20 p-3 sm:grid-cols-2">
+              <div><Label className="text-xs font-medium">Breed</Label><select aria-label="Cattle breed" value={cattleBreed} onChange={e => setCattleBreed(e.target.value)} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option>Holstein</option><option>Jersey</option><option>Ayrshire</option><option>Guernsey</option></select></div>
+              <div><Label className="text-xs font-medium">Your butterfat (%)</Label><Input aria-label="Your butterfat percentage" value={cattleBf} onChange={e => setCattleBf(e.target.value)} type="number" step="0.01" className="mt-1 h-10 text-sm" /></div>
             </div>
             <div className="rounded-lg border p-3" style={{ borderColor: cattleResult.diff >= -0.1 ? '#10b98160' : '#dc262660', backgroundColor: cattleResult.diff >= -0.1 ? '#10b98110' : '#dc262610' }}>
               <div className="grid grid-cols-3 gap-2 text-center">
@@ -135,11 +133,11 @@ export function LivestockGrowthBenchmark() {
               </div>
             </div>
             {cattleResult.diff < -0.2 ? (
-              <div className="rounded-md border border-rose-200 dark:border-rose-900 bg-rose-50/60 dark:bg-rose-950/20 p-2 text-xs text-rose-700 dark:text-rose-300 flex items-start gap-1.5"><AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" /><span><strong>Below breed average.</strong> Check: energy intake (low fiber → low BF), rumen pH (SARA reduces BF), stage of lactation, heat stress.</span></div>
+              <div className="rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50/60 dark:bg-rose-950/20 p-3 text-xs leading-relaxed text-rose-700 dark:text-rose-300 flex items-start gap-1.5"><AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" /><span><strong>Below breed average.</strong> Check: energy intake (low fiber → low BF), rumen pH (SARA reduces BF), stage of lactation, heat stress.</span></div>
             ) : (
-              <div className="rounded-md border border-emerald-200 dark:border-emerald-900 bg-emerald-50/60 dark:bg-emerald-950/20 p-2 text-xs text-emerald-700 dark:text-emerald-300 flex items-start gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 mt-0.5 shrink-0" /><span><strong>At or above breed average.</strong> Butterfat production healthy.</span></div>
+              <div className="rounded-xl border border-emerald-200 dark:border-emerald-900 bg-emerald-50/60 dark:bg-emerald-950/20 p-3 text-xs leading-relaxed text-emerald-700 dark:text-emerald-300 flex items-start gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 mt-0.5 shrink-0" /><span><strong>At or above breed average.</strong> Butterfat production healthy.</span></div>
             )}
-            <div className="text-[10px] text-muted-foreground bg-muted/20 rounded p-2">💡 Source: gpk R package cattle butterfat trial (4 breeds × 2 age classes). Jersey has highest BF (4.21%), Holstein lowest (3.58%).</div>
+            <div className="rounded-lg bg-muted/30 p-3 text-xs leading-relaxed text-muted-foreground">💡 Source: gpk R package cattle butterfat trial (4 breeds × 2 age classes). Jersey has highest BF (4.21%), Holstein lowest (3.58%).</div>
           </div>
         )}
       </CardContent>

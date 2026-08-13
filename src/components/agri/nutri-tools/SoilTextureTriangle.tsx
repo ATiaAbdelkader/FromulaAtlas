@@ -216,44 +216,43 @@ export function SoilTextureTriangle() {
   const polygons = system === 'usda' ? USDA_POLYGONS : USDA_POLYGONS; // SSEW uses same visual layout
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2">
-          <Mountain className="h-4 w-4 text-amber-700" /> Soil Texture Triangle
+    <Card className="overflow-hidden border-amber-100 shadow-sm dark:border-amber-900/60">
+      <CardHeader className="border-b border-border/60 bg-amber-50/50 pb-4 dark:bg-amber-950/10">
+        <CardTitle className="flex items-center gap-2 text-base"><span className="rounded-lg bg-amber-100 p-2 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"><Mountain className="h-4 w-4" /></span> Soil Texture Triangle
         </CardTitle>
         <p className="text-[10px] text-muted-foreground">Interactive ternary diagram · 3 classification systems (USDA/SSEW/International) · soil properties · irrigation + management recommendations</p>
       </CardHeader>
       <CardContent className="space-y-3">
         {/* Classification system selector */}
-        <div className="flex gap-1">
+        <div className="grid grid-cols-1 gap-1 rounded-xl bg-amber-100/70 p-1 dark:bg-amber-950/30 sm:grid-cols-3">
           {(['usda', 'ssew', 'intl'] as System[]).map(sys => (
-            <button key={sys} onClick={() => setSystem(sys)}
-              className={`px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${system === sys ? 'bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300' : 'text-muted-foreground hover:bg-muted/50'}`}>
+            <button type="button" key={sys} aria-pressed={system === sys} onClick={() => setSystem(sys)}
+              className={`min-h-11 rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${system === sys ? 'bg-background text-amber-700 shadow-sm dark:text-amber-300' : 'text-muted-foreground hover:text-foreground'}`}>
               {SYSTEM_LABELS[sys]}
             </button>
           ))}
         </div>
 
         {/* Inputs */}
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 gap-3 rounded-xl border border-amber-200/70 bg-amber-50/30 p-3 sm:grid-cols-3 dark:border-amber-900/60 dark:bg-amber-950/10">
           <div>
-            <Label className="text-[10px]">Clay (%)</Label>
-            <Input value={clay} onChange={e => setClay(e.target.value)} type="number" min="0" max="100" step="1" className="h-8 text-xs mt-0.5" />
+            <Label className="text-[11px] font-medium">Clay (%)</Label>
+            <Input value={clay} onChange={e => setClay(e.target.value)} type="number" min="0" max="100" step="1" className="mt-1 h-10 text-sm" />
           </div>
           <div>
-            <Label className="text-[10px]">Sand (%)</Label>
-            <Input value={sand} onChange={e => setSand(e.target.value)} type="number" min="0" max="100" step="1" className="h-8 text-xs mt-0.5" />
+            <Label className="text-[11px] font-medium">Sand (%)</Label>
+            <Input value={sand} onChange={e => setSand(e.target.value)} type="number" min="0" max="100" step="1" className="mt-1 h-10 text-sm" />
           </div>
           <div>
-            <Label className="text-[10px]">Silt (%)</Label>
-            <Input value={silt} onChange={e => setSilt(e.target.value)} type="number" min="0" max="100" step="1" className="h-8 text-xs mt-0.5" />
+            <Label className="text-[11px] font-medium">Silt (%)</Label>
+            <Input value={silt} onChange={e => setSilt(e.target.value)} type="number" min="0" max="100" step="1" className="mt-1 h-10 text-sm" />
           </div>
         </div>
-        <div className="text-[10px] text-muted-foreground text-center">Sum: {(c + s + si).toFixed(1)}% {Math.abs(c + s + si - 100) > 0.5 && '(auto-normalized to 100%)'}</div>
+        <div className={`rounded-lg px-3 py-2 text-center text-xs ${Math.abs(c + s + si - 100) > 0.5 ? 'border border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900 dark:bg-amber-950/20 dark:text-amber-200' : 'bg-muted/30 text-muted-foreground'}`}>Composition total: <span className="font-mono font-semibold">{(c + s + si).toFixed(1)}%</span> {Math.abs(c + s + si - 100) > 0.5 && '· values auto-normalized to 100%'}</div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
           {/* SVG Triangle */}
-          <div className="rounded-lg border bg-card p-2">
+          <div className="rounded-xl border border-amber-200/70 bg-card p-3 shadow-sm dark:border-amber-900/60">
             <svg viewBox={`0 0 ${TRI_SIZE + TRI_PAD * 2} ${TRI_HEIGHT + TRI_PAD * 2}`} className="w-full h-auto">
               {/* Triangle outline */}
               <polygon
@@ -317,16 +316,16 @@ export function SoilTextureTriangle() {
           </div>
 
           {/* Results panel */}
-          <div className="space-y-2">
+          <div className="space-y-3">
             {/* Texture classification */}
-            <div className="rounded-lg border-2 p-3 text-center" style={{ borderColor: TEXTURE_COLORS[props.texture] ?? '#999', backgroundColor: (TEXTURE_COLORS[props.texture] ?? '#999') + '15' }}>
-              <div className="text-[10px] text-muted-foreground uppercase">Classification ({SYSTEM_LABELS[system]})</div>
-              <div className="text-xl font-bold" style={{ color: TEXTURE_COLORS[props.texture] ?? '#333' }}>{props.texture}</div>
+            <div className="rounded-xl border-2 p-4 text-center shadow-sm" style={{ borderColor: TEXTURE_COLORS[props.texture] ?? '#999', backgroundColor: (TEXTURE_COLORS[props.texture] ?? '#999') + '15' }}>
+              <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Classification · {SYSTEM_LABELS[system]}</div>
+              <div className="mt-1 text-2xl font-bold" style={{ color: TEXTURE_COLORS[props.texture] ?? '#333' }}>{props.texture}</div>
               <div className="text-[10px] text-muted-foreground">{c.toFixed(0)}% clay · {s.toFixed(0)}% sand · {si.toFixed(0)}% silt</div>
             </div>
 
             {/* Soil properties grid */}
-            <div className="grid grid-cols-2 gap-2 text-xs">
+            <div className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-2">
               <PropCard icon={Droplets} label="Avail. Water" value={`${props.availableWater.taw.toFixed(0)} mm/m`} sub={`FC ${props.availableWater.fc.toFixed(0)}% · PWP ${props.availableWater.pwp.toFixed(0)}%`} color="#0891b2" />
               <PropCard icon={Layers} label="Infiltration" value={`${props.infiltrationRate} mm/hr`} sub={props.drainageClass} color="#0ea5e9" />
               <PropCard icon={Mountain} label="Bulk density" value={`${props.bulkDensity.toFixed(2)} g/cm³`} sub={`CEC ${props.cationExchangeCapacity.toFixed(0)} meq/100g`} color="#78716c" />
@@ -335,16 +334,16 @@ export function SoilTextureTriangle() {
 
             {/* Management flags */}
             <div className="space-y-1">
-              <div className="text-[9px] font-semibold text-muted-foreground uppercase">Management</div>
-              <div className="rounded border p-1.5 text-[10px]"><span className="text-muted-foreground">💧 Irrigation:</span> {props.irrigationSuitability}</div>
-              <div className="rounded border p-1.5 text-[10px]"><span className="text-muted-foreground">⛏️ Erosion:</span> {props.erosionRisk}</div>
-              <div className="rounded border p-1.5 text-[10px]"><span className="text-muted-foreground">🚜 Compaction:</span> {props.compactionRisk}</div>
-              <div className="rounded border p-1.5 text-[10px]"><span className="text-muted-foreground">🔨 Workability:</span> {props.workability}</div>
+              <div><p className="text-sm font-semibold">Management cues</p><p className="text-xs text-muted-foreground">Use these estimates to guide field checks and irrigation planning.</p></div>
+              <div className="rounded-lg border bg-background/70 p-2.5 text-xs leading-relaxed"><span className="text-muted-foreground">💧 Irrigation:</span> {props.irrigationSuitability}</div>
+              <div className="rounded-lg border bg-background/70 p-2.5 text-xs leading-relaxed"><span className="text-muted-foreground">⛏️ Erosion:</span> {props.erosionRisk}</div>
+              <div className="rounded-lg border bg-background/70 p-2.5 text-xs leading-relaxed"><span className="text-muted-foreground">🚜 Compaction:</span> {props.compactionRisk}</div>
+              <div className="rounded-lg border bg-background/70 p-2.5 text-xs leading-relaxed"><span className="text-muted-foreground">🔨 Workability:</span> {props.workability}</div>
             </div>
 
             {/* Recommendations */}
             {props.recommendations.length > 0 && (
-              <div className="rounded-md border border-emerald-200 dark:border-emerald-900 bg-emerald-50/40 dark:bg-emerald-950/10 p-2 space-y-1">
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-3 space-y-2 dark:border-emerald-900 dark:bg-emerald-950/10">
                 <div className="text-[9px] font-semibold text-emerald-700 dark:text-emerald-300 uppercase">Recommendations</div>
                 {props.recommendations.map((r, i) => (
                   <div key={i} className="text-[10px] text-foreground/80 flex items-start gap-1">
@@ -356,7 +355,7 @@ export function SoilTextureTriangle() {
           </div>
         </div>
 
-        <div className="text-[10px] text-muted-foreground bg-muted/20 rounded p-2">
+        <div className="rounded-lg bg-muted/30 p-3 text-xs leading-relaxed text-muted-foreground">
           💡 Based on ggsoiltexture R package (Acevedo et al. 2025, SoftwareX). Soil properties estimated via Saxton-Rawls pedotransfer functions + USDA-NRCS interpretation guidelines. Click on the triangle to set texture (coming soon).
         </div>
       </CardContent>
@@ -366,8 +365,8 @@ export function SoilTextureTriangle() {
 
 function PropCard({ icon: Icon, label, value, sub, color }: { icon: typeof Droplets; label: string; value: string; sub?: string; color: string }) {
   return (
-    <div className="rounded-md border p-2">
-      <div className="flex items-center gap-1 text-[9px] text-muted-foreground uppercase">
+    <div className="rounded-xl border bg-background/70 p-3 shadow-sm">
+      <div className="flex items-center gap-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
         <Icon className="h-2.5 w-2.5" style={{ color }} /> {label}
       </div>
       <div className="font-mono text-sm font-semibold leading-tight">{value}</div>

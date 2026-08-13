@@ -35,18 +35,18 @@ export function SoilColorIdentifier() {
   const [tab, setTab] = useState<Tab>('identifier');
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2">
-          <Mountain className="h-4 w-4 text-stone-600" /> Soil Color Identifier
+    <Card className="overflow-hidden border-stone-200 shadow-sm dark:border-stone-800">
+      <CardHeader className="border-b border-border/60 bg-stone-50/60 pb-4 dark:bg-stone-950/20">
+        <CardTitle className="flex items-center gap-2 text-base"><span className="rounded-lg bg-stone-200 p-2 text-stone-700 dark:bg-stone-800 dark:text-stone-200">
+          <Mountain className="h-4 w-4" /></span> Soil Color Identifier
         </CardTitle>
         <p className="text-[10px] text-muted-foreground">Munsell color → mineral + drainage + iron status · US state soils · from agridatasets-py (aqp R package)</p>
-        <div className="flex gap-1 mt-2">
-          <button onClick={() => setTab('identifier')} className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${tab === 'identifier' ? 'bg-stone-100 dark:bg-stone-950/50 text-stone-700 dark:text-stone-300' : 'text-muted-foreground hover:bg-muted/50'}`}>
-            <Mountain className="h-3.5 w-3.5" /> Color → Mineral
+        <div className="mt-3 grid grid-cols-2 gap-1 rounded-xl bg-stone-100 p-1 dark:bg-stone-900">
+          <button type="button" aria-pressed={tab === 'identifier'} onClick={() => setTab('identifier')} className={`flex min-h-11 items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${tab === 'identifier' ? 'bg-background text-stone-700 shadow-sm dark:text-stone-200' : 'text-muted-foreground hover:text-foreground'}`}>
+            <Mountain className="h-4 w-4" /> Color → Mineral
           </button>
-          <button onClick={() => setTab('states')} className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${tab === 'states' ? 'bg-stone-100 dark:bg-stone-950/50 text-stone-700 dark:text-stone-300' : 'text-muted-foreground hover:bg-muted/50'}`}>
-            <Droplets className="h-3.5 w-3.5" /> US State Soils
+          <button type="button" aria-pressed={tab === 'states'} onClick={() => setTab('states')} className={`flex min-h-11 items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${tab === 'states' ? 'bg-background text-stone-700 shadow-sm dark:text-stone-200' : 'text-muted-foreground hover:text-foreground'}`}>
+            <Droplets className="h-4 w-4" /> US State Soils
           </button>
         </div>
       </CardHeader>
@@ -126,29 +126,29 @@ function IdentifierTab() {
 
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-1 gap-3 rounded-xl border border-stone-200/70 bg-stone-50/40 p-3 sm:grid-cols-3 dark:border-stone-800 dark:bg-stone-950/10">
         <div>
-          <Label className="text-[10px]">Hue</Label>
-          <select value={hue} onChange={e => setHue(e.target.value)} className="h-8 text-xs w-full rounded-md border border-input bg-background px-2 mt-0.5">
+          <Label className="text-[11px] font-medium">Hue</Label>
+          <select value={hue} onChange={e => setHue(e.target.value)} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
             {HUES.map(h => <option key={h} value={h}>{h}</option>)}
           </select>
         </div>
         <div>
-          <Label className="text-[10px]">Value (1-8)</Label>
-          <Input value={value} onChange={e => setValue(e.target.value)} type="number" min="1" max="8" step="1" className="h-8 text-xs mt-0.5" />
+          <Label className="text-[11px] font-medium">Value (1-8)</Label>
+          <Input value={value} onChange={e => setValue(e.target.value)} type="number" min="1" max="8" step="1" className="mt-1 h-10 text-sm" />
         </div>
         <div>
-          <Label className="text-[10px]">Chroma (0-8)</Label>
-          <Input value={chroma} onChange={e => setChroma(e.target.value)} type="number" min="0" max="8" step="1" className="h-8 text-xs mt-0.5" />
+          <Label className="text-[11px] font-medium">Chroma (0-8)</Label>
+          <Input value={chroma} onChange={e => setChroma(e.target.value)} type="number" min="0" max="8" step="1" className="mt-1 h-10 text-sm" />
         </div>
       </div>
 
       {/* Color swatch + Munsell notation */}
-      <div className="flex items-center gap-3 rounded-lg border p-3">
-        <div className="w-16 h-16 rounded-lg border-2 border-border shrink-0" style={{ backgroundColor: colorSwatch }} />
+      <div className="flex items-center gap-3 rounded-xl border border-stone-200/80 bg-background p-3 shadow-sm dark:border-stone-800">
+        <div className="h-16 w-16 shrink-0 rounded-xl border-2 border-background shadow-inner ring-1 ring-border" aria-label={`Approximate soil color swatch for ${munsellNotation}`} style={{ backgroundColor: colorSwatch }} />
         <div>
-          <div className="text-[10px] text-muted-foreground uppercase">Munsell notation</div>
-          <div className="text-lg font-bold font-mono">{munsellNotation}</div>
+          <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Munsell notation</div>
+          <div className="font-mono text-xl font-bold">{munsellNotation}</div>
           <div className="text-xs text-muted-foreground capitalize">{traditionalName}</div>
         </div>
       </div>
@@ -156,9 +156,9 @@ function IdentifierTab() {
       {/* Mineral match result */}
       {match ? (
         <div className="space-y-2">
-          <div className="rounded-lg border border-stone-200 dark:border-stone-800 bg-stone-50/40 dark:bg-stone-950/20 p-3 space-y-2">
+          <div className="space-y-3 rounded-xl border border-stone-200 bg-stone-50/70 p-4 shadow-sm dark:border-stone-800 dark:bg-stone-950/20">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-bold">{match.mineral.mineral}</span>
+              <div><p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Closest mineral interpretation</p><span className="text-base font-bold">{match.mineral.mineral}</span></div>
               <Badge variant="outline" className="text-[9px]">match dist: {match.dist}</Badge>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">{match.mineral.interpretation}</p>
@@ -207,7 +207,7 @@ function IdentifierTab() {
 
       {/* All minerals reference */}
       <details className="text-xs">
-        <summary className="cursor-pointer text-muted-foreground hover:text-foreground">📋 View all {SOIL_MINERALS.length} soil minerals</summary>
+        <summary className="min-h-11 cursor-pointer rounded-lg px-3 py-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground">📋 View all {SOIL_MINERALS.length} soil minerals</summary>
         <div className="mt-2 space-y-1 max-h-[200px] overflow-y-auto">
           {SOIL_MINERALS.map(m => (
             <div key={m.mineral} className="flex items-center gap-2 rounded border p-1.5">
@@ -258,15 +258,15 @@ function StatesTab() {
   return (
     <div className="space-y-3">
       <div className="relative">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-        <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search state or soil series…" className="pl-8 text-xs h-8" />
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input aria-label="Search state or soil series" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search state or soil series…" className="h-11 pl-10 text-sm" />
       </div>
 
-      <div className="text-[10px] text-muted-foreground">{filtered.length} state soil{filtered.length !== 1 ? 's' : ''}</div>
+      <div className="flex items-center justify-between gap-2"><div><p className="text-sm font-semibold">Reference soils by state</p><p className="text-xs text-muted-foreground">Use the series name as a starting point for local verification.</p></div><Badge variant="secondary" className="text-[10px]">{filtered.length} result{filtered.length !== 1 ? 's' : ''}</Badge></div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 max-h-[350px] overflow-y-auto">
+      <div className="grid max-h-[350px] grid-cols-1 gap-2 overflow-y-auto sm:grid-cols-2 lg:grid-cols-3">
         {filtered.map(s => (
-          <div key={s.abbreviation} className="rounded-md border bg-card p-2 hover:shadow-sm transition-shadow">
+          <div key={s.abbreviation} className="rounded-xl border bg-card p-3 transition-shadow hover:shadow-sm">
             <div className="text-[10px] font-semibold">{s.state}</div>
             <div className="text-[9px] text-muted-foreground">{s.abbreviation}</div>
             <div className="mt-1 text-[10px]">
@@ -277,7 +277,9 @@ function StatesTab() {
         ))}
       </div>
 
-      <div className="text-[10px] text-muted-foreground bg-muted/20 rounded p-2">
+      {filtered.length === 0 && <div className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">No state soils match “{search}”. Try a state abbreviation or soil-series name.</div>}
+
+      <div className="rounded-lg bg-muted/30 p-3 text-xs leading-relaxed text-muted-foreground">
         💡 State soils are representative soil series designated by USDA-NRCS for each US state. They reflect the dominant agricultural soil and its management challenges. Source: aqp R package.
       </div>
     </div>

@@ -86,58 +86,62 @@ export function SoilTestHistoryTracker() {
   };
 
   return (
-    <Card>
+    <Card className="overflow-hidden border-emerald-100 shadow-sm dark:border-emerald-900/60">
       {/* Field selector + actions */}
-      <div className="flex items-center gap-2 flex-wrap">
+      <div className="flex items-center justify-between gap-3 flex-wrap border-b border-border/60 bg-muted/10 p-3">
         <Select value={selectedField} onValueChange={setSelectedField}>
-          <SelectTrigger className="h-8 text-xs w-40"><SelectValue /></SelectTrigger>
+          <SelectTrigger aria-label="Filter soil tests by field" className="h-10 min-w-44 text-sm bg-background"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Fields</SelectItem>
             {fieldNames.map(f => <SelectItem key={f} value={f}><MapPin className="h-3 w-3 inline mr-1" />{f}</SelectItem>)}
           </SelectContent>
         </Select>
-        <Button size="sm" variant="outline" onClick={() => setShowForm(!showForm)} className="gap-1.5 text-xs h-8">
+        <Button size="sm" variant="outline" onClick={() => setShowForm(!showForm)} className="h-10 gap-2 px-3 text-sm">
           <Plus className="h-3.5 w-3.5" /> Add Test
         </Button>
-        <Button size="sm" variant="ghost" onClick={exportPdf} className="gap-1.5 text-xs h-8 ml-auto">
+        <Button size="sm" variant="ghost" onClick={exportPdf} className="h-10 gap-2 px-3 text-sm sm:ml-auto">
           <Download className="h-3.5 w-3.5" /> PDF
         </Button>
       </div>
 
       {/* Add form */}
       {showForm && (
-        <div className="rounded-lg border-2 border-emerald-200 dark:border-emerald-800 bg-emerald-50/30 dark:bg-emerald-950/10 p-3 space-y-2">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            <div><Label className="text-[10px]">Date</Label><Input type="date" value={newEntry.date} onChange={e => setNewEntry({ ...newEntry, date: e.target.value })} className="h-8 text-xs mt-0.5" /></div>
-            <div><Label className="text-[10px]">Field name</Label><Input value={newEntry.fieldName} onChange={e => setNewEntry({ ...newEntry, fieldName: e.target.value })} className="h-8 text-xs mt-0.5" /></div>
-            <div><Label className="text-[10px]">pH</Label><Input type="number" step="0.1" value={newEntry.ph as any} onChange={e => setNewEntry({ ...newEntry, ph: e.target.value })} className="h-8 text-xs mt-0.5" /></div>
-            <div><Label className="text-[10px]">OM (%)</Label><Input type="number" step="0.1" value={newEntry.om as any} onChange={e => setNewEntry({ ...newEntry, om: e.target.value })} className="h-8 text-xs mt-0.5" /></div>
-            <div><Label className="text-[10px]">CEC (meq/100g)</Label><Input type="number" step="0.1" value={newEntry.cec as any} onChange={e => setNewEntry({ ...newEntry, cec: e.target.value })} className="h-8 text-xs mt-0.5" /></div>
-            <div><Label className="text-[10px]">Ca (meq/100g)</Label><Input type="number" step="0.1" value={newEntry.ca as any} onChange={e => setNewEntry({ ...newEntry, ca: e.target.value })} className="h-8 text-xs mt-0.5" /></div>
-            <div><Label className="text-[10px]">Mg (meq/100g)</Label><Input type="number" step="0.1" value={newEntry.mg as any} onChange={e => setNewEntry({ ...newEntry, mg: e.target.value })} className="h-8 text-xs mt-0.5" /></div>
-            <div><Label className="text-[10px]">K (meq/100g)</Label><Input type="number" step="0.1" value={newEntry.k as any} onChange={e => setNewEntry({ ...newEntry, k: e.target.value })} className="h-8 text-xs mt-0.5" /></div>
-            <div><Label className="text-[10px]">Na (meq/100g)</Label><Input type="number" step="0.1" value={newEntry.na as any} onChange={e => setNewEntry({ ...newEntry, na: e.target.value })} className="h-8 text-xs mt-0.5" /></div>
-            <div><Label className="text-[10px]">P (ppm)</Label><Input type="number" value={newEntry.p as any} onChange={e => setNewEntry({ ...newEntry, p: e.target.value })} className="h-8 text-xs mt-0.5" /></div>
-            <div><Label className="text-[10px]">Sand (%)</Label><Input type="number" value={newEntry.sand as any} onChange={e => setNewEntry({ ...newEntry, sand: e.target.value })} className="h-8 text-xs mt-0.5" /></div>
-            <div><Label className="text-[10px]">Silt (%)</Label><Input type="number" value={newEntry.silt as any} onChange={e => setNewEntry({ ...newEntry, silt: e.target.value })} className="h-8 text-xs mt-0.5" /></div>
+        <div className="mx-3 mt-3 rounded-xl border-2 border-emerald-200 bg-emerald-50/40 p-4 shadow-sm dark:border-emerald-800 dark:bg-emerald-950/10">
+          <div className="mb-3 flex items-start gap-2">
+            <div className="rounded-lg bg-emerald-100 p-2 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"><FlaskConical className="h-4 w-4" /></div>
+            <div><p className="text-sm font-semibold">Add a soil test</p><p className="text-xs text-muted-foreground">Capture the lab values once, then compare field trends over time.</p></div>
           </div>
-          <Textarea value={newEntry.notes} onChange={e => setNewEntry({ ...newEntry, notes: e.target.value })} placeholder="Notes..." className="text-xs min-h-[40px]" />
-          <div className="flex gap-2 justify-end">
-            <Button size="sm" variant="ghost" onClick={() => setShowForm(false)}>Cancel</Button>
-            <Button size="sm" onClick={handleAdd} className="gap-1"><Plus className="h-3 w-3" /> Save Test</Button>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div><Label className="text-[11px] font-medium">Date</Label><Input type="date" value={newEntry.date} onChange={e => setNewEntry({ ...newEntry, date: e.target.value })} className="mt-1 h-10 text-sm" /></div>
+            <div><Label className="text-[11px] font-medium">Field name</Label><Input value={newEntry.fieldName} onChange={e => setNewEntry({ ...newEntry, fieldName: e.target.value })} className="mt-1 h-10 text-sm" /></div>
+            <div><Label className="text-[11px] font-medium">pH</Label><Input type="number" step="0.1" value={newEntry.ph as any} onChange={e => setNewEntry({ ...newEntry, ph: e.target.value })} className="mt-1 h-10 text-sm" /></div>
+            <div><Label className="text-[11px] font-medium">OM (%)</Label><Input type="number" step="0.1" value={newEntry.om as any} onChange={e => setNewEntry({ ...newEntry, om: e.target.value })} className="mt-1 h-10 text-sm" /></div>
+            <div><Label className="text-[11px] font-medium">CEC (meq/100g)</Label><Input type="number" step="0.1" value={newEntry.cec as any} onChange={e => setNewEntry({ ...newEntry, cec: e.target.value })} className="mt-1 h-10 text-sm" /></div>
+            <div><Label className="text-[11px] font-medium">Ca (meq/100g)</Label><Input type="number" step="0.1" value={newEntry.ca as any} onChange={e => setNewEntry({ ...newEntry, ca: e.target.value })} className="mt-1 h-10 text-sm" /></div>
+            <div><Label className="text-[11px] font-medium">Mg (meq/100g)</Label><Input type="number" step="0.1" value={newEntry.mg as any} onChange={e => setNewEntry({ ...newEntry, mg: e.target.value })} className="mt-1 h-10 text-sm" /></div>
+            <div><Label className="text-[11px] font-medium">K (meq/100g)</Label><Input type="number" step="0.1" value={newEntry.k as any} onChange={e => setNewEntry({ ...newEntry, k: e.target.value })} className="mt-1 h-10 text-sm" /></div>
+            <div><Label className="text-[11px] font-medium">Na (meq/100g)</Label><Input type="number" step="0.1" value={newEntry.na as any} onChange={e => setNewEntry({ ...newEntry, na: e.target.value })} className="mt-1 h-10 text-sm" /></div>
+            <div><Label className="text-[11px] font-medium">P (ppm)</Label><Input type="number" value={newEntry.p as any} onChange={e => setNewEntry({ ...newEntry, p: e.target.value })} className="mt-1 h-10 text-sm" /></div>
+            <div><Label className="text-[11px] font-medium">Sand (%)</Label><Input type="number" value={newEntry.sand as any} onChange={e => setNewEntry({ ...newEntry, sand: e.target.value })} className="mt-1 h-10 text-sm" /></div>
+            <div><Label className="text-[11px] font-medium">Silt (%)</Label><Input type="number" value={newEntry.silt as any} onChange={e => setNewEntry({ ...newEntry, silt: e.target.value })} className="mt-1 h-10 text-sm" /></div>
+          </div>
+          <Textarea value={newEntry.notes} onChange={e => setNewEntry({ ...newEntry, notes: e.target.value })} placeholder="Notes..." className="min-h-20 resize-y text-sm" />
+          <div className="flex flex-col-reverse gap-2 pt-1 sm:flex-row sm:justify-end">
+            <Button size="sm" variant="ghost" onClick={() => setShowForm(false)} className="h-10">Cancel</Button>
+            <Button size="sm" onClick={handleAdd} className="h-10 gap-2"><Plus className="h-4 w-4" /> Save Test</Button>
           </div>
         </div>
       )}
 
       {/* Latest test summary */}
       {latest && (
-        <div className="rounded-lg p-3 border border-border bg-muted/20">
+        <div className="mx-3 mt-3 rounded-xl border border-emerald-200/70 bg-emerald-50/30 p-4 dark:border-emerald-900/60 dark:bg-emerald-950/10">
           <div className="flex items-center gap-2 mb-2">
-            <Calendar className="h-3.5 w-3.5 text-emerald-600" />
-            <span className="text-xs font-semibold">Latest Test: {latest.date} · {latest.fieldName}</span>
-            <Badge variant="outline" className="text-[9px]">{filtered.length} tests on record</Badge>
+            <div className="rounded-lg bg-emerald-100 p-2 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"><Calendar className="h-4 w-4" /></div>
+            <div className="min-w-0"><p className="text-sm font-semibold">Latest test</p><p className="text-xs text-muted-foreground">{latest.date} · {latest.fieldName}</p></div>
+            <Badge variant="outline" className="ml-auto text-[10px]">{filtered.length} tests on record</Badge>
           </div>
-          <div className="grid grid-cols-4 sm:grid-cols-8 gap-1.5">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-8">
             {[
               { l: 'pH', v: latest.ph }, { l: 'OM%', v: latest.om }, { l: 'CEC', v: latest.cec },
               { l: 'Ca', v: latest.ca }, { l: 'Mg', v: latest.mg }, { l: 'K', v: latest.k },
@@ -152,11 +156,13 @@ export function SoilTestHistoryTracker() {
         </div>
       )}
 
+      {filtered.length > 0 ? (
+        <>
       {/* Trend charts */}
-      <div className="space-y-2">
-        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Parameter Trends</div>
+      <div className="space-y-3 px-3 pt-4">
+        <div><p className="text-sm font-semibold">Parameter trends</p><p className="text-xs text-muted-foreground">Compare the latest values with the previous test and the target range.</p></div>
         {trends.map(trend => (
-          <div key={trend.param} className="rounded-lg border border-border p-2.5">
+          <div key={trend.param} className="rounded-xl border border-border/70 bg-background/70 p-3 shadow-sm">
             <div className="flex items-center justify-between mb-1.5">
               <div className="flex items-center gap-2">
                 <span className="text-xs font-semibold">{trend.label}</span>
@@ -200,8 +206,8 @@ export function SoilTestHistoryTracker() {
       </div>
 
       {/* Test history table */}
-      <div>
-        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Test History ({filtered.length})</div>
+      <div className="px-3 pb-3 pt-2">
+        <div className="mb-2 flex items-end justify-between gap-2"><div><p className="text-sm font-semibold">Test history</p><p className="text-xs text-muted-foreground">Review recorded lab values by date.</p></div><Badge variant="secondary" className="text-[10px]">{filtered.length} records</Badge></div>
         <div className="overflow-x-auto rounded-lg border border-border">
           <table className="w-full text-xs">
             <thead className="bg-muted/40">
@@ -225,13 +231,22 @@ export function SoilTestHistoryTracker() {
                   <td className="px-2 py-1.5 text-center font-mono">{e.mg}</td>
                   <td className="px-2 py-1.5 text-center font-mono">{e.k}</td>
                   <td className="px-2 py-1.5 text-center font-mono">{e.p}</td>
-                  <td className="px-2 py-1.5"><button onClick={() => handleDelete(e.id)} className="text-muted-foreground hover:text-destructive"><Trash2 className="h-3 w-3" /></button></td>
+                  <td className="px-2 py-1.5"><button type="button" aria-label={`Delete soil test from ${e.date}`} title="Delete soil test" onClick={() => handleDelete(e.id)} className="inline-flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"><Trash2 className="h-4 w-4" /></button></td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       </div>
+        </>
+      ) : (
+        <div className="mx-3 my-4 rounded-xl border border-dashed border-emerald-300 bg-emerald-50/40 p-6 text-center dark:border-emerald-800 dark:bg-emerald-950/10">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"><FlaskConical className="h-6 w-6" /></div>
+          <p className="text-sm font-semibold">No soil tests for this view</p>
+          <p className="mx-auto mt-1 max-w-sm text-xs leading-relaxed text-muted-foreground">Add a lab result to unlock parameter trends, target-range guidance, and a searchable history for this field.</p>
+          <Button size="sm" onClick={() => setShowForm(true)} className="mt-4 h-10 gap-2"><Plus className="h-4 w-4" /> Add first test</Button>
+        </div>
+      )}
     </Card>
   );
 }

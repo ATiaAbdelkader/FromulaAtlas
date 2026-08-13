@@ -41,35 +41,37 @@ export function GrainBinInventoryTracker() {
   const remove = (id: string) => setBins(bs => bs.filter(b => b.id !== id));
 
   return (
-    <Card>
-      <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><Warehouse className="h-4 w-4 text-amber-600" /> Grain Bin Inventory Tracker</CardTitle><p className="text-[10px] text-muted-foreground">Volume × density × price → stored grain value</p></CardHeader>
+    <Card className="overflow-hidden border-amber-100 shadow-sm dark:border-amber-900/60">
+      <CardHeader className="border-b border-border/60 bg-amber-50/50 pb-4 dark:bg-amber-950/10"><CardTitle className="flex items-center gap-2 text-base"><span className="rounded-lg bg-amber-100 p-2 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"><Warehouse className="h-4 w-4" /></span> Grain Bin Inventory Tracker</CardTitle><p className="text-[10px] text-muted-foreground">Volume × density × price → stored grain value</p></CardHeader>
       <CardContent className="space-y-3">
         <div className="space-y-1.5">
           {results.map(r => (
-            <div key={r.id} className="rounded-md border p-2 space-y-1.5">
-              <div className="flex items-center gap-1.5">
-                <select value={r.crop} onChange={e => update(r.id, { crop: e.target.value })} className="h-7 text-[10px] rounded border border-input bg-background px-1 flex-1">
+            <div key={r.id} className="rounded-xl border bg-background/70 p-3 shadow-sm">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                <div className="min-w-0 flex-1"><Label className="text-xs font-medium">Crop</Label><select aria-label="Crop stored in bin" value={r.crop} onChange={e => update(r.id, { crop: e.target.value })} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
                   {Object.keys(CROP_DENSITY).map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
-                <Input value={r.diameter} onChange={e => update(r.id, { diameter: parseFloat(e.target.value) || 0 })} type="number" step="0.5" className="h-7 text-[10px] w-14" title="Diameter (m)" />
-                <Input value={r.height} onChange={e => update(r.id, { height: parseFloat(e.target.value) || 0 })} type="number" step="0.5" className="h-7 text-[10px] w-14" title="Height (m)" />
-                <Input value={r.moisture} onChange={e => update(r.id, { moisture: parseFloat(e.target.value) || 0 })} type="number" step="0.5" className="h-7 text-[10px] w-14" title="Moisture (%)" />
-                <Input value={r.price} onChange={e => update(r.id, { price: e.target.value })} type="number" step="0.01" className="h-7 text-[10px] w-14" title="Price ($/kg)" />
-                <button onClick={() => remove(r.id)} className="text-rose-500 hover:text-rose-700"><Trash2 className="h-3 w-3" /></button>
+                </select></div>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:flex-1">
+                  <div><Label className="text-[11px]">Diameter (m)</Label><Input aria-label="Bin diameter in meters" value={r.diameter} onChange={e => update(r.id, { diameter: parseFloat(e.target.value) || 0 })} type="number" step="0.5" className="mt-1 h-10 w-full text-sm" /></div>
+                  <div><Label className="text-[11px]">Height (m)</Label><Input aria-label="Bin height in meters" value={r.height} onChange={e => update(r.id, { height: parseFloat(e.target.value) || 0 })} type="number" step="0.5" className="mt-1 h-10 w-full text-sm" /></div>
+                  <div><Label className="text-[11px]">Moisture (%)</Label><Input aria-label="Grain moisture percentage" value={r.moisture} onChange={e => update(r.id, { moisture: parseFloat(e.target.value) || 0 })} type="number" step="0.5" className="mt-1 h-10 w-full text-sm" /></div>
+                  <div><Label className="text-[11px]">Price ($/kg)</Label><Input aria-label="Grain price per kilogram" value={r.price} onChange={e => update(r.id, { price: e.target.value })} type="number" step="0.01" className="mt-1 h-10 w-full text-sm" /></div>
+                </div>
+                <button type="button" aria-label={`Remove ${r.crop} bin`} title="Remove bin" onClick={() => remove(r.id)} className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-rose-500 transition-colors hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-950/30"><Trash2 className="h-4 w-4" /></button>
               </div>
-              <div className="flex items-center justify-between text-[10px] text-muted-foreground px-1">
-                <span>{r.tonnes.toFixed(1)} t · {r.volume.toFixed(0)} m³ · {r.moisture}% moist</span>
-                <span className="font-mono font-bold text-emerald-600">${r.value.toFixed(0)}</span>
+              <div className="mt-3 flex flex-col gap-1 border-t pt-2 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+                <span>{r.tonnes.toFixed(1)} t · {r.volume.toFixed(0)} m³ · {r.moisture}% moisture</span>
+                <span className="font-mono text-sm font-bold text-emerald-600">${r.value.toFixed(0)}</span>
               </div>
             </div>
           ))}
         </div>
-        <button onClick={addBin} className="w-full text-[10px] flex items-center justify-center gap-1 py-1.5 rounded-md border border-dashed hover:bg-muted/50"><Plus className="h-3 w-3" /> Add bin</button>
-        <div className="rounded-lg border border-amber-200 bg-amber-50/40 p-3 flex items-center justify-between">
-          <div><div className="text-[10px] text-muted-foreground uppercase">Total inventory</div><div className="text-xl font-bold font-mono">{totals.tonnes.toFixed(1)} t</div><div className="text-[10px] text-muted-foreground">{totals.bins} bin{totals.bins !== 1 ? 's' : ''}</div></div>
-          <div className="text-right"><div className="text-[10px] text-muted-foreground uppercase">Total value</div><div className="text-xl font-bold font-mono text-emerald-700">${totals.value.toFixed(0)}</div></div>
+        <button type="button" onClick={addBin} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-dashed px-3 py-2 text-sm font-medium transition-colors hover:bg-muted/50"><Plus className="h-4 w-4" /> Add another bin</button>
+        <div className="flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50/50 p-4 sm:flex-row sm:items-center sm:justify-between dark:border-amber-900/60 dark:bg-amber-950/20">
+          <div><div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Total inventory</div><div className="text-2xl font-bold font-mono">{totals.tonnes.toFixed(1)} t</div><div className="text-xs text-muted-foreground">{totals.bins} bin{totals.bins !== 1 ? 's' : ''}</div></div>
+          <div className="sm:text-right"><div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Total value</div><div className="text-2xl font-bold font-mono text-emerald-700">${totals.value.toFixed(0)}</div></div>
         </div>
-        <div className="text-[10px] text-muted-foreground bg-muted/20 rounded p-2">💡 Monitor moisture monthly. Above 14% → aerate or dry. Grain value changes daily — update price to track real-time inventory value.</div>
+        <div className="rounded-lg bg-muted/30 p-3 text-xs leading-relaxed text-muted-foreground">💡 Monitor moisture monthly. Above 14% → aerate or dry. Grain value changes daily — update price to track real-time inventory value.</div>
       </CardContent>
     </Card>
   );

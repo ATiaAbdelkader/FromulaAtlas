@@ -50,13 +50,12 @@ export function PostHarvestStorageCalculator() {
   const [tab, setTab] = useState<Tab>('storage');
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2">
-          <Warehouse className="h-4 w-4 text-amber-600" /> Post-Harvest Storage Calculator
+    <Card className="overflow-hidden border-amber-100 shadow-sm dark:border-amber-900/60">
+      <CardHeader className="border-b border-border/60 bg-amber-50/50 pb-4 dark:bg-amber-950/10">
+        <CardTitle className="flex items-center gap-2 text-base"><span className="rounded-lg bg-amber-100 p-2 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"><Warehouse className="h-4 w-4" /></span> Post-Harvest Storage Calculator
         </CardTitle>
         <p className="text-[10px] text-muted-foreground">EMC · Safe storage days · Drying time + cost · Bin aeration fan sizing — 7 crops</p>
-        <div className="flex gap-1 mt-2">
+        <div className="mt-3 grid grid-cols-1 gap-1 rounded-xl bg-amber-100/70 p-1 dark:bg-amber-950/30 sm:grid-cols-3">
           <TabBtn active={tab === 'storage'} onClick={() => setTab('storage')} icon={Droplets} label="EMC + Safe Storage" />
           <TabBtn active={tab === 'drying'} onClick={() => setTab('drying')} icon={Zap} label="Drying" />
           <TabBtn active={tab === 'aeration'} onClick={() => setTab('aeration')} icon={Wind} label="Bin Aeration" />
@@ -100,10 +99,10 @@ function StorageTab() {
 
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-3 rounded-xl border border-amber-200/70 bg-amber-50/30 p-3 sm:grid-cols-2 dark:border-amber-900/60 dark:bg-amber-950/10">
         <div>
           <Label className="text-[10px]">Crop</Label>
-          <select value={crop} onChange={e => setCrop(e.target.value)} className="h-8 text-xs w-full rounded-md border border-input bg-background px-2 mt-0.5">
+          <select value={crop} onChange={e => setCrop(e.target.value)} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
             {Object.entries(CROP_EMC).map(([k, v]) => (
               <option key={k} value={k}>{v.emoji} {v.name}</option>
             ))}
@@ -111,23 +110,23 @@ function StorageTab() {
         </div>
         <div>
           <Label className="text-[10px]">Current moisture (% wet basis)</Label>
-          <Input value={moisture} onChange={e => setMoisture(e.target.value)} type="number" step="0.1" className="h-8 text-xs mt-0.5" />
+          <Input value={moisture} onChange={e => setMoisture(e.target.value)} type="number" step="0.1" className="mt-1 h-10 text-sm" />
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-3 rounded-xl border border-amber-200/70 bg-amber-50/30 p-3 sm:grid-cols-2 dark:border-amber-900/60 dark:bg-amber-950/10">
         <div>
           <Label className="text-[10px]">Storage temperature (°C)</Label>
-          <Input value={temp} onChange={e => setTemp(e.target.value)} type="number" step="0.1" className="h-8 text-xs mt-0.5" />
+          <Input value={temp} onChange={e => setTemp(e.target.value)} type="number" step="0.1" className="mt-1 h-10 text-sm" />
         </div>
         <div>
           <Label className="text-[10px]">Storage relative humidity (%)</Label>
-          <Input value={rh} onChange={e => setRh(e.target.value)} type="number" step="1" min="0" max="100" className="h-8 text-xs mt-0.5" />
+          <Input value={rh} onChange={e => setRh(e.target.value)} type="number" step="1" min="0" max="100" className="mt-1 h-10 text-sm" />
         </div>
       </div>
 
       {result && (
         <div className="space-y-2">
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="rounded-lg border p-3" style={{ borderColor: result.safe ? '#10b98160' : '#dc262660', backgroundColor: result.safe ? '#10b98110' : '#dc262610' }}>
               <div className="text-[10px] text-muted-foreground uppercase">Equilibrium Moisture</div>
               <div className="text-2xl font-bold font-mono">{result.emc.toFixed(1)}%</div>
@@ -159,7 +158,7 @@ function StorageTab() {
             </div>
           )}
 
-          <div className="text-[10px] text-muted-foreground bg-muted/20 rounded p-2">
+          <div className="rounded-lg bg-muted/30 p-3 text-xs leading-relaxed text-muted-foreground">
             💡 Safe moisture for long-term storage of {result.crop.name}: {result.crop.safeMoisture}%. At this moisture + 25°C, expect ~100+ safe days.
           </div>
         </div>
@@ -216,10 +215,10 @@ function DryingTab() {
 
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-3 rounded-xl border border-amber-200/70 bg-amber-50/30 p-3 sm:grid-cols-2 dark:border-amber-900/60 dark:bg-amber-950/10">
         <div>
           <Label className="text-[10px]">Crop</Label>
-          <select value={crop} onChange={e => setCrop(e.target.value)} className="h-8 text-xs w-full rounded-md border border-input bg-background px-2 mt-0.5">
+          <select value={crop} onChange={e => setCrop(e.target.value)} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
             {Object.entries(CROP_EMC).map(([k, v]) => (
               <option key={k} value={k}>{v.emoji} {v.name}</option>
             ))}
@@ -227,26 +226,26 @@ function DryingTab() {
         </div>
         <div>
           <Label className="text-[10px]">Air temperature (°C)</Label>
-          <Input value={airTemp} onChange={e => setAirTemp(e.target.value)} type="number" step="1" className="h-8 text-xs mt-0.5" />
+          <Input value={airTemp} onChange={e => setAirTemp(e.target.value)} type="number" step="1" className="mt-1 h-10 text-sm" />
         </div>
       </div>
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-1 gap-3 rounded-xl border border-amber-200/70 bg-amber-50/30 p-3 sm:grid-cols-3 dark:border-amber-900/60 dark:bg-amber-950/10">
         <div>
           <Label className="text-[10px]">Start moisture (%)</Label>
-          <Input value={mStart} onChange={e => setMStart(e.target.value)} type="number" step="0.1" className="h-8 text-xs mt-0.5" />
+          <Input value={mStart} onChange={e => setMStart(e.target.value)} type="number" step="0.1" className="mt-1 h-10 text-sm" />
         </div>
         <div>
           <Label className="text-[10px]">Target moisture (%)</Label>
-          <Input value={mTarget} onChange={e => setMTarget(e.target.value)} type="number" step="0.1" className="h-8 text-xs mt-0.5" />
+          <Input value={mTarget} onChange={e => setMTarget(e.target.value)} type="number" step="0.1" className="mt-1 h-10 text-sm" />
         </div>
         <div>
           <Label className="text-[10px]">Dryer efficiency (0–1)</Label>
-          <Input value={efficiency} onChange={e => setEfficiency(e.target.value)} type="number" step="0.05" min="0.3" max="0.9" className="h-8 text-xs mt-0.5" />
+          <Input value={efficiency} onChange={e => setEfficiency(e.target.value)} type="number" step="0.05" min="0.3" max="0.9" className="mt-1 h-10 text-sm" />
         </div>
       </div>
       <div>
         <Label className="text-[10px]">Electricity price ($/kWh)</Label>
-        <Input value={electricityPrice} onChange={e => setElectricityPrice(e.target.value)} type="number" step="0.01" className="h-8 text-xs mt-0.5" />
+        <Input value={electricityPrice} onChange={e => setElectricityPrice(e.target.value)} type="number" step="0.01" className="mt-1 h-10 text-sm" />
       </div>
 
       {result?.error && (
@@ -257,13 +256,13 @@ function DryingTab() {
 
       {result && !result.error && result.dryingTime !== undefined && (
         <div className="space-y-2">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             <Metric label="Drying time" value={`${result.dryingTime!.toFixed(1)} hr`} color="amber" />
             <Metric label="Water removed" value={`${result.waterRemoved!.toFixed(0)} kg/t`} color="cyan" />
             <Metric label="Energy" value={`${result.energyKWh!.toFixed(1)} kWh/t`} color="violet" />
             <Metric label="Cost" value={`$${result.costPerTonne!.toFixed(2)}/t`} color="emerald" />
           </div>
-          <div className="text-[10px] text-muted-foreground bg-muted/20 rounded p-2">
+          <div className="rounded-lg bg-muted/30 p-3 text-xs leading-relaxed text-muted-foreground">
             💡 EMC at {airTemp}°C drying air: {result.Me!.toFixed(1)}%. Page equation with k={(0.02 * Math.exp(0.03 * parseFloat(airTemp))).toFixed(3)} hr⁻¹. Increase air temp to cut drying time exponentially.
           </div>
         </div>
@@ -317,20 +316,20 @@ function AerationTab() {
 
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-3 rounded-xl border border-amber-200/70 bg-amber-50/30 p-3 sm:grid-cols-2 dark:border-amber-900/60 dark:bg-amber-950/10">
         <div>
           <Label className="text-[10px]">Bin diameter (m)</Label>
-          <Input value={binDiameter} onChange={e => setBinDiameter(e.target.value)} type="number" step="0.5" className="h-8 text-xs mt-0.5" />
+          <Input value={binDiameter} onChange={e => setBinDiameter(e.target.value)} type="number" step="0.5" className="mt-1 h-10 text-sm" />
         </div>
         <div>
           <Label className="text-[10px]">Grain depth (m)</Label>
-          <Input value={grainDepth} onChange={e => setGrainDepth(e.target.value)} type="number" step="0.5" className="h-8 text-xs mt-0.5" />
+          <Input value={grainDepth} onChange={e => setGrainDepth(e.target.value)} type="number" step="0.5" className="mt-1 h-10 text-sm" />
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-3 rounded-xl border border-amber-200/70 bg-amber-50/30 p-3 sm:grid-cols-2 dark:border-amber-900/60 dark:bg-amber-950/10">
         <div>
           <Label className="text-[10px]">Crop</Label>
-          <select value={crop} onChange={e => setCrop(e.target.value)} className="h-8 text-xs w-full rounded-md border border-input bg-background px-2 mt-0.5">
+          <select value={crop} onChange={e => setCrop(e.target.value)} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
             {Object.entries(CROP_EMC).map(([k, v]) => (
               <option key={k} value={k}>{v.emoji} {v.name}</option>
             ))}
@@ -338,7 +337,7 @@ function AerationTab() {
         </div>
         <div>
           <Label className="text-[10px]">Airflow rate (m³/min/t)</Label>
-          <select value={airflowRate} onChange={e => setAirflowRate(e.target.value)} className="h-8 text-xs w-full rounded-md border border-input bg-background px-2 mt-0.5">
+          <select value={airflowRate} onChange={e => setAirflowRate(e.target.value)} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
             <option value="0.1">0.1 — Cooling only</option>
             <option value="0.5">0.5 — Light drying</option>
             <option value="1.0">1.0 — Standard drying</option>
@@ -349,13 +348,13 @@ function AerationTab() {
 
       {result && (
         <div className="space-y-2">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             <Metric label="Grain in bin" value={`${result.grainT.toFixed(1)} t`} sub={`${result.grainBu.toFixed(0)} bu`} color="amber" />
             <Metric label="Required CFM" value={result.cfm.toFixed(0)} sub="cubic ft/min" color="cyan" />
             <Metric label="Static pressure" value={`${result.sp.toFixed(0)} Pa`} sub="resistance" color="violet" />
             <Metric label="Fan power" value={`${result.fanPower.toFixed(1)} kW`} sub="minimum" color="emerald" />
           </div>
-          <div className="text-[10px] text-muted-foreground bg-muted/20 rounded p-2">
+          <div className="rounded-lg bg-muted/30 p-3 text-xs leading-relaxed text-muted-foreground">
             💡 Select fan with ≥{result.cfm.toFixed(0)} CFM at {result.sp.toFixed(0)} Pa static pressure. Add 20% safety margin. Run fans at night (cool, dry air) for first 2 weeks.
           </div>
         </div>
@@ -377,8 +376,8 @@ const ACCENT_BG: Record<string, string> = {
 
 function Metric({ label, value, sub, color }: { label: string; value: string; sub?: string; color: keyof typeof ACCENT_BG }) {
   return (
-    <div className={`rounded-md border px-2 py-1.5 ${ACCENT_BG[color]}`}>
-      <div className="text-[9px] text-muted-foreground uppercase tracking-wide">{label}</div>
+    <div className={`rounded-xl border p-3 shadow-sm ${ACCENT_BG[color]}`}>
+      <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{label}</div>
       <div className="font-mono text-sm font-semibold leading-tight">{value}</div>
       {sub && <div className="text-[9px] text-muted-foreground">{sub}</div>}
     </div>
@@ -387,8 +386,8 @@ function Metric({ label, value, sub, color }: { label: string; value: string; su
 
 function TabBtn({ active, onClick, icon: Icon, label }: { active: boolean; onClick: () => void; icon: typeof Droplets; label: string }) {
   return (
-    <button onClick={onClick} className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${active ? 'bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300' : 'text-muted-foreground hover:bg-muted/50'}`}>
-      <Icon className="h-3.5 w-3.5" /><span>{label}</span>
+    <button type="button" aria-pressed={active} onClick={onClick} className={`flex min-h-11 items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${active ? 'bg-background text-amber-700 shadow-sm dark:text-amber-300' : 'text-muted-foreground hover:text-foreground'}`}>
+      <Icon className="h-4 w-4" /><span>{label}</span>
     </button>
   );
 }

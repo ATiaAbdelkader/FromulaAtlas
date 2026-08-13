@@ -4834,3 +4834,11 @@ The Active Matter Selector now presents a compact green decision banner, respons
 No blocking browser console/runtime issue was observed during this checkpoint. The visual review is complete for the Plant Protection group; proceed to the full validation suite and milestone commit.
 
 ---
+
+## Soil & Livestock visual checkpoint — 2026-08-13
+
+The local app opened successfully at `/app` and the Farm tab activated through the app navigation. The Farm Management header, workspace panel, Fields & Crops accordions, and responsive control shells rendered without a blocking runtime error. The Soil & Livestock group is present later in the long accordion page; this checkpoint confirms the route and shared Farm-tool shell remain stable after the group’s component-level redesigns. The browser viewport is narrow enough to exercise the mobile-first layouts, while the accordions and controls remain touch-oriented and visually consistent with the previously upgraded groups.
+
+Completed Soil & Livestock tools in Farm-tab order: Soil Test History Tracker, Soil Color Identifier, Soil Texture Triangle, Post-Harvest Storage Calculator, Compost Mixer Calculator, Cover Crop Selector, Greenhouse Climate Designer, Grain Bin Inventory Tracker, Manure Management Planner, Machinery Cost Calculator, Yield Monitor Calibrator, Livestock Management, Feed Ration Balancer, Livestock Growth Benchmarks, Silage Fermentation Predictor, and Bee Hive + Honey Yield Calculator.
+
+No calculator formulas, data contracts, or persistence paths were intentionally changed; the work focused on hierarchy, responsive control framing, accessible labels/actions, metric cards, and empty/status guidance.
