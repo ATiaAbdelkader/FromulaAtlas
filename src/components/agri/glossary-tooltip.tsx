@@ -8,19 +8,17 @@ import {
 } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
 import { BookText } from 'lucide-react';
-import { findGlossaryTerm, type GlossaryCategory } from '@/lib/glossary';
+import { findGlossary, type GlossaryCategory } from '@/lib/glossary';
 import { cn } from '@/lib/utils';
 import { useLanguageStore } from '@/lib/language-store';
 
 const categoryTone: Record<GlossaryCategory, string> = {
   soil: 'bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300',
   water: 'bg-sky-100 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300',
-  crop: 'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300',
-  livestock: 'bg-orange-100 dark:bg-orange-950/40 text-orange-700 dark:text-orange-300',
+  fertilizer: 'bg-lime-100 dark:bg-lime-950/40 text-lime-700 dark:text-lime-300',
+  plant: 'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300',
   climate: 'bg-cyan-100 dark:bg-cyan-950/40 text-cyan-700 dark:text-cyan-300',
-  economics: 'bg-violet-100 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300',
-  nutrition: 'bg-lime-100 dark:bg-lime-950/40 text-lime-700 dark:text-lime-300',
-  irrigation: 'bg-teal-100 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300',
+  units: 'bg-violet-100 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300',
 };
 
 interface GlossaryTooltipProps {
@@ -45,7 +43,7 @@ export function GlossaryTooltip({
   const language = useLanguageStore(s => s.language);
   const isRTL = language === 'ar';
 
-  const entry = useMemo(() => findGlossaryTerm(term), [term]);
+  const entry = useMemo(() => findGlossary(term), [term]);
 
   if (!entry) {
     return <span>{children ?? term}</span>;
@@ -87,27 +85,14 @@ export function GlossaryTooltip({
             {entry.category}
           </Badge>
         </div>
-        <p className="leading-relaxed text-muted-foreground">{entry.definition}</p>
+        <p className="leading-relaxed text-muted-foreground">{entry.long}</p>
         {entry.aliases && entry.aliases.length > 0 && (
           <div className="text-[10px] text-muted-foreground">
             <span className="font-medium">{isRTL ? 'أيضاً: ' : 'Also: '}</span>
             {entry.aliases.join(', ')}
           </div>
         )}
-        {entry.relatedFormulas && entry.relatedFormulas.length > 0 && (
-          <div className="flex items-center gap-1 flex-wrap pt-1">
-            <span className="text-[10px] text-muted-foreground font-medium">{isRTL ? 'مرتبط:' : 'Related:'}</span>
-            {entry.relatedFormulas.map((code) => (
-              <Badge
-                key={code}
-                variant="outline"
-                className="text-[9px] font-mono px-1 py-0 h-4"
-              >
-                {code}
-              </Badge>
-            ))}
-          </div>
-        )}
+
       </PopoverContent>
     </Popover>
   );

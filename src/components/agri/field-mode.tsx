@@ -102,14 +102,6 @@ export function FieldModeButton() {
     addRecent(formula.code);
   };
 
-  const handleSelectByCode = (code: string) => {
-    const f = allFormulas.find((x) => x.code === code);
-    if (!f) return;
-    setSelectedFormula(f);
-    setDialogOpen(true);
-    addRecent(code);
-  };
-
   // Lock background scroll while the overlay is open. We restore the
   // previous overflow value on cleanup so we don't clobber a host page
   // that already manipulates `body.overflow`.
@@ -316,7 +308,6 @@ export function FieldModeButton() {
         formula={selectedFormula}
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        onSelectFormula={handleSelectByCode}
       />
     </>
   );

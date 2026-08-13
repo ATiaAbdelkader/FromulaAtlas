@@ -96,7 +96,8 @@ Format: [{"code":"2.1","name_ar":"...","purpose_ar":"...","variables_ar":"Symbol
 
       if (bi < batches.length - 1) await new Promise(r => setTimeout(r, 500));
     } catch (e) {
-      console.error(`  ✗ Batch ${bi+1} failed:`, e.message);
+      const message = e instanceof Error ? e.message : String(e);
+      console.error(`  ✗ Batch ${bi + 1} failed:`, message);
     }
   }
 
