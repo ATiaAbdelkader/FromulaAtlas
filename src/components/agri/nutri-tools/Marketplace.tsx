@@ -33,6 +33,31 @@ const CATEGORY_LABEL_AR: Record<ProductCategory, string> = {
   irrigation: 'ري',
 };
 
+const PRODUCT_AR: Record<string, { name: string; description: string; activeIngredient?: string }> = {
+  urea: { name: 'اليوريا (46-0-0)', activeIngredient: 'نيتروجين 46%', description: 'سماد نيتروجيني صلب عالي التركيز وسريع الإطلاق. يُفضّل استخدامه مع مثبط اليورياز أو دمجه في التربة.' },
+  dap: { name: 'DAP (18-46-0)', activeIngredient: 'نيتروجين 18%، فوسفات 46%', description: 'فوسفات ثنائي الأمونيوم؛ مصدر مرتفع للفوسفور مع نيتروجين متوسط، ومناسب للجرعة الأساسية لمعظم المحاصيل.' },
+  map: { name: 'MAP (11-52-0)', activeIngredient: 'نيتروجين 11%، فوسفات 52%', description: 'فوسفات أحادي الأمونيوم؛ أعلى تركيز للفوسفور مع نيتروجين أقل من DAP، ومناسب للترب الفقيرة بالفوسفور.' },
+  sop: { name: 'كبريتات البوتاسيوم (0-0-50)', activeIngredient: 'K₂O 50%، كبريت 18%', description: 'مصدر بوتاسيوم خالٍ من الكلوريد مع الكبريت، ومناسب للمحاصيل الحساسة للكلوريد مثل البطاطس والطماطم والفراولة.' },
+  mop: { name: 'كلوريد البوتاسيوم (0-0-60)', activeIngredient: 'K₂O 60%', description: 'مصدر اقتصادي للبوتاسيوم، لكنه يحتوي على الكلوريد؛ تجنّبه مع المحاصيل الحساسة للملوحة.' },
+  kno3: { name: 'نترات البوتاسيوم (13-0-46)', activeIngredient: 'نيتروجين 13%، K₂O 46%', description: 'قابل للذوبان تماماً، ومثالي للتسميد بالري والرش الورقي، ويوفّر البوتاسيوم والنترات دون كلوريد أو كبريتات.' },
+  can: { name: 'نترات الكالسيوم (15.5-0-0 + 19 Ca)', activeIngredient: 'نيتروجين 15.5%، كالسيوم 19%', description: 'مصدر للنيتروجين والكالسيوم، يساعد على الوقاية من عفن الطرف الزهري، وقابل للذوبان تماماً للتسميد بالري.' },
+  mkp: { name: 'فوسفات أحادي البوتاسيوم (0-52-34)', activeIngredient: 'فوسفات 52%، K₂O 34%', description: 'مصدر فوسفور وبوتاسيوم قابل للذوبان تماماً للتسميد بالري، ويساعد رقمه الهيدروجيني الحمضي على تنظيف خطوط التنقيط.' },
+  gypsum: { name: 'الجبس الزراعي (CaSO₄·2H₂O)', activeIngredient: 'كالسيوم 23%، كبريت 18%', description: 'معدّل يضيف الكالسيوم والكبريت دون رفع الرقم الهيدروجيني، ويحسّن بنية التربة ويزيح الصوديوم.' },
+  lime: { name: 'الجير الزراعي (CaCO₃)', activeIngredient: 'CaCO₃ 95%، كالسيوم 40%', description: 'يرفع الرقم الهيدروجيني للتربة ويزوّدها بالكالسيوم. يُستخدم عند pH أقل من 6 ويُدمج قبل الزراعة بشهرين أو ثلاثة.' },
+  dolomite: { name: 'الجير الدولوميتي (CaCO₃+MgCO₃)', activeIngredient: 'كالسيوم 22%، مغنيسيوم 13%', description: 'يرفع الرقم الهيدروجيني مع تزويد التربة بالكالسيوم والمغنيسيوم عند وجود نقص في العنصرين.' },
+  mgso4: { name: 'كبريتات المغنيسيوم (ملح إبسوم)', activeIngredient: 'مغنيسيوم 10%، كبريت 13%', description: 'مصدر ذائب للمغنيسيوم والكبريت للتسميد بالري أو الرش الورقي، ويصحّح نقص المغنيسيوم سريعاً.' },
+  'fe-edta': { name: 'حديد EDTA (Fe 13%)', activeIngredient: 'حديد 13% (مخلّب بـ EDTA)', description: 'حديد مخلّب للرش الورقي أو التسميد بالري، يصحّح اصفرار الحديد في الترب الكلسية ويستقر عند pH أقل من 7.' },
+  'fe-eddha': { name: 'حديد EDDHA (Fe 6%)', activeIngredient: 'حديد 6% (مخلّب بـ EDDHA)', description: 'حديد مخلّب ممتاز ومستقر حتى pH 9، وهو الخيار الأفضل للاصفرار الشديد في الترب الكلسية القلوية.' },
+  znso4: { name: 'كبريتات الزنك (Zn 36%)', activeIngredient: 'زنك 36%، كبريت 17%', description: 'تصحّح نقص الزنك الشائع في الترب عالية الفوسفور والقلوية، وتُستخدم مع التربة أو بالرش الورقي.' },
+  boron: { name: 'حمض البوريك (B 17%)', activeIngredient: 'بورون 17%', description: 'مصدر للبورون الضروري للإزهار وحيوية حبوب اللقاح والعقد، خاصة في الأفوكادو والتفاح والكانولا.' },
+  chlorothalonil: { name: 'كلوروثالونيل 720 SC', activeIngredient: 'كلوروثالونيل 720 غ/ل', description: 'مبيد فطري تلامسي واسع الطيف لمكافحة اللفحة المبكرة والمتأخرة والأنثراكنوز، من مجموعة FRAC M05.' },
+  mancozeb: { name: 'مانكوزيب 80 WP', activeIngredient: 'مانكوزيب 80%', description: 'مبيد فطري تلامسي متعدد المواقع لمكافحة البياض الزغبي واللفحة المتأخرة والبوتريتس، من مجموعة FRAC M03.' },
+  copper: { name: 'هيدروكسيد النحاس 77 WP', activeIngredient: 'نحاس 77%', description: 'مبيد بكتيري وفطري وقائي لمكافحة التبقع البكتيري واللفحة النارية والبياض الزغبي، ومدرج لدى OMRI.' },
+  imidacloprid: { name: 'إيميداكلوبريد 350 SC', activeIngredient: 'إيميداكلوبريد 350 غ/ل', description: 'مبيد حشري جهازي من النيونيكوتينويدات لمكافحة المن والذبابة البيضاء ونطاطات الأوراق، بالمعاملة الأرضية أو الرش الورقي.' },
+  'tomato-seed': { name: 'بذور طماطم هجينة (F1)', description: 'هجين F1 غير محدد عالي الإنتاجية، مقاوم لفيروسات TYLCV وToMV والفيوزاريوم، ونسبة إنباته 95%.' },
+  'maize-seed': { name: 'بذور ذرة هجينة (F1)', description: 'ذرة حبوب مبكرة النضج بإمكان إنتاج يصل إلى 12 طن/هكتار، متحملة للجفاف، وتحتوي على 32000 بذرة/كغ.' },
+};
+
 const CART_KEY = 'nutriplant_marketplace_cart_v1';
 
 function copyFor(language: Language, en: string, fr: string, ar: string) {
@@ -45,6 +70,8 @@ export function Marketplace() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [showCart, setShowCart] = useState(false);
   const { language } = useTranslation();
+
+  const productDisplay = (product: Product) => language === 'ar' ? (PRODUCT_AR[product.id] ?? { name: product.name, description: product.description, activeIngredient: product.activeIngredient }) : { name: product.name, description: product.description, activeIngredient: product.activeIngredient };
 
   const categoryLabel = (cat: ProductCategory | 'all') => {
     if (cat === 'all') return copyFor(language, 'All Products', 'Tous les produits', 'كل المنتجات');
@@ -99,7 +126,7 @@ export function Marketplace() {
     const win = window.open('', '_blank');
     if (!win) return;
     const rows = cart.map((c, i) =>
-      `<tr><td>${i + 1}</td><td>${c.emoji} ${c.productName}</td><td>${c.supplierName}</td><td style="text-align:right">${c.quantity}</td><td>${c.unit}</td><td style="text-align:right">$${c.price}</td><td style="text-align:right">$${(c.price * c.quantity).toFixed(2)}</td></tr>`
+      `<tr><td>${i + 1}</td><td>${c.emoji} ${language === 'ar' ? productDisplay(PRODUCTS.find(p => p.id === c.productId) ?? ({ id: c.productId, name: c.productName, description: '' } as Product)).name : c.productName}</td><td>${c.supplierName}</td><td style="text-align:right">${c.quantity}</td><td>${c.unit}</td><td style="text-align:right">$${c.price}</td><td style="text-align:right">$${(c.price * c.quantity).toFixed(2)}</td></tr>`
     ).join('');
     const titleText = copyFor(language, 'Farm Purchase Order', 'Bon de commande de la ferme', 'أمر شراء مزرعة');
     const dateText = copyFor(language, 'Date', 'Date', 'التاريخ');
@@ -127,7 +154,7 @@ export function Marketplace() {
   };
 
   return (
-    <Card>
+    <Card dir={language === 'ar' ? 'rtl' : 'ltr'}>
       {/* Search + Cart bar */}
       <div className="flex gap-2 items-center">
         <div className="relative flex-1">
@@ -168,7 +195,7 @@ export function Marketplace() {
             <div key={i} className="flex items-center gap-2 text-xs py-1.5 border-b border-emerald-100 dark:border-emerald-900/50 last:border-0">
               <span className="text-lg">{item.emoji}</span>
               <div className="flex-1 min-w-0">
-                <div className="font-medium truncate">{item.productName}</div>
+                <div className="font-medium truncate">{language === 'ar' ? productDisplay(PRODUCTS.find(p => p.id === item.productId) ?? ({ id: item.productId, name: item.productName, description: '' } as Product)).name : item.productName}</div>
                 <div className="text-[10px] text-muted-foreground">{item.supplierName} · ${item.price}/{item.unit}</div>
               </div>
               <div className="flex items-center gap-1">
@@ -195,6 +222,8 @@ export function Marketplace() {
           const savings = worst.price - best.price;
           const savingsPct = Math.round((savings / worst.price) * 100);
 
+          const display = productDisplay(product);
+
           return (
             <div key={product.id} className="rounded-lg border border-border bg-card overflow-hidden hover:shadow-md transition-shadow">
               {/* Header */}
@@ -203,19 +232,19 @@ export function Marketplace() {
                   <div className="flex items-center gap-2">
                     <span className="text-2xl">{product.emoji}</span>
                     <div>
-                      <div className="text-sm font-semibold leading-tight">{product.name}</div>
-                      {product.activeIngredient && <div className="text-[10px] text-muted-foreground">{product.activeIngredient}</div>}
+                      <div className="text-sm font-semibold leading-tight">{display.name}</div>
+                      {display.activeIngredient && <div className="text-[10px] text-muted-foreground">{display.activeIngredient}</div>}
                     </div>
                   </div>
                   <Badge variant="outline" className="text-[9px] flex-shrink-0" style={{ color: CATEGORY_COLORS[product.category], borderColor: `${CATEGORY_COLORS[product.category]}60` }}>
-                    {CATEGORY_LABELS[product.category]}
+                    {categoryLabel(product.category)}
                   </Badge>
                 </div>
               </div>
 
               {/* Body */}
               <div className="p-3 space-y-2">
-                <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">{product.description}</p>
+                <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">{display.description}</p>
                 {product.applicationRate && (
                   <div className="text-[10px] bg-muted/30 rounded p-1.5">
                     <span className="font-semibold">{copyFor(language, 'Rate:', 'Dose :', 'المعدل:')}</span> {product.applicationRate}

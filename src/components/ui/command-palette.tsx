@@ -134,11 +134,11 @@ export function CommandPalette({ open, onOpenChange, onSelect }: CommandPaletteP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="p-0 overflow-hidden max-w-2xl gap-0" aria-describedby={undefined}>
-        <DialogTitle className="sr-only">Command Palette</DialogTitle>
+      <DialogContent dir={isRTL ? 'rtl' : 'ltr'} className="p-0 overflow-hidden max-w-2xl gap-0" aria-describedby={undefined}>
+        <DialogTitle className="sr-only">{language === 'ar' ? 'لوحة الأوامر' : language === 'fr' ? 'Palette de commandes' : 'Command Palette'}</DialogTitle>
         <Command className="rounded-lg" shouldFilter={false}>
           <div className="flex items-center border-b px-3">
-            <Search className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" />
+            <Search className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
             <CommandInput
               placeholder={language === 'ar'
                 ? 'ابحث عن أدوات أو وكلاء أو معادلات… (أو اكتب كلمة مثل «صقيع» أو «سماد»)'

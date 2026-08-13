@@ -50,6 +50,72 @@ function copyFor(language: Language, en: string, fr: string, ar: string) {
   return language === 'ar' ? ar : language === 'fr' ? fr : en;
 }
 
+const STAGE_AR: Record<string, string> = {
+  Establishment: 'التأسيس',
+  Vegetative: 'النمو الخضري',
+  Flowering: 'الإزهار',
+  'Fruit/Grain Fill': 'امتلاء الثمار/الحبوب',
+  Maturation: 'النضج',
+};
+
+const DISEASE_AR: Record<string, string> = {
+  'Late Blight (Smith Period)': 'اللفحة المتأخرة (فترة سميث)',
+  'Early Blight (FAST)': 'اللفحة المبكرة (FAST)',
+  'Powdery Mildew': 'البياض الدقيقي',
+  Botrytis: 'البوتريتس',
+  'Blossom-End Rot': 'عفن الطرف الزهري',
+};
+
+function localizeAlert(alert: Alert, language: Language): Alert {
+  if (language !== 'ar') return alert;
+  const stage = (value: string) => STAGE_AR[value] ?? value;
+  const disease = (value: string) => DISEASE_AR[value] ?? value;
+  let title = disease(alert.title);
+  let message = alert.message;
+  let action = alert.action;
+
+  const frost = title.match(/^Frost risk on (.+)$/);
+  const heat = title.match(/^Extreme heat on (.+)$/);
+  const rain = title.match(/^Heavy rain on (.+)$/);
+  const started = title.match(/^(.+) stage started$/);
+  const recipe = title.match(/^Fertigation recipe: (.+)$/);
+  const sample = title.match(/^Time to sample: (.+)$/);
+
+  if (frost) title = `خطر الصقيع في ${frost[1]}`;
+  else if (heat) title = `حرارة شديدة في ${heat[1]}`;
+  else if (rain) title = `أمطار غزيرة في ${rain[1]}`;
+  else if (started) title = `بدأت مرحلة ${stage(started[1])}`;
+  else if (recipe) title = `وصفة التسميد بالري: ${stage(recipe[1])}`;
+  else if (sample) title = `حان وقت أخذ العينة: ${sample[1]}`;
+  else if (title === 'Peak water demand — verify irrigation') title = 'ذروة الطلب على المياه — تحقّق من الري';
+  else if (title === 'Reduce N, prepare for harvest') title = 'خفّض النيتروجين واستعد للحصاد';
+
+  message = message
+    .replace(/^Your (.+) is entering the (.+) stage \(week (\d+) of (\d+)\)\. Key focus: (.+)\.$/, (_, crop, currentStage, week, total, focus) => `يدخل محصول ${crop} مرحلة ${stage(currentStage)} (الأسبوع ${week} من ${total}). التركيز الأساسي: ${focus}.`)
+    .replace(/^Current recipe: (.+)$/, (_, value) => `الوصفة الحالية: ${value}`)
+    .replace(/^Mid-(.+) is the optimal window for (.+)\. Results guide the next fertigation adjustment\.$/, (_, currentStage, sampling) => `منتصف مرحلة ${stage(currentStage)} هو الموعد الأنسب لـ${sampling}. وتوجّه النتائج تعديل التسميد بالري التالي.`)
+    .replace(/^(.+) stage has the highest ETc\. Check that irrigation is keeping up with the forecast demand\.$/, (_, currentStage) => `تتميز مرحلة ${stage(currentStage)} بأعلى قيمة ETc. تحقّق من مواكبة الري للطلب المتوقع.`)
+    .replace(/^In maturation, excess N delays ripening and reduces quality\. Cut N to near-zero\. Maintain Ca for fruit firmness\.$/, 'يؤخر فائض النيتروجين النضج ويقلل الجودة. اخفض النيتروجين إلى ما يقارب الصفر وحافظ على الكالسيوم لصلابة الثمار.')
+    .replace(/^Minimum temperature forecast: ([\d.]+)°C\. Frost can damage (.+)\.$/, 'درجة الحرارة الدنيا المتوقعة: $1°م. قد يضر الصقيع بمحصول $2.')
+    .replace(/^Maximum temperature forecast: ([\d.]+)°C\. Heat stress likely\.$/, 'درجة الحرارة القصوى المتوقعة: $1°م. يُحتمل حدوث إجهاد حراري.')
+    .replace(/^Precipitation forecast: ([\d.]+) mm\. Risk of leaching, soil erosion, and disease spread\.$/, 'الهطول المتوقع: $1 مم. يوجد خطر غسل العناصر وانجراف التربة وانتشار الأمراض.');
+
+  action = action
+    ?.replace(/^Starter formula \(high P, e\.g\. 10-30-10\) at low rate$/, 'استخدم تركيبة بادئة عالية الفوسفور، مثل 10-30-10، بمعدل منخفض')
+    .replace(/^Grow formula \(balanced N-K, e\.g\. 20-10-20\) at moderate rate$/, 'استخدم تركيبة نمو متوازنة من N-K، مثل 20-10-20، بمعدل متوسط')
+    .replace(/^Bloom formula \(high K, e\.g\. 15-15-30\) at moderate rate$/, 'استخدم تركيبة إزهار عالية البوتاسيوم، مثل 15-15-30، بمعدل متوسط')
+    .replace(/^Finish formula \(high K, low N, e\.g\. 12-4-26\) at peak rate$/, 'استخدم تركيبة إنهاء عالية البوتاسيوم ومنخفضة النيتروجين، مثل 12-4-26، بالمعدل الأقصى')
+    .replace(/^Reduce or stop \(water only or low-rate finish\)$/, 'خفّض التسميد أو أوقفه؛ استخدم الماء فقط أو تركيبة إنهاء منخفضة المعدل')
+    .replace(/^Collect (.+) this week$/, 'اجمع عينة $1 هذا الأسبوع')
+    .replace(/^Use the Irrigation Balance tool with this week's ETo$/, 'استخدم أداة توازن الري مع قيمة ETo لهذا الأسبوع')
+    .replace(/^Switch to water-only or low-K finish formula$/, 'انتقل إلى الماء فقط أو تركيبة إنهاء منخفضة البوتاسيوم')
+    .replace(/^Protect crops with frost cloth, overhead irrigation, or move container plants indoors\.$/, 'احمِ المحاصيل بأغطية الصقيع أو الري العلوي، وانقل النباتات المزروعة في حاويات إلى الداخل.')
+    .replace(/^Increase irrigation, use shade cloth \(30-50%\), avoid foliar sprays during peak heat\.$/, 'زد الري، واستخدم شبكة تظليل بنسبة 30–50%، وتجنب الرش الورقي أثناء ذروة الحرارة.')
+    .replace(/^Delay fertilizer application\. Ensure drainage is clear\. Scout for disease 3-5 days after\.$/, 'أجّل تطبيق السماد، وتأكد من خلو المصارف، وافحص الأمراض بعد 3–5 أيام.');
+
+  return { ...alert, title, message, action };
+}
+
 export function NotificationCenter() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -131,7 +197,7 @@ export function NotificationCenter() {
 
       {/* Alert panel */}
       {open && (
-        <div className="fixed bottom-24 right-6 z-40 w-[min(440px,calc(100vw-3rem))] max-h-[70vh] flex flex-col rounded-xl border border-border bg-background shadow-2xl overflow-hidden">
+        <div dir={language === 'ar' ? 'rtl' : 'ltr'} className="fixed bottom-24 right-6 z-40 w-[min(440px,calc(100vw-3rem))] max-h-[70vh] flex flex-col rounded-xl border border-border bg-background shadow-2xl overflow-hidden">
           {/* Header */}
           <div className="flex items-center justify-between p-3 border-b border-border bg-gradient-to-br from-amber-500 to-orange-600 text-white">
             <div className="flex items-center gap-2">
@@ -211,7 +277,7 @@ export function NotificationCenter() {
                     {copyFor(language, `Week ${alerts.currentWeek}/${alerts.totalWeeks}`, `Semaine ${alerts.currentWeek}/${alerts.totalWeeks}`, `أسبوع ${alerts.currentWeek}/${alerts.totalWeeks}`)}
                   </Badge>
                   <Badge variant="outline" className="text-[10px] capitalize">
-                    {alerts.currentStage}
+                    {language === 'ar' ? (STAGE_AR[alerts.currentStage] ?? alerts.currentStage) : alerts.currentStage}
                   </Badge>
                   <span className="text-muted-foreground ml-auto">{alerts.summary.total} {copyFor(language, 'alerts', 'alertes', 'تنبيهات')}</span>
                 </div>
@@ -222,7 +288,8 @@ export function NotificationCenter() {
                     <span>{copyFor(language, 'No alerts — conditions look good for the next 7 days.', 'Aucune alerte — les conditions semblent bonnes pour les 7 prochains jours.', 'لا تنبيهات — تبدو الظروف جيدة للأيام الـ7 القادمة.')}</span>
                   </div>
                 ) : (
-                  alerts.alerts.map(a => {
+                  alerts.alerts.map(rawAlert => {
+                    const a = localizeAlert(rawAlert, language);
                     const style = PRIORITY_STYLES[a.priority];
                     const CatIcon = CATEGORY_ICONS[a.category];
                     return (

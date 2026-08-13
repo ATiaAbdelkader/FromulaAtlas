@@ -15,6 +15,35 @@ import { FREE_TOOL_COUNT } from '@/lib/catalog-stats';
 
 type Step = 'welcome' | 'role' | 'crop' | 'features' | 'finish';
 
+const ROLE_LABEL_AR: Record<UserRole, string> = {
+  grower: 'مزارع',
+  agronomist: 'مهندس زراعي',
+  consultant: 'استشاري',
+  student: 'طالب',
+  other: 'أخرى',
+};
+
+const ROLE_DESCRIPTION_AR: Record<UserRole, string> = {
+  grower: 'أدير مزرعة أو محصولاً',
+  agronomist: 'أقدّم المشورة للمزارعين في التغذية والزراعة',
+  consultant: 'أستشير في تخطيط المحاصيل والاستدامة',
+  student: 'أدرس علم الزراعة أو الزراعة التطبيقية',
+  other: 'أحب النباتات فحسب',
+};
+
+const CROP_LABEL_AR: Record<string, string> = {
+  tomato: 'طماطم',
+  strawberry: 'فراولة',
+  avocado: 'أفوكادو',
+  blueberry: 'توت أزرق',
+  lettuce: 'خس',
+  pepper: 'فلفل حلو',
+  cucumber: 'خيار',
+  citrus: 'حمضيات',
+  coffee: 'قهوة',
+  maize: 'ذرة',
+};
+
 const FEATURE_HIGHLIGHTS = [
   {
     icon: Calculator,
@@ -114,7 +143,7 @@ export function OnboardingFlow() {
         <div className="absolute -bottom-20 left-1/3 w-80 h-80 rounded-full bg-cyan-500/15 blur-3xl" style={{ animation: 'ob-float 9s ease-in-out infinite 2s' }} />
       </div>
 
-      <div className="relative w-full max-w-2xl bg-card/95 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl overflow-hidden" style={{ animation: 'ob-slide-up 0.5s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+      <div dir={isRTL ? 'rtl' : 'ltr'} className="relative w-full max-w-2xl bg-card/95 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl overflow-hidden" style={{ animation: 'ob-slide-up 0.5s cubic-bezier(0.16, 1, 0.3, 1)' }}>
         {step !== 'welcome' && step !== 'finish' && (
           <div className="absolute top-0 left-0 right-0 h-1 bg-muted/40 z-10">
             <div className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-500 ease-out" style={{ width: `${(stepIndex / (stepCount - 2)) * 100}%` }} />
@@ -186,8 +215,8 @@ export function OnboardingFlow() {
                   >
                     <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-muted/60 text-xl flex-shrink-0">{r.emoji}</div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-semibold text-foreground">{r.label}</div>
-                      <div className="text-[11px] text-muted-foreground leading-tight mt-0.5">{r.description}</div>
+                      <div className="text-sm font-semibold text-foreground">{isRTL ? ROLE_LABEL_AR[r.id] : r.label}</div>
+                      <div className="text-[11px] text-muted-foreground leading-tight mt-0.5">{isRTL ? ROLE_DESCRIPTION_AR[r.id] : r.description}</div>
                     </div>
                     {role === r.id && <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" />}
                   </button>
@@ -214,7 +243,7 @@ export function OnboardingFlow() {
                     className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all ${crop === c.id ? 'border-emerald-500 bg-emerald-50/60 dark:bg-emerald-950/30 scale-105' : 'border-border hover:border-emerald-300 hover:bg-muted/40'}`}
                   >
                     <span className="text-3xl">{c.emoji}</span>
-                    <span className="text-xs font-medium text-foreground">{c.label}</span>
+                    <span className="text-xs font-medium text-foreground">{isRTL ? CROP_LABEL_AR[c.id] : c.label}</span>
                     {crop === c.id && <Check className="h-3 w-3 text-emerald-600" />}
                   </button>
                 ))}
@@ -271,8 +300,8 @@ export function OnboardingFlow() {
                   {role && crop ? (
                     isRTL ? (
                       <>
-                        بصفتك <strong className="text-foreground">{ROLE_OPTIONS.find(r => r.id === role)?.label}</strong> الذي يزرع{' '}
-                        <strong className="text-foreground">{CROP_OPTIONS.find(c => c.id === crop)?.label}</strong>، إعداداتك المسبقة جاهزة.
+                        بصفتك <strong className="text-foreground">{ROLE_LABEL_AR[role]}</strong> الذي يزرع{' '}
+                        <strong className="text-foreground">{CROP_LABEL_AR[crop]}</strong>، إعداداتك المسبقة جاهزة.
                         افتح <strong className="text-foreground">تبويب الأدوات</strong> للبدء، أو اضغط زر{' '}
                         <strong className="text-foreground">المهندس الزراعي بالذكاء</strong> عندما تحتاج إرشاداً.
                       </>
