@@ -11,6 +11,7 @@ import {
   ROLE_OPTIONS, CROP_OPTIONS, type UserRole,
 } from '@/lib/onboarding-store';
 import { useTranslation } from '@/lib/language-store';
+import { FREE_TOOL_COUNT } from '@/lib/catalog-stats';
 
 type Step = 'welcome' | 'role' | 'crop' | 'features' | 'finish';
 
@@ -18,8 +19,8 @@ const FEATURE_HIGHLIGHTS = [
   {
     icon: Calculator,
     color: '#16a34a',
-    title: '91 Free Agronomic Tools',
-    title_ar: '91 أداة زراعية مجانية',
+    title: `${FREE_TOOL_COUNT} Free Agronomic Tools`,
+    title_ar: `${FREE_TOOL_COUNT} أداة زراعية مجانية`,
     description: 'Converters, hydro solution designer, VPD estimator, fertilizer compatibility matrix, soil texture triangle, and more — all native, no sign-up.',
     description_ar: 'محوّلات، مصمّم محاليل مائية، مقدّر VPD، مصفوفة توافق الأسمدة، مثلث نسجة التربة، والمزيد — كلها أصيلة بلا تسجيل.',
     badge: 'Tools tab',
@@ -30,8 +31,8 @@ const FEATURE_HIGHLIGHTS = [
     color: '#0891b2',
     title: 'AI Agronomist Assistant',
     title_ar: 'مساعد المهندس الزراعي بالذكاء',
-    description: 'A floating chat that knows all 91 tools. Describe a symptom or share lab values — it tells you exactly which tool to open and what to enter.',
-    description_ar: 'دردشة عائمة تعرف كل الـ91 أداة. صِف عرضاً أو شارك قيم المختبر — يخبرك بالضبط بأي أداة تفتحها وماذا تدخل.',
+    description: `A floating chat that knows the ${FREE_TOOL_COUNT} free calculators. Describe a symptom or share lab values — it tells you exactly which tool to open and what to enter.`,
+    description_ar: `دردشة عائمة تعرف ${FREE_TOOL_COUNT} حاسبة مجانية. صِف عرضاً أو شارك قيم المختبر — يخبرك بالضبط بأي أداة تفتحها وماذا تدخل.`,
     badge: 'Bottom-right',
     badge_ar: 'أسفل اليمين',
   },
@@ -145,13 +146,13 @@ export function OnboardingFlow() {
                 </h1>
                 <p className="text-sm text-muted-foreground mt-2 max-w-md mx-auto leading-relaxed">
                   {isRTL
-                    ? 'منصة زراعية شاملة — 91 حاسبة دقيقة، ومهندس زراعي بالذكاء الاصطناعي، ومولّد خطة موسم 52 أسبوعاً. لنأخذ جولة 60 ثانية.'
-                    : 'Your all-in-one agronomy platform — 91 precision calculators, an AI agronomist, and a 52-week season plan generator. Let\'s take a 60-second tour.'}
+                    ? `منصة زراعية شاملة — ${FREE_TOOL_COUNT} حاسبة مجانية، ومهندس زراعي بالذكاء الاصطناعي، ومولّد خطة موسم 52 أسبوعاً. لنأخذ جولة 60 ثانية.`
+                    : `Your all-in-one agronomy platform — ${FREE_TOOL_COUNT} free calculators, an AI agronomist, and a 52-week season plan generator. Let\'s take a 60-second tour.`}
                 </p>
               </div>
               <div className="grid grid-cols-3 gap-3 w-full max-w-md mt-2">
                 {[
-                  { icon: Calculator, label: isRTL ? '91 أداة' : '91 Tools', color: '#16a34a' },
+                  { icon: Calculator, label: isRTL ? `${FREE_TOOL_COUNT} أداة` : `${FREE_TOOL_COUNT} Free Tools`, color: '#16a34a' },
                   { icon: Bot, label: isRTL ? 'مساعد ذكاء' : 'AI Assistant', color: '#0891b2' },
                   { icon: Calendar, label: isRTL ? 'خطة موسمية' : 'Season Plan', color: '#7c3aed' },
                 ].map((f, i) => (
@@ -285,14 +286,14 @@ export function OnboardingFlow() {
                     )
                   ) : (
                     isRTL
-                      ? <>افتح تبويب الأدوات لاستكشاف كل الحاسبات الـ91، أو اضغط زر المهندس الزراعي بالذكاء لإرشاد فوري.</>
-                      : <>Open the Tools tab to explore all 91 calculators, or click the AI Agronomist button for instant guidance.</>
+                      ? <>افتح تبويب الأدوات لاستكشاف كل الحاسبات الـ{FREE_TOOL_COUNT}، أو اضغط زر المهندس الزراعي بالذكاء لإرشاد فوري.</>
+                      : <>Open the Tools tab to explore all {FREE_TOOL_COUNT} free calculators, or click the AI Agronomist button for instant guidance.</>
                   )}
                 </p>
               </div>
               <div className="grid grid-cols-3 gap-2 w-full max-w-sm">
                 <div className="rounded-lg p-2.5 bg-muted/40 border border-border">
-                  <div className="text-lg font-bold text-emerald-600">91</div>
+                  <div className="text-lg font-bold text-emerald-600">{FREE_TOOL_COUNT}</div>
                   <div className="text-[10px] text-muted-foreground">{isRTL ? 'أداة' : 'Tools'}</div>
                 </div>
                 <div className="rounded-lg p-2.5 bg-muted/40 border border-border">

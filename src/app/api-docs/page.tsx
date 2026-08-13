@@ -11,12 +11,13 @@ import {
   ArrowRight, ChevronRight,
 } from 'lucide-react';
 import { useTranslation } from '@/lib/language-store';
+import { FORMULA_COUNT, FREE_TOOL_COUNT } from '@/lib/catalog-stats';
 
 const ENDPOINTS = [
   {
     method: 'GET',
     path: '/api/v1/formulas',
-    desc: 'Browse 332 agronomic formulas with filtering and pagination',
+    desc: `Browse ${FORMULA_COUNT} agronomic formulas with filtering and pagination`,
     params: [
       { name: 'code', type: 'string', desc: 'Filter by formula code (e.g. 2.1)' },
       { name: 'part', type: 'string', desc: 'Filter by part name' },
@@ -224,7 +225,7 @@ export default function ApiDocsPage() {
             <Code className="h-7 w-7" />
           </div>
           <h1 className="text-2xl font-bold">{isRTL ? 'واجهة برمجة تطبيقات أطلس المعادلات' : 'Formula Atlas API'}</h1>
-          <p className="text-sm text-muted-foreground mt-1">{isRTL ? 'REST API لـ 500 معادلة، 91 حاسبة، 35 محصولاً، 39 مرضاً، ومهندس زراعي بالذكاء' : 'REST API for 500 formulas, 91 calculators, 35 crops, 39 diseases, and AI agronomist'}</p>
+          <p className="text-sm text-muted-foreground mt-1">{isRTL ? `REST API لـ ${FORMULA_COUNT} معادلة، ${FREE_TOOL_COUNT} حاسبة مجانية، 35 محصولاً، 39 مرضاً، ومهندس زراعي بالذكاء` : `REST API for ${FORMULA_COUNT} formulas, ${FREE_TOOL_COUNT} free calculators, 35 crops, 39 diseases, and AI agronomist`}</p>
           <div className="flex justify-center gap-2 mt-3">
             <Badge variant="outline" className="text-xs">v1.0</Badge>
             <Badge variant="outline" className="text-xs text-emerald-700 dark:text-emerald-400 border-emerald-300">{isRTL ? 'بدون مفتاح API' : 'No API key required'}</Badge>
@@ -235,8 +236,8 @@ export default function ApiDocsPage() {
         {/* Quick stats */}
         <div className="grid grid-cols-4 gap-3 mb-6">
           {[
-            { label: isRTL ? 'معادلات' : 'Formulas', value: '500' },
-            { label: isRTL ? 'حاسبات' : 'Calculators', value: '91' },
+            { label: isRTL ? 'معادلات' : 'Formulas', value: String(FORMULA_COUNT) },
+            { label: isRTL ? 'حاسبات مجانية' : 'Free calculators', value: String(FREE_TOOL_COUNT) },
             { label: isRTL ? 'محاصيل' : 'Crops', value: '35' },
             { label: isRTL ? 'أمراض' : 'Diseases', value: '39' },
           ].map(s => (

@@ -18,6 +18,7 @@ import {
   Satellite, Bug, DollarSign, ShoppingCart, Leaf, Users, FileText,
   Calculator, Network, TableProperties, Star, Columns2,
 } from 'lucide-react';
+import { FORMULA_COUNT, FREE_TOOL_COUNT } from './catalog-stats';
 
 export type TabId = 'home' | 'formulas' | 'tools' | 'farm' | 'insights';
 
@@ -95,8 +96,8 @@ export const TOOL_REGISTRY: ToolEntry[] = [
   // ==========================================================================
   // TOOLS TAB (FreeToolsSection — represents the whole section)
   // ==========================================================================
-  { id: 'tools-tab', title: 'All Free Tools (18 calculators)', description: 'Oxide/elemental, units, hydro, water, fertilizers, soil, reference', keywords: 'free tools calculator oxide elemental units hydro water fertilizer soil reference', tab: 'tools', icon: Wrench, category: 'tools', color: '#0891b2' },
-  { id: 'formulas-tab', title: 'Formula Atlas (332 formulas)', description: 'Browse all 332 agronomic formulas with 218 interactive calculators', keywords: 'formula atlas browse all 332 218 interactive calculator', tab: 'formulas', icon: BookOpen, category: 'formulas', color: '#f59e0b' },
+  { id: 'tools-tab', title: `All Free Tools (${FREE_TOOL_COUNT} calculators)`, description: 'Oxide/elemental, units, hydro, water, fertilizers, soil, reference', keywords: 'free tools calculator oxide elemental units hydro water fertilizer soil reference', tab: 'tools', icon: Wrench, category: 'tools', color: '#0891b2' },
+  { id: 'formulas-tab', title: `Formula Atlas (${FORMULA_COUNT} formulas)`, description: `Browse all ${FORMULA_COUNT} agronomic formulas with 218 interactive calculators`, keywords: 'formula atlas browse formulas interactive calculator', tab: 'formulas', icon: BookOpen, category: 'formulas', color: '#f59e0b' },
 
   // ==========================================================================
   // Quick actions (not real tools, but navigable shortcuts)

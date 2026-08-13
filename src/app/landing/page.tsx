@@ -23,6 +23,7 @@ import {
   ChevronRight, Microscope,
 } from 'lucide-react';
 import { AnimatedCounter } from '@/components/agri/nutri-tools/AnimatedCounter';
+import { FORMULA_COUNT, FREE_TOOL_COUNT } from '@/lib/catalog-stats';
 
 export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
@@ -283,8 +284,8 @@ export default function LandingPage() {
                 <ArrowRight className="h-5 w-5" />
               </Link>
               <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-8 text-xs text-emerald-100">
-                <span className="flex items-center gap-1"><Check className="h-3 w-3" /> 332 formulas</span>
-                <span className="flex items-center gap-1"><Check className="h-3 w-3" /> 50+ tools</span>
+                <span className="flex items-center gap-1"><Check className="h-3 w-3" /> {FORMULA_COUNT} formulas</span>
+                <span className="flex items-center gap-1"><Check className="h-3 w-3" /> {FREE_TOOL_COUNT} free calculators</span>
                 <span className="flex items-center gap-1"><Check className="h-3 w-3" /> 10 AI agents</span>
                 <span className="flex items-center gap-1"><Check className="h-3 w-3" /> GIS suite</span>
                 <span className="flex items-center gap-1"><Check className="h-3 w-3" /> FAO-56 ET₀</span>

@@ -36,6 +36,7 @@ import { FarmStats } from '@/components/agri/farm-stats';
 import { TodayTasks } from '@/components/agri/today-tasks';
 import { FarmProfileWizard, needsFarmProfileSetup } from '@/components/agri/farm-profile-wizard';
 import { useTranslation } from '@/lib/language-store';
+import { FREE_TOOL_COUNT, FORMULA_COUNT } from '@/lib/catalog-stats';
 
 const FARM_PROFILE_KEY = 'farm_profile_v1';
 const LAST_LOC_KEY = 'et_tracker_last_loc_v1';
@@ -499,8 +500,8 @@ export function HomeDashboard({ onNavigate, onOpenTool, onOpenSearch }: HomeDash
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <NavCard icon={Tractor} label={t.tabFarm} desc={isRTL ? 'الحقول، المحاصيل، التربة، الماشية، الري' : 'Fields, crops, soil, livestock, irrigation'} color="#16a34a" onClick={() => onNavigate('farm')} />
           <NavCard icon={Sparkles} label={t.tabInsights} desc={isRTL ? 'NDVI، الطقس، الذكاء، المالية، المجتمع' : 'NDVI, weather, AI, financial, community'} color="#6366f1" onClick={() => onNavigate('insights')} />
-          <NavCard icon={Wrench} label={t.tabTools} desc={isRTL ? '18 حاسبة زراعية مجانية' : '18 free agronomic calculators'} color="#0891b2" onClick={() => onNavigate('tools')} />
-          <NavCard icon={BookOpen} label={t.tabFormulas} desc={isRTL ? '500 معادلة بحاسبات' : '500 formulas with calculators'} color="#f59e0b" onClick={() => onNavigate('formulas')} />
+          <NavCard icon={Wrench} label={t.tabTools} desc={isRTL ? `${FREE_TOOL_COUNT} حاسبات زراعية مجانية` : `${FREE_TOOL_COUNT} free agronomic calculators`} color="#0891b2" onClick={() => onNavigate('tools')} />
+          <NavCard icon={BookOpen} label={t.tabFormulas} desc={isRTL ? `${FORMULA_COUNT} معادلة بحاسبات` : `${FORMULA_COUNT} formulas with calculators`} color="#f59e0b" onClick={() => onNavigate('formulas')} />
         </div>
       </section>
 

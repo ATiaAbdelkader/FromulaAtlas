@@ -17,6 +17,7 @@
 // this file with hundreds of entries.
 
 import { create } from 'zustand';
+import { FREE_TOOL_COUNT, FORMULA_COUNT } from './catalog-stats';
 import { persist } from 'zustand/middleware';
 
 export type Language = 'en' | 'ar';
@@ -47,7 +48,7 @@ export const uiStrings = {
     // App identity
     appName: 'Formula Atlas',
     appSubtitle: 'Your AI-powered agronomy platform',
-    appTagline: '500 formulas · 91 tools · 10 AI specialists · 1 free platform',
+    appTagline: `${FORMULA_COUNT} formulas · ${FREE_TOOL_COUNT} free tools · 10 AI specialists · 1 free platform`,
 
     // Top-level navigation tabs
     tabHome: 'Home',
@@ -224,7 +225,7 @@ export const uiStrings = {
     // App identity
     appName: 'أطلس المعادلات',
     appSubtitle: 'منصة زراعية مدعومة بالذكاء الاصطناعي',
-    appTagline: '500 معادلة · 91 أداة · 10 وكلاء ذكاء · منصة مجانية واحدة',
+    appTagline: `${FORMULA_COUNT} معادلة · ${FREE_TOOL_COUNT} أداة مجانية · 10 وكلاء ذكاء · منصة مجانية واحدة`,
 
     // Top-level navigation tabs
     tabHome: 'الرئيسية',
