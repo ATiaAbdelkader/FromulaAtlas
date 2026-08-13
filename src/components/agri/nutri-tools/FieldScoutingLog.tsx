@@ -1,6 +1,13 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import {
+  SCOUT_ENTRIES_CHANGED_EVENT,
+  appendScoutEntry,
+  loadScoutEntries,
+  removeScoutEntry,
+  type ScoutEntry,
+} from '@/lib/scouting-store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,20 +17,6 @@ import {
   Mic, MicOff, Camera, MapPin, Trash2, Download, Calendar,
   Leaf, AlertTriangle, CheckCircle2, Loader2, X, Search,
 } from 'lucide-react';
-
-interface ScoutEntry {
-  id: string;
-  timestamp: number;
-  fieldName: string;
-  crop: string;
-  location?: { lat: number; lng: number };
-  note: string;
-  severity: 'info' | 'warning' | 'critical';
-  photo?: string; // base64 data URL
-  voiceTranscript?: string;
-}
-
-const STORAGE_KEY = 'nutriplant_scout_log_v1';
 
 const SEVERITY_STYLES = {
   info:     { color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe', icon: CheckCircle2, label: 'Info' },
@@ -51,23 +44,15 @@ export function FieldScoutingLog() {
 
   // Load from localStorage
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setEntries(JSON.parse(raw));
-    } catch { /* ignore */ }
+    setEntries(loadScoutEntries());
+    const handleEntriesChanged = () => setEntries(loadScoutEntries());
+    window.addEventListener(SCOUT_ENTRIES_CHANGED_EVENT, handleEntriesChanged);
     // Check speech recognition support
     if (typeof window !== 'undefined') {
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       setSpeechSupported(!!SpeechRecognition);
     }
-  }, []);
-
-  // Save to localStorage
-  const save = useCallback((newEntries: ScoutEntry[]) => {
-    setEntries(newEntries);
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(newEntries));
-    } catch { /* ignore */ }
+    return () => window.removeEventListener(SCOUT_ENTRIES_CHANGED_EVENT, handleEntriesChanged);
   }, []);
 
   // Voice transcription
@@ -127,18 +112,20 @@ export function FieldScoutingLog() {
       severity,
       photo: photo || undefined,
     };
-    save([entry, ...entries]);
+    const nextEntries = appendScoutEntry(entry);
+    setEntries(nextEntries);
     // Reset form
     setNote('');
     setPhoto(null);
     setLocation(null);
     setSeverity('info');
-  }, [note, photo, fieldName, crop, location, severity, entries, save]);
+  }, [note, photo, fieldName, crop, location, severity]);
 
   // Delete entry
   const deleteEntry = useCallback((id: string) => {
-    save(entries.filter(e => e.id !== id));
-  }, [entries, save]);
+    const nextEntries = removeScoutEntry(id);
+    setEntries(nextEntries);
+  }, []);
 
   // Export as PDF (print-friendly)
   const exportPdf = useCallback(() => {

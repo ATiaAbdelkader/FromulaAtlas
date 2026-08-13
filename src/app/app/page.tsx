@@ -99,6 +99,8 @@ import type { Workflow } from '@/lib/workflows';
 import { useTranslation } from '@/lib/language-store';
 import { cn } from '@/lib/utils';
 import { FormulaExplorer } from '@/components/agri/formula-explorer';
+import { MobileFieldCaptureButton } from '@/components/agri/mobile-field-capture';
+import { FieldModeButton } from '@/components/agri/field-mode';
 
 type TabId = 'home' | 'formulas' | 'tools' | 'farm' | 'insights' | 'about';
 
@@ -231,6 +233,8 @@ export default function Page() {
               <TakeTourButton />
               <ApiDocsButton />
               <TelegramConnectButton />
+              <FieldModeButton />
+              <MobileFieldCaptureButton />
               {installPromptEvent && !isInstalled && (
                 <Button size="sm" onClick={handleInstall} className="gap-1.5 text-xs h-9 bg-emerald-600 hover:bg-emerald-700" title={t.installApp}>
                   <Download className="h-3.5 w-3.5" />
