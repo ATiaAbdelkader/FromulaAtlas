@@ -26,6 +26,7 @@ import {
   detectAndParse, computeMetrics,
   toGeoJSON, toKML, toWKT, toCSV,
 } from '@/lib/field-boundary';
+import { copyFor, useTranslation } from '@/lib/language-store';
 
 type Tab = 'import' | 'draw' | 'convert';
 
@@ -34,6 +35,7 @@ type Tab = 'import' | 'draw' | 'convert';
 // ============================================================================
 
 export function FieldBoundaryImporter() {
+  const { language } = useTranslation();
   const [tab, setTab] = useState<Tab>('import');
   const [boundary, setBoundary] = useState<Boundary | null>(null);
   const [sourceFormat, setSourceFormat] = useState<ImportFormat | null>(null);
@@ -42,12 +44,12 @@ export function FieldBoundaryImporter() {
     <Card className="overflow-hidden border-emerald-100/80 shadow-sm dark:border-emerald-950/60">
       <CardHeader className="border-b border-emerald-100/70 bg-gradient-to-br from-emerald-50/70 via-card to-card pb-4 dark:border-emerald-950/70 dark:from-emerald-950/30">
         <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-300"><Shapes className="h-4 w-4" /></span> Field Boundary Importer
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-300"><Shapes className="h-4 w-4" /></span> {copyFor(language, 'Field Boundary Importer', 'مستورد حدود الحقول')}
         </CardTitle>
         <div className="mt-3 grid grid-cols-1 gap-1 rounded-xl bg-muted/50 p-1 sm:grid-cols-3">
-          <TabBtn active={tab === 'import'} onClick={() => setTab('import')} icon={Upload} label="Import" />
-          <TabBtn active={tab === 'draw'} onClick={() => setTab('draw')} icon={Shapes} label="Draw" />
-          <TabBtn active={tab === 'convert'} onClick={() => setTab('convert')} icon={ArrowRight} label="Convert / Export" disabled={!boundary} />
+          <TabBtn active={tab === 'import'} onClick={() => setTab('import')} icon={Upload} label={copyFor(language, 'Import', 'استيراد')} />
+          <TabBtn active={tab === 'draw'} onClick={() => setTab('draw')} icon={Shapes} label={copyFor(language, 'Draw', 'رسم')} />
+          <TabBtn active={tab === 'convert'} onClick={() => setTab('convert')} icon={ArrowRight} label={copyFor(language, 'Convert / Export', 'تحويل / تصدير')} disabled={!boundary} />
         </div>
       </CardHeader>
       <CardContent className="p-4 sm:p-5">
@@ -62,7 +64,7 @@ export function FieldBoundaryImporter() {
         )}
         {tab === 'convert' && !boundary && (
           <div className="text-xs text-muted-foreground text-center py-6">
-            Import or draw a boundary first.
+            {copyFor(language, 'Import or draw a boundary first.', 'استورد أو ارسم حدوداً أولاً.')}
           </div>
         )}
       </CardContent>
@@ -104,6 +106,7 @@ Field A,37.77,-122.42`,
 };
 
 function ImportPanel({ onImport }: { onImport: (b: Boundary, fmt: ImportFormat) => void }) {
+  const { language } = useTranslation();
   const [text, setText] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [parsedPreview, setParsedPreview] = useState<{ count: number; firstName: string; format: ImportFormat } | null>(null);
@@ -145,19 +148,19 @@ function ImportPanel({ onImport }: { onImport: (b: Boundary, fmt: ImportFormat) 
           onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
         />
         <Button size="sm" variant="outline" onClick={() => fileRef.current?.click()} className="gap-1.5 text-xs">
-          <Upload className="h-3.5 w-3.5" /> Upload File
+          <Upload className="h-3.5 w-3.5" /> {copyFor(language, 'Upload File', 'رفع ملف')}
         </Button>
-          <span className="text-[10px] text-muted-foreground">Accepts .geojson · .kml · .wkt · .csv</span>
+          <span className="text-[10px] text-muted-foreground">{copyFor(language, 'Accepts .geojson · .kml · .wkt · .csv', 'يدعم .geojson · .kml · .wkt · .csv')}</span>
         </div>
-        <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">Upload a file or paste geometry below. The format is detected automatically.</p>
+        <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">{copyFor(language, 'Upload a file or paste geometry below. The format is detected automatically.', 'ارفع ملفاً أو الصق البيانات الهندسية أدناه. يُكتشف التنسيق تلقائياً.')}</p>
       </div>
 
       <div>
-        <Label className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Paste geometry</Label>
+        <Label className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{copyFor(language, 'Paste geometry', 'الصق البيانات الهندسية')}</Label>
         <Textarea
           value={text}
           onChange={e => { setText(e.target.value); setError(null); setParsedPreview(null); }}
-          placeholder="Auto-detected — paste any supported format…"
+          placeholder={copyFor(language, 'Auto-detected — paste any supported format…', 'اكتشاف تلقائي — الصق أي تنسيق مدعوم…')}
           className="mt-2 min-h-[150px] text-xs font-mono"
         />
       </div>
@@ -169,15 +172,15 @@ function ImportPanel({ onImport }: { onImport: (b: Boundary, fmt: ImportFormat) 
             onClick={() => { setText(EXAMPLES[fmt]); setError(null); setParsedPreview(null); }}
             className="px-2 py-1 text-[10px] rounded border border-border hover:bg-muted/50 uppercase tracking-wide font-medium"
           >
-            Load {fmt} example
+            {copyFor(language, 'Load', 'تحميل')} {fmt} {copyFor(language, 'example', 'مثال')}
           </button>
         ))}
       </div>
 
       <div className="flex flex-col gap-2 sm:flex-row">
-        <Button size="sm" variant="outline" onClick={handleParse} className="min-h-10 gap-1.5 text-xs sm:min-h-9">Validate</Button>
+        <Button size="sm" variant="outline" onClick={handleParse} className="min-h-10 gap-1.5 text-xs sm:min-h-9">{copyFor(language, 'Validate', 'تحقق')}</Button>
         <Button size="sm" onClick={handleImport} className="min-h-10 flex-1 gap-1.5 text-xs sm:min-h-9">
-          <CheckCircle2 className="h-3.5 w-3.5" /> Import Boundary
+          <CheckCircle2 className="h-3.5 w-3.5" /> {copyFor(language, 'Import Boundary', 'استيراد الحدود')}
         </Button>
       </div>
 
@@ -185,22 +188,22 @@ function ImportPanel({ onImport }: { onImport: (b: Boundary, fmt: ImportFormat) 
         <div className="rounded-md border border-emerald-200 dark:border-emerald-900 bg-emerald-50/50 dark:bg-emerald-950/20 p-2 text-xs">
           <div className="flex items-center gap-1.5">
             <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-            <span className="font-medium">{parsedPreview.count} boundary{parsedPreview.count > 1 ? 'ies' : 'y'} parsed</span>
+            <span className="font-medium">{copyFor(language, `${parsedPreview.count} boundary${parsedPreview.count > 1 ? 'ies' : 'y'} parsed`, `تم تحليل ${parsedPreview.count} حدود`)}</span>
             <Badge variant="secondary" className="ml-auto text-[10px] uppercase">{parsedPreview.format}</Badge>
           </div>
-          <div className="text-muted-foreground mt-0.5">First: “{parsedPreview.firstName}”. Click Import to load into Convert/Export.</div>
+          <div className="text-muted-foreground mt-0.5">{copyFor(language, 'First:', 'الأول:')} “{parsedPreview.firstName}”. {copyFor(language, 'Click Import to load into Convert/Export.', 'انقر استيراد للتحميل في التحويل/التصدير.')}</div>
         </div>
       )}
 
       {error && (
         <div className="rounded-md border border-rose-200 dark:border-rose-900 bg-rose-50/50 dark:bg-rose-950/20 p-2 text-xs text-rose-700 dark:text-rose-300 flex items-start gap-1.5">
           <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-          <span className="font-mono">{error}</span>
+          <span className="font-mono">{copyFor(language, error, 'تعذر تحليل البيانات. راجع صيغة GeoJSON أو KML أو WKT أو CSV.')}</span>
         </div>
       )}
 
       <div className="text-[10px] text-muted-foreground bg-muted/20 rounded p-2">
-        💡 Auto-detects format from the first non-whitespace character. Multi-feature GeoJSON/KML imports the first Polygon/MultiPolygon. For surveyor KML exports with multiple Placemarks, paste one block at a time.
+        {copyFor(language, 'Auto-detects format from the first non-whitespace character. Multi-feature GeoJSON/KML imports the first Polygon/MultiPolygon. For surveyor KML exports with multiple Placemarks, paste one block at a time.', 'يكتشف التنسيق تلقائياً من أول حرف غير فارغ. في GeoJSON/KML متعدد المعالم يُستورد أول مضلع أو متعدد الأضلاع. ولملفات KML للمساحة التي تتضمن علامات موضع متعددة، الصق كتلة واحدة في كل مرة.')}
       </div>
     </div>
   );
@@ -211,6 +214,7 @@ function ImportPanel({ onImport }: { onImport: (b: Boundary, fmt: ImportFormat) 
 // ============================================================================
 
 function DrawPanel({ onDraw }: { onDraw: (b: Boundary) => void }) {
+  const { language } = useTranslation();
   const [name, setName] = useState('New Field');
   const [points, setPoints] = useState<Ring>([
     [-122.42, 37.77], [-122.41, 37.77], [-122.41, 37.78], [-122.42, 37.78],
@@ -221,47 +225,47 @@ function DrawPanel({ onDraw }: { onDraw: (b: Boundary) => void }) {
   const addPoint = useCallback(() => {
     const lat = parseFloat(latInput), lng = parseFloat(lngInput);
     if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
-      toast({ title: 'Invalid coordinates', description: 'Enter numeric latitude and longitude', variant: 'destructive' });
+      toast({ title: copyFor(language, 'Invalid coordinates', 'إحداثيات غير صالحة'), description: copyFor(language, 'Enter numeric latitude and longitude', 'أدخل قيماً رقمية لخط العرض وخط الطول'), variant: 'destructive' });
       return;
     }
     if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
-      toast({ title: 'Out of range', description: 'Latitude must be -90..90, longitude -180..180', variant: 'destructive' });
+      toast({ title: copyFor(language, 'Out of range', 'خارج النطاق'), description: copyFor(language, 'Latitude must be -90..90, longitude -180..180', 'يجب أن يكون خط العرض بين -90 و90 وخط الطول بين -180 و180'), variant: 'destructive' });
       return;
     }
     setPoints(prev => [...prev, [lng, lat]]);
     setLatInput(''); setLngInput('');
-  }, [latInput, lngInput]);
+  }, [language, latInput, lngInput]);
 
   const removePoint = (idx: number) => setPoints(prev => prev.filter((_, i) => i !== idx));
 
   const handleDraw = useCallback(() => {
     if (points.length < 3) {
-      toast({ title: 'Need at least 3 points', description: 'Add more vertices to form a polygon', variant: 'destructive' });
+      toast({ title: copyFor(language, 'Need at least 3 points', 'يلزم ثلاث نقاط على الأقل'), description: copyFor(language, 'Add more vertices to form a polygon', 'أضف مزيداً من الرؤوس لتكوين مضلع'), variant: 'destructive' });
       return;
     }
     const first = points[0], last = points[points.length - 1];
     const closed = first[0] === last[0] && first[1] === last[1] ? points : [...points, points[0]];
-    onDraw({ name: name || 'New Field', type: 'Polygon', coordinates: [closed] });
-  }, [points, name, onDraw]);
+    onDraw({ name: name || copyFor(language, 'New Field', 'حقل جديد'), type: 'Polygon', coordinates: [closed] });
+  }, [language, points, name, onDraw]);
 
   return (
     <div className="space-y-3">
       <div>
-        <Label className="text-[10px]">Field Name</Label>
+        <Label className="text-[10px]">{copyFor(language, 'Field Name', 'اسم الحقل')}</Label>
         <Input value={name} onChange={e => setName(e.target.value)} className="h-8 text-xs mt-0.5" />
       </div>
 
       <div className="grid grid-cols-[1fr_1fr_auto] gap-2 items-end">
         <div>
-          <Label className="text-[10px]">Latitude</Label>
+          <Label className="text-[10px]">{copyFor(language, 'Latitude', 'خط العرض')}</Label>
           <Input value={latInput} onChange={e => setLatInput(e.target.value)} type="number" step="0.000001" placeholder="37.77" className="h-8 text-xs mt-0.5" />
         </div>
         <div>
-          <Label className="text-[10px]">Longitude</Label>
+          <Label className="text-[10px]">{copyFor(language, 'Longitude', 'خط الطول')}</Label>
           <Input value={lngInput} onChange={e => setLngInput(e.target.value)} type="number" step="0.000001" placeholder="-122.42" className="h-8 text-xs mt-0.5" />
         </div>
         <Button size="sm" variant="outline" onClick={addPoint} className="gap-1.5 h-8">
-          <Plus className="h-3.5 w-3.5" /> Add
+          <Plus className="h-3.5 w-3.5" /> {copyFor(language, 'Add', 'إضافة')}
         </Button>
       </div>
 
@@ -289,18 +293,18 @@ function DrawPanel({ onDraw }: { onDraw: (b: Boundary) => void }) {
               </tr>
             ))}
             {points.length === 0 && (
-              <tr><td colSpan={4} className="px-2 py-4 text-center text-muted-foreground text-[10px]">No vertices yet</td></tr>
+              <tr><td colSpan={4} className="px-2 py-4 text-center text-muted-foreground text-[10px]">{copyFor(language, 'No vertices yet', 'لا توجد رؤوس بعد')}</td></tr>
             )}
           </tbody>
         </table>
       </div>
 
       <Button size="sm" onClick={handleDraw} className="gap-1.5 w-full">
-        <CheckCircle2 className="h-3.5 w-3.5" /> Import Drawn Polygon ({points.length} pts)
+        <CheckCircle2 className="h-3.5 w-3.5" /> {copyFor(language, `Import Drawn Polygon (${points.length} pts)`, `استيراد المضلع المرسوم (${points.length} نقاط)`)}
       </Button>
 
       <div className="text-[10px] text-muted-foreground bg-muted/20 rounded p-2">
-        💡 Click Add to append vertices in order (clockwise or counter-clockwise). Ring is auto-closed when imported. Use a paper map or GPS waypoints to transcribe corners.
+        {copyFor(language, 'Click Add to append vertices in order (clockwise or counter-clockwise). Ring is auto-closed when imported. Use a paper map or GPS waypoints to transcribe corners.', 'انقر إضافة لإلحاق الرؤوس بالترتيب (مع أو عكس عقارب الساعة). تُغلق الحلقة تلقائياً عند الاستيراد. استخدم خريطة ورقية أو نقاط GPS لتدوين الزوايا.')}
       </div>
     </div>
   );
@@ -318,6 +322,7 @@ const FMT_LABEL: Record<ExportFormat, string> = {
 };
 
 function ConvertPanel({ boundary, sourceFormat }: { boundary: Boundary; sourceFormat: ImportFormat | null }) {
+  const { language } = useTranslation();
   const metrics = useMemo<BoundaryMetrics>(() => computeMetrics(boundary), [boundary]);
   const [targetFmt, setTargetFmt] = useState<ExportFormat>('geojson');
   const [copied, setCopied] = useState(false);
@@ -349,8 +354,8 @@ function ConvertPanel({ boundary, sourceFormat }: { boundary: Boundary; sourceFo
     URL.revokeObjectURL(url);
   };
 
-  const fmtArea = (m2: number) => m2 >= 10_000 ? `${(m2 / 10_000).toFixed(2)} ha` : `${m2.toFixed(0)} m²`;
-  const fmtLen = (m: number) => m >= 1000 ? `${(m / 1000).toFixed(2)} km` : `${m.toFixed(0)} m`;
+  const fmtArea = (m2: number) => m2 >= 10_000 ? `${(m2 / 10_000).toFixed(2)} ${copyFor(language, 'ha', 'هكتار')}` : `${m2.toFixed(0)} ${copyFor(language, 'm²', 'م²')}`;
+  const fmtLen = (m: number) => m >= 1000 ? `${(m / 1000).toFixed(2)} ${copyFor(language, 'km', 'كم')}` : `${m.toFixed(0)} ${copyFor(language, 'm', 'م')}`;
 
   return (
     <div className="space-y-3">
@@ -359,26 +364,26 @@ function ConvertPanel({ boundary, sourceFormat }: { boundary: Boundary; sourceFo
           <MapPin className="h-3.5 w-3.5 text-emerald-600" />
           <span className="font-semibold text-sm">{boundary.name}</span>
           <Badge variant="secondary" className="text-[10px]">{boundary.type}</Badge>
-          {sourceFormat && <Badge variant="outline" className="text-[10px] uppercase">from {sourceFormat}</Badge>}
+          {sourceFormat && <Badge variant="outline" className="text-[10px] uppercase">{copyFor(language, 'from', 'من')} {sourceFormat}</Badge>}
           <Badge variant={metrics.valid ? 'default' : 'destructive'} className="text-[10px] ml-auto">
             {metrics.valid ? <CheckCircle2 className="h-3 w-3 mr-1" /> : <AlertTriangle className="h-3 w-3 mr-1" />}
-            {metrics.valid ? 'Valid' : 'Invalid'}
+            {metrics.valid ? copyFor(language, 'Valid', 'صالح') : copyFor(language, 'Invalid', 'غير صالح')}
           </Badge>
         </div>
         <div className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
-          <Metric label="Area" value={fmtArea(metrics.areaM2)} />
-          <Metric label="Perimeter" value={fmtLen(metrics.perimeterM)} />
-          <Metric label="Vertices" value={String(metrics.vertexCount)} />
-          <Metric label="Centroid" value={`${metrics.centroid[1].toFixed(5)}, ${metrics.centroid[0].toFixed(5)}`} />
+          <Metric label={copyFor(language, 'Area', 'المساحة')} value={fmtArea(metrics.areaM2)} />
+          <Metric label={copyFor(language, 'Perimeter', 'المحيط')} value={fmtLen(metrics.perimeterM)} />
+          <Metric label={copyFor(language, 'Vertices', 'الرؤوس')} value={String(metrics.vertexCount)} />
+          <Metric label={copyFor(language, 'Centroid', 'المركز الهندسي')} value={`${metrics.centroid[1].toFixed(5)}, ${metrics.centroid[0].toFixed(5)}`} />
         </div>
         <div className="text-[10px] text-muted-foreground font-mono">
-          BBox: W {metrics.bbox.west.toFixed(4)} · S {metrics.bbox.south.toFixed(4)} · E {metrics.bbox.east.toFixed(4)} · N {metrics.bbox.north.toFixed(4)}
+          {copyFor(language, 'BBox:', 'المربع المحيط:')} {copyFor(language, 'W', 'غ')} {metrics.bbox.west.toFixed(4)} · {copyFor(language, 'S', 'ج')} {metrics.bbox.south.toFixed(4)} · {copyFor(language, 'E', 'ش')} {metrics.bbox.east.toFixed(4)} · {copyFor(language, 'N', 'ش')} {metrics.bbox.north.toFixed(4)}
         </div>
         {metrics.issues.length > 0 && (
           <div className="space-y-0.5 pt-1">
             {metrics.issues.map((iss, i) => (
               <div key={i} className="text-[10px] text-amber-700 dark:text-amber-400 flex items-start gap-1">
-                <AlertTriangle className="h-3 w-3 mt-0.5 shrink-0" /> {iss}
+                <AlertTriangle className="h-3 w-3 mt-0.5 shrink-0" /> {copyFor(language, iss, 'تحذير بحدود الحقل: راجع هندسة المضلع.') }
               </div>
             ))}
           </div>
@@ -410,15 +415,15 @@ function ConvertPanel({ boundary, sourceFormat }: { boundary: Boundary; sourceFo
 
       <div className="flex flex-col gap-2 sm:flex-row">
         <Button size="sm" variant="outline" onClick={copy} className="gap-1.5 text-xs flex-1">
-          {copied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />} Copy
+          {copied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />} {copyFor(language, 'Copy', 'نسخ')}
         </Button>
         <Button size="sm" onClick={download} className="gap-1.5 text-xs flex-1">
-          <Download className="h-3.5 w-3.5" /> Download .{targetFmt}
+          <Download className="h-3.5 w-3.5" /> {copyFor(language, 'Download', 'تنزيل')} .{targetFmt}
         </Button>
       </div>
 
       <div className="text-[10px] text-muted-foreground bg-muted/20 rounded p-2">
-        💡 GeoJSON is the native format for web maps (Leaflet, Mapbox). KML opens in Google Earth. WKT is used by PostGIS, QGIS expression engine, and spatial SQL. CSV is portable to Excel for paper-records workflows.
+        {copyFor(language, 'GeoJSON is the native format for web maps (Leaflet, Mapbox). KML opens in Google Earth. WKT is used by PostGIS, QGIS expression engine, and spatial SQL. CSV is portable to Excel for paper-records workflows.', 'GeoJSON هو التنسيق الأصلي لخرائط الويب مثل Leaflet وMapbox. يفتح KML في Google Earth. ويُستخدم WKT في PostGIS ومحرك تعبيرات QGIS وSQL المكاني. ويمكن نقل CSV إلى Excel لسير عمل السجلات الورقية.')}
       </div>
     </div>
   );
@@ -438,6 +443,7 @@ function Metric({ label, value }: { label: string; value: string }) {
 // ============================================================================
 
 function PolygonPreview({ boundary, bbox: bb }: { boundary: Boundary; bbox: BoundaryMetrics['bbox'] }) {
+  const { language } = useTranslation();
   const W = 320, H = 140, pad = 8;
   const spanLng = Math.max(1e-6, bb.east - bb.west);
   const spanLat = Math.max(1e-6, bb.north - bb.south);
@@ -461,7 +467,7 @@ function PolygonPreview({ boundary, bbox: bb }: { boundary: Boundary; bbox: Boun
 
   return (
       <div className="overflow-hidden rounded-xl border bg-gradient-to-br from-sky-50/40 to-emerald-50/30 p-2 shadow-inner dark:from-sky-950/10 dark:to-emerald-950/10">
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label="Field boundary preview">
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label={copyFor(language, 'Field boundary preview', 'معاينة حدود الحقل')}>
         <defs>
           <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
             <path d="M 20 0 L 0 0 0 20" fill="none" stroke="currentColor" strokeWidth="0.5" className="text-muted-foreground/20" />
@@ -481,7 +487,7 @@ function PolygonPreview({ boundary, bbox: bb }: { boundary: Boundary; bbox: Boun
         <g transform={`translate(${W - 22}, 16)`} className="text-muted-foreground">
           <line x1="0" y1="8" x2="0" y2="-8" stroke="currentColor" strokeWidth="1" />
           <polygon points="0,-8 -3,-3 3,-3" fill="currentColor" />
-          <text x="0" y="20" fontSize="8" textAnchor="middle" fill="currentColor" className="font-mono">N</text>
+          <text x="0" y="20" fontSize="8" textAnchor="middle" fill="currentColor" className="font-mono">{copyFor(language, 'N', 'ش')}</text>
         </g>
       </svg>
     </div>
