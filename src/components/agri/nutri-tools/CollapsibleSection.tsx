@@ -49,6 +49,8 @@ export function CollapsibleSection({
 
   return (
     <section
+      data-farm-tool
+      data-state={open ? 'open' : 'closed'}
       className={`group overflow-hidden rounded-2xl border bg-card/95 shadow-sm shadow-black/[0.03] transition-all duration-200 hover:shadow-md hover:shadow-emerald-950/[0.04] ${
         open ? 'border-emerald-200/80 dark:border-emerald-900/70' : 'border-border/80'
       }`}
@@ -60,7 +62,7 @@ export function CollapsibleSection({
           onClick={toggle}
           aria-controls={panelId}
           aria-expanded={open}
-          className="flex min-h-12 min-w-0 flex-1 items-center gap-3 rounded-xl px-1.5 text-left outline-none transition-colors hover:bg-muted/45 focus-visible:ring-2 focus-visible:ring-emerald-500/60 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-card"
+            className="flex min-h-12 min-w-0 flex-1 touch-manipulation items-center gap-3 rounded-xl px-1.5 text-left outline-none transition-colors active:scale-[0.995] hover:bg-muted/45 focus-visible:ring-2 focus-visible:ring-emerald-500/60 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-card"
         >
           {Icon && (
             <span
@@ -92,7 +94,8 @@ export function CollapsibleSection({
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); onReset(); }}
-            className="flex min-h-9 shrink-0 items-center gap-1 rounded-lg px-2.5 text-[10px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/60 sm:min-h-10"
+            aria-label={`Reset ${title} to defaults`}
+            className="flex min-h-10 touch-manipulation shrink-0 items-center gap-1 rounded-lg px-2.5 text-[10px] font-medium text-muted-foreground transition-colors active:scale-[0.98] hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/60 sm:min-h-10"
             title="Reset to defaults"
           >
             <RotateCcw className="h-3.5 w-3.5" />
@@ -107,7 +110,7 @@ export function CollapsibleSection({
               <ToolExportLite title={title} description={description} />
             </div>
           )}
-          <div className="collapsible-body px-0.5 pb-1 sm:px-1">
+          <div className="collapsible-body min-w-0 px-0.5 pb-1 sm:px-1">
             {children}
           </div>
         </div>

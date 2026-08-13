@@ -4850,3 +4850,6 @@ The lower-page checkpoint brought the full Water & Irrigation group into view. W
 
 ## Irrigation Scheduler visual checkpoint — 2026-08-13
 The final Irrigation Scheduler row was expanded through the rendered Farm page. Its disclosure state opened correctly at the bottom of the Water & Irrigation group, with the shared export row remaining visible and the page reporting only 736 px below the viewport. The long content continues below the fold, but the scheduler shell and expansion behavior are stable with no blocking runtime error.
+
+## Cross-tool consistency checkpoint — 2026-08-13
+After reloading the local app and activating Farm, the shared Farm shell remains stable. The first expanded Multi-Field Dashboard exposes the standardized Copy/CSV/PDF/Share row, and the Farm accordion header retains a clear title, two-line description, icon tile, disclosure affordance, and visible focus-compatible structure. No blocking runtime error appeared during the reload or navigation check.
