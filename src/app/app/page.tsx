@@ -111,8 +111,9 @@ import { MobileFieldCaptureButton } from '@/components/agri/mobile-field-capture
 import { FieldModeButton } from '@/components/agri/field-mode';
 import { DataExportDialog } from '@/components/agri/data-export-dialog';
 import { WorkspacePanel } from '@/components/agri/workspace-panel';
+import { CropSimulator } from '@/components/agri/simulator/CropSimulator';
 
-type TabId = 'home' | 'formulas' | 'tools' | 'farm' | 'insights' | 'about';
+type TabId = 'home' | 'formulas' | 'tools' | 'farm' | 'simulator' | 'insights' | 'about';
 
 /** French labels for the app shell's farm and insights tool index. */
 const FRENCH_TOOL_COPY: Record<string, string> = {
@@ -384,6 +385,7 @@ export default function Page() {
               <TabButton active={activeTab === 'formulas'} onClick={() => setActiveTab('formulas')} icon={BookOpen} label={t.tabFormulas} badge={allFormulas.length} />
               <TabButton active={activeTab === 'tools'} onClick={() => setActiveTab('tools')} icon={Wrench} label={t.tabTools} />
               <TabButton active={activeTab === 'farm'} onClick={() => setActiveTab('farm')} icon={Tractor} label={t.tabFarm} />
+              <TabButton active={activeTab === 'simulator'} onClick={() => setActiveTab('simulator')} icon={FlaskConical} label={tr('Simulator', 'المحاكي', language)} />
               <TabButton active={activeTab === 'insights'} onClick={() => setActiveTab('insights')} icon={Sparkles} label={t.tabInsights} />
               <TabButton active={activeTab === 'about'} onClick={() => setActiveTab('about')} icon={Users} label={t.tabAbout} />
             </div>
@@ -414,6 +416,13 @@ export default function Page() {
           </CollapsibleSection>
 
           <UseCasesSection onLaunch={(wf) => { setActiveWorkflow(wf); setWorkflowOpen(true); }} />
+        </main>
+      )}
+
+      {/* SIMULATOR TAB — Algeria-aware crop business simulation */}
+      {activeTab === 'simulator' && (
+        <main className="flex-1 max-w-[1600px] mx-auto w-full p-4 sm:p-6 pb-20 sm:pb-6">
+          <CropSimulator />
         </main>
       )}
 
@@ -659,16 +668,17 @@ function MobileBottomNav({ activeTab, onTabChange, onSearch }: {
   onTabChange: (tab: TabId) => void;
   onSearch: () => void;
 }) {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const tabs: { id: TabId; icon: typeof Home; label: string }[] = [
     { id: 'home', icon: Home, label: t.tabHome },
     { id: 'farm', icon: Tractor, label: t.tabFarm },
     { id: 'insights', icon: Sparkles, label: t.tabInsights },
     { id: 'formulas', icon: BookOpen, label: t.tabFormulas },
+    { id: 'simulator', icon: FlaskConical, label: tr('Simulator', 'المحاكي', language) },
   ];
   return (
     <nav className="sm:hidden fixed bottom-0 inset-x-0 z-40 border-t bg-background/95 backdrop-blur-md safe-area-pb">
-      <div className="grid grid-cols-5 items-center h-14">
+      <div className="grid grid-cols-6 items-center h-14">
         {tabs.slice(0, 2).map(tab => (
           <MobileTabButton key={tab.id} active={activeTab === tab.id} icon={tab.icon} label={tab.label} onClick={() => onTabChange(tab.id)} />
         ))}
