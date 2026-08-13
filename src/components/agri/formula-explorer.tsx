@@ -31,10 +31,24 @@ import {
 } from '@/lib/formula-scenarios';
 import { getFormulaOfTheDay } from '@/lib/learning';
 import { getBookmarks } from '@/lib/formula-bookmarks';
-import { useTranslation } from '@/lib/language-store';
+import { useTranslation, type Language } from '@/lib/language-store';
 import { cn } from '@/lib/utils';
 import type { Formula } from '@/lib/types';
 import { getFormulaMeta, type FormulaDifficulty } from '@/lib/formula-tags';
+
+type LocalizedLabel = { en: string; fr: string; ar: string };
+
+function labelFor(language: Language, labels: LocalizedLabel) {
+  return labels[language];
+}
+
+function scenarioTitle(language: Language, scenario: FormulaScenario) {
+  return language === 'ar' ? scenario.title_ar : language === 'fr' ? scenario.title_fr : scenario.title;
+}
+
+function scenarioSubtitle(language: Language, scenario: FormulaScenario) {
+  return language === 'ar' ? scenario.subtitle_ar : language === 'fr' ? scenario.subtitle_fr : scenario.subtitle;
+}
 
 type ViewMode = 'explorer' | 'classic' | 'graph';
 type QuickFilter = 'all' | 'calculator' | 'recent' | 'bookmarked';
@@ -59,7 +73,7 @@ export function FormulaExplorer({
   selectedChapter,
   onlyWithCalculators,
 }: FormulaExplorerProps) {
-  const { t, isRTL } = useTranslation();
+  const { t, language } = useTranslation();
   const [view, setView] = useState<ViewMode>('explorer');
   const [activeScenario, setActiveScenario] = useState<string | null>(null);
   const [quickFilter, setQuickFilter] = useState<QuickFilter>('all');
@@ -127,7 +141,7 @@ export function FormulaExplorer({
       <div className="flex-1 min-w-0">
         {/* View toggle + search bar */}
         <div className="flex items-center gap-3 mb-4 flex-wrap">
-          <ViewToggle view={view} onViewChange={setView} isRTL={isRTL} />
+          <ViewToggle view={view} onViewChange={setView} language={language} />
           <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
             <Input
@@ -150,22 +164,22 @@ export function FormulaExplorer({
           <Filter className="h-3.5 w-3.5 text-muted-foreground" />
           <QuickFilterChip active={quickFilter === 'all' && !activeScenario} onClick={() => { setQuickFilter('all'); setActiveScenario(null); }} label={t.allFormulas} count={allFormulas.length} />
           <QuickFilterChip active={quickFilter === 'calculator'} onClick={() => { setQuickFilter('calculator'); setActiveScenario(null); }} label={t.interactiveCalculators} count={allFormulas.filter(f => hasCalculator(f.code)).length} icon={Calculator} />
-          <QuickFilterChip active={quickFilter === 'recent'} onClick={() => { setQuickFilter('recent'); setActiveScenario(null); }} label={isRTL ? 'شوهد مؤخراً' : 'Recently Used'} count={recents.length} icon={Clock} />
-          <QuickFilterChip active={quickFilter === 'bookmarked'} onClick={() => { setQuickFilter('bookmarked'); setActiveScenario(null); }} label={isRTL ? 'المفضّلة' : 'Bookmarked'} count={bookmarks.length} icon={Star} />
+          <QuickFilterChip active={quickFilter === 'recent'} onClick={() => { setQuickFilter('recent'); setActiveScenario(null); }} label={labelFor(language, { en: 'Recently Used', fr: 'Utilisés récemment', ar: 'شوهد مؤخراً' })} count={recents.length} icon={Clock} />
+          <QuickFilterChip active={quickFilter === 'bookmarked'} onClick={() => { setQuickFilter('bookmarked'); setActiveScenario(null); }} label={labelFor(language, { en: 'Bookmarked', fr: 'Favoris', ar: 'المفضّلة' })} count={bookmarks.length} icon={Star} />
         </div>
 
         {/* Scenario hub — only when no scenario selected and no quick filter active */}
         {!activeScenario && quickFilter === 'all' && !searchQuery && (
           <>
             {/* Formula of the Day hero banner */}
-            <FormulaOfDayBanner isRTL={isRTL} onSelect={handleSelectFormula} />
+            <FormulaOfDayBanner language={language} onSelect={handleSelectFormula} />
 
             {/* Mini-stats bar */}
-            <MiniStatsBar isRTL={isRTL} bookmarkCount={bookmarks.length} recentCount={recents.length} />
+            <MiniStatsBar language={language} bookmarkCount={bookmarks.length} recentCount={recents.length} />
 
             {/* Recently viewed strip */}
             {recents.length > 0 && (
-              <RecentlyViewedStrip isRTL={isRTL} recents={recents} onSelect={handleSelectFormula} />
+              <RecentlyViewedStrip language={language} recents={recents} onSelect={handleSelectFormula} />
             )}
 
             {/* Scenario grid */}
@@ -173,7 +187,7 @@ export function FormulaExplorer({
               <div className="flex items-center gap-2 mb-3">
                 <Sparkles className="h-4 w-4 text-emerald-600" />
                 <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
-                  {isRTL ? 'تصفّح حسب السيناريو' : 'Browse by Scenario'}
+                  {labelFor(language, { en: 'Browse by Scenario', fr: 'Parcourir par scénario', ar: 'تصفّح حسب السيناريو' })}
                 </h2>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -182,7 +196,7 @@ export function FormulaExplorer({
                     key={scenario.id}
                     scenario={scenario}
                     count={scenarioCounts[scenario.id] || 0}
-                    isRTL={isRTL}
+                    language={language}
                     onClick={() => setActiveScenario(scenario.id)}
                   />
                 ))}
@@ -195,7 +209,7 @@ export function FormulaExplorer({
         {activeScenario && (
           <div className="mb-4 flex items-center gap-3">
             <Button variant="ghost" size="sm" onClick={() => setActiveScenario(null)} className="gap-1 text-xs">
-              <X className="h-3.5 w-3.5" /> {isRTL ? 'كل السيناريوهات' : 'All scenarios'}
+              <X className="h-3.5 w-3.5" /> {labelFor(language, { en: 'All scenarios', fr: 'Tous les scénarios', ar: 'كل السيناريوهات' })}
             </Button>
             {(() => {
               const s = FORMULA_SCENARIOS.find(x => x.id === activeScenario);
@@ -205,10 +219,10 @@ export function FormulaExplorer({
                   <span className="text-2xl">{s.emoji}</span>
                   <div>
                     <div className="text-sm font-bold" style={{ color: s.color }}>
-                      {isRTL ? s.title_ar : s.title}
+                      {scenarioTitle(language, s)}
                     </div>
                     <div className="text-[10px] text-muted-foreground">
-                      {scenarioCounts[s.id]} {isRTL ? 'معادلة' : 'formulas'}
+                      {scenarioCounts[s.id]} {labelFor(language, { en: 'formulas', fr: 'formules', ar: 'معادلة' })}
                     </div>
                   </div>
                 </div>
@@ -222,8 +236,8 @@ export function FormulaExplorer({
           <div className="flex items-center gap-2">
             <h3 className="text-lg font-semibold">
               {searchQuery || activeScenario || quickFilter !== 'all'
-                ? `${filteredFormulas.length} ${isRTL ? 'نتيجة' : 'results'}`
-                : isRTL ? 'كل المعادلات' : t.allFormulas}
+                ? `${filteredFormulas.length} ${labelFor(language, { en: 'results', fr: 'résultats', ar: 'نتيجة' })}`
+                : language === 'ar' ? 'كل المعادلات' : t.allFormulas}
             </h3>
             <Badge variant="secondary" className="font-mono">{filteredFormulas.length} / {allFormulas.length}</Badge>
           </div>
@@ -256,7 +270,7 @@ export function FormulaExplorer({
     return (
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-3 mb-4">
-          <ViewToggle view={view} onViewChange={setView} isRTL={isRTL} />
+          <ViewToggle view={view} onViewChange={setView} language={language} />
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
             <Input
@@ -313,7 +327,7 @@ export function FormulaExplorer({
   return (
     <div className="flex-1 min-w-0">
       <div className="flex items-center gap-3 mb-4">
-        <ViewToggle view={view} onViewChange={setView} isRTL={isRTL} />
+        <ViewToggle view={view} onViewChange={setView} language={language} />
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
           <Input
@@ -329,13 +343,11 @@ export function FormulaExplorer({
       <div className="rounded-xl border border-border bg-card p-4">
         <div className="flex items-center gap-2 mb-3">
           <GraphIcon className="h-4 w-4 text-indigo-600" />
-          <h3 className="text-sm font-semibold">{isRTL ? 'خريطة علاقات المعادلات' : 'Formula Relationship Map'}</h3>
-          <Badge variant="outline" className="text-[10px] ml-auto">{allFormulas.length} {isRTL ? 'عقدة' : 'nodes'}</Badge>
+          <h3 className="text-sm font-semibold">{labelFor(language, { en: 'Formula Relationship Map', fr: 'Carte des relations entre formules', ar: 'خريطة علاقات المعادلات' })}</h3>
+          <Badge variant="outline" className="text-[10px] ml-auto">{allFormulas.length} {labelFor(language, { en: 'nodes', fr: 'nœuds', ar: 'عقدة' })}</Badge>
         </div>
         <div className="text-xs text-muted-foreground mb-4">
-          {isRTL
-            ? 'تصفّح بصرياً كيف ترتبط المعادلات ببعضها. اضغط على أي معادلة لرؤية التفاصيل.'
-            : 'Visually explore how formulas relate to each other. Click any formula to see details.'}
+          {labelFor(language, { en: 'Visually explore how formulas relate to each other. Click any formula to see details.', fr: 'Explorez visuellement les liens entre les formules. Cliquez sur une formule pour voir ses détails.', ar: 'تصفّح بصرياً كيف ترتبط المعادلات ببعضها. اضغط على أي معادلة لرؤية التفاصيل.' })}
         </div>
         {/* Reuse the existing FormulaGraph component */}
         <FormulaGraphLazy onSelect={handleSelectFormula} />
@@ -349,11 +361,11 @@ export function FormulaExplorer({
 // Sub-components
 // ============================================================================
 
-function ViewToggle({ view, onViewChange, isRTL }: { view: ViewMode; onViewChange: (v: ViewMode) => void; isRTL: boolean }) {
-  const modes: { id: ViewMode; label: string; label_ar: string; icon: typeof Sparkles }[] = [
-    { id: 'explorer', label: 'Explorer', label_ar: 'المستكشف', icon: Sparkles },
-    { id: 'classic', label: 'Classic', label_ar: 'كلاسيكي', icon: BookOpen },
-    { id: 'graph', label: 'Graph', label_ar: 'الخريطة', icon: GraphIcon },
+function ViewToggle({ view, onViewChange, language }: { view: ViewMode; onViewChange: (v: ViewMode) => void; language: Language }) {
+  const modes: { id: ViewMode; label: LocalizedLabel; icon: typeof Sparkles }[] = [
+    { id: 'explorer', label: { en: 'Explorer', fr: 'Explorateur', ar: 'المستكشف' }, icon: Sparkles },
+    { id: 'classic', label: { en: 'Classic', fr: 'Classique', ar: 'كلاسيكي' }, icon: BookOpen },
+    { id: 'graph', label: { en: 'Graph', fr: 'Graphe', ar: 'الخريطة' }, icon: GraphIcon },
   ];
   return (
     <div className="inline-flex items-center gap-0.5 rounded-lg border border-border bg-muted/30 p-0.5">
@@ -371,7 +383,7 @@ function ViewToggle({ view, onViewChange, isRTL }: { view: ViewMode; onViewChang
             )}
           >
             <Icon className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">{isRTL ? m.label_ar : m.label}</span>
+            <span className="hidden sm:inline">{labelFor(language, m.label)}</span>
           </button>
         );
       })}
@@ -379,10 +391,10 @@ function ViewToggle({ view, onViewChange, isRTL }: { view: ViewMode; onViewChang
   );
 }
 
-function ScenarioCard({ scenario, count, isRTL, onClick }: {
+function ScenarioCard({ scenario, count, language, onClick }: {
   scenario: FormulaScenario;
   count: number;
-  isRTL: boolean;
+  language: Language;
   onClick: () => void;
 }) {
   // Get top 3 formulas for this scenario (prefer ones with calculators)
@@ -417,12 +429,12 @@ function ScenarioCard({ scenario, count, isRTL, onClick }: {
 
       {/* Title */}
       <h3 className="text-sm font-bold leading-tight mb-1" style={{ color: scenario.color }}>
-        {isRTL ? scenario.title_ar : scenario.title}
+        {scenarioTitle(language, scenario)}
       </h3>
 
       {/* Subtitle */}
       <p className="text-[10px] text-muted-foreground leading-relaxed line-clamp-2">
-        {isRTL ? scenario.subtitle_ar : scenario.subtitle}
+        {scenarioSubtitle(language, scenario)}
       </p>
 
       {/* Top 3 formula preview */}
@@ -440,7 +452,7 @@ function ScenarioCard({ scenario, count, isRTL, onClick }: {
 
       {/* Hover indicator */}
       <div className="flex items-center gap-1 text-[10px] font-medium mt-2 transition-colors" style={{ color: scenario.color }}>
-        {isRTL ? 'تصفّح' : 'Browse'}
+        {labelFor(language, { en: 'Browse', fr: 'Parcourir', ar: 'تصفّح' })}
         <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
       </div>
     </button>
@@ -475,12 +487,12 @@ function QuickFilterChip({ active, onClick, label, count, icon: Icon }: {
  * Formula of the Day hero banner — shows above the scenario grid.
  * Uses the existing getFormulaOfTheDay() helper from the learning module.
  */
-function FormulaOfDayBanner({ isRTL, onSelect }: { isRTL: boolean; onSelect: (f: Formula) => void }) {
+function FormulaOfDayBanner({ language, onSelect }: { language: Language; onSelect: (f: Formula) => void }) {
   const formula = useMemo(() => getFormulaOfTheDay(), []);
   const scenario = useMemo(() => getPrimaryScenario(formula), [formula.code, formula.part, formula.name, formula.purpose]);
   const calcAvailable = hasCalculator(formula.code);
-  const name = isRTL && (formula as any).name_ar ? (formula as any).name_ar : formula.name;
-  const purpose = isRTL && (formula as any).purpose_ar ? (formula as any).purpose_ar : formula.purpose;
+  const name = language === 'ar' && (formula as any).name_ar ? (formula as any).name_ar : formula.name;
+  const purpose = language === 'ar' && (formula as any).purpose_ar ? (formula as any).purpose_ar : formula.purpose;
 
   return (
     <div className="mb-6">
@@ -504,7 +516,7 @@ function FormulaOfDayBanner({ isRTL, onSelect }: { isRTL: boolean; onSelect: (f:
               <Sparkles className="h-6 w-6" />
             </div>
             <span className="text-[8px] uppercase tracking-wider font-bold" style={{ color: scenario.color }}>
-              {isRTL ? 'اليوم' : 'Today'}
+              {labelFor(language, { en: 'Today', fr: 'Aujourd’hui', ar: 'اليوم' })}
             </span>
           </div>
 
@@ -512,7 +524,7 @@ function FormulaOfDayBanner({ isRTL, onSelect }: { isRTL: boolean; onSelect: (f:
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <span className="text-[10px] uppercase tracking-wide font-bold text-muted-foreground">
-                {isRTL ? 'معادلة اليوم' : 'Formula of the Day'}
+                {labelFor(language, { en: 'Formula of the Day', fr: 'Formule du jour', ar: 'معادلة اليوم' })}
               </span>
               <Badge variant="outline" className="text-[9px] font-mono font-bold" style={{ color: scenario.color, borderColor: `${scenario.color}40` }}>
                 {formula.code}
@@ -520,11 +532,11 @@ function FormulaOfDayBanner({ isRTL, onSelect }: { isRTL: boolean; onSelect: (f:
               {calcAvailable && (
                 <Badge variant="secondary" className="text-[9px] gap-0.5">
                   <Calculator className="h-2.5 w-2.5" />
-                  {isRTL ? 'حاسبة' : 'Calculator'}
+                  {labelFor(language, { en: 'Calculator', fr: 'Calculateur', ar: 'حاسبة' })}
                 </Badge>
               )}
               <span className="text-[9px] text-muted-foreground flex items-center gap-0.5">
-                {scenario.emoji} {isRTL ? scenario.title_ar : scenario.title}
+                {scenario.emoji} {scenarioTitle(language, scenario)}
               </span>
             </div>
             <h3 className="text-base sm:text-lg font-bold leading-tight mb-1 group-hover:text-emerald-600 transition-colors">
@@ -574,7 +586,7 @@ function FormulaGraphLazy({ onSelect }: { onSelect: (f: Formula) => void }) {
 // Mini-stats bar — shows quick numbers about the formula library
 // ============================================================================
 
-function MiniStatsBar({ isRTL, bookmarkCount, recentCount }: { isRTL: boolean; bookmarkCount: number; recentCount: number }) {
+function MiniStatsBar({ language, bookmarkCount, recentCount }: { language: Language; bookmarkCount: number; recentCount: number }) {
   const stats = useMemo(() => {
     const calcCount = allFormulas.filter(f => hasCalculator(f.code)).length;
     const arCount = allFormulas.filter(f => (f as any).name_ar).length;
@@ -584,11 +596,11 @@ function MiniStatsBar({ isRTL, bookmarkCount, recentCount }: { isRTL: boolean; b
   }, []);
 
   const items = [
-    { label: isRTL ? 'معادلة' : 'Formulas', value: allFormulas.length, color: '#16a34a', icon: Layers },
-    { label: isRTL ? 'حاسبات' : 'Calculators', value: stats.calcCount, color: '#0891b2', icon: Calculator },
-    { label: isRTL ? 'بالعربية' : 'Bilingual', value: stats.arCount, color: '#8b5cf6', icon: BookOpen },
-    { label: isRTL ? 'مفضّلة' : 'Bookmarks', value: bookmarkCount, color: '#f59e0b', icon: Star },
-    { label: isRTL ? 'شوهدت' : 'Viewed', value: recentCount, color: '#0ea5e9', icon: Clock },
+    { label: labelFor(language, { en: 'Formulas', fr: 'Formules', ar: 'معادلة' }), value: allFormulas.length, color: '#16a34a', icon: Layers },
+    { label: labelFor(language, { en: 'Calculators', fr: 'Calculateurs', ar: 'حاسبات' }), value: stats.calcCount, color: '#0891b2', icon: Calculator },
+    { label: labelFor(language, { en: 'Bilingual', fr: 'Bilingues', ar: 'بالعربية' }), value: stats.arCount, color: '#8b5cf6', icon: BookOpen },
+    { label: labelFor(language, { en: 'Bookmarks', fr: 'Favoris', ar: 'مفضّلة' }), value: bookmarkCount, color: '#f59e0b', icon: Star },
+    { label: labelFor(language, { en: 'Viewed', fr: 'Consultées', ar: 'شوهدت' }), value: recentCount, color: '#0ea5e9', icon: Clock },
   ];
 
   return (
@@ -611,8 +623,8 @@ function MiniStatsBar({ isRTL, bookmarkCount, recentCount }: { isRTL: boolean; b
 // Recently Viewed strip — horizontal scroll of recently opened formulas
 // ============================================================================
 
-function RecentlyViewedStrip({ isRTL, recents, onSelect }: {
-  isRTL: boolean;
+function RecentlyViewedStrip({ language, recents, onSelect }: {
+  language: Language;
   recents: string[];
   onSelect: (f: Formula) => void;
 }) {
@@ -629,14 +641,14 @@ function RecentlyViewedStrip({ isRTL, recents, onSelect }: {
       <div className="flex items-center gap-1.5 mb-2">
         <Clock className="h-3.5 w-3.5 text-muted-foreground" />
         <span className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground">
-          {isRTL ? 'شوهد مؤخراً' : 'Recently Viewed'}
+          {labelFor(language, { en: 'Recently Viewed', fr: 'Consultées récemment', ar: 'شوهد مؤخراً' })}
         </span>
       </div>
       <div className="flex gap-2 overflow-x-auto pb-1">
         {recentFormulas.map(f => {
           const scenario = getPrimaryScenario(f);
           const calc = hasCalculator(f.code);
-          const name = isRTL && (f as any).name_ar ? (f as any).name_ar : f.name;
+          const name = language === 'ar' && (f as any).name_ar ? (f as any).name_ar : f.name;
           return (
             <button
               key={f.code}

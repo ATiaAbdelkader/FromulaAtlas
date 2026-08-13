@@ -26,7 +26,7 @@ import {
 import {
   getCropLifecycle, stageForDay, type LaborOperation, type CropLifecycle,
 } from '@/lib/crop-lifecycle';
-import { useTranslation } from '@/lib/language-store';
+import { useTranslation, type Language } from '@/lib/language-store';
 
 interface TodayTask {
   id: string;
@@ -84,13 +84,17 @@ const PRIORITY_ORDER: Record<TodayTask['priority'], number> = {
   optional: 2,
 };
 
+function copyFor(language: Language, en: string, fr: string, ar: string) {
+  return language === 'ar' ? ar : language === 'fr' ? fr : en;
+}
+
 export function TodayTasks({ onOpenTool, refreshToken = 0 }: {
   onOpenTool: (tab: 'farm' | 'insights', storageKey?: string) => void;
   refreshToken?: number;
 }) {
   const [tasks, setTasks] = useState<TodayTask[]>([]);
   const [loading, setLoading] = useState(true);
-  const { isRTL } = useTranslation();
+  const { language } = useTranslation();
 
   useEffect(() => {
     const compute = () => {
@@ -110,10 +114,10 @@ export function TodayTasks({ onOpenTool, refreshToken = 0 }: {
             const timeStr = ev.start.slice(11, 16);
             collected.push({
               id: `irr-${ev.start}`,
-              title: isRTL ? `سقِ ${ev.zoneName}` : `Irrigate ${ev.zoneName}`,
+              title: copyFor(language, `Irrigate ${ev.zoneName}`, `Irriguer ${ev.zoneName}`, `سقِ ${ev.zoneName}`),
               type: 'irrigation',
               time: timeStr,
-              duration: `${(ev.durationSec / 60).toFixed(0)} ${isRTL ? 'د' : 'min'}`,
+              duration: `${(ev.durationSec / 60).toFixed(0)} ${copyFor(language, 'min', 'min', 'د')}`,
               priority: 'critical',
               source: 'irrigation',
               field: ev.zoneName,
@@ -145,15 +149,15 @@ export function TodayTasks({ onOpenTool, refreshToken = 0 }: {
                       title: op.task,
                       type: op.type === 'irrigation' ? 'irrigation_check' : op.type,
                       time: diff === 0
-                        ? (isRTL ? 'اليوم' : 'Today')
+                        ? copyFor(language, 'Today', 'Aujourd’hui', 'اليوم')
                         : diff === 1
                           ? (op.day > dayOfSeason
-                              ? (isRTL ? 'غداً' : 'Tomorrow')
-                              : (isRTL ? 'أمس' : 'Yesterday'))
+                              ? copyFor(language, 'Tomorrow', 'Demain', 'غداً')
+                              : copyFor(language, 'Yesterday', 'Hier', 'أمس'))
                           : (op.day > dayOfSeason
-                              ? (isRTL ? `خلال ${diff} أيام` : `In ${diff} days`)
-                              : (isRTL ? `منذ ${diff} أيام` : `${diff} days ago`)),
-                      duration: `${op.durationDays}-${isRTL ? 'يوم' : 'day'} ${isRTL ? 'نافذة' : 'window'}`,
+                              ? copyFor(language, `In ${diff} days`, `Dans ${diff} jours`, `خلال ${diff} أيام`)
+                              : copyFor(language, `${diff} days ago`, `Il y a ${diff} jours`, `منذ ${diff} أيام`)),
+                      duration: `${op.durationDays}-${copyFor(language, 'day', 'jour', 'يوم')} ${copyFor(language, 'window', 'fenêtre', 'نافذة')}`,
                       priority: op.priority,
                       source: 'labor',
                       crop: crop.name,
@@ -179,18 +183,18 @@ export function TodayTasks({ onOpenTool, refreshToken = 0 }: {
     };
 
     compute();
-  }, [isRTL, refreshToken]);
+  }, [language, refreshToken]);
 
   const criticalCount = tasks.filter(t => t.priority === 'critical').length;
-  const todayCount = tasks.filter(t => t.time === (isRTL ? 'اليوم' : 'Today')).length;
+  const todayCount = tasks.filter(t => t.time === copyFor(language, 'Today', 'Aujourd’hui', 'اليوم')).length;
 
   if (loading) {
     return (
       <div className="rounded-xl border bg-card p-4">
         <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1">
-          <Clock className="h-3 w-3" /> {isRTL ? 'مهام اليوم' : 'Today\'s Tasks'}
+          <Clock className="h-3 w-3" /> {copyFor(language, 'Today\'s Tasks', 'Tâches du jour', 'مهام اليوم')}
         </div>
-        <div className="text-xs text-muted-foreground">{isRTL ? 'جارٍ التحميل...' : 'Loading…'}</div>
+        <div className="text-xs text-muted-foreground">{copyFor(language, 'Loading…', 'Chargement…', 'جارٍ التحميل...')}</div>
       </div>
     );
   }
@@ -199,17 +203,15 @@ export function TodayTasks({ onOpenTool, refreshToken = 0 }: {
     return (
       <div className="rounded-xl border bg-card p-4">
         <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1">
-          <Clock className="h-3 w-3" /> {isRTL ? 'مهام اليوم' : 'Today\'s Tasks'}
+          <Clock className="h-3 w-3" /> {copyFor(language, 'Today\'s Tasks', 'Tâches du jour', 'مهام اليوم')}
         </div>
         <EmptyState
           icon={CalendarIcon}
-          title={isRTL ? 'لا مهام مجدولة اليوم' : 'No tasks scheduled today'}
-          description={isRTL
-            ? 'أعدّ ملف مزرعتك (محصول + تاريخ زراعة) وجداول الري لرؤية المهام اليومية هنا.'
-            : 'Set up your farm profile (crop + planting date) and irrigation schedules to see daily tasks here.'}
+          title={copyFor(language, 'No tasks scheduled today', 'Aucune tâche prévue aujourd’hui', 'لا مهام مجدولة اليوم')}
+          description={copyFor(language, 'Set up your farm profile (crop + planting date) and irrigation schedules to see daily tasks here.', 'Configurez le profil de votre ferme (culture + date de plantation) et les programmes d’irrigation pour voir les tâches quotidiennes ici.', 'أعدّ ملف مزرعتك (محصول + تاريخ زراعة) وجداول الري لرؤية المهام اليومية هنا.')}
           color="#0891b2"
           variant="compact"
-          action={{ label: isRTL ? 'إعداد ملف المزرعة' : 'Set up farm profile', onClick: () => onOpenTool('farm', 'collapse_et_tracker') }}
+          action={{ label: copyFor(language, 'Set up farm profile', 'Configurer le profil de la ferme', 'إعداد ملف المزرعة'), onClick: () => onOpenTool('farm', 'collapse_et_tracker') }}
         />
       </div>
     );
@@ -219,13 +221,13 @@ export function TodayTasks({ onOpenTool, refreshToken = 0 }: {
     <div className="rounded-xl border bg-card p-4">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-          <Clock className="h-3 w-3" /> {isRTL ? 'مهام اليوم' : 'Today\'s Tasks'}
+          <Clock className="h-3 w-3" /> {copyFor(language, 'Today\'s Tasks', 'Tâches du jour', 'مهام اليوم')}
         </div>
         <div className="flex items-center gap-1.5">
           {criticalCount > 0 && (
-            <Badge variant="destructive" className="text-[9px]">{criticalCount} {isRTL ? 'حرج' : 'critical'}</Badge>
+            <Badge variant="destructive" className="text-[9px]">{criticalCount} {copyFor(language, 'critical', 'critique(s)', 'حرج')}</Badge>
           )}
-          <Badge variant="outline" className="text-[9px]">{tasks.length} {isRTL ? 'كل' : 'total'}</Badge>
+          <Badge variant="outline" className="text-[9px]">{tasks.length} {copyFor(language, 'total', 'au total', 'كل')}</Badge>
         </div>
       </div>
 
@@ -266,7 +268,7 @@ export function TodayTasks({ onOpenTool, refreshToken = 0 }: {
 
       {todayCount > 0 && (
         <div className="mt-2 pt-2 border-t text-[10px] text-muted-foreground text-center">
-          {todayCount} {isRTL ? 'مهمة مستحقة اليوم' : (todayCount === 1 ? 'task' : 'tasks') + ' due today'} · {tasks.length - todayCount} {isRTL ? 'قادمة' : 'upcoming'}
+          {todayCount} {copyFor(language, todayCount === 1 ? 'task due today' : 'tasks due today', todayCount === 1 ? 'tâche due aujourd’hui' : 'tâches dues aujourd’hui', 'مهمة مستحقة اليوم')} · {tasks.length - todayCount} {copyFor(language, 'upcoming', 'à venir', 'قادمة')}
         </div>
       )}
     </div>

@@ -9,7 +9,7 @@ import {
   Bell, Loader2, AlertTriangle, AlertCircle, Info, CheckCircle2,
   CloudRain, Thermometer, Bug, Calendar, X, MapPin, RefreshCw,
 } from 'lucide-react';
-import { useTranslation } from '@/lib/language-store';
+import { useTranslation, type Language } from '@/lib/language-store';
 
 interface Alert {
   id: string;
@@ -46,12 +46,16 @@ const CATEGORY_ICONS = {
   weather: CloudRain,
 };
 
+function copyFor(language: Language, en: string, fr: string, ar: string) {
+  return language === 'ar' ? ar : language === 'fr' ? fr : en;
+}
+
 export function NotificationCenter() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [alerts, setAlerts] = useState<AlertsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { isRTL } = useTranslation();
+  const { language } = useTranslation();
 
   // Form state
   const [lat, setLat] = useState('19.4326');
@@ -115,7 +119,7 @@ export function NotificationCenter() {
         onClick={() => setOpen(v => !v)}
         className="fixed bottom-6 right-6 z-40 flex items-center justify-center h-12 w-12 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all"
         style={{ bottom: open ? 'auto' : '6rem' }}
-        title={isRTL ? 'تنبيهات تنبؤية' : 'Predictive alerts'}
+        title={copyFor(language, 'Predictive alerts', 'Alertes prédictives', 'تنبيهات تنبؤية')}
       >
         <Bell className="h-5 w-5" />
         {alertCount > 0 && (
@@ -135,8 +139,8 @@ export function NotificationCenter() {
                 <Bell className="h-4 w-4" />
               </div>
               <div>
-                <div className="text-sm font-semibold leading-tight">{isRTL ? 'التنبيهات التنبؤية' : 'Predictive Alerts'}</div>
-                <div className="text-[10px] text-amber-100/90 leading-tight">{isRTL ? 'الطقس + الأمراض + الفينولوجيا' : 'Weather + disease + phenology'}</div>
+                <div className="text-sm font-semibold leading-tight">{copyFor(language, 'Predictive Alerts', 'Alertes prédictives', 'التنبيهات التنبؤية')}</div>
+                <div className="text-[10px] text-amber-100/90 leading-tight">{copyFor(language, 'Weather + disease + phenology', 'Météo + maladies + phénologie', 'الطقس + الأمراض + الفينولوجيا')}</div>
               </div>
             </div>
             <button onClick={() => setOpen(false)} className="text-amber-100 hover:text-white p-1 rounded hover:bg-white/10">
@@ -148,21 +152,21 @@ export function NotificationCenter() {
           <div className="p-3 border-b border-border space-y-2 bg-muted/20">
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="text-[10px] text-muted-foreground uppercase tracking-wide">{isRTL ? 'خط العرض' : 'Latitude'}</label>
+                <label className="text-[10px] text-muted-foreground uppercase tracking-wide">{copyFor(language, 'Latitude', 'Latitude', 'خط العرض')}</label>
                 <Input value={lat} onChange={e => setLat(e.target.value)} className="h-8 text-xs" />
               </div>
               <div>
-                <label className="text-[10px] text-muted-foreground uppercase tracking-wide">{isRTL ? 'خط الطول' : 'Longitude'}</label>
+                <label className="text-[10px] text-muted-foreground uppercase tracking-wide">{copyFor(language, 'Longitude', 'Longitude', 'خط الطول')}</label>
                 <Input value={lng} onChange={e => setLng(e.target.value)} className="h-8 text-xs" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="text-[10px] text-muted-foreground uppercase tracking-wide">{isRTL ? 'المحصول' : 'Crop'}</label>
+                <label className="text-[10px] text-muted-foreground uppercase tracking-wide">{copyFor(language, 'Crop', 'Culture', 'المحصول')}</label>
                 <Input value={crop} onChange={e => setCrop(e.target.value)} className="h-8 text-xs" />
               </div>
               <div>
-                <label className="text-[10px] text-muted-foreground uppercase tracking-wide">{isRTL ? 'تاريخ الزراعة' : 'Planting date'}</label>
+                <label className="text-[10px] text-muted-foreground uppercase tracking-wide">{copyFor(language, 'Planting date', 'Date de plantation', 'تاريخ الزراعة')}</label>
                 <Input type="date" value={plantingDate} onChange={e => setPlantingDate(e.target.value)} className="h-8 text-xs" />
               </div>
             </div>
@@ -172,7 +176,7 @@ export function NotificationCenter() {
               </Button>
               <Button size="sm" onClick={fetchAlerts} disabled={loading} className="gap-1.5 text-xs h-8 flex-1">
                 {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
-                {isRTL ? 'تحقّق من التنبيهات' : 'Check alerts'}
+                {copyFor(language, 'Check alerts', 'Vérifier les alertes', 'تحقّق من التنبيهات')}
               </Button>
             </div>
           </div>
@@ -188,14 +192,14 @@ export function NotificationCenter() {
 
             {loading && (
               <div className="flex items-center justify-center gap-2 py-6 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" /> {isRTL ? 'جلب التوقعات + تشغيل نماذج الأمراض...' : 'Fetching forecast + running disease models...'}
+                <Loader2 className="h-4 w-4 animate-spin" /> {copyFor(language, 'Fetching forecast + running disease models...', 'Récupération des prévisions et exécution des modèles de maladies…', 'جلب التوقعات + تشغيل نماذج الأمراض...')}
               </div>
             )}
 
             {!loading && !alerts && !error && (
               <div className="text-center py-6 text-sm text-muted-foreground">
                 <Bell className="h-8 w-8 mx-auto mb-2 opacity-40" />
-                {isRTL ? 'أدخل موقعك ومحصولك، ثم اضغط «تحقّق من التنبيهات» للحصول على تحذيرات استباقية للأيام الـ7 القادمة.' : 'Enter your location and crop, then click "Check alerts" to get proactive warnings for the next 7 days.'}
+                {copyFor(language, 'Enter your location and crop, then click "Check alerts" to get proactive warnings for the next 7 days.', 'Saisissez votre localisation et votre culture, puis cliquez sur « Vérifier les alertes » pour obtenir des avertissements préventifs pour les 7 prochains jours.', 'أدخل موقعك ومحصولك، ثم اضغط «تحقّق من التنبيهات» للحصول على تحذيرات استباقية للأيام الـ7 القادمة.')}
               </div>
             )}
 
@@ -204,18 +208,18 @@ export function NotificationCenter() {
                 {/* Summary */}
                 <div className="flex items-center gap-2 flex-wrap text-xs mb-2">
                   <Badge variant="outline" className="text-[10px]">
-                    {isRTL ? `أسبوع ${alerts.currentWeek}/${alerts.totalWeeks}` : `Week ${alerts.currentWeek}/${alerts.totalWeeks}`}
+                    {copyFor(language, `Week ${alerts.currentWeek}/${alerts.totalWeeks}`, `Semaine ${alerts.currentWeek}/${alerts.totalWeeks}`, `أسبوع ${alerts.currentWeek}/${alerts.totalWeeks}`)}
                   </Badge>
                   <Badge variant="outline" className="text-[10px] capitalize">
                     {alerts.currentStage}
                   </Badge>
-                  <span className="text-muted-foreground ml-auto">{alerts.summary.total} {isRTL ? 'تنبيهات' : 'alerts'}</span>
+                  <span className="text-muted-foreground ml-auto">{alerts.summary.total} {copyFor(language, 'alerts', 'alertes', 'تنبيهات')}</span>
                 </div>
 
                 {alerts.alerts.length === 0 ? (
                   <div className="flex items-center gap-2 p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900 text-sm">
                     <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                    <span>{isRTL ? 'لا تنبيهات — تبدو الظروف جيدة للأيام الـ7 القادمة.' : 'No alerts — conditions look good for the next 7 days.'}</span>
+                    <span>{copyFor(language, 'No alerts — conditions look good for the next 7 days.', 'Aucune alerte — les conditions semblent bonnes pour les 7 prochains jours.', 'لا تنبيهات — تبدو الظروف جيدة للأيام الـ7 القادمة.')}</span>
                   </div>
                 ) : (
                   alerts.alerts.map(a => {
@@ -235,7 +239,7 @@ export function NotificationCenter() {
                             <div className="flex items-center gap-2">
                               <span className="text-xs font-semibold" style={{ color: style.color }}>{a.title}</span>
                               {a.forecastDays != null && a.forecastDays >= 0 && (
-                                <span className="text-[9px] text-muted-foreground">{isRTL ? `خلال ${a.forecastDays}ي` : `in ${a.forecastDays}d`}</span>
+                                <span className="text-[9px] text-muted-foreground">{copyFor(language, `in ${a.forecastDays}d`, `dans ${a.forecastDays} j`, `خلال ${a.forecastDays}ي`)}</span>
                               )}
                             </div>
                             <p className="text-xs text-foreground mt-0.5 leading-snug">{a.message}</p>
