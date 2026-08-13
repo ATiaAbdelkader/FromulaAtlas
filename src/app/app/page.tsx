@@ -46,6 +46,7 @@ import { EvapotranspirationTracker } from '@/components/agri/nutri-tools/Evapotr
 import { ServiceIntegrations } from '@/components/agri/nutri-tools/ServiceIntegrations';
 import { FertilizationGenerator } from '@/components/agri/nutri-tools/FertilizationGenerator';
 import { NutrientBudgetPlanner } from '@/components/agri/nutri-tools/NutrientBudgetPlanner';
+import { WaterBudgetOptimizer } from '@/components/agri/nutri-tools/WaterBudgetOptimizer';
 import { LaborCalendar } from '@/components/agri/nutri-tools/LaborCalendar';
 import { SeasonPlanGenerator } from '@/components/agri/nutri-tools/SeasonPlanGenerator';
 import { IrrigationScheduler } from '@/components/agri/nutri-tools/IrrigationScheduler';
@@ -159,6 +160,8 @@ const FRENCH_TOOL_COPY: Record<string, string> = {
   'Irrigation System Designer': 'Concepteur de système d’irrigation',
   'Seasonal Irrigation Planner': 'Planificateur d’irrigation saisonnière',
   'Evapotranspiration Tracker': 'Suivi de l’évapotranspiration',
+  'Water Budget Optimizer': 'Optimiseur de budget hydrique',
+  'FAO-56 ETc × soil-water balance · forecast-aware irrigation depth and volume': 'Bilan hydrique du sol ETc FAO-56 · profondeur et volume d’irrigation selon les prévisions',
   'Irrigation Scheduler': 'Planificateur d’irrigation',
   'NDVI Satellite Field Maps': 'Cartes NDVI des parcelles par satellite',
   'Weather Radar + Frost Maps': 'Radar météo et cartes du gel',
@@ -428,6 +431,7 @@ export default function Page() {
             <CollapsibleSection title={tr('Fertilization Generator', 'مولّد التسميد', language)} description={tr('Per-crop lifecycle fertilization schedule · NPK + micros · Application methods + sources · 20 crops · PDF export', 'جدول تسميد لكل دورة حياة محصول · NPK + عناصر صغرى · طرق التطبيق + المصادر · 20 محصول · تصدير PDF', language)} icon={Flask} color="#16a34a" storageKey="collapse_fertilization" defaultOpen={false} enableExport><div className="p-4"><FertilizationGenerator /></div></CollapsibleSection>
             <CollapsibleSection title={tr('Field Workbench', 'لوحة عمل الحقل', language)} description={tr('One field view: soil health, irrigation demand, scouting follow-ups and 4R nutrient milestones', 'عرض حقل واحد: صحة التربة واحتياج الري ومتابعات الكشف ومحطات المغذيات 4R', language)} icon={Activity} color="#0f766e" storageKey="collapse_field_workbench" defaultOpen={false} enableExport><div className="p-4"><FieldWorkbench /></div></CollapsibleSection>
             <CollapsibleSection title={tr('4R Nutrient Budget Planner', 'مخطّط ميزانية المغذيات 4R', language)} description={tr('Field-specific nutrient budget · soil and organic-source credits · staged applications · source, rate, time and place checks · printable plan', 'ميزانية مغذيات خاصة بالحقل · ائتمانات التربة والمصدر العضوي · تطبيقات مرحلية · فحص المصدر والمعدل والتوقيت والمكان · خطة قابلة للطباعة', language)} icon={FlaskConical} color="#059669" storageKey="collapse_nutrient_budget" defaultOpen={false} enableExport><div className="p-4"><NutrientBudgetPlanner /></div></CollapsibleSection>
+            <CollapsibleSection title={tr('Water Budget Optimizer', 'محسّن ميزانية المياه', language)} description={tr('FAO-56 ETc × soil-water balance · forecast-aware irrigation depth and volume', 'ميزان مياه التربة وفق ETc بطريقة FAO-56 · عمق وحجم الري مع مراعاة التوقعات', language)} icon={Droplets} color="#0891b2" storageKey="collapse_water_budget" defaultOpen={false} enableExport><div className="p-4"><WaterBudgetOptimizer /></div></CollapsibleSection>
             <CollapsibleSection title={tr('Labor Calendar', 'تقويم العمالة', language)} description={tr('Phenology-driven field operations · Person-days/ha · Peak week detection · Skill levels · 20 crops · PDF export', 'عمليات حقلية مدفوعة بالفينولوجيا · أيام-شخص/هكتار · كشف ذروة الأسابيع · مستويات المهارة · 20 محصول · تصدير PDF', language)} icon={CalendarDays} color="#0891b2" storageKey="collapse_labor_cal" defaultOpen={false} enableExport><div className="p-4"><LaborCalendar /></div></CollapsibleSection>
             <CollapsibleSection title={tr('Yield Gap Analysis', 'تحليل فجوة الإنتاج', language)} description={tr('Benchmark actual vs potential yield by crop and climate zone', 'قياس الإنتاج الفعلي مقابل المحتمل حسب المحصول والمنطقة المناخية', language)} icon={TrendingUp} color="#0891b2" storageKey="collapse_yieldgap" defaultOpen={false} enableExport><div className="p-4"><YieldGapAnalysis /></div></CollapsibleSection>
             <CollapsibleSection title={tr('Yield Estimation Calculator', 'حاسبة تقدير الإنتاج', language)} description={tr('Heads/m² × kernels/head × kernel weight → yield (t/ha) — 6 crops · reference: GWHD dataset', 'سنابل/م² × حبوب/سنبلة × وزن الحبة → إنتاج (طن/هكتار) — 6 محاصيل · مرجع: مجموعة GWHD', language)} icon={TrendingUp} color="#0891b2" storageKey="collapse_yieldest" defaultOpen={false} enableExport><div className="p-4"><YieldEstimationCalculator /></div></CollapsibleSection>

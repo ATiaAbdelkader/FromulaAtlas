@@ -11,6 +11,7 @@ const suites = [
   'scripts/test-open-meteo.ts',
   'scripts/test-nutrient-budget.ts',
   'scripts/test-field-workbench.ts',
+  'scripts/test-water-budget.ts',
 ];
 
 if (!existsSync(tsx)) {
