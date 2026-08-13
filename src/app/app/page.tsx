@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useMemo, useState, useEffect, useRef } from 'react';
-import { Search, Sprout, Layers, BookOpen, Calculator, X, Leaf, Filter, Home, Wrench, Bug, TrendingUp, Droplets, Settings, Calendar, Satellite, ShoppingCart, Users, DollarSign, RefreshCw, Beef, FlaskConical, CloudRain, FileText, Trophy, Tractor, Sparkles, Download, Database, CheckCircle2, MapPin, Shapes, Compass, Sun, Mountain, FlaskConical as Flask, CalendarDays, Clock, Warehouse, Recycle, Wind, Flame, Snowflake, Gauge, Shield, Moon, Microscope, Activity } from 'lucide-react';
+import { Search, Sprout, Layers, BookOpen, Calculator, X, Leaf, Filter, Home, Wrench, Bug, TrendingUp, Droplets, Settings, Calendar, Satellite, ShoppingCart, Users, DollarSign, RefreshCw, Beef, FlaskConical, CloudRain, FileText, Trophy, Tractor, Sparkles, Download, Database, CheckCircle2, MapPin, Shapes, Compass, Sun, Mountain, FlaskConical as Flask, CalendarDays, Clock, Warehouse, Recycle, Wind, Flame, Snowflake, Gauge, Shield, Moon, Microscope, Activity, Scale } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -32,6 +32,7 @@ import { NdviFieldMaps } from '@/components/agri/nutri-tools/NdviFieldMaps';
 import { Marketplace } from '@/components/agri/nutri-tools/Marketplace';
 import { FarmerCommunity } from '@/components/agri/nutri-tools/FarmerCommunity';
 import { FinancialDashboard } from '@/components/agri/nutri-tools/FinancialDashboard';
+import { GrossMarginPlanner } from '@/components/agri/nutri-tools/GrossMarginPlanner';
 import { CropRotationPlanner } from '@/components/agri/nutri-tools/CropRotationPlanner';
 import { LivestockIntegration } from '@/components/agri/nutri-tools/LivestockIntegration';
 import { SoilTestHistoryTracker } from '@/components/agri/nutri-tools/SoilTestHistoryTracker';
@@ -517,6 +518,7 @@ export default function Page() {
           <div className="space-y-3">
             <SubHeader emoji="💰" label={t.businessAndMarketplace} />
             <CollapsibleSection title={tr('Financial Dashboard', 'لوحة المالية', language)} description={tr('Costs · Revenue · Gross margin · Break-even · ROI · What-if scenario analysis', 'التكاليف · الإيرادات · الهامش الإجمالي · نقطة التعادل · العائد على الاستثمار · تحليل سيناريوهات ماذا لو', language)} icon={DollarSign} color="#f59e0b" storageKey="collapse_financial" defaultOpen={false} enableExport><div className="p-4"><FinancialDashboard /></div></CollapsibleSection>
+            <CollapsibleSection title={tr('Gross-Margin & Break-Even Planner', 'مخطّط الهامش الإجمالي ونقطة التعادل', language)} description={tr('Compare crop choices · Cost and revenue per hectare · Break-even yield and price · Downside scenarios', 'قارن خيارات المحاصيل · التكلفة والإيراد لكل هكتار · إنتاج وسعر التعادل · سيناريوهات الهبوط', language)} icon={Scale} color="#d97706" storageKey="collapse_gross_margin" defaultOpen={false} enableExport><div className="p-4"><GrossMarginPlanner /></div></CollapsibleSection>
             <CollapsibleSection title={tr('Marketplace — Buy Fertilizers & Supplies', 'السوق — شراء الأسمدة والمستلزمات', language)} description={tr('Price comparison from 3 suppliers · Shopping cart · Order export', 'مقارنة الأسعار من 3 موردين · سلة تسوق · تصدير الطلبات', language)} icon={ShoppingCart} color="#f59e0b" storageKey="collapse_marketplace" defaultOpen={false} enableExport><div className="p-4"><Marketplace /></div></CollapsibleSection>
             <CollapsibleSection title={tr('Sustainability Scorecard', 'بطاقة الاستدامة', language)} description={tr('5 traffic-light metrics — NUE, water, carbon, soil, pesticides', '5 مؤشرات بإشارات مرورية — كفاءة النيتروجين، المياه، الكربون، التربة، المبيدات', language)} icon={Leaf} color="#16a34a" storageKey="collapse_sustainability" defaultOpen={false} enableExport><div className="p-4"><SustainabilityScorecard /></div></CollapsibleSection>
             <CollapsibleSection title={tr('RUSLE Erosion Calculator', 'حاسبة التعرّف RUSLE', language)} description={tr('A = R × K × LS × C × P — universal soil loss equation · 14 regions · 12 soil types', 'A = R × K × LS × C × P — معادلة الفقد العالمي للتربة · 14 منطقة · 12 نوع تربة', language)} icon={Mountain} color="#78716c" storageKey="collapse_rusle" defaultOpen={false} enableExport><div className="p-4"><RUSLEErosionCalculator /></div></CollapsibleSection>

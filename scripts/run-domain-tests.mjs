@@ -13,6 +13,7 @@ const suites = [
   'scripts/test-field-workbench.ts',
   'scripts/test-water-budget.ts',
   'scripts/test-ipm-action-planner.ts',
+  'scripts/test-gross-margin-planner.ts',
 ];
 
 if (!existsSync(tsx)) {
