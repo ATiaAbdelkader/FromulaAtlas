@@ -34,36 +34,36 @@ export function DroughtStressIndex() {
   }, [et0, rain, soilWater, taw, stage]);
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2">
+    <Card className="overflow-hidden border-orange-200/60 shadow-sm dark:border-orange-900/60">
+      <CardHeader className="border-b bg-gradient-to-r from-orange-50 via-background to-amber-50/40 pb-4 dark:from-orange-950/30 dark:via-background dark:to-amber-950/20">
+        <CardTitle className="flex items-center gap-2 text-base">
           <Flame className="h-4 w-4 text-orange-600" /> Drought Stress Index
         </CardTitle>
-        <p className="text-[10px] text-muted-foreground">Combines ET₀ deficit + soil water depletion + crop stage sensitivity</p>
+        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">Combines ET₀ deficit + soil water depletion + crop stage sensitivity</p>
       </CardHeader>
-      <CardContent className="space-y-3">
-        <div className="grid grid-cols-2 gap-2">
+      <CardContent className="space-y-5 p-4 sm:p-5">
+        <div className="grid grid-cols-1 gap-3 rounded-xl border bg-muted/20 p-3 sm:grid-cols-2">
           <div>
-            <Label className="text-[10px]">ET₀ today (mm/day)</Label>
-            <Input value={et0} onChange={e => setEt0(e.target.value)} type="number" step="0.1" className="h-8 text-xs mt-0.5" />
+            <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">ET₀ today (mm/day)</Label>
+            <Input value={et0} onChange={e => setEt0(e.target.value)} type="number" step="0.1" className="mt-1 h-10 text-sm" />
           </div>
           <div>
-            <Label className="text-[10px]">Rain today (mm)</Label>
-            <Input value={rain} onChange={e => setRain(e.target.value)} type="number" step="0.1" className="h-8 text-xs mt-0.5" />
+            <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Rain today (mm)</Label>
+            <Input value={rain} onChange={e => setRain(e.target.value)} type="number" step="0.1" className="mt-1 h-10 text-sm" />
           </div>
         </div>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 gap-3 rounded-xl border bg-muted/20 p-3 sm:grid-cols-3">
           <div>
-            <Label className="text-[10px]">Soil water (mm)</Label>
-            <Input value={soilWater} onChange={e => setSoilWater(e.target.value)} type="number" step="5" className="h-8 text-xs mt-0.5" />
+            <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Soil water (mm)</Label>
+            <Input value={soilWater} onChange={e => setSoilWater(e.target.value)} type="number" step="5" className="mt-1 h-10 text-sm" />
           </div>
           <div>
-            <Label className="text-[10px]">TAW (mm)</Label>
-            <Input value={taw} onChange={e => setTaw(e.target.value)} type="number" step="10" className="h-8 text-xs mt-0.5" />
+            <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">TAW (mm)</Label>
+            <Input value={taw} onChange={e => setTaw(e.target.value)} type="number" step="10" className="mt-1 h-10 text-sm" />
           </div>
           <div>
-            <Label className="text-[10px]">Growth stage</Label>
-            <select value={stage} onChange={e => setStage(e.target.value)} className="h-8 text-xs w-full rounded-md border border-input bg-background px-1.5 mt-0.5">
+            <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Growth stage</Label>
+            <select value={stage} onChange={e => setStage(e.target.value)} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
               <option value="establishment">Establishment</option>
               <option value="vegetative">Vegetative</option>
               <option value="flowering">Flowering</option>
@@ -73,21 +73,21 @@ export function DroughtStressIndex() {
           </div>
         </div>
         {result && (
-          <div className="space-y-2">
-            <div className="rounded-lg border p-4 text-center" style={{ borderColor: result.color + '60', backgroundColor: result.color + '15' }}>
-              <div className="text-[10px] text-muted-foreground uppercase">Drought Stress Index</div>
-              <div className="text-3xl font-bold font-mono" style={{ color: result.color }}>{result.dsiScore.toFixed(0)}<span className="text-sm">/100</span></div>
-              <div className="text-sm font-semibold" style={{ color: result.color }}>{result.level}</div>
+          <div className="space-y-4">
+            <div className="rounded-xl border p-5 text-center shadow-sm" style={{ borderColor: result.color + '60', backgroundColor: result.color + '15' }}>
+              <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Drought Stress Index</div>
+              <div className="mt-1 text-4xl font-bold font-mono" style={{ color: result.color }}>{result.dsiScore.toFixed(0)}<span className="text-sm">/100</span></div>
+              <div className="mt-1 text-sm font-semibold" style={{ color: result.color }}>{result.level}</div>
             </div>
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="rounded border p-2"><span className="text-muted-foreground">Water deficit:</span> <strong>{result.deficit.toFixed(1)} mm/day</strong></div>
-              <div className="rounded border p-2"><span className="text-muted-foreground">Soil depletion:</span> <strong>{result.depletionPct.toFixed(0)}%</strong></div>
+            <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+              <div className="rounded-xl border bg-background p-3"><span className="text-muted-foreground">Water deficit:</span> <strong>{result.deficit.toFixed(1)} mm/day</strong></div>
+              <div className="rounded-xl border bg-background p-3"><span className="text-muted-foreground">Soil depletion:</span> <strong>{result.depletionPct.toFixed(0)}%</strong></div>
             </div>
-            <div className="rounded-md border p-2 text-xs flex items-start gap-1.5" style={{ borderColor: result.color + '40', color: result.color }}>
+            <div className="flex items-start gap-2 rounded-xl border p-3 text-sm leading-relaxed" style={{ borderColor: result.color + '40', color: result.color }}>
               {result.dsiScore < 50 ? <CheckCircle2 className="h-3.5 w-3.5 mt-0.5 shrink-0" /> : <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />}
               <span>{result.advice}</span>
             </div>
-            <div className="text-[10px] text-muted-foreground bg-muted/20 rounded p-2">
+            <div className="rounded-lg border border-dashed bg-muted/20 p-3 text-xs leading-relaxed text-muted-foreground">
               💡 DSI = 40% ET₀ deficit + 40% soil depletion + 20% stage sensitivity. Flowering is most sensitive — water stress here causes irreversible yield loss.
             </div>
           </div>

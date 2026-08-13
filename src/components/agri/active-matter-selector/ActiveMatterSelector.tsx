@@ -424,9 +424,9 @@ export function ActiveMatterSelector() {
 
   // =========================================================================
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {/* ------------------------------------------------ Banner ---------- */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-800 p-6 text-white shadow-lg">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-800 p-5 text-white shadow-lg sm:p-6">
         <div className="pointer-events-none absolute -top-16 -right-16 h-56 w-56 rounded-full bg-white/10" />
         <div className="pointer-events-none absolute -bottom-20 right-24 h-44 w-44 rounded-full bg-teal-300/10" />
         <div className="relative flex flex-wrap items-start justify-between gap-4">
@@ -457,7 +457,7 @@ export function ActiveMatterSelector() {
           { icon: '🔎', t: '2 · Décrivez le problème', d: 'Maladie, ravageur ou adventice — par liste ou par symptômes.' },
           { icon: '🧭', t: '3 · Recevez le classement', d: 'Produits notés avec explications, doses, DAR et restrictions.' },
         ].map((s) => (
-          <div key={s.t} className="flex items-start gap-3 rounded-xl border bg-card p-3.5">
+          <div key={s.t} className="flex min-h-[92px] items-start gap-3 rounded-2xl border bg-card p-4 shadow-sm">
             <div className="text-2xl leading-none">{s.icon}</div>
             <div>
               <div className="text-sm font-semibold">{s.t}</div>
@@ -468,11 +468,11 @@ export function ActiveMatterSelector() {
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="grid w-full max-w-xl grid-cols-4">
-          <TabsTrigger value="decision">🧭 Décision</TabsTrigger>
-          <TabsTrigger value="catalog">📚 Catalogue</TabsTrigger>
-          <TabsTrigger value="inpv">📜 Index INPV</TabsTrigger>
-          <TabsTrigger value="ephy">🇫🇷 E-Phy</TabsTrigger>
+        <TabsList className="grid h-auto w-full max-w-2xl grid-cols-2 gap-1 p-1 sm:grid-cols-4">
+          <TabsTrigger value="decision" className="min-h-10 text-sm">🧭 Décision</TabsTrigger>
+          <TabsTrigger value="catalog" className="min-h-10 text-sm">📚 Catalogue</TabsTrigger>
+          <TabsTrigger value="inpv" className="min-h-10 text-sm">📜 Index INPV</TabsTrigger>
+          <TabsTrigger value="ephy" className="min-h-10 text-sm">🇫🇷 E-Phy</TabsTrigger>
         </TabsList>
 
         {/* ================================================================
@@ -480,9 +480,9 @@ export function ActiveMatterSelector() {
         ================================================================ */}
         <TabsContent value="decision" className="space-y-4">
           {/* ---- Photo identification ---- */}
-          <Card className="border-emerald-200 dark:border-emerald-900 bg-emerald-50/30 dark:bg-emerald-950/10">
+          <Card className="overflow-hidden rounded-2xl border-emerald-200 bg-emerald-50/30 shadow-sm dark:border-emerald-900 dark:bg-emerald-950/10">
             <CardContent className="p-4">
-              <div className="flex flex-col sm:flex-row items-start gap-4">
+              <div className="flex flex-col items-start gap-4 rounded-xl border bg-background/70 p-3 sm:flex-row sm:p-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1.5">
                     <Camera className="h-4 w-4 text-emerald-600" />
@@ -491,21 +491,21 @@ export function ActiveMatterSelector() {
                   </div>
                   <p className="text-xs text-muted-foreground mb-2">Prenez une photo du problème (feuille malade, insecte, adventice) — l'IA identifie le problème et remplit automatiquement les champs ci-dessous.</p>
                   <input ref={fileInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handlePhotoUpload(f); }} />
-                  <Button size="sm" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={photoLoading} className="gap-1.5">
+                    <Button size="sm" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={photoLoading} className="min-h-10 gap-1.5">
                     {photoLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
                     {photoLoading ? 'Analyse en cours…' : 'Téléverser une photo'}
                   </Button>
                 </div>
                 {photoData && (
                   <div className="relative shrink-0">
-                    <img src={photoData} alt="Symptôme" className="w-24 h-24 rounded-lg object-cover border-2 border-emerald-300" />
+                    <img src={photoData} alt="Symptôme" className="h-24 w-24 rounded-xl border-2 border-emerald-300 object-cover" />
                     {photoLoading && <div className="absolute inset-0 rounded-lg bg-black/40 flex items-center justify-center"><Loader2 className="h-6 w-6 text-white animate-spin" /></div>}
                   </div>
                 )}
               </div>
               {photoError && <div className="mt-2 text-xs text-rose-600">⚠️ {photoError}</div>}
               {photoResult && !photoLoading && (
-                <div className="mt-3 rounded-lg border border-emerald-200 dark:border-emerald-800 bg-background p-3 space-y-1.5 text-xs">
+                <div className="mt-4 space-y-2 rounded-xl border border-emerald-200 bg-background p-3 text-sm dark:border-emerald-800">
                   <div className="flex items-center gap-2 flex-wrap">
                     <Badge className="bg-emerald-600 text-white text-[10px]">{photoResult.problem_type}</Badge>
                     <span className="font-semibold">{photoResult.problem_name}</span>
@@ -525,7 +525,7 @@ export function ActiveMatterSelector() {
             </CardContent>
           </Card>
 
-          <div className="grid gap-4 lg:grid-cols-3">
+          <div className="grid gap-3 lg:grid-cols-3">
             {/* ---- Step 1 : culture ---- */}
             <Card>
               <CardHeader className="pb-3">
@@ -605,7 +605,7 @@ export function ActiveMatterSelector() {
                         value={symptomQuery}
                         onChange={(e) => { setSymptomQuery(e.target.value); setProblemId(''); }}
                         placeholder="Ex : taches brunes, galeries, oïdium…"
-                        className="pl-8 text-xs"
+                        className="h-10 pl-9 text-sm"
                       />
                     </div>
                     {matchedBySymptoms.length > 0 && (
@@ -694,7 +694,7 @@ export function ActiveMatterSelector() {
               size="lg"
               disabled={!canAnalyze || !crop}
               onClick={runAnalysis}
-              className="w-full max-w-md gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-base"
+              className="min-h-11 w-full max-w-md gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-base hover:from-emerald-700 hover:to-teal-700"
             >
               <Wand2 className="h-4 w-4" />
               Analyser et classer les matières actives
@@ -710,7 +710,7 @@ export function ActiveMatterSelector() {
 
           {/* ---- Results ---- */}
           {results && analysedProblem && (
-            <div className="space-y-3">
+            <div className="space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h3 className="flex items-center gap-2 text-base font-semibold">
                   <Sparkles className="h-4 w-4 text-emerald-600" />
@@ -721,7 +721,7 @@ export function ActiveMatterSelector() {
                   {analysedProblem.crops.slice(0, 3).map((c) => (
                     <Badge key={c} variant="outline" className="text-[10px]">{CROP_BY_ID[c]?.emoji} {CROP_BY_ID[c]?.name}</Badge>
                   ))}
-                  <Button size="sm" variant="outline" onClick={exportTreatmentPDF} className="gap-1.5 text-xs h-7">
+                  <Button size="sm" variant="outline" onClick={exportTreatmentPDF} className="min-h-10 gap-1.5 text-sm">
                     <FileText className="h-3.5 w-3.5" /> Exporter PDF
                   </Button>
                 </div>
@@ -766,7 +766,7 @@ export function ActiveMatterSelector() {
                   />
                 </div>
                 <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as typeof typeFilter)}>
-                  <SelectTrigger className="text-xs"><SelectValue /></SelectTrigger>
+                                        <SelectTrigger className="min-h-10 text-sm"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Tous les types</SelectItem>
                     {(['insecticide', 'acaricide', 'fungicide', 'herbicide', 'nematicide', 'rodenticide', 'molluscicide', 'bio-insecticide', 'bio-fongicide'] as ActiveMatterType[]).map((t) => (
@@ -776,7 +776,7 @@ export function ActiveMatterSelector() {
                 </Select>
                 <div className="flex gap-2">
                   <Select value={cropFilter} onValueChange={setCropFilter}>
-                    <SelectTrigger className="text-xs"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="min-h-10 text-sm"><SelectValue /></SelectTrigger>
                     <SelectContent className="max-h-72">
                       <SelectItem value="all">Toutes cultures</SelectItem>
                       {ALGERIA_CROPS.map((c) => (
@@ -795,7 +795,7 @@ export function ActiveMatterSelector() {
                     type="button"
                     size="sm"
                     variant={availFilter === a ? 'default' : 'outline'}
-                    className={availFilter === a ? 'bg-emerald-600 hover:bg-emerald-700 h-7 text-xs' : 'h-7 text-xs'}
+                    className={availFilter === a ? 'h-9 bg-emerald-600 text-sm hover:bg-emerald-700' : 'h-9 text-sm'}
                     onClick={() => setAvailFilter(a)}
                   >
                     {a === 'all' ? 'Tous' : AVAIL_META[a].label}
@@ -811,7 +811,7 @@ export function ActiveMatterSelector() {
               ) : (
                 <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                   {catalogFiltered.map((m) => (
-                    <Card key={m.id} className="transition hover:border-emerald-400/60 hover:shadow-sm">
+                      <Card key={m.id} className="rounded-xl transition hover:border-emerald-400/60 hover:shadow-md">
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
@@ -880,7 +880,7 @@ export function ActiveMatterSelector() {
       </Tabs>
 
       {/* ------------------------------------------------ Sources ---------- */}
-      <div className="rounded-xl border bg-card px-4 py-3">
+      <div className="rounded-2xl border bg-card px-4 py-4 shadow-sm">
         <div className="flex items-start gap-3">
           <BookOpen className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
           <div className="text-xs text-muted-foreground">
@@ -920,13 +920,13 @@ function RecommendationCard({
     return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
   }, [darDays]);
   return (
-    <Card className={`overflow-hidden ${top ? 'border-emerald-500/70 shadow-md ring-1 ring-emerald-500/30' : ''}`}>
+      <Card className={`overflow-hidden rounded-2xl shadow-sm ${top ? 'border-emerald-500/70 shadow-md ring-1 ring-emerald-500/30' : ''}`}>
       {top && (
         <div className="flex items-center gap-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-1.5 text-[11px] font-semibold text-white">
           <Check className="h-3.5 w-3.5" /> Choix recommandé — meilleur compromis efficacité / risque / disponibilité
         </div>
       )}
-      <CardContent className="flex gap-4 p-4">
+      <CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:p-5">
         <div className="flex flex-col items-center gap-1">
           <ConfidenceRing value={scored.score} />
           <span className="text-[9px] uppercase tracking-wide text-muted-foreground">confiance</span>
@@ -938,7 +938,7 @@ function RecommendationCard({
             <span className="text-sm font-semibold">{m.name}</span>
             <Badge variant="outline" className="text-[10px]">{TYPE_EMOJI[m.type]} {TYPE_LABEL[m.type]}</Badge>
             {m.registeredAlgeria && <Badge className="bg-emerald-600 px-1.5 py-0 text-[9px] text-white">🇩🇿 INPV 2017</Badge>}
-            <div className="ml-auto flex gap-1">
+            <div className="ml-auto flex flex-wrap justify-end gap-1">
               <Badge className={`text-[9px] ${SAFETY_META[m.safetyLevel].cls}`}>{SAFETY_META[m.safetyLevel].emoji} {SAFETY_META[m.safetyLevel].label}</Badge>
               <Badge className={`text-[9px] ${COST_META[m.cost].cls}`}>{COST_META[m.cost].label}</Badge>
               <Badge className={`text-[9px] ${AVAIL_META[m.availability].cls}`}>{AVAIL_META[m.availability].label}</Badge>

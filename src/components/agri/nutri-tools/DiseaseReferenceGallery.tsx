@@ -48,22 +48,22 @@ export function DiseaseReferenceGallery() {
   const [tab, setTab] = useState<Tab>('gallery');
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2">
+    <Card className="overflow-hidden border-violet-200/60 shadow-sm dark:border-violet-900/60">
+      <CardHeader className="border-b bg-gradient-to-r from-violet-50 via-background to-lime-50/40 pb-4 dark:from-violet-950/30 dark:via-background dark:to-lime-950/20">
+        <CardTitle className="flex items-center gap-2 text-base">
           <Microscope className="h-4 w-4 text-violet-600" /> Disease &amp; Weed Reference Gallery
         </CardTitle>
-        <p className="text-[10px] text-muted-foreground">Curated from PlantVillage (50K images) · PlantDoc · DeepWeeds · 35+ research datasets</p>
-        <div className="flex gap-1 mt-2">
-          <button onClick={() => setTab('gallery')} className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${tab === 'gallery' ? 'bg-violet-100 dark:bg-violet-950/50 text-violet-700 dark:text-violet-300' : 'text-muted-foreground hover:bg-muted/50'}`}>
+        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">Curated from PlantVillage (50K images) · PlantDoc · DeepWeeds · 35+ research datasets</p>
+        <div className="mt-3 flex gap-1 rounded-lg border bg-muted/30 p-1" role="tablist" aria-label="Reference views">
+          <button type="button" role="tab" aria-selected={tab === 'gallery'} onClick={() => setTab('gallery')} className={`flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors ${tab === 'gallery' ? 'bg-background text-violet-700 shadow-sm dark:bg-violet-950/50 dark:text-violet-300' : 'text-muted-foreground hover:bg-muted/50'}`}>
             <Bug className="h-3.5 w-3.5" /> Gallery ({DISEASE_REFS.length})
           </button>
-          <button onClick={() => setTab('datasets')} className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${tab === 'datasets' ? 'bg-violet-100 dark:bg-violet-950/50 text-violet-700 dark:text-violet-300' : 'text-muted-foreground hover:bg-muted/50'}`}>
+          <button type="button" role="tab" aria-selected={tab === 'datasets'} onClick={() => setTab('datasets')} className={`flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors ${tab === 'datasets' ? 'bg-background text-violet-700 shadow-sm dark:bg-violet-950/50 dark:text-violet-300' : 'text-muted-foreground hover:bg-muted/50'}`}>
             <BookOpen className="h-3.5 w-3.5" /> Datasets ({RESEARCH_DATASETS.length})
           </button>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-4 sm:p-5">
         {tab === 'gallery' && <GalleryTab />}
         {tab === 'datasets' && <DatasetsTab />}
       </CardContent>
@@ -99,38 +99,38 @@ function GalleryTab() {
   }, [search, typeFilter, cropFilter]);
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {/* Search + filters */}
       <div className="flex flex-wrap gap-2">
         <div className="relative flex-1 min-w-[180px]">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-          <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search disease, symptom, weed…" className="pl-8 text-xs h-8" />
+          <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search disease, symptom, weed…" className="h-10 pl-9 text-sm" />
         </div>
-        <select value={cropFilter} onChange={e => setCropFilter(e.target.value)} className="h-8 text-xs rounded-md border border-input bg-background px-2">
+        <select value={cropFilter} onChange={e => setCropFilter(e.target.value)} className="h-10 rounded-md border border-input bg-background px-3 text-sm">
           {crops.map(c => <option key={c} value={c}>{c === 'all' ? 'All crops' : c}</option>)}
         </select>
-        <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} className="h-8 text-xs rounded-md border border-input bg-background px-2">
+        <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} className="h-10 rounded-md border border-input bg-background px-3 text-sm">
           <option value="all">All types</option>
           {Object.entries(TYPE_META).map(([k, v]) => <option key={k} value={k}>{v.emoji} {v.label}</option>)}
         </select>
       </div>
 
       {/* Results count */}
-      <div className="text-[10px] text-muted-foreground">{filtered.length} reference{filtered.length !== 1 ? 's' : ''} found</div>
+      <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground"><span>{filtered.length} reference{filtered.length !== 1 ? 's' : ''} found</span><span className="rounded-full bg-muted px-2 py-1">Browse by crop or type</span></div>
 
       {/* Gallery cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[500px] overflow-y-auto">
+      <div className="grid max-h-[520px] grid-cols-1 gap-3 overflow-y-auto rounded-xl border bg-muted/10 p-2 sm:grid-cols-2">
         {filtered.map(d => <GalleryCard key={d.id} ref={d} />)}
       </div>
 
       {filtered.length === 0 && (
-        <div className="text-center py-8 text-xs text-muted-foreground">
+        <div className="rounded-lg border border-dashed bg-muted/20 px-4 py-10 text-center text-sm text-muted-foreground">
           <Microscope className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
           No references found. Try a different search.
         </div>
       )}
 
-      <div className="text-[10px] text-muted-foreground bg-muted/20 rounded p-2">
+      <div className="rounded-lg border border-dashed bg-muted/20 p-3 text-xs leading-relaxed text-muted-foreground">
         💡 Reference photos from PlantVillage (50K images), PlantDoc (2.5K), and DeepWeeds (17.5K). Click "View photos" to browse the original dataset.
       </div>
     </div>
@@ -142,9 +142,9 @@ function GalleryCard({ ref: d }: { ref: DiseaseRef }) {
   const sevMeta = SEVERITY_META[d.severity];
 
   return (
-    <div className="rounded-lg border bg-card p-3 space-y-2 hover:shadow-sm transition-shadow">
+    <div className="space-y-3 rounded-xl border bg-card p-3 shadow-sm transition-shadow hover:shadow-md">
       <div className="flex items-start gap-2">
-        <div className="text-2xl shrink-0">{d.cropEmoji}</div>
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted text-2xl">{d.cropEmoji}</div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 flex-wrap">
             <span className="text-xs font-semibold leading-tight">{d.disease}</span>
@@ -171,7 +171,7 @@ function GalleryCard({ ref: d }: { ref: DiseaseRef }) {
           </Badge>
           <span className="text-[9px] text-muted-foreground">{d.imageCount.toLocaleString()} images</span>
         </div>
-        <a href={d.sourceUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[10px] text-blue-600 hover:underline">
+        <a href={d.sourceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-10 items-center gap-1 rounded-md px-2 text-sm text-blue-600 hover:bg-blue-50 hover:underline dark:hover:bg-blue-950/30">
           View photos <ExternalLink className="h-2.5 w-2.5" />
         </a>
       </div>
@@ -200,13 +200,13 @@ function DatasetsTab() {
   }, [search, categoryFilter]);
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <div className="flex flex-wrap gap-2">
         <div className="relative flex-1 min-w-[180px]">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-          <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search datasets by name, description, modality…" className="pl-8 text-xs h-8" />
+          <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search datasets by name, description, modality…" className="h-10 pl-9 text-sm" />
         </div>
-        <select value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)} className="h-8 text-xs rounded-md border border-input bg-background px-2">
+        <select value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)} className="h-10 rounded-md border border-input bg-background px-3 text-sm">
           <option value="all">All categories</option>
           {DATASET_CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.emoji} {c.label}</option>)}
         </select>
@@ -214,11 +214,11 @@ function DatasetsTab() {
 
       <div className="text-[10px] text-muted-foreground">{filtered.length} dataset{filtered.length !== 1 ? 's' : ''}</div>
 
-      <div className="space-y-1.5 max-h-[500px] overflow-y-auto">
+      <div className="max-h-[520px] space-y-2 overflow-y-auto rounded-xl border bg-muted/10 p-2">
         {filtered.map(d => <DatasetCard key={d.id} dataset={d} />)}
       </div>
 
-      <div className="text-[10px] text-muted-foreground bg-muted/20 rounded p-2">
+      <div className="rounded-lg border border-dashed bg-muted/20 p-3 text-xs leading-relaxed text-muted-foreground">
         💡 These datasets can train ML models for weed detection, disease identification, fruit counting, and robotic navigation. Use AgML (Python framework) for standardized access.
       </div>
     </div>
@@ -228,7 +228,7 @@ function DatasetsTab() {
 function DatasetCard({ dataset: d }: { dataset: ResearchDataset }) {
   const cat = DATASET_CATEGORIES.find(c => c.id === d.category);
   return (
-    <div className="rounded-md border bg-card p-2.5 flex items-start gap-2.5 hover:shadow-sm transition-shadow">
+    <div className="flex items-start gap-3 rounded-xl border bg-card p-3 shadow-sm transition-shadow hover:shadow-md">
       <div className="text-lg shrink-0">{cat?.emoji ?? '📊'}</div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5 flex-wrap">
@@ -241,7 +241,7 @@ function DatasetCard({ dataset: d }: { dataset: ResearchDataset }) {
           <span>📡 {d.modalities}</span>
         </div>
       </div>
-      <a href={d.url} target="_blank" rel="noopener noreferrer" className="shrink-0 text-blue-600 hover:text-blue-800">
+      <a href={d.url} target="_blank" rel="noopener noreferrer" aria-label={`Open ${d.name}`} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-blue-600 hover:bg-blue-50 hover:text-blue-800 dark:hover:bg-blue-950/30">
         <ExternalLink className="h-3.5 w-3.5" />
       </a>
     </div>

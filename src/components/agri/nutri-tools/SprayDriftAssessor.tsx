@@ -50,35 +50,35 @@ export function SprayDriftAssessor() {
   }, [windSpeed, temp, rh, dropletSize, boomHeight]);
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2">
+    <Card className="overflow-hidden border-cyan-200/60 shadow-sm dark:border-cyan-900/60">
+      <CardHeader className="border-b bg-gradient-to-r from-cyan-50 via-background to-sky-50/40 pb-4 dark:from-cyan-950/30 dark:via-background dark:to-sky-950/20">
+        <CardTitle className="flex items-center gap-2 text-base">
           <Wind className="h-4 w-4 text-cyan-600" /> Spray Drift Risk Assessor
         </CardTitle>
-        <p className="text-[10px] text-muted-foreground">Wind · Delta-T · Droplet size · Boom height → drift score + buffer distance</p>
+        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">Wind · Delta-T · Droplet size · Boom height → drift score + buffer distance</p>
       </CardHeader>
-      <CardContent className="space-y-3">
-        <div className="grid grid-cols-4 gap-2">
+      <CardContent className="space-y-5 p-4 sm:p-5">
+        <div className="grid grid-cols-2 gap-3 rounded-xl border bg-muted/20 p-3 sm:grid-cols-4">
           <div>
-            <Label className="text-[10px]">Wind (km/h)</Label>
-            <Input value={windSpeed} onChange={e => setWindSpeed(e.target.value)} type="number" step="0.5" className="h-8 text-xs mt-0.5" />
+            <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Wind (km/h)</Label>
+            <Input value={windSpeed} onChange={e => setWindSpeed(e.target.value)} type="number" step="0.5" className="mt-1 h-10 text-sm" />
           </div>
           <div>
-            <Label className="text-[10px]">Temp (°C)</Label>
-            <Input value={temp} onChange={e => setTemp(e.target.value)} type="number" step="1" className="h-8 text-xs mt-0.5" />
+            <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Temp (°C)</Label>
+            <Input value={temp} onChange={e => setTemp(e.target.value)} type="number" step="1" className="mt-1 h-10 text-sm" />
           </div>
           <div>
-            <Label className="text-[10px]">RH (%)</Label>
-            <Input value={rh} onChange={e => setRh(e.target.value)} type="number" step="5" className="h-8 text-xs mt-0.5" />
+            <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">RH (%)</Label>
+            <Input value={rh} onChange={e => setRh(e.target.value)} type="number" step="5" className="mt-1 h-10 text-sm" />
           </div>
           <div>
-            <Label className="text-[10px]">Boom (cm)</Label>
-            <Input value={boomHeight} onChange={e => setBoomHeight(e.target.value)} type="number" step="10" className="h-8 text-xs mt-0.5" />
+            <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Boom (cm)</Label>
+            <Input value={boomHeight} onChange={e => setBoomHeight(e.target.value)} type="number" step="10" className="mt-1 h-10 text-sm" />
           </div>
         </div>
         <div>
-          <Label className="text-[10px]">Droplet size</Label>
-          <select value={dropletSize} onChange={e => setDropletSize(e.target.value)} className="h-8 text-xs w-full rounded-md border border-input bg-background px-2 mt-0.5">
+          <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Droplet size</Label>
+          <select value={dropletSize} onChange={e => setDropletSize(e.target.value)} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
             <option value="fine">Fine (VF–F) — highest drift, best coverage</option>
             <option value="medium">Medium (M) — balanced</option>
             <option value="coarse">Coarse (C) — low drift, systemic herbicides</option>
@@ -87,21 +87,21 @@ export function SprayDriftAssessor() {
         </div>
 
         {result && (
-          <div className="space-y-2">
-            <div className="rounded-lg border p-4 text-center" style={{ borderColor: result.color + '60', backgroundColor: result.color + '15' }}>
-              <div className="text-2xl font-bold" style={{ color: result.color }}>{result.can}</div>
-              <div className="text-[10px] text-muted-foreground mt-1">
+          <div className="space-y-4">
+            <div className="rounded-xl border p-5 text-center shadow-sm" style={{ borderColor: result.color + '60', backgroundColor: result.color + '15' }}>
+              <div className="text-3xl font-bold leading-tight" style={{ color: result.color }}>{result.can}</div>
+              <div className="mt-2 text-xs text-muted-foreground">
                 Drift score: {result.score.toFixed(0)}/100 · {result.risk.toUpperCase()} · ΔT = {result.deltaT.toFixed(1)}
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
-              <div className="rounded-md border p-2 text-center">
-                <div className="text-[9px] text-muted-foreground uppercase">Buffer zone</div>
-                <div className="text-lg font-bold font-mono">{result.buffer} m</div>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <div className="rounded-xl border bg-background p-3 text-center">
+                <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Buffer zone</div>
+                <div className="mt-1 text-2xl font-bold font-mono">{result.buffer} m</div>
               </div>
-              <div className="rounded-md border p-2 text-center">
-                <div className="text-[9px] text-muted-foreground uppercase">Best spray window</div>
+              <div className="rounded-xl border bg-background p-3 text-center">
+                <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Best spray window</div>
                 <div className="text-xs font-semibold">
                   {result.deltaT < 2 ? 'Too humid' : result.deltaT > 10 ? 'Too dry' : 'Good (ΔT 2–8)'}
                 </div>
@@ -109,18 +109,18 @@ export function SprayDriftAssessor() {
             </div>
 
             {result.risk === 'low' ? (
-              <div className="rounded-md border border-emerald-200 dark:border-emerald-900 bg-emerald-50/60 dark:bg-emerald-950/20 p-2 text-xs text-emerald-700 dark:text-emerald-300 flex items-start gap-1.5">
+              <div className="flex items-start gap-2 rounded-xl border border-emerald-200 bg-emerald-50/60 p-3 text-sm leading-relaxed text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/20 dark:text-emerald-300">
                 <CheckCircle2 className="h-3.5 w-3.5 mt-0.5 shrink-0" />
                 <span><strong>Good conditions.</strong> Wind {windSpeed} km/h, ΔT {result.deltaT.toFixed(1)}. Spray now — minimal drift risk.</span>
               </div>
             ) : (
-              <div className="rounded-md border border-amber-200 dark:border-amber-900 bg-amber-50/60 dark:bg-amber-950/20 p-2 text-xs text-amber-700 dark:text-amber-300 flex items-start gap-1.5">
+              <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50/60 p-3 text-sm leading-relaxed text-amber-700 dark:border-amber-900 dark:bg-amber-950/20 dark:text-amber-300">
                 <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
                 <span><strong>{result.can}.</strong> {result.risk === 'extreme' ? 'Wait for better conditions. ' : ''}Use coarser droplets, lower boom, or wait for wind &lt; 10 km/h.</span>
               </div>
             )}
 
-            <div className="text-[10px] text-muted-foreground bg-muted/20 rounded p-2">
+            <div className="rounded-lg border border-dashed bg-muted/20 p-3 text-xs leading-relaxed text-muted-foreground">
               💡 Optimal spraying: wind 3–10 km/h, ΔT 2–8, temp &lt; 28°C. Avoid inversions (calm dawn/dusk) — drift stays at ground level.
             </div>
           </div>

@@ -46,46 +46,46 @@ export function PesticideDoseCalculator() {
   }, [herbicide, aiRate, area, crop, sprayVolume]);
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2">
+    <Card className="overflow-hidden border-rose-200/60 shadow-sm dark:border-rose-900/60">
+      <CardHeader className="border-b bg-gradient-to-r from-rose-50 via-background to-cyan-50/40 pb-4 dark:from-rose-950/30 dark:via-background dark:to-cyan-950/20">
+          <CardTitle className="flex items-center gap-2 text-base">
           <FlaskRound className="h-4 w-4 text-rose-600" /> Pesticide Dose + PHI Calculator
         </CardTitle>
-        <p className="text-[10px] text-muted-foreground">AI rate → product rate · tank mix · rainfast · pre-harvest interval countdown</p>
+        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">AI rate → product rate · tank mix · rainfast · pre-harvest interval countdown</p>
       </CardHeader>
-      <CardContent className="space-y-3">
-        <div className="grid grid-cols-2 gap-2">
+      <CardContent className="space-y-5 p-4 sm:p-5">
+        <div className="grid grid-cols-1 gap-3 rounded-xl border bg-muted/20 p-3 sm:grid-cols-2">
           <div>
-            <Label className="text-[10px]">Herbicide</Label>
-            <select value={herbicide} onChange={e => setHerbicide(e.target.value)} className="h-8 text-xs w-full rounded-md border border-input bg-background px-2 mt-0.5">
+            <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Herbicide</Label>
+            <select value={herbicide} onChange={e => setHerbicide(e.target.value)} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
               {Object.entries(HERBICIDES).map(([k, v]) => <option key={k} value={k}>{v.ai} ({v.aiPct}{v.unit})</option>)}
             </select>
           </div>
           <div>
-            <Label className="text-[10px]">Crop</Label>
-            <select value={crop} onChange={e => setCrop(e.target.value)} className="h-8 text-xs w-full rounded-md border border-input bg-background px-2 mt-0.5">
+            <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Crop</Label>
+            <select value={crop} onChange={e => setCrop(e.target.value)} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
               {['maize', 'wheat', 'soybean', 'sorghum', 'pasture', 'fallow'].map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
         </div>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 gap-3 rounded-xl border bg-muted/20 p-3 sm:grid-cols-3">
           <div>
-            <Label className="text-[10px]">AI rate (kg/ha)</Label>
-            <Input value={aiRate} onChange={e => setAiRate(e.target.value)} type="number" step="0.1" className="h-8 text-xs mt-0.5" />
+            <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">AI rate (kg/ha)</Label>
+            <Input value={aiRate} onChange={e => setAiRate(e.target.value)} type="number" step="0.1" className="mt-1 h-10 text-sm" />
           </div>
           <div>
-            <Label className="text-[10px]">Area (ha)</Label>
-            <Input value={area} onChange={e => setArea(e.target.value)} type="number" step="0.5" className="h-8 text-xs mt-0.5" />
+            <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Area (ha)</Label>
+            <Input value={area} onChange={e => setArea(e.target.value)} type="number" step="0.5" className="mt-1 h-10 text-sm" />
           </div>
           <div>
-            <Label className="text-[10px]">Spray vol (L/ha)</Label>
-            <Input value={sprayVolume} onChange={e => setSprayVolume(e.target.value)} type="number" step="10" className="h-8 text-xs mt-0.5" />
+            <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Spray vol (L/ha)</Label>
+            <Input value={sprayVolume} onChange={e => setSprayVolume(e.target.value)} type="number" step="10" className="mt-1 h-10 text-sm" />
           </div>
         </div>
 
         {result && (
-          <div className="space-y-2">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               <Metric label="Product rate" value={`${result.productRatePerHa.toFixed(2)}`} unit="L/ha" color="rose" />
               <Metric label="Total needed" value={result.productTotal.toFixed(1)} unit="L" color="amber" />
               <Metric label="Per 200L tank" value={result.productPerTank.toFixed(2)} unit="L" color="cyan" />
@@ -93,15 +93,15 @@ export function PesticideDoseCalculator() {
             </div>
 
             {/* PHI countdown */}
-            <div className="rounded-md border p-3" style={{ borderColor: typeof result.phi === 'number' && result.phi > 14 ? '#dc262660' : '#0891b260', backgroundColor: typeof result.phi === 'number' && result.phi > 14 ? '#dc262610' : '#0891b210' }}>
+            <div className="rounded-xl border p-4 shadow-sm" style={{ borderColor: typeof result.phi === 'number' && result.phi > 14 ? '#dc262660' : '#0891b260', backgroundColor: typeof result.phi === 'number' && result.phi > 14 ? '#dc262610' : '#0891b210' }}>
               <div className="flex items-center gap-2 mb-1">
                 <Clock className="h-4 w-4" />
-                <span className="text-xs font-semibold">Pre-Harvest Interval (PHI)</span>
+                <span className="text-sm font-semibold">Pre-Harvest Interval (PHI)</span>
               </div>
               <div className="text-sm">
                 {typeof result.phi === 'number' ? (
                   <>
-                    <strong>{result.phi} days</strong> until safe harvest.
+                    <strong className="text-lg">{result.phi} days</strong> until safe harvest.
                     <div className="text-[10px] text-muted-foreground mt-0.5">
                       Earliest harvest: <strong className="font-mono">{result.phiDate.toLocaleDateString()}</strong>
                     </div>
@@ -112,12 +112,12 @@ export function PesticideDoseCalculator() {
               </div>
             </div>
 
-            <div className="rounded-md border border-amber-200 dark:border-amber-900 bg-amber-50/60 dark:bg-amber-950/20 p-2 text-xs text-amber-700 dark:text-amber-300 flex items-start gap-1.5">
+            <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50/60 p-3 text-sm leading-relaxed text-amber-700 dark:border-amber-900 dark:bg-amber-950/20 dark:text-amber-300">
               <Wind className="h-3.5 w-3.5 mt-0.5 shrink-0" />
               <span><strong>Rainfast: {result.rainfast} hr.</strong> Don't spray if rain expected within this window. Spray after dew dries (mid-morning).</span>
             </div>
 
-            <div className="text-[10px] text-muted-foreground bg-muted/20 rounded p-2">
+            <div className="rounded-lg border border-dashed bg-muted/20 p-3 text-xs leading-relaxed text-muted-foreground">
               ⚠️ Always read product label. This calculator is a guide — local regulations + label rates override. Wear PPE. Avoid bee-toxic products during bloom.
             </div>
           </div>
@@ -137,9 +137,9 @@ const ACCENT_BG: Record<string, string> = {
 
 function Metric({ label, value, unit, color }: { label: string; value: string; unit: string; color: keyof typeof ACCENT_BG }) {
   return (
-    <div className={`rounded-md border px-2 py-1.5 ${ACCENT_BG[color]}`}>
-      <div className="text-[9px] text-muted-foreground uppercase tracking-wide">{label}</div>
-      <div className="font-mono text-sm font-semibold leading-tight">{value}</div>
+    <div className={`rounded-xl border p-3 shadow-sm ${ACCENT_BG[color]}`}>
+      <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className="mt-1 font-mono text-lg font-semibold leading-tight">{value}</div>
       <div className="text-[9px] text-muted-foreground">{unit}</div>
     </div>
   );

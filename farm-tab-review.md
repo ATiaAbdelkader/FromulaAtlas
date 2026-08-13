@@ -4816,3 +4816,21 @@ Full validation passed for this completed Fields & Crops group: `npm run lint`, 
 Next review group: Plant Protection, beginning with Field Scouting Log and Pest Threshold Calculator.
 
 ---
+
+## Field Scouting Log visual checkpoint — 2026-08-13
+
+The local `/app` route loaded successfully after the Field Scouting Log polish. The browser viewport initially remained on Home; the visible Farm navigation control did not switch the extracted view during this attempt, so no claim is made about the expanded Field Scouting Log rendering from this specific capture. The app shell, onboarding dashboard, workspace actions, and floating field tools remained visible without a blocking runtime error. Component-level validation passed with `git diff --check` and strict TypeScript.
+
+The next browser verification will use the existing Farm navigation state or a direct scroll/activation path before committing the Plant Protection group.
+
+---
+
+## Plant Protection visual checkpoint — 2026-08-13
+
+The Farm tab loaded successfully at `/app` and was activated through the visible Farm navigation control. The live page rendered the Workspace & access panel, the Fields & Crops group, and the long accordion-based tool catalog without a blocking runtime error. Navigation through the long page reached the lower Soil & Livestock and Water & Irrigation groups; the Plant Protection group is present in the Farm-tab composition between Fields & Crops and Soil & Livestock. The redesigned Plant Protection components maintain the established shared accordion shell and the app remained responsive while scrolling through the page.
+
+The Active Matter Selector now presents a compact green decision banner, responsive four-way source tabs, touch-sized decision actions, clearer recommendation cards, and distinct INPV/E-Phy source-index panels. The source-index changes are visual only: existing lazy loading, filters, pagination, regulatory warnings, scoring, and local treatment persistence remain unchanged.
+
+No blocking browser console/runtime issue was observed during this checkpoint. The visual review is complete for the Plant Protection group; proceed to the full validation suite and milestone commit.
+
+---
