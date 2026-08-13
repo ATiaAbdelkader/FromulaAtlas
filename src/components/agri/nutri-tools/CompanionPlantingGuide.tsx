@@ -40,47 +40,61 @@ export function CompanionPlantingGuide() {
   }, [search]);
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
+    <Card className="overflow-hidden border-lime-200/60 shadow-sm dark:border-lime-900/60">
+      <CardHeader className="border-b bg-gradient-to-r from-lime-50 via-background to-emerald-50/50 pb-4 dark:from-lime-950/30 dark:via-background dark:to-emerald-950/20">
         <CardTitle className="text-base flex items-center gap-2">
           <Sprout className="h-4 w-4 text-emerald-600" /> Companion Planting Guide
         </CardTitle>
-        <p className="text-[10px] text-muted-foreground">20 crops · 100+ pairings · synergy (✓) · antagonism (✗) · search any crop</p>
+        <p className="text-xs leading-relaxed text-muted-foreground">20 crops · 100+ pairings · synergy (✓) · antagonism (✗) · search any crop</p>
       </CardHeader>
-      <CardContent className="space-y-3">
-        <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-          <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search crop or companion…" className="pl-8 text-xs h-8" />
+      <CardContent className="space-y-4 p-4 sm:p-5">
+        <div className="space-y-2">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input aria-label="Search crop or companion" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search crop or companion…" className="h-10 pl-9 text-sm" />
+          </div>
+          <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+            <span>{search ? `Showing matches for “${search}”` : 'Browse all crop relationships'}</span>
+            <Badge variant="secondary" className="shrink-0">{filtered.length} of {COMPANIONS.length}</Badge>
+          </div>
         </div>
-        <div className="space-y-1.5 max-h-[400px] overflow-y-auto">
+        <div className="max-h-[460px] space-y-2 overflow-y-auto pr-1">
+          {filtered.length === 0 && (
+            <div className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
+              No crop or companion matches. Try a different name.
+            </div>
+          )}
           {filtered.map(c => (
-            <div key={c.crop} className="rounded-md border p-2.5">
-              <div className="flex items-center gap-2 mb-1.5">
-                <span className="text-lg">{c.emoji}</span>
-                <span className="text-sm font-semibold">{c.crop}</span>
+            <div key={c.crop} className="rounded-xl border bg-background p-3 shadow-sm transition-colors hover:border-lime-300 dark:hover:border-lime-800">
+              <div className="mb-2 flex items-center gap-2">
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-lime-50 text-lg dark:bg-lime-950/30">{c.emoji}</span>
+                <div>
+                  <div className="text-sm font-semibold">{c.crop}</div>
+                  <div className="text-[10px] text-muted-foreground">Companion relationships</div>
+                </div>
               </div>
               {c.helps.length > 0 && (
                 <div className="flex items-center gap-1.5 text-[10px] mb-1">
                   <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 text-[9px] border-0">Helps ✓</Badge>
-                  <span className="text-muted-foreground">{c.helps.join(', ')}</span>
+                  <span className="leading-relaxed text-muted-foreground">{c.helps.join(', ')}</span>
                 </div>
               )}
               {c.helpedBy.length > 0 && (
                 <div className="flex items-center gap-1.5 text-[10px] mb-1">
                   <Badge className="bg-cyan-100 text-cyan-700 dark:bg-cyan-950/40 dark:text-cyan-300 text-[9px] border-0">Helped by ↑</Badge>
-                  <span className="text-muted-foreground">{c.helpedBy.join(', ')}</span>
+                  <span className="leading-relaxed text-muted-foreground">{c.helpedBy.join(', ')}</span>
                 </div>
               )}
               {c.avoid.length > 0 && (
                 <div className="flex items-center gap-1.5 text-[10px]">
                   <Badge className="bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 text-[9px] border-0">Avoid ✗</Badge>
-                  <span className="text-muted-foreground">{c.avoid.join(', ')}</span>
+                  <span className="leading-relaxed text-muted-foreground">{c.avoid.join(', ')}</span>
                 </div>
               )}
             </div>
           ))}
         </div>
-        <div className="text-[10px] text-muted-foreground bg-muted/20 rounded p-2">
+        <div className="rounded-xl border bg-muted/20 p-3 text-xs leading-relaxed text-muted-foreground">
           💡 Companion planting uses plant synergies (pest repulsion, N fixation, pollinator attraction) + avoids antagonisms (allelopathy, shared pests, nutrient competition).
         </div>
       </CardContent>

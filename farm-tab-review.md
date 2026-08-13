@@ -4804,3 +4804,15 @@ The modal renders correctly and no blocking issue appears. Continue to Fertiliza
 Proceed to Fertilization Generator next.
 
 ---
+
+## Fields & Crops completion checkpoint — 2026-08-13
+
+The remaining Fields & Crops tools have now received the focused design pass: Fertilization Generator, Labor Calendar, Yield Gap Analysis, Yield Estimation Calculator, Companion Planting Guide, Seed Rate Calculator, Moon Phase Planting Calendar, GDD Tracker, and Crop Calendar Generator. The changes strengthen hierarchy, responsive form layouts, result/metric emphasis, empty and warning states, table readability, and mobile touch targets while preserving calculation logic, schedules, API flow, editing behavior, persistence, and PDF/export behavior.
+
+The Farm tab was opened in the local app after activating the Farm navigation control. The Farm Management shell, workspace panel, Fields & Crops group, and first upgraded tools rendered without a blocking runtime or layout issue. Dense calendar/table surfaces use horizontal scrolling rather than forcing unreadable narrow columns. The visible controls retain existing actions such as Copy, CSV, PDF, Share, Add field, generation, and note editing.
+
+Full validation passed for this completed Fields & Crops group: `npm run lint`, `npx tsc --noEmit`, `npm run test:domain` (164 deterministic tests), `npm run test:catalog`, `npm run build`, and `git diff --check`.
+
+Next review group: Plant Protection, beginning with Field Scouting Log and Pest Threshold Calculator.
+
+---

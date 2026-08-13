@@ -101,50 +101,50 @@ export function GDDTracker() {
   const pctProgress = (currentGDD / cropInfo.targetGDD) * 100;
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
+    <Card className="overflow-hidden border-amber-200/60 shadow-sm dark:border-amber-900/60">
+      <CardHeader className="border-b bg-gradient-to-r from-amber-50 via-background to-orange-50/50 pb-4 dark:from-amber-950/30 dark:via-background dark:to-orange-950/20">
         <CardTitle className="text-base flex items-center gap-2">
           <Sun className="h-4 w-4 text-amber-600" /> GDD Tracker (Growing Degree Days)
         </CardTitle>
-        <p className="text-[10px] text-muted-foreground">Accumulates thermal time from Open-Meteo historical data · predicts growth stages</p>
+        <p className="text-xs leading-relaxed text-muted-foreground">Accumulates thermal time from Open-Meteo historical data · predicts growth stages</p>
       </CardHeader>
-      <CardContent className="space-y-3">
-        <div className="grid grid-cols-2 gap-2">
+      <CardContent className="space-y-5 p-4 sm:p-5">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
-            <Label className="text-[10px]">Crop</Label>
-            <select value={crop} onChange={e => setCrop(e.target.value)} className="h-8 text-xs w-full rounded-md border border-input bg-background px-2 mt-0.5">
+            <Label className="text-xs font-medium">Crop</Label>
+            <select aria-label="Crop" value={crop} onChange={e => setCrop(e.target.value)} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
               {Object.entries(CROP_BASE_TEMPS).map(([k, v]) => <option key={k} value={k}>{v.emoji} {v.name}</option>)}
             </select>
           </div>
           <div>
-            <Label className="text-[10px]">Planting date</Label>
-            <Input type="date" value={plantingDate} onChange={e => setPlantingDate(e.target.value)} className="h-8 text-xs mt-0.5" />
+            <Label className="text-xs font-medium">Planting date</Label>
+            <Input aria-label="Planting date" type="date" value={plantingDate} onChange={e => setPlantingDate(e.target.value)} className="mt-1 h-10 text-sm" />
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-2">
-          <div><Label className="text-[10px]">Latitude</Label><Input value={lat} onChange={e => setLat(e.target.value)} type="number" step="0.0001" className="h-8 text-xs mt-0.5" /></div>
-          <div><Label className="text-[10px]">Longitude</Label><Input value={lng} onChange={e => setLng(e.target.value)} type="number" step="0.0001" className="h-8 text-xs mt-0.5" /></div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div><Label className="text-xs font-medium">Latitude</Label><Input aria-label="Latitude" value={lat} onChange={e => setLat(e.target.value)} type="number" step="0.0001" className="mt-1 h-10 text-sm" /></div>
+          <div><Label className="text-xs font-medium">Longitude</Label><Input aria-label="Longitude" value={lng} onChange={e => setLng(e.target.value)} type="number" step="0.0001" className="mt-1 h-10 text-sm" /></div>
         </div>
-        <Button size="sm" onClick={fetchGDD} disabled={loading} className="gap-1.5 w-full">
+        <Button size="sm" onClick={fetchGDD} disabled={loading} className="h-11 w-full gap-2">
           <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
           {loading ? 'Fetching weather…' : 'Calculate GDD'}
         </Button>
 
         {loading && <Skeleton className="h-24 w-full" />}
 
-        {error && <div className="text-xs text-rose-600">{error}</div>}
+        {error && <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50/60 p-3 text-sm leading-relaxed text-rose-700 dark:border-rose-900 dark:bg-rose-950/20 dark:text-rose-300">{error}</div>}
 
         {!loading && !error && weather.length > 0 && (
-          <div className="space-y-2">
+          <div className="space-y-3">
             {/* GDD progress bar */}
-            <div className="rounded-lg border border-amber-200 dark:border-amber-900 bg-amber-50/40 p-3">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-[10px] text-muted-foreground uppercase">Cumulative GDD</span>
+            <div className="rounded-xl border border-amber-200 bg-amber-50/40 p-4 shadow-sm dark:border-amber-900 dark:bg-amber-950/20">
+              <div className="mb-1 flex items-center justify-between gap-2">
+                <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Cumulative GDD</span>
                 <Badge variant="secondary" className="text-[9px]">{weather.length} days since planting</Badge>
               </div>
-              <div className="text-3xl font-bold font-mono text-amber-700 dark:text-amber-300">{currentGDD.toFixed(0)}</div>
+              <div className="text-4xl font-bold font-mono tracking-tight text-amber-700 dark:text-amber-300">{currentGDD.toFixed(0)}</div>
               <div className="text-[10px] text-muted-foreground">of {cropInfo.targetGDD} needed for maturity ({pctProgress.toFixed(0)}%)</div>
-              <div className="mt-2 h-3 rounded-full bg-muted overflow-hidden">
+              <div className="mt-3 h-3 overflow-hidden rounded-full bg-muted" role="progressbar" aria-valuenow={Math.min(100, Math.max(0, pctProgress))} aria-valuemin={0} aria-valuemax={100} aria-label="GDD progress to maturity">
                 <div className="h-full bg-gradient-to-r from-amber-500 to-emerald-500 transition-all" style={{ width: `${Math.min(100, pctProgress)}%` }} />
               </div>
               {/* Stage markers */}
@@ -154,13 +154,13 @@ export function GDDTracker() {
             </div>
 
             {/* Current stage */}
-            <div className="grid grid-cols-2 gap-2">
-              <div className="rounded-md border border-emerald-200 bg-emerald-50/40 p-2 text-center">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-3 text-center shadow-sm">
                 <div className="text-[9px] text-muted-foreground uppercase">Current stage</div>
                 <div className="text-xl">{currentStage.emoji}</div>
                 <div className="text-xs font-semibold">{currentStage.name}</div>
               </div>
-              <div className="rounded-md border border-cyan-200 bg-cyan-50/40 p-2 text-center">
+              <div className="rounded-xl border border-cyan-200 bg-cyan-50/40 p-3 text-center shadow-sm">
                 <div className="text-[9px] text-muted-foreground uppercase">Next stage</div>
                 <div className="text-xl">{nextStage?.emoji ?? '✅'}</div>
                 <div className="text-xs font-semibold">{nextStage ? `${nextStage.name} (${(nextStage.gdd - currentGDD).toFixed(0)} GDD)` : 'Mature!'}</div>
@@ -168,8 +168,8 @@ export function GDDTracker() {
             </div>
 
             {/* Daily GDD sparkline */}
-            <div className="rounded-md border bg-muted/10 p-2">
-              <div className="text-[9px] text-muted-foreground uppercase mb-1">Daily GDD accumulation</div>
+            <div className="rounded-xl border bg-muted/10 p-3">
+              <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground"><TrendingUp className="h-3.5 w-3.5 text-amber-600" /> Daily GDD accumulation</div>
               <div className="flex items-end gap-0.5 h-16">
                 {weather.slice(-30).map((d, i) => (
                   <div key={i} className="flex-1 bg-amber-500/70 rounded-t" style={{ height: `${Math.min(100, (d.gdd / cropInfo.targetGDD) * 100)}%` }} title={`${d.date}: ${d.gdd.toFixed(0)} GDD`} />
@@ -178,7 +178,7 @@ export function GDDTracker() {
               <div className="text-[8px] text-muted-foreground text-center mt-0.5">Last {Math.min(30, weather.length)} days</div>
             </div>
 
-            <div className="text-[10px] text-muted-foreground bg-muted/20 rounded p-2">
+            <div className="rounded-xl border bg-muted/20 p-3 text-xs leading-relaxed text-muted-foreground">
               💡 GDD = ((Tmax + Tmin) / 2) − Tbase ({cropInfo.tbase}°C). More accurate than calendar days for predicting flowering, fertilizing, and harvest timing.
             </div>
           </div>

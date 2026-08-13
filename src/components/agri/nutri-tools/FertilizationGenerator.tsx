@@ -158,22 +158,23 @@ export function FertilizationGenerator() {
   }, [crop, areaHa, plantingDate, scaledApps, totals]);
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
+    <Card className="overflow-hidden border-emerald-200/60 shadow-sm dark:border-emerald-900/60">
+      <CardHeader className="border-b bg-gradient-to-r from-emerald-50 via-background to-lime-50/60 pb-4 dark:from-emerald-950/30 dark:via-background dark:to-lime-950/20">
         <CardTitle className="text-base flex items-center gap-2">
           <FlaskConical className="h-4 w-4 text-emerald-600" /> Fertilization Generator
         </CardTitle>
-        <p className="text-[10px] text-muted-foreground">FAO-56 + extension service plans · 20 crops · week-by-week schedule with sources</p>
+        <p className="text-xs leading-relaxed text-muted-foreground">FAO-56 + extension service plans · 20 crops · week-by-week schedule with sources</p>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-5 p-4 sm:p-5">
         {/* Inputs */}
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
-            <Label className="text-[10px]">Crop</Label>
+            <Label className="text-xs font-medium">Crop</Label>
             <select
               value={cropId}
               onChange={e => setCropId(e.target.value)}
-              className="h-8 text-xs w-full rounded-md border border-input bg-background px-2 mt-0.5"
+              aria-label="Crop"
+              className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
             >
               {CROP_LIFECYCLES.map(c => (
                 <option key={c.id} value={c.id}>{c.emoji} {c.name}</option>
@@ -181,45 +182,56 @@ export function FertilizationGenerator() {
             </select>
           </div>
           <div>
-            <Label className="text-[10px]">Field area (hectares)</Label>
+            <Label className="text-xs font-medium">Field area (hectares)</Label>
             <Input
               type="number" min={0.1} step={0.1}
               value={areaHa}
               onChange={e => setAreaHa(Math.max(0.1, parseFloat(e.target.value) || 1))}
-              className="h-8 text-xs mt-0.5"
+              aria-label="Field area in hectares"
+              className="mt-1 h-10 text-sm"
             />
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
-            <Label className="text-[10px]">Planting date</Label>
+            <Label className="text-xs font-medium">Planting date</Label>
             <Input
               type="date"
               value={plantingDate}
               onChange={e => setPlantingDate(e.target.value)}
-              className="h-8 text-xs mt-0.5"
+              aria-label="Planting date"
+              className="mt-1 h-10 text-sm"
             />
           </div>
           <div>
-            <Label className="text-[10px]">Climate</Label>
-            <div className="text-[10px] text-muted-foreground mt-2 leading-tight">{crop.climate}</div>
+            <Label className="text-xs font-medium">Climate</Label>
+            <div className="mt-1 flex min-h-10 items-center rounded-md border bg-muted/40 px-3 text-xs leading-relaxed text-muted-foreground">{crop.climate}</div>
           </div>
         </div>
 
         {/* Stage chips */}
-        <div className="flex flex-wrap gap-1">
-          {crop.stages.map(s => (
-            <Badge key={s.name} variant="outline" className="text-[10px]">
-              {s.emoji} {s.name}
-              <span className="text-muted-foreground ml-1">D{s.startDay}–{s.endDay} · Kc {s.kc}</span>
-            </Badge>
-          ))}
+        <div className="rounded-xl border bg-muted/20 p-3">
+          <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-foreground">
+            <Activity className="h-3.5 w-3.5 text-emerald-600" />
+            Crop lifecycle stages
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {crop.stages.map(s => (
+              <Badge key={s.name} variant="outline" className="min-h-7 px-2 text-[10px]">
+                {s.emoji} {s.name}
+                <span className="ml-1 text-muted-foreground">D{s.startDay}–{s.endDay} · Kc {s.kc}</span>
+              </Badge>
+            ))}
+          </div>
         </div>
 
         {/* Season totals */}
-        <div className="rounded-lg border border-emerald-200 dark:border-emerald-900 bg-emerald-50/40 dark:bg-emerald-950/20 p-3">
-          <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1.5">Season totals ({areaHa} ha)</div>
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 text-xs">
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-4 dark:border-emerald-900 dark:bg-emerald-950/20">
+          <div className="mb-2 flex items-center justify-between gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <span>Season totals</span>
+            <span className="font-mono normal-case tracking-normal text-emerald-700 dark:text-emerald-300">{areaHa} ha</span>
+          </div>
+          <div className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-3 lg:grid-cols-6">
             <NutrientTotal label="N" value={totals.n} unit="kg" color="emerald" />
             <NutrientTotal label="P" value={totals.p} unit="kg" color="indigo" />
             <NutrientTotal label="K" value={totals.k} unit="kg" color="amber" />
@@ -243,14 +255,14 @@ export function FertilizationGenerator() {
         <ApplicationTimeline crop={crop} apps={scaledApps} />
 
         {/* Application cards */}
-        <div className="space-y-2">
-          <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+        <div className="space-y-2.5">
+          <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             <Calendar className="h-3 w-3" /> Application schedule ({scaledApps.length} events)
           </div>
           {scaledApps.map((a, i) => {
             const stage = stageForDay(crop, Math.max(1, a.day));
             return (
-              <div key={i} className="rounded-md border bg-background p-2.5">
+              <div key={i} className="rounded-xl border bg-background p-3 shadow-sm transition-colors hover:border-emerald-300 dark:hover:border-emerald-800">
                 <div className="flex items-center justify-between flex-wrap gap-1 mb-1.5">
                   <div className="flex items-center gap-1.5">
                     <Badge variant="secondary" className="text-[10px] font-mono">D{a.day}</Badge>
@@ -290,11 +302,11 @@ export function FertilizationGenerator() {
         </div>
 
         {/* Export + general notes */}
-        <Button size="sm" onClick={exportPdf} className="gap-1.5 w-full">
+        <Button size="sm" onClick={exportPdf} className="h-11 w-full gap-2">
           <Download className="h-3.5 w-3.5" /> Export fertilization plan (PDF)
         </Button>
 
-        <div className="rounded-md border border-amber-200 dark:border-amber-900 bg-amber-50/40 dark:bg-amber-950/20 p-2 text-[10px] text-amber-800 dark:text-amber-300 flex items-start gap-1.5">
+        <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50/40 p-3 text-xs leading-relaxed text-amber-800 dark:border-amber-900 dark:bg-amber-950/20 dark:text-amber-300">
           <AlertTriangle className="h-3 w-3 mt-0.5 shrink-0" />
           <div>{crop.notes}</div>
         </div>
@@ -328,8 +340,11 @@ function ApplicationTimeline({ crop, apps }: { crop: CropLifecycle; apps: (Ferti
   };
 
   return (
-    <div className="rounded-md border bg-muted/20 p-2">
-      <div className="text-[9px] text-muted-foreground uppercase tracking-wide mb-1">Application timeline</div>
+    <div className="rounded-xl border bg-muted/20 p-3">
+      <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <TrendingUp className="h-3.5 w-3.5 text-emerald-600" />
+        Application timeline
+      </div>
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label="Fertilization timeline">
         {/* Stage background bands */}
         {stages.map(s => (

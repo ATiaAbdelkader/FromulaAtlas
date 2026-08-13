@@ -73,8 +73,8 @@ export function YieldGapAnalysis() {
   }, [gapPct, gap, area, price]);
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
+    <Card className="overflow-hidden border-emerald-200/60 shadow-sm dark:border-emerald-900/60">
+      <CardHeader className="border-b bg-gradient-to-r from-emerald-50 via-background to-teal-50/50 pb-4 dark:from-emerald-950/30 dark:via-background dark:to-teal-950/20">
         <CardTitle className="flex items-center gap-2 text-base">
           <TrendingUp className="h-4 w-4 text-emerald-600" />
           Yield Gap Analysis
@@ -83,48 +83,51 @@ export function YieldGapAnalysis() {
           Compare actual yield against FAO potential yield (GYGA) for your crop × climate zone.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <CardContent className="space-y-5 p-4 sm:p-5">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <Label className="text-xs">Crop</Label>
+            <Label className="text-xs font-medium">Crop</Label>
             <Select value={crop} onValueChange={setCrop}>
-              <SelectTrigger className="h-9 mt-1 w-full text-xs"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="mt-1 h-10 w-full text-sm"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {Object.keys(POTENTIAL_YIELD).map(c => <SelectItem key={c} value={c} className="text-xs">{CROP_LABELS[c]}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <div>
-            <Label className="text-xs">Climate zone</Label>
+            <Label className="text-xs font-medium">Climate zone</Label>
             <Select value={climate} onValueChange={(v) => setClimate(v as ClimateZone)}>
-              <SelectTrigger className="h-9 mt-1 w-full text-xs"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="mt-1 h-10 w-full text-sm"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {(Object.keys(CLIMATE_LABELS) as ClimateZone[]).map(k => <SelectItem key={k} value={k} className="text-xs">{CLIMATE_LABELS[k]}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <div>
-            <Label className="text-xs">Actual yield (t/ha)</Label>
-            <Input type="number" value={actualStr} onChange={e => setActualStr(e.target.value)} className="h-9 mt-1" />
+            <Label className="text-xs font-medium">Actual yield (t/ha)</Label>
+            <Input aria-label="Actual yield in tonnes per hectare" type="number" value={actualStr} onChange={e => setActualStr(e.target.value)} className="mt-1 h-10 text-sm" />
           </div>
           <div>
-            <Label className="text-xs">Area (ha)</Label>
-            <Input type="number" value={areaStr} onChange={e => setAreaStr(e.target.value)} className="h-9 mt-1" />
+            <Label className="text-xs font-medium">Area (ha)</Label>
+            <Input aria-label="Field area in hectares" type="number" value={areaStr} onChange={e => setAreaStr(e.target.value)} className="mt-1 h-10 text-sm" />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-          <div className="rounded-lg p-4 border" style={{ background: cls.bg, borderColor: cls.color + '40' }}>
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+          <div className="rounded-xl border p-4 shadow-sm" style={{ background: cls.bg, borderColor: cls.color + '40' }}>
             <div className="text-[10px] uppercase tracking-wide text-muted-foreground flex items-center gap-1">
               <Gauge className="h-3 w-3" /> Yield gap
             </div>
-            <div className="text-3xl font-bold mt-1" style={{ color: cls.color }}>{gap.toFixed(1)} t/ha</div>
+            <div className="mt-1 text-3xl font-bold tracking-tight" style={{ color: cls.color }}>{gap.toFixed(1)} t/ha</div>
             <div className="text-xs font-medium mt-1" style={{ color: cls.color }}>{gapPct.toFixed(0)}% · {cls.label}</div>
             <div className="text-[11px] text-muted-foreground mt-1">Potential {potential} · Actual {actual} t/ha</div>
           </div>
 
-          <div className="rounded-lg border p-3 lg:col-span-2">
-            <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">Actual vs potential (t/ha)</div>
+          <div className="rounded-xl border bg-background p-4 shadow-sm lg:col-span-2">
+            <div className="mb-2 flex items-center justify-between gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <span>Actual vs potential</span>
+              <span className="font-mono normal-case tracking-normal">t/ha</span>
+            </div>
             <BarPair actual={actual} potential={potential} />
             <div className="flex items-center gap-3 mt-2 text-[10px] text-muted-foreground">
               <span className="flex items-center gap-1"><span className="inline-block w-3 h-2.5 rounded-sm bg-emerald-500" />Actual</span>
@@ -133,8 +136,8 @@ export function YieldGapAnalysis() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="rounded-lg p-4 border bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-900">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-4 shadow-sm dark:border-emerald-900 dark:bg-emerald-950/20">
             <div className="text-[10px] uppercase tracking-wide text-muted-foreground flex items-center gap-1">
               <DollarSign className="h-3 w-3" /> Economic loss (this season)
             </div>
@@ -146,14 +149,14 @@ export function YieldGapAnalysis() {
             </div>
             <div className="mt-2">
               <Label className="text-[10px] text-muted-foreground">Price override (USD/t)</Label>
-              <Input type="number" value={priceStr} onChange={e => setPriceStr(e.target.value)} placeholder={`Default: ${DEFAULT_PRICES[crop]}`} className="h-8 mt-1 text-xs" />
+              <Input aria-label="Price override in US dollars per tonne" type="number" value={priceStr} onChange={e => setPriceStr(e.target.value)} placeholder={`Default: ${DEFAULT_PRICES[crop]}`} className="mt-1 h-10 text-sm" />
             </div>
           </div>
-          <div className="rounded-lg p-4 border bg-amber-50/50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900">
+          <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-4 shadow-sm dark:border-amber-900 dark:bg-amber-950/20">
             <div className="text-[10px] uppercase tracking-wide text-muted-foreground flex items-center gap-1">
               <Lightbulb className="h-3 w-3" /> Recommendation
             </div>
-            <p className="text-xs mt-1 leading-relaxed">{recommendation}</p>
+            <p className="mt-2 text-sm leading-relaxed text-foreground/90">{recommendation}</p>
             <Badge variant="outline" className="mt-2 text-[10px]" style={{ color: cls.color, borderColor: cls.color + '40' }}>{cls.label}</Badge>
           </div>
         </div>

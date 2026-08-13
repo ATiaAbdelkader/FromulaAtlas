@@ -35,37 +35,44 @@ export function MoonPhaseCalendar() {
   }, []);
 
   return (
-    <Card>
-      <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><Moon className="h-4 w-4 text-indigo-600" /> Moon Phase Planting Calendar</CardTitle><p className="text-[10px] text-muted-foreground">Biodynamic planting guide · 29.5-day lunar cycle · 30-day forecast</p></CardHeader>
-      <CardContent className="space-y-3">
+    <Card className="overflow-hidden border-indigo-200/60 shadow-sm dark:border-indigo-900/60">
+      <CardHeader className="border-b bg-gradient-to-r from-indigo-50 via-background to-violet-50/50 pb-4 dark:from-indigo-950/30 dark:via-background dark:to-violet-950/20">
+        <CardTitle className="flex items-center gap-2 text-base"><Moon className="h-4 w-4 text-indigo-600" /> Moon Phase Planting Calendar</CardTitle>
+        <p className="text-xs leading-relaxed text-muted-foreground">Biodynamic planting guide · 29.5-day lunar cycle · 30-day forecast</p>
+      </CardHeader>
+      <CardContent className="space-y-5 p-4 sm:p-5">
         {/* Today's moon */}
-        <div className="rounded-lg border border-indigo-200 dark:border-indigo-900 bg-indigo-50/40 p-4 text-center">
-          <div className="text-5xl mb-2">{moon.emoji}</div>
-          <div className="text-sm font-bold">{moon.name}</div>
+        <div className="rounded-xl border border-indigo-200 bg-indigo-50/40 p-4 text-center shadow-sm dark:border-indigo-900 dark:bg-indigo-950/20">
+          <div className="mb-2 text-6xl" aria-hidden="true">{moon.emoji}</div>
+          <div className="text-base font-bold">{moon.name}</div>
           <div className="text-[10px] text-muted-foreground">{today.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}</div>
-          <div className="text-xs text-foreground/80 mt-2">{moon.planting}</div>
+          <div className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-foreground/80">{moon.planting}</div>
         </div>
 
         {/* 30-day strip */}
-        <div>
-          <Label className="text-[10px] mb-1.5 block">Next 30 days</Label>
-          <div className="grid grid-cols-10 gap-0.5">
+        <div className="rounded-xl border bg-muted/20 p-3">
+          <Label className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground"><CalendarRangeIcon /> Next 30 days</Label>
+          <div className="grid grid-cols-5 gap-1 sm:grid-cols-10">
             {next30.map((d, i) => (
-              <button key={i} onClick={() => setOffset(i)} className={`flex flex-col items-center p-1 rounded text-[8px] transition-colors ${offset === i ? 'bg-indigo-600 text-white' : 'hover:bg-muted/50'}`} title={`${d.date.toLocaleDateString()} — ${d.moon.name}: ${d.moon.planting}`}>
-                <span className="text-sm">{d.moon.emoji}</span>
-                <span className="text-[7px]">{d.date.getDate()}</span>
+              <button key={i} onClick={() => setOffset(i)} aria-label={`${d.date.toLocaleDateString()} — ${d.moon.name}`} aria-pressed={offset === i} className={`flex min-h-11 flex-col items-center justify-center rounded-md p-1 text-[9px] transition-colors ${offset === i ? 'bg-indigo-600 text-white shadow-sm' : 'hover:bg-indigo-100/70 dark:hover:bg-indigo-950/40'}`} title={`${d.date.toLocaleDateString()} — ${d.moon.name}: ${d.moon.planting}`}>
+                <span className="text-base" aria-hidden="true">{d.moon.emoji}</span>
+                <span className="font-mono text-[9px]">{d.date.getDate()}</span>
               </button>
             ))}
           </div>
         </div>
 
         {/* Legend */}
-        <div className="grid grid-cols-2 gap-1.5 text-[10px]">
+        <div className="grid grid-cols-1 gap-2 rounded-xl border bg-background p-3 text-xs sm:grid-cols-2">
           <div className="flex items-center gap-1.5"><span className="text-sm">🌒🌓🌔</span> <span className="text-muted-foreground">Waxing → above-ground crops</span></div>
           <div className="flex items-center gap-1.5"><span className="text-sm">🌖🌗🌘</span> <span className="text-muted-foreground">Waning → root crops</span></div>
         </div>
-        <div className="text-[10px] text-muted-foreground bg-muted/20 rounded p-2">💡 Biodynamic planting uses lunar cycles: waxing moon for above-ground (leaves, fruits), waning for below-ground (roots, tubers). Scientific evidence is mixed, but practiced for millennia.</div>
+        <div className="rounded-xl border bg-muted/20 p-3 text-xs leading-relaxed text-muted-foreground">💡 Biodynamic planting uses lunar cycles: waxing moon for above-ground (leaves, fruits), waning for below-ground (roots, tubers). Scientific evidence is mixed, but practiced for millennia.</div>
       </CardContent>
     </Card>
   );
+}
+
+function CalendarRangeIcon() {
+  return <span aria-hidden="true" className="inline-flex h-3.5 w-3.5 items-center justify-center rounded border border-indigo-400/60 text-[8px]">30</span>;
 }

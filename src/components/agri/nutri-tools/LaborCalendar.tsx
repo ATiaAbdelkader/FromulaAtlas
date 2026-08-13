@@ -195,22 +195,23 @@ export function LaborCalendar() {
   }, [crop, areaHa, plantingDate, opsWithWeek, stats, totalWeeks]);
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
+    <Card className="overflow-hidden border-cyan-200/60 shadow-sm dark:border-cyan-900/60">
+      <CardHeader className="border-b bg-gradient-to-r from-cyan-50 via-background to-sky-50/60 pb-4 dark:from-cyan-950/30 dark:via-background dark:to-sky-950/20">
         <CardTitle className="text-base flex items-center gap-2">
           <CalendarDays className="h-4 w-4 text-cyan-600" /> Labor Calendar
         </CardTitle>
-        <p className="text-[10px] text-muted-foreground">Phenology-driven field operations · 20 crops · person-days/ha estimates + peak week detection</p>
+        <p className="text-xs leading-relaxed text-muted-foreground">Phenology-driven field operations · 20 crops · person-days/ha estimates + peak week detection</p>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-5 p-4 sm:p-5">
         {/* Inputs */}
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
-            <Label className="text-[10px]">Crop</Label>
+            <Label className="text-xs font-medium">Crop</Label>
             <select
               value={cropId}
               onChange={e => setCropId(e.target.value)}
-              className="h-8 text-xs w-full rounded-md border border-input bg-background px-2 mt-0.5"
+              aria-label="Crop"
+              className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
             >
               {CROP_LIFECYCLES.map(c => (
                 <option key={c.id} value={c.id}>{c.emoji} {c.name}</option>
@@ -218,31 +219,34 @@ export function LaborCalendar() {
             </select>
           </div>
           <div>
-            <Label className="text-[10px]">Field area (hectares)</Label>
+            <Label className="text-xs font-medium">Field area (hectares)</Label>
             <Input
               type="number" min={0.1} step={0.1}
               value={areaHa}
               onChange={e => setAreaHa(Math.max(0.1, parseFloat(e.target.value) || 1))}
-              className="h-8 text-xs mt-0.5"
+              aria-label="Field area in hectares"
+              className="mt-1 h-10 text-sm"
             />
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
-            <Label className="text-[10px]">Planting date</Label>
+            <Label className="text-xs font-medium">Planting date</Label>
             <Input
               type="date"
               value={plantingDate}
               onChange={e => setPlantingDate(e.target.value)}
-              className="h-8 text-xs mt-0.5"
+              aria-label="Planting date"
+              className="mt-1 h-10 text-sm"
             />
           </div>
           <div>
-            <Label className="text-[10px]">Filter by type</Label>
+            <Label className="text-xs font-medium">Filter by type</Label>
             <select
               value={filterType}
               onChange={e => setFilterType(e.target.value as LaborType | 'all')}
-              className="h-8 text-xs w-full rounded-md border border-input bg-background px-2 mt-0.5"
+              aria-label="Filter operations by type"
+              className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
             >
               <option value="all">All operations ({opsWithWeek.length})</option>
               {(Object.keys(LABOR_TYPE_INFO) as LaborType[]).map(t => (
@@ -253,7 +257,7 @@ export function LaborCalendar() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
           <StatCard icon={Users} color="cyan" label="Total labor" value={`${stats.total.toFixed(1)} d`} sub={`${areaHa} ha`} />
           <StatCard icon={TrendingUp} color="amber" label="Peak week" value={`Wk ${stats.peak.week}`} sub={`${stats.peak.laborDays.toFixed(1)} d`} />
           <StatCard icon={AlertTriangle} color="rose" label="Critical ops" value={String(stats.critical)} sub={`${stats.total > 0 ? ((stats.critical / opsWithWeek.length) * 100).toFixed(0) : 0}% of total`} />
@@ -261,7 +265,7 @@ export function LaborCalendar() {
 
         {/* Peak week warning */}
         {stats.peak.laborDays > 5 && (
-          <div className="rounded-md border border-amber-200 dark:border-amber-900 bg-amber-50/60 dark:bg-amber-950/20 p-2 text-xs text-amber-800 dark:text-amber-300 flex items-start gap-1.5">
+          <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50/60 p-3 text-xs leading-relaxed text-amber-800 dark:border-amber-900 dark:bg-amber-950/20 dark:text-amber-300">
             <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
             <div>
               <strong>Peak labor bottleneck in week {stats.peak.week}.</strong> {stats.peak.laborDays.toFixed(1)} person-days needed — consider hiring temp workers, mechanizing, or staggering plantings.
@@ -273,8 +277,8 @@ export function LaborCalendar() {
         <CalendarGrid weekGrid={weekGrid} totalWeeks={totalWeeks} />
 
         {/* Operations list */}
-        <div className="space-y-2">
-          <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+        <div className="space-y-2.5">
+          <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             <Briefcase className="h-3 w-3" /> Operations ({filtered.length})
           </div>
           {filtered
@@ -286,7 +290,7 @@ export function LaborCalendar() {
               const priorityInfo = PRIORITY_INFO[op.priority];
               const skillInfo = SKILL_INFO[op.skill];
               return (
-                <div key={i} className="rounded-md border bg-background p-2.5" style={{ borderLeftWidth: 3, borderLeftColor: typeInfo.color }}>
+                <div key={i} className="rounded-xl border bg-background p-3 shadow-sm transition-colors hover:bg-muted/20" style={{ borderLeftWidth: 4, borderLeftColor: typeInfo.color }}>
                   <div className="flex items-start justify-between flex-wrap gap-1 mb-1">
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <Badge variant="secondary" className="text-[10px] font-mono">D{op.day}</Badge>
@@ -301,7 +305,7 @@ export function LaborCalendar() {
                     </Badge>
                   </div>
                   <div className="text-xs font-medium mb-1.5">{op.task}</div>
-                  <div className="grid grid-cols-3 gap-2 text-[10px] mb-1.5">
+                  <div className="grid grid-cols-1 gap-2 text-xs mb-2 sm:grid-cols-3">
                     <div>
                       <span className="text-muted-foreground">Labor: </span>
                       <strong className="font-mono">{op.totalLaborDays.toFixed(1)} d</strong>
@@ -328,8 +332,11 @@ export function LaborCalendar() {
         </div>
 
         {/* By-type breakdown */}
-        <div className="rounded-md border bg-muted/20 p-2.5">
-          <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">Labor by operation type</div>
+        <div className="rounded-xl border bg-muted/20 p-3">
+          <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <Activity className="h-3.5 w-3.5 text-cyan-600" />
+            Labor by operation type
+          </div>
           <div className="space-y-1">
             {Object.entries(stats.byType)
               .sort((a, b) => b[1] - a[1])
@@ -351,11 +358,11 @@ export function LaborCalendar() {
         </div>
 
         {/* Export */}
-        <Button size="sm" onClick={exportPdf} className="gap-1.5 w-full">
+        <Button size="sm" onClick={exportPdf} className="h-11 w-full gap-2">
           <Download className="h-3.5 w-3.5" /> Export labor calendar (PDF)
         </Button>
 
-        <div className="text-[10px] text-muted-foreground bg-muted/20 rounded p-2">
+        <div className="rounded-xl border bg-muted/20 p-3 text-xs leading-relaxed text-muted-foreground">
           💡 Labor requirements assume smallholder-to-medium mechanization. Highly mechanized farms should reduce estimates by 40–70%. Stagger plantings 1–2 weeks apart to spread peak labor demand.
         </div>
       </CardContent>
@@ -379,8 +386,11 @@ function CalendarGrid({ weekGrid, totalWeeks }: { weekGrid: { week: number; ops:
   const pad = 22;
 
   return (
-    <div className="rounded-md border bg-background p-2">
-      <div className="text-[9px] text-muted-foreground uppercase tracking-wide mb-1">Weekly calendar</div>
+    <div className="rounded-xl border bg-background p-3">
+      <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <CalendarDays className="h-3.5 w-3.5 text-cyan-600" />
+        Weekly calendar
+      </div>
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label="Labor calendar">
         {/* Type row labels */}
         {typeRows.map((t, i) => (
@@ -454,7 +464,7 @@ function StatCard({ icon: Icon, color, label, value, sub }: {
   icon: typeof Users; color: keyof typeof ACCENT_BG; label: string; value: string; sub?: string;
 }) {
   return (
-    <div className={`rounded-md border px-2 py-1.5 ${ACCENT_BG[color]}`}>
+    <div className={`rounded-xl border px-3 py-2.5 shadow-sm ${ACCENT_BG[color]}`}>
       <div className="flex items-center gap-1 text-[9px] text-muted-foreground uppercase tracking-wide">
         <Icon className="h-2.5 w-2.5" />{label}
       </div>
