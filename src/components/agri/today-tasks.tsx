@@ -84,7 +84,10 @@ const PRIORITY_ORDER: Record<TodayTask['priority'], number> = {
   optional: 2,
 };
 
-export function TodayTasks({ onOpenTool }: { onOpenTool: (tab: 'farm' | 'insights', storageKey?: string) => void }) {
+export function TodayTasks({ onOpenTool, refreshToken = 0 }: {
+  onOpenTool: (tab: 'farm' | 'insights', storageKey?: string) => void;
+  refreshToken?: number;
+}) {
   const [tasks, setTasks] = useState<TodayTask[]>([]);
   const [loading, setLoading] = useState(true);
   const { isRTL } = useTranslation();
@@ -176,7 +179,7 @@ export function TodayTasks({ onOpenTool }: { onOpenTool: (tab: 'farm' | 'insight
     };
 
     compute();
-  }, []);
+  }, [isRTL, refreshToken]);
 
   const criticalCount = tasks.filter(t => t.priority === 'critical').length;
   const todayCount = tasks.filter(t => t.time === (isRTL ? 'اليوم' : 'Today')).length;

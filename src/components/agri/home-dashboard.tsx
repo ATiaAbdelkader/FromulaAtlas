@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
-  Cloud, Sun, Droplets, MapPin, RefreshCw, AlertTriangle,
+  Cloud, Sun, Droplets, MapPin, RefreshCw, AlertTriangle, CheckCircle2,
   Sprout, Clock, Sparkles, Tractor, BookOpen, Wrench,
   ArrowRight, Zap, Calendar,
 } from 'lucide-react';
@@ -66,6 +66,7 @@ export function HomeDashboard({ onNavigate, onOpenTool, onOpenSearch }: HomeDash
   const [weatherError, setWeatherError] = useState<string | null>(null);
   const [recent, setRecent] = useState<ToolEntry[]>([]);
   const [wizardOpen, setWizardOpen] = useState(false);
+  const [refreshToken, setRefreshToken] = useState(0);
   const { t, isRTL, language } = useTranslation();
 
   // Load farm profile + recent tools from localStorage on mount
@@ -86,17 +87,30 @@ export function HomeDashboard({ onNavigate, onOpenTool, onOpenSearch }: HomeDash
     setWeatherLoading(true);
     setWeatherError(null);
     try {
-      let lat = 37.77, lng = -122.42;  // default: SF
-      try {
-        const saved = localStorage.getItem(LAST_LOC_KEY);
-        if (saved) {
+      let lat: number | undefined;
+      let lng: number | undefined;
+
+      // Prefer the farm profile location, then fall back to the ET Tracker
+      // location for existing users who have not completed the profile wizard.
+      for (const key of [FARM_PROFILE_KEY, LAST_LOC_KEY]) {
+        if (lat !== undefined && lng !== undefined) break;
+        try {
+          const saved = localStorage.getItem(key);
+          if (!saved) continue;
           const obj = JSON.parse(saved);
           const la = parseFloat(obj.lat), ln = parseFloat(obj.lng);
           if (Number.isFinite(la) && Number.isFinite(ln)) {
-            lat = la; lng = ln;
+            lat = la;
+            lng = ln;
           }
-        }
-      } catch { /* use default */ }
+        } catch { /* try the next stored location */ }
+      }
+
+      if (lat === undefined || lng === undefined) {
+        setForecast(null);
+        return;
+      }
+
       const f = await getForecast(lat, lng, { days: 4 });
       setForecast(f);
     } catch (e: any) {
@@ -106,7 +120,7 @@ export function HomeDashboard({ onNavigate, onOpenTool, onOpenSearch }: HomeDash
     }
   }, []);
 
-  useEffect(() => { fetchWeather(); /* eslint-disable-line */ }, []);
+  useEffect(() => { fetchWeather(); }, [fetchWeather]);
 
   const today = forecast?.daily[0];
   const current = forecast?.current;
@@ -147,6 +161,17 @@ export function HomeDashboard({ onNavigate, onOpenTool, onOpenSearch }: HomeDash
       {/* Weather alert banner — proactive warnings */}
       <WeatherAlertBanner forecast={forecast} />
 
+      {/* Next best action — converts setup and weather data into a clear plan */}
+      <TodayFocusPanel
+        profile={profile}
+        forecast={forecast}
+        weatherLoading={weatherLoading}
+        weatherError={weatherError}
+        onSetup={() => setWizardOpen(true)}
+        onOpenTool={onOpenTool}
+        onRefresh={fetchWeather}
+      />
+
       {/* Farm stats — aggregate counts */}
       <section>
         <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{isRTL ? 'مزرعتك في لمحة' : 'Your Farm at a Glance'}</div>
@@ -174,6 +199,18 @@ export function HomeDashboard({ onNavigate, onOpenTool, onOpenSearch }: HomeDash
             <div className="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-400 py-4">
               <AlertTriangle className="h-4 w-4 shrink-0" />
               <span>{isRTL ? `الطقس غير متاح: ${weatherError}. متعقّب التبدّر لا يزال يعمل — افتحه لتحديد موقعك.` : `Weather unavailable: ${weatherError}. ET Tracker still works — open it to set your location.`}</span>
+            </div>
+          )}
+
+          {!weatherLoading && !weatherError && (!current || !today) && (
+            <div className="flex flex-col items-center justify-center gap-2 py-5 text-center">
+              <MapPin className="h-6 w-6 text-muted-foreground/50" />
+              <p className="text-xs text-muted-foreground">
+                {isRTL ? 'أكمل ملف مزرعتك لرؤية الطقس المحلي.' : 'Complete your farm profile to see local weather.'}
+              </p>
+              <Button size="sm" variant="outline" onClick={() => setWizardOpen(true)} className="h-7 text-[10px] gap-1">
+                {isRTL ? 'إعداد الموقع' : 'Set up location'} <ArrowRight className="h-3 w-3" />
+              </Button>
             </div>
           )}
 
@@ -298,7 +335,7 @@ export function HomeDashboard({ onNavigate, onOpenTool, onOpenSearch }: HomeDash
       {/* Today's Tasks + Weather details side-by-side on large screens */}
       {/* =================================================================== */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-        <TodayTasks onOpenTool={onOpenTool} />
+          <TodayTasks onOpenTool={onOpenTool} refreshToken={refreshToken} />
 
         {/* Farm profile summary / edit */}
         <div className="rounded-xl border bg-card p-4">
@@ -423,6 +460,8 @@ export function HomeDashboard({ onNavigate, onOpenTool, onOpenSearch }: HomeDash
             const saved = localStorage.getItem(FARM_PROFILE_KEY);
             if (saved) setProfile(JSON.parse(saved));
           } catch { /* ignore */ }
+          setRefreshToken(value => value + 1);
+          void fetchWeather();
         }}
       />
     </div>
@@ -450,6 +489,192 @@ function WeatherSkeleton() {
         <Skeleton className="h-12 w-full" />
       </div>
     </div>
+  );
+}
+
+function TodayFocusPanel({
+  profile,
+  forecast,
+  weatherLoading,
+  weatherError,
+  onSetup,
+  onOpenTool,
+  onRefresh,
+}: {
+  profile: FarmProfile;
+  forecast: ForecastResult | null;
+  weatherLoading: boolean;
+  weatherError: string | null;
+  onSetup: () => void;
+  onOpenTool: HomeDashboardProps['onOpenTool'];
+  onRefresh: () => void;
+}) {
+  const { isRTL } = useTranslation();
+  const today = forecast?.daily[0];
+  const current = forecast?.current;
+  const setupChecks = [profile.name, profile.lat && profile.lng, profile.crop, profile.plantingDate];
+  const completedSteps = setupChecks.filter(Boolean).length;
+
+  if (completedSteps < setupChecks.length) {
+    return (
+      <section className="rounded-xl border border-emerald-200 bg-gradient-to-br from-emerald-50/80 to-white p-4 dark:border-emerald-900/60 dark:from-emerald-950/30 dark:to-card">
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white">
+            <Sprout className="h-5 w-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
+                {isRTL ? 'خطوتك التالية' : 'Your next best action'}
+              </span>
+              <Badge variant="outline" className="text-[9px]">{completedSteps}/4</Badge>
+            </div>
+            <h3 className="mt-1 text-sm font-semibold">{isRTL ? 'أكمل ملف مزرعتك' : 'Finish your farm profile'}</h3>
+            <p className="mt-1 max-w-2xl text-xs text-muted-foreground">
+              {isRTL
+                ? 'أضف موقعك ومحصولك وتاريخ الزراعة لنحوّل الطقس والحسابات إلى خطة يومية قابلة للتنفيذ.'
+                : 'Add your location, crop, and planting date so Formula Atlas can turn weather and calculations into a daily plan.'}
+            </p>
+          </div>
+        </div>
+        <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {[
+            { label: isRTL ? 'اسم المزرعة' : 'Farm name', done: Boolean(profile.name) },
+            { label: isRTL ? 'الموقع' : 'Location', done: Boolean(profile.lat && profile.lng) },
+            { label: isRTL ? 'المحصول' : 'Main crop', done: Boolean(profile.crop) },
+            { label: isRTL ? 'تاريخ الزراعة' : 'Planting date', done: Boolean(profile.plantingDate) },
+          ].map(step => (
+            <div key={step.label} className="flex items-center gap-1.5 rounded-md border bg-background/70 px-2 py-1.5 text-[10px]">
+              <CheckCircle2 className={`h-3.5 w-3.5 shrink-0 ${step.done ? 'text-emerald-600' : 'text-muted-foreground/30'}`} />
+              <span className={step.done ? 'text-foreground' : 'text-muted-foreground'}>{step.label}</span>
+            </div>
+          ))}
+        </div>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Button size="sm" onClick={onSetup} className="h-8 gap-1.5 bg-emerald-600 text-xs hover:bg-emerald-700">
+            <Sprout className="h-3.5 w-3.5" /> {isRTL ? 'إكمال الإعداد' : 'Continue setup'}
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => onOpenTool('tools')} className="h-8 text-xs">
+            {isRTL ? 'استكشف الأدوات' : 'Explore tools'}
+          </Button>
+        </div>
+      </section>
+    );
+  }
+
+  if (weatherLoading) {
+    return (
+      <section className="rounded-xl border bg-card p-4">
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-10 w-10 rounded-lg" />
+          <div className="flex-1 space-y-2">
+            <Skeleton className="h-3 w-28" />
+            <Skeleton className="h-4 w-64 max-w-full" />
+            <Skeleton className="h-3 w-80 max-w-full" />
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (weatherError || !today || !current) {
+    return (
+      <section className="rounded-xl border border-amber-200 bg-amber-50/60 p-4 dark:border-amber-900/60 dark:bg-amber-950/20">
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+            <MapPin className="h-5 w-5" />
+          </div>
+          <div className="flex-1">
+            <span className="text-[10px] font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-300">
+              {isRTL ? 'خطوتك التالية' : 'Your next best action'}
+            </span>
+            <h3 className="mt-1 text-sm font-semibold">{isRTL ? 'حدّث ظروف الطقس المحلية' : 'Update your local conditions'}</h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {weatherError
+                ? (isRTL ? 'تعذر تحميل الطقس الآن. يمكنك إعادة المحاولة أو متابعة استخدام الأدوات.' : 'Weather could not be loaded right now. Retry or continue using the tools.')
+                : (isRTL ? 'سنستخدم موقع مزرعتك لإظهار ET₀ والتنبيهات والتوصيات اليومية.' : 'We use your farm location to show ET₀, alerts, and daily recommendations.')}
+            </p>
+          </div>
+          <Button size="sm" variant="outline" onClick={onRefresh} className="h-8 shrink-0 text-xs">
+            {isRTL ? 'إعادة المحاولة' : 'Retry'}
+          </Button>
+        </div>
+      </section>
+    );
+  }
+
+  let title = isRTL ? 'راجع خطة محصولك اليوم' : 'Review today\'s crop plan';
+  let description = isRTL
+    ? 'الظروف مستقرة. راجع المهام المجدولة وابدأ بأهم عملية ميدانية.'
+    : 'Conditions look manageable. Review scheduled tasks and start with the most important field operation.';
+  let actionLabel = isRTL ? 'افتح تقويم العمالة' : 'Open labor calendar';
+  let actionTab: 'farm' | 'insights' = 'farm';
+  let actionKey = 'collapse_labor_cal';
+  let Icon = CheckCircle2;
+  let color = '#16a34a';
+
+  if (today.precipitationProbability >= 60 || today.precipitationSum >= 10) {
+    title = isRTL ? 'راجع الري قبل هطول المطر' : 'Review irrigation before the rain';
+    description = isRTL
+      ? `احتمال المطر ${today.precipitationProbability}% اليوم. أعدّل الجدول لتجنب الري الزائد وتوفير المياه.`
+      : `${today.precipitationProbability}% rain probability today. Adjust the schedule to avoid overwatering and save water.`;
+    actionLabel = isRTL ? 'افتح جدول الري' : 'Open irrigation schedule';
+    actionKey = 'collapse_irr_sched';
+    Icon = Droplets;
+    color = '#0284c7';
+  } else if (today.et0 >= 5) {
+    title = isRTL ? 'الطلب المائي مرتفع اليوم' : 'Water demand is high today';
+    description = isRTL
+      ? `قيمة ET₀ هي ${today.et0.toFixed(1)} مم. احسب الاحتياج الصافي وجدول الري للمحصول.`
+      : `Reference ET₀ is ${today.et0.toFixed(1)} mm. Calculate net crop need and schedule irrigation.`;
+    actionLabel = isRTL ? 'افتح متعقّب ET₀' : 'Open ET₀ tracker';
+    actionKey = 'collapse_et_tracker';
+    Icon = Droplets;
+    color = '#0891b2';
+  } else if (today.tempMax >= 35 || current.temperature >= 35) {
+    title = isRTL ? 'راقب إجهاد الحرارة' : 'Watch for heat stress';
+    description = isRTL
+      ? `ستصل الحرارة إلى ${today.tempMax.toFixed(0)}°م. افحص المحصول وراجع احتياج المياه.`
+      : `Temperatures may reach ${today.tempMax.toFixed(0)}°C. Scout the crop and review its water need.`;
+    actionLabel = isRTL ? 'افتح كشف الحقل' : 'Open field scouting';
+    actionKey = 'collapse_scouting';
+    Icon = AlertTriangle;
+    color = '#d97706';
+  } else if (today.windSpeedMax > 30 || current.windSpeed10m > 30) {
+    title = isRTL ? 'الرياح قوية — خطط للرش بحذر' : 'Wind is strong — plan spraying carefully';
+    description = isRTL
+      ? 'أجّل الرش عند الحاجة وراجع خطر انجراف المبيدات قبل الخروج إلى الحقل.'
+      : 'Delay spraying when appropriate and review drift risk before heading to the field.';
+    actionLabel = isRTL ? 'افتح تقييم الانجراف' : 'Open drift assessment';
+    actionKey = 'collapse_drift';
+    Icon = AlertTriangle;
+    color = '#ea580c';
+  }
+
+  return (
+    <section className="rounded-xl border p-4" style={{ borderColor: color + '55', background: `linear-gradient(135deg, ${color}12, transparent)` }}>
+      <div className="flex items-start gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg" style={{ backgroundColor: color + '20' }}>
+          <Icon className="h-5 w-5" style={{ color }} />
+        </div>
+        <div className="min-w-0 flex-1">
+          <span className="text-[10px] font-semibold uppercase tracking-wide" style={{ color }}>
+            {isRTL ? 'خطة اليوم' : 'Today\'s focus'}
+          </span>
+          <h3 className="mt-1 text-sm font-semibold">{title}</h3>
+          <p className="mt-1 text-xs text-muted-foreground">{description}</p>
+        </div>
+        <Badge variant="outline" className="hidden shrink-0 text-[9px] sm:inline-flex">ET₀ {today.et0.toFixed(1)} mm</Badge>
+      </div>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Button size="sm" onClick={() => onOpenTool(actionTab, actionKey)} className="h-8 gap-1.5 text-xs" style={{ backgroundColor: color }}>
+          {actionLabel} <ArrowRight className="h-3.5 w-3.5" />
+        </Button>
+        <Button size="sm" variant="ghost" onClick={() => onOpenTool('insights', 'collapse_weather_radar')} className="h-8 text-xs">
+          {isRTL ? 'عرض الطقس' : 'View weather'}
+        </Button>
+      </div>
+    </section>
   );
 }
 
