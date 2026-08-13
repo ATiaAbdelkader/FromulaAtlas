@@ -18,7 +18,7 @@ import {
 } from '@/lib/soil-history-store';
 import { getEntries, computeSummary } from '@/lib/financial-store';
 import { CROP_IRRIGATION_DATA } from '@/lib/irrigation-crop-data';
-import { useTranslation } from '@/lib/language-store';
+import { copyFor, useTranslation } from '@/lib/language-store';
 
 const SECTION_LABELS: { key: keyof ReportConfig['includeSections']; label: string; label_ar: string; emoji: string }[] = [
   { key: 'farmSummary', label: 'Farm Summary', label_ar: 'ملخّص المزرعة', emoji: '📋' },
@@ -35,7 +35,7 @@ const SECTION_LABELS: { key: keyof ReportConfig['includeSections']; label: strin
 export function ReportGenerator() {
   const [config, setConfig] = useState<ReportConfig>(DEFAULT_CONFIG);
   const [preview, setPreview] = useState<string | null>(null);
-  const { isRTL } = useTranslation();
+  const { isRTL, language } = useTranslation();
   const sectionLabel = (s: typeof SECTION_LABELS[number]) => isRTL ? s.label_ar : s.label;
 
   useEffect(() => {
@@ -110,20 +110,20 @@ export function ReportGenerator() {
       sustainability: data.sustainability,
       scouting: data.scouting,
       weather: data.weather,
-    });
+    }, language);
 
     return { ...data, recommendations };
   };
 
   const generate = () => {
     const data = gatherData();
-    const html = generateReport(config, data);
+    const html = generateReport(config, data, language);
     setPreview(html);
   };
 
   const printReport = () => {
     if (!preview) { generate(); }
-    const html = preview || generateReport(config, gatherData());
+    const html = preview || generateReport(config, gatherData(), language);
     const win = window.open('', '_blank');
     if (!win) return;
     win.document.write(html);
@@ -134,7 +134,7 @@ export function ReportGenerator() {
   const enabledCount = Object.values(config.includeSections).filter(Boolean).length;
 
   return (
-    <Card>
+    <Card dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Report config */}
       <div className="grid grid-cols-3 gap-2">
         <div>
@@ -203,9 +203,9 @@ export function ReportGenerator() {
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
               <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /> {isRTL ? `التقرير جاهز (${enabledCount} أقسام)` : `Report Ready (${enabledCount} sections)`}
             </span>
-            <Badge variant="outline" className="text-[9px]">{config.reportType}</Badge>
+            <Badge variant="outline" className="text-[9px]">{copyFor(language, config.reportType.replace('_', ' '), config.reportType === 'season_plan' ? 'خطة الموسم' : config.reportType === 'soil_analysis' ? 'تحليل التربة' : config.reportType === 'comprehensive' ? 'شامل' : config.reportType === 'financial' ? 'مالي' : 'ري')}</Badge>
           </div>
-          <iframe srcDoc={preview} className="w-full h-[500px] rounded-lg border border-border" title={isRTL ? 'معاينة التقرير' : 'Report Preview'} />
+          <iframe srcDoc={preview} className="w-full h-[500px] rounded-lg border border-border" title={copyFor(language, 'Report Preview', 'معاينة التقرير')} />
         </div>
       )}
 

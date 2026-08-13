@@ -31,6 +31,25 @@ function copyFor(language: Language, en: string, fr: string, ar: string) {
 }
 
 const BENCHMARK_CROPS = ['Tomato', 'Maize', 'Wheat', 'Potato', 'Rice', 'Soybean', 'Avocado'];
+const BENCHMARK_CROP_LABELS: Record<string, string> = {
+  Tomato: 'طماطم', Maize: 'ذرة', Wheat: 'قمح', Potato: 'بطاطا',
+  Rice: 'أرز', Soybean: 'فول الصويا', Avocado: 'أفوكادو',
+};
+
+function cropLabel(crop: string, language: Language): string {
+  return language === 'ar' ? BENCHMARK_CROP_LABELS[crop] ?? crop : crop;
+}
+
+function roleLabel(role: string, language: Language): string {
+  const labels: Record<string, string> = {
+    grower: copyFor(language, 'Grower', 'Producteur', 'مزارع'),
+    agronomist: copyFor(language, 'Agronomist', 'Agronome', 'مهندس زراعي'),
+    consultant: copyFor(language, 'Consultant', 'Conseiller', 'استشاري'),
+    student: copyFor(language, 'Student', 'Étudiant', 'طالب'),
+    other: copyFor(language, 'Other', 'Autre', 'أخرى'),
+  };
+  return labels[role] ?? role;
+}
 
 export function FarmerCommunity() {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -219,8 +238,8 @@ export function FarmerCommunity() {
                     <div>
                       <div className="text-sm font-semibold leading-tight">{post.title}</div>
                       <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground mt-0.5">
-                        <span className="font-medium">{post.author}</span>
-                        <Badge variant="outline" className="text-[8px] px-1 py-0 capitalize">{post.authorRole}</Badge>
+                        <span className="font-medium">{post.author === 'Anonymous Farmer' ? copyFor(language, 'Anonymous Farmer', 'Agriculteur anonyme', 'مزارع مجهول') : post.author}</span>
+                        <Badge variant="outline" className="text-[8px] px-1 py-0 capitalize">{roleLabel(post.authorRole, language)}</Badge>
                         {post.crop && <span>· {post.crop}</span>}
                         {post.region && <span>· <MapPin className="h-2 w-2 inline" /> {post.region}</span>}
                         <span>· {timeAgo(post.createdAt)}</span>
@@ -260,7 +279,7 @@ export function FarmerCommunity() {
                     {post.replies.map(r => (
                       <div key={r.id} className="text-xs">
                         <div className="flex items-center gap-1.5">
-                          <span className="font-medium">{r.author}</span>
+                          <span className="font-medium">{r.author === 'Anonymous Farmer' ? copyFor(language, 'Anonymous Farmer', 'Agriculteur anonyme', 'مزارع مجهول') : r.author}</span>
                           {r.isExpert && <Badge variant="outline" className="text-[8px] text-emerald-600 border-emerald-300 px-1 py-0 gap-0.5"><Star className="h-2 w-2" fill="currentColor" /> {copyFor(language, 'Expert', 'Expert', 'خبير')}</Badge>}
                           <span className="text-[9px] text-muted-foreground">{timeAgo(r.createdAt)}</span>
                         </div>
@@ -304,7 +323,7 @@ export function FarmerCommunity() {
               <div>
                 <Label className="text-[10px]">{copyFor(language, 'Crop', 'Culture', 'المحصول')}</Label>
                 <select value={benchCrop} onChange={e => setBenchCrop(e.target.value)} className="h-8 text-xs w-full rounded-md border border-input bg-background px-2 mt-0.5">
-                  {BENCHMARK_CROPS.map(c => <option key={c} value={c}>{c}</option>)}
+                  {BENCHMARK_CROPS.map(c => <option key={c} value={c}>{cropLabel(c, language)}</option>)}
                 </select>
               </div>
               <div>
@@ -328,7 +347,7 @@ export function FarmerCommunity() {
           {/* Comparison */}
           {benchmark.avg && benchmark.top && (
             <div className="space-y-2">
-              <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{benchCrop} — {copyFor(language, 'How do you compare?', 'Comment vous situez-vous ?', 'كيف تقارن؟')}</div>
+              <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{cropLabel(benchCrop, language)} — {copyFor(language, 'How do you compare?', 'Comment vous situez-vous ?', 'كيف تقارن؟')}</div>
               {[
                 { label: copyFor(language, 'Yield (t/ha)', 'Rendement (t/ha)', 'الإنتاج (ط/هـ)'), avg: benchmark.avg.yield, top: benchmark.top.yield, user: userBench?.yield },
                 { label: copyFor(language, 'NUE (%)', 'EUN (%)', 'كفاءة N (%)'), avg: benchmark.avg.nUe, top: benchmark.top.nUe, user: userBench?.nUe },
@@ -398,7 +417,7 @@ export function FarmerCommunity() {
           </div>
           <div>
             <Label className="text-[10px]">{copyFor(language, 'Crops you grow (comma-separated)', 'Cultures cultivées (séparées par des virgules)', 'محاصيل تزرعها (بفاصلة)')}</Label>
-            <Input value={(profile?.crops || []).join(', ')} onChange={e => { const p = { ...profile, crops: e.target.value.split(',').map(c => c.trim()).filter(Boolean) } as UserProfile; setProfile(p); saveProfile(p); }} className="h-8 text-xs mt-0.5" placeholder="tomato, maize, avocado" />
+            <Input value={(profile?.crops || []).join(', ')} onChange={e => { const p = { ...profile, crops: e.target.value.split(',').map(c => c.trim()).filter(Boolean) } as UserProfile; setProfile(p); saveProfile(p); }} className="h-8 text-xs mt-0.5" placeholder={copyFor(language, 'tomato, maize, avocado', 'tomate, maïs, avocat', 'طماطم، ذرة، أفوكادو')} />
           </div>
           <div className="text-[10px] text-muted-foreground text-center pt-2">{copyFor(language, 'Your profile is stored locally and attached to your community posts.', 'Votre profil est stocké localement et associé à vos publications communautaires.', 'ملفك مخزّن محلياً ومرفق بمنشوراتك في المجتمع.')}</div>
         </div>
