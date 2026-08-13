@@ -9,6 +9,7 @@ const suites = [
   'scripts/test-field-boundary.ts',
   'scripts/test-elevation.ts',
   'scripts/test-open-meteo.ts',
+  'scripts/test-nutrient-budget.ts',
 ];
 
 if (!existsSync(tsx)) {
