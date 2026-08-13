@@ -741,7 +741,7 @@ export function FreeToolsSection() {
           <Sparkles className="h-3.5 w-3.5" /> {copy('19 Free Agronomic Tools', '19 أداة زراعية مجانية', '19 outils agronomiques gratuits', language)}
         </div>
         <h2 className="text-xl sm:text-2xl font-bold leading-tight mb-1">
-          {copy('NutriPlant PRO Free Tools', 'أدوات NutriPlant PRO المجانية', 'Outils gratuits NutriPlant PRO', language)}
+          {copy('FormulaAtlas Free Tools', 'أدوات FormulaAtlas المجانية', 'Outils gratuits FormulaAtlas', language)}
         </h2>
         <p className="text-sm text-emerald-100/90 max-w-2xl">
           {copy('A native reimplementation of NutriPlant PRO\'s public free-tools collection — converters, solution & water diagnostics, fertilizer calculators, soil & irrigation tools, and quick-reference matrices. All calculations run client-side; nothing is sent to a server.', 'إعادة تنفيذ أصيلة لمجموعة الأدوات المجانية العامة من NutriPlant PRO — محوّلات، تشخيص محاليل ومياه، حاسبات أسمدة، أدوات تربة وري، ومصفوفات مرجعية. كل الحسابات تعمل في المتصفح، لا شيء يُرسل إلى خادم.', 'Une réimplémentation native de la collection publique d’outils gratuits de NutriPlant PRO — conversions, diagnostics des solutions et de l’eau, calculateurs d’engrais, outils sol et irrigation, et tableaux de référence. Tous les calculs s’exécutent dans le navigateur ; rien n’est envoyé à un serveur.', language)}
