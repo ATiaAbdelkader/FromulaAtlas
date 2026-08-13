@@ -102,6 +102,7 @@ import { FormulaExplorer } from '@/components/agri/formula-explorer';
 import { MobileFieldCaptureButton } from '@/components/agri/mobile-field-capture';
 import { FieldModeButton } from '@/components/agri/field-mode';
 import { DataExportDialog } from '@/components/agri/data-export-dialog';
+import { WorkspacePanel } from '@/components/agri/workspace-panel';
 
 type TabId = 'home' | 'formulas' | 'tools' | 'farm' | 'insights' | 'about';
 
@@ -407,6 +408,8 @@ export default function Page() {
             <div className="flex items-center gap-2"><Tractor className="h-5 w-5" /><h2 className="text-lg font-bold">{t.farmManagement}</h2></div>
             <p className="text-xs text-emerald-100 mt-1">{t.farmManagementSubtitle}</p>
           </div>
+
+          <WorkspacePanel />
 
           {/* Sub-category: Fields & Crops */}
           <div className="space-y-3">
