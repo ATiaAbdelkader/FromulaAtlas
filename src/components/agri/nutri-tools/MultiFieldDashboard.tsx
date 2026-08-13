@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
-import { Plus, Pencil, Trash2, LayoutDashboard, Sprout, Droplets, Calendar } from 'lucide-react';
+import { Plus, Pencil, Trash2, LayoutDashboard, Sprout, Droplets, Calendar, BarChart3 } from 'lucide-react';
 import { CROP_PRESETS, getCropPreset } from '@/lib/crop-presets';
 
 const STORAGE_KEY = 'nutriplant_fields_v1';
@@ -97,45 +97,61 @@ export function MultiFieldDashboard() {
   })), [fields]);
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <LayoutDashboard className="h-4 w-4 text-emerald-600" />
-              Multi-Field Dashboard
+    <Card className="overflow-hidden border-emerald-100/80 shadow-sm dark:border-emerald-950/60">
+      <CardHeader className="border-b border-emerald-100/70 bg-gradient-to-br from-emerald-50/80 via-card to-card pb-4 dark:border-emerald-950/70 dark:from-emerald-950/30">
+        <div className="flex items-start justify-between gap-3 flex-wrap">
+          <div className="min-w-0">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-300">
+                <LayoutDashboard className="h-4 w-4" />
+              </span>
+              <span>Multi-Field Dashboard</span>
             </CardTitle>
-            <CardDescription className="text-xs mt-1">
+            <CardDescription className="mt-2 max-w-2xl text-xs leading-relaxed">
               Track multiple fields, compare yields vs benchmarks, and view per-field quick stats.
             </CardDescription>
           </div>
-          <Button size="sm" onClick={openAdd} className="gap-1.5 bg-emerald-600 hover:bg-emerald-700">
-            <Plus className="h-4 w-4" /> Add field
-          </Button>
+          <div className="flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-end">
+            <Badge variant="outline" className="border-emerald-200 bg-emerald-50/70 px-2.5 py-1 text-[10px] text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300">
+              {fields.length} {fields.length === 1 ? 'field' : 'fields'}
+            </Badge>
+            <Button size="sm" onClick={openAdd} className="min-h-9 gap-1.5 bg-emerald-600 px-3 shadow-sm hover:bg-emerald-700">
+              <Plus className="h-4 w-4" /> Add field
+            </Button>
+          </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 p-4 sm:p-5">
         {fields.length === 0 ? (
-          <EmptyState
-            icon={Sprout}
-            title="No fields yet"
-            description="Add your first field to start tracking irrigation, fertilization, and scouting. You'll see it here with crop stage, water demand, and progress."
-            color="#16a34a"
-            action={{ label: "Add your first field", onClick: openAdd }}
-          />
+          <div className="rounded-2xl border border-dashed border-emerald-200 bg-gradient-to-br from-emerald-50/80 via-background to-background p-2 dark:border-emerald-900/70 dark:from-emerald-950/30">
+            <EmptyState
+              icon={Sprout}
+              title="No fields yet"
+              description="Add your first field to start tracking irrigation, fertilization, and scouting. You'll see it here with crop stage, water demand, and progress."
+              color="#16a34a"
+              action={{ label: "Add your first field", onClick: openAdd }}
+            />
+          </div>
         ) : (
           <>
-            <div className="rounded-lg border bg-muted/30 p-3">
-              <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2 flex items-center justify-between">
-                <span>Yield vs benchmark (t/ha)</span>
-                <span className="flex items-center gap-2">
-                  <span className="flex items-center gap-1"><span className="inline-block w-2.5 h-2.5 rounded-sm bg-emerald-500" />Actual</span>
-                  <span className="flex items-center gap-1"><span className="inline-block w-2.5 h-2.5 rounded-sm bg-slate-400" />Benchmark</span>
-                </span>
+            <div className="rounded-2xl border border-border/70 bg-muted/20 p-3 sm:p-4">
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2 text-xs font-semibold">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">
+                    <BarChart3 className="h-3.5 w-3.5" />
+                  </span>
+                  <span>Yield vs benchmark <span className="font-normal text-muted-foreground">(t/ha)</span></span>
+                </div>
+                <div className="flex flex-wrap items-center gap-3 text-[10px] text-muted-foreground">
+                  <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-emerald-500" />Actual</span>
+                  <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-slate-400" />Benchmark</span>
+                </div>
               </div>
-              <ComparisonChart data={chartData} />
+              <div className="overflow-x-auto rounded-xl bg-background/70 px-1 py-2">
+                <ComparisonChart data={chartData} />
+              </div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {fields.map(f => {
                 const preset = getCropPreset(f.crop);
                 const days = daysSince(f.plantingDate);
@@ -144,31 +160,36 @@ export function MultiFieldDashboard() {
                 const irr = irrigationDemand(f.crop, days);
                 const ratio = bench ? Math.min(100, (f.lastYield / bench) * 100) : 0;
                 return (
-                  <div key={f.id} className="rounded-lg border bg-card p-3 space-y-2">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-2xl" aria-hidden>{preset?.emoji ?? '🌱'}</span>
+                  <article key={f.id} className="rounded-2xl border border-border/80 bg-card p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md dark:hover:border-emerald-900/70">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex min-w-0 items-center gap-2.5">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-xl dark:bg-emerald-950/40" aria-hidden>{preset?.emoji ?? '🌱'}</span>
                         <div className="min-w-0">
-                          <div className="font-semibold text-sm truncate">{f.name || 'Unnamed'}</div>
-                          <div className="text-[11px] text-muted-foreground">{preset?.name ?? f.crop} · {f.areaHa} ha</div>
+                          <div className="truncate text-sm font-semibold">{f.name || 'Unnamed'}</div>
+                          <div className="mt-0.5 truncate text-[11px] text-muted-foreground">{preset?.name ?? f.crop} · {f.areaHa} ha</div>
                         </div>
                       </div>
-                      <div className="flex gap-1">
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(f)} aria-label="Edit field"><Pencil className="h-3.5 w-3.5" /></Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 text-red-600 hover:text-red-700" onClick={() => remove(f.id)} aria-label="Delete field"><Trash2 className="h-3.5 w-3.5" /></Button>
+                      <div className="flex shrink-0 gap-1">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => openEdit(f)} aria-label={`Edit ${f.name || 'field'}`}><Pencil className="h-3.5 w-3.5" /></Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950/30" onClick={() => remove(f.id)} aria-label={`Delete ${f.name || 'field'}`}><Trash2 className="h-3.5 w-3.5" /></Button>
                       </div>
                     </div>
-                    <div className="flex items-center justify-between gap-2 text-[11px]">
-                      <Badge variant="outline" className="text-[10px]">{stage}</Badge>
-                      <span className="flex items-center gap-1 text-muted-foreground"><Calendar className="h-3 w-3" />{days}d</span>
-                      <span className="flex items-center gap-1 text-muted-foreground"><Droplets className="h-3 w-3 text-blue-500" />{irr}</span>
+                    <div className="mt-4 grid grid-cols-1 gap-2 text-[11px] sm:grid-cols-3">
+                      <Badge variant="outline" className="justify-center truncate border-emerald-200/80 bg-emerald-50/40 text-[10px] dark:border-emerald-900/70 dark:bg-emerald-950/20">{stage}</Badge>
+                      <span className="flex items-center justify-center gap-1 rounded-md bg-muted/50 px-2 py-1 text-muted-foreground"><Calendar className="h-3 w-3" />{days}d</span>
+                      <span className="flex items-center justify-center gap-1 rounded-md bg-muted/50 px-2 py-1 text-muted-foreground"><Droplets className="h-3 w-3 text-blue-500" />{irr}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-[11px]">
-                      <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden"><div className="h-full bg-emerald-500" style={{ width: `${ratio}%` }} /></div>
-                      <span className="text-muted-foreground whitespace-nowrap">{f.lastYield}/{bench} t/ha</span>
+                    <div className="mt-4 space-y-1.5">
+                      <div className="flex items-center justify-between gap-2 text-[11px]">
+                        <span className="font-medium text-muted-foreground">Yield progress</span>
+                        <span className="whitespace-nowrap font-mono text-muted-foreground">{f.lastYield}/{bench} t/ha</span>
+                      </div>
+                      <div className="h-2 overflow-hidden rounded-full bg-muted" role="progressbar" aria-label={`${f.name || 'Field'} yield progress`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(ratio)}>
+                        <div className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-green-400 transition-all" style={{ width: `${ratio}%` }} />
+                      </div>
                     </div>
-                    {f.notes && <p className="text-[11px] text-muted-foreground italic line-clamp-2">{f.notes}</p>}
-                  </div>
+                    {f.notes && <p className="mt-3 line-clamp-2 border-t border-border/60 pt-3 text-[11px] leading-relaxed text-muted-foreground italic">{f.notes}</p>}
+                  </article>
                 );
               })}
             </div>
@@ -177,40 +198,40 @@ export function MultiFieldDashboard() {
       </CardContent>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-[560px]">
+        <DialogContent className="max-h-[92vh] max-w-[560px] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{isEditing ? 'Edit field' : 'Add field'}</DialogTitle>
-            <DialogDescription className="text-xs">Enter field details. Saved to local storage on this device.</DialogDescription>
+            <DialogDescription className="text-xs leading-relaxed">Enter field details. Saved to local storage on this device.</DialogDescription>
           </DialogHeader>
           {draft && (
-            <div className="grid grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto pr-1">
-              <div className="col-span-2">
+            <div className="grid grid-cols-1 gap-3 overflow-y-auto pr-1 sm:grid-cols-2">
+              <div className="sm:col-span-2">
                 <Label className="text-xs">Field name *</Label>
-                <Input value={draft.name} onChange={e => setDraft({ ...draft, name: e.target.value })} className="h-9 mt-1" placeholder="e.g. North 40" />
+                <Input value={draft.name} onChange={e => setDraft({ ...draft, name: e.target.value })} className="mt-1 h-10" placeholder="e.g. North 40" />
               </div>
               <div>
                 <Label className="text-xs">Crop</Label>
                 <Select value={draft.crop} onValueChange={v => setDraft({ ...draft, crop: v })}>
-                  <SelectTrigger className="h-9 mt-1 w-full text-xs"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="mt-1 h-10 w-full text-xs"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {CROP_PRESETS.map(c => <SelectItem key={c.id} value={c.id} className="text-xs">{c.emoji} {c.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
-              <div><Label className="text-xs">Area (ha)</Label><Input type="number" value={draft.areaHa} onChange={e => setDraft({ ...draft, areaHa: parseFloat(e.target.value) || 0 })} className="h-9 mt-1" /></div>
-              <div><Label className="text-xs">Planting date</Label><Input type="date" value={draft.plantingDate} onChange={e => setDraft({ ...draft, plantingDate: e.target.value })} className="h-9 mt-1" /></div>
-              <div><Label className="text-xs">Last yield (t/ha)</Label><Input type="number" value={draft.lastYield} onChange={e => setDraft({ ...draft, lastYield: parseFloat(e.target.value) || 0 })} className="h-9 mt-1" /></div>
-              <div><Label className="text-xs">Soil pH</Label><Input value={draft.soil.ph} onChange={e => setDraft({ ...draft, soil: { ...draft.soil, ph: e.target.value } })} className="h-9 mt-1" /></div>
-              <div><Label className="text-xs">OM %</Label><Input value={draft.soil.om} onChange={e => setDraft({ ...draft, soil: { ...draft.soil, om: e.target.value } })} className="h-9 mt-1" /></div>
-              <div><Label className="text-xs">CEC (meq/100g)</Label><Input value={draft.soil.cec} onChange={e => setDraft({ ...draft, soil: { ...draft.soil, cec: e.target.value } })} className="h-9 mt-1" /></div>
-              <div><Label className="text-xs">Texture</Label><Input value={draft.soil.texture} onChange={e => setDraft({ ...draft, soil: { ...draft.soil, texture: e.target.value } })} className="h-9 mt-1" /></div>
-              <div className="col-span-2">
+              <div><Label className="text-xs">Area (ha)</Label><Input type="number" value={draft.areaHa} onChange={e => setDraft({ ...draft, areaHa: parseFloat(e.target.value) || 0 })} className="mt-1 h-10" /></div>
+              <div><Label className="text-xs">Planting date</Label><Input type="date" value={draft.plantingDate} onChange={e => setDraft({ ...draft, plantingDate: e.target.value })} className="mt-1 h-10" /></div>
+              <div><Label className="text-xs">Last yield (t/ha)</Label><Input type="number" value={draft.lastYield} onChange={e => setDraft({ ...draft, lastYield: parseFloat(e.target.value) || 0 })} className="mt-1 h-10" /></div>
+              <div><Label className="text-xs">Soil pH</Label><Input value={draft.soil.ph} onChange={e => setDraft({ ...draft, soil: { ...draft.soil, ph: e.target.value } })} className="mt-1 h-10" /></div>
+              <div><Label className="text-xs">OM %</Label><Input value={draft.soil.om} onChange={e => setDraft({ ...draft, soil: { ...draft.soil, om: e.target.value } })} className="mt-1 h-10" /></div>
+              <div><Label className="text-xs">CEC (meq/100g)</Label><Input value={draft.soil.cec} onChange={e => setDraft({ ...draft, soil: { ...draft.soil, cec: e.target.value } })} className="mt-1 h-10" /></div>
+              <div><Label className="text-xs">Texture</Label><Input value={draft.soil.texture} onChange={e => setDraft({ ...draft, soil: { ...draft.soil, texture: e.target.value } })} className="mt-1 h-10" /></div>
+              <div className="sm:col-span-2">
                 <Label className="text-xs">Notes</Label>
-                <Textarea value={draft.notes} onChange={e => setDraft({ ...draft, notes: e.target.value })} rows={2} className="mt-1 text-xs" />
+                <Textarea value={draft.notes} onChange={e => setDraft({ ...draft, notes: e.target.value })} rows={3} className="mt-1 text-xs" />
               </div>
             </div>
           )}
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:gap-0">
             <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
             <Button onClick={save} disabled={!draft?.name.trim()} className="bg-emerald-600 hover:bg-emerald-700">Save field</Button>
           </DialogFooter>
@@ -226,7 +247,7 @@ function ComparisonChart({ data }: { data: { name: string; actual: number; bench
   const chartW = data.length * groupW + (data.length - 1) * groupGap + 40;
   const plotH = 80, baseY = 20 + plotH;
   return (
-    <svg viewBox={`0 0 ${chartW} 110`} className="w-full h-[110px]" preserveAspectRatio="xMidYMid meet">
+    <svg viewBox={`0 0 ${chartW} 110`} className="h-[110px] min-w-full" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Yield compared with benchmark chart">
       <line x1="20" y1="20" x2="20" y2={baseY} stroke="currentColor" className="text-border" strokeWidth="1" />
       <line x1="20" y1={baseY} x2={chartW - 5} y2={baseY} stroke="currentColor" className="text-border" strokeWidth="1" />
       {data.map((d, i) => {
