@@ -18,16 +18,16 @@ export function CoordinateConverter() {
   const [tab, setTab] = useState<Tab>('dms');
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2"><MapPin className="h-4 w-4 text-indigo-600" /> Coordinate Converter</CardTitle>
-        <div className="flex gap-1 mt-2">
+    <Card className="overflow-hidden border-indigo-100/80 shadow-sm dark:border-indigo-950/60">
+      <CardHeader className="border-b border-indigo-100/70 bg-gradient-to-br from-indigo-50/70 via-card to-card pb-4 dark:border-indigo-950/70 dark:from-indigo-950/30">
+        <CardTitle className="flex items-center gap-2 text-base sm:text-lg"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700 dark:bg-indigo-950/70 dark:text-indigo-300"><MapPin className="h-4 w-4" /></span> Coordinate Converter</CardTitle>
+        <div className="mt-3 grid grid-cols-1 gap-1 rounded-xl bg-muted/50 p-1 sm:grid-cols-3">
           <TabBtn active={tab === 'dms'} onClick={() => setTab('dms')} icon={Globe} label="DMS ↔ Decimal" />
           <TabBtn active={tab === 'utm'} onClick={() => setTab('utm')} icon={Grid3x3} label="UTM ↔ Lat/Lng" />
           <TabBtn active={tab === 'batch'} onClick={() => setTab('batch')} icon={FileSpreadsheet} label="Batch CSV" />
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-4 sm:p-5">
         {tab === 'dms' && <DmsConverter />}
         {tab === 'utm' && <UtmConverter />}
         {tab === 'batch' && <BatchConverter />}
@@ -78,7 +78,7 @@ function DmsConverter() {
       {/* DMS → Decimal */}
       <div className="space-y-2">
         <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">DMS → Decimal Degrees</div>
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           <div><Label className="text-[10px]">Degrees (°)</Label><Input value={deg} onChange={e => setDeg(e.target.value)} type="number" className="h-8 text-xs mt-0.5" /></div>
           <div><Label className="text-[10px]">Minutes (')</Label><Input value={min} onChange={e => setMin(e.target.value)} type="number" className="h-8 text-xs mt-0.5" /></div>
           <div><Label className="text-[10px]">Seconds (")</Label><Input value={sec} onChange={e => setSec(e.target.value)} type="number" step="0.01" className="h-8 text-xs mt-0.5" /></div>
@@ -91,8 +91,8 @@ function DmsConverter() {
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="flex-1 rounded-lg border border-indigo-200 dark:border-indigo-900 bg-indigo-50/50 dark:bg-indigo-950/20 p-3">
+        <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
+          <div className="flex-1 rounded-xl border border-indigo-200 bg-indigo-50/50 p-3 dark:border-indigo-900 dark:bg-indigo-950/20">
             <div className="text-[10px] text-muted-foreground">Decimal Degrees</div>
             <div className="text-lg font-bold font-mono text-indigo-700 dark:text-indigo-300">{dmsToDecimal}°</div>
           </div>
@@ -107,11 +107,11 @@ function DmsConverter() {
       {/* Decimal → DMS */}
       <div className="space-y-2">
         <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Decimal → DMS</div>
-        <div className="flex gap-2 items-end">
-          <div className="flex-1"><Label className="text-[10px]">Decimal degrees</Label><Input value={decimal} onChange={e => setDecimal(e.target.value)} type="number" step="0.000001" placeholder="e.g. 37.770000" className="h-8 text-xs mt-0.5" /></div>
+        <div className="flex items-end gap-2">
+          <div className="min-w-0 flex-1"><Label className="text-[10px]">Decimal degrees</Label><Input value={decimal} onChange={e => setDecimal(e.target.value)} type="number" step="0.000001" placeholder="e.g. 37.770000" className="h-8 text-xs mt-0.5" /></div>
         </div>
         {decimalToDms && (
-          <div className="rounded-lg border border-emerald-200 dark:border-emerald-900 bg-emerald-50/50 dark:bg-emerald-950/20 p-3">
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-3 dark:border-emerald-900 dark:bg-emerald-950/20">
             <div className="text-[10px] text-muted-foreground">DMS Format</div>
             <div className="text-lg font-bold font-mono text-emerald-700 dark:text-emerald-300">
               {decimalToDms.d}° {decimalToDms.m}' {decimalToDms.s}" {decimalToDms.dir}
@@ -233,12 +233,12 @@ function UtmConverter() {
       {/* Lat/Lng → UTM */}
       <div className="space-y-2">
         <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Lat/Lng → UTM</div>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <div><Label className="text-[10px]">Latitude</Label><Input value={lat} onChange={e => setLat(e.target.value)} type="number" step="0.000001" className="h-8 text-xs mt-0.5" /></div>
           <div><Label className="text-[10px]">Longitude</Label><Input value={lng} onChange={e => setLng(e.target.value)} type="number" step="0.000001" className="h-8 text-xs mt-0.5" /></div>
         </div>
         {utmResult && (
-          <div className="rounded-lg border border-indigo-200 dark:border-indigo-900 bg-indigo-50/50 dark:bg-indigo-950/20 p-3 space-y-1">
+          <div className="rounded-xl border border-indigo-200 bg-indigo-50/50 p-3 shadow-sm dark:border-indigo-900 dark:bg-indigo-950/20 space-y-1">
             <div className="grid grid-cols-4 gap-2 text-xs">
               <div><span className="text-muted-foreground">Zone:</span> <strong>{utmResult.zone}{utmResult.hemisphere}</strong></div>
               <div><span className="text-muted-foreground">Easting:</span> <strong className="font-mono">{utmResult.easting}</strong></div>
@@ -256,7 +256,7 @@ function UtmConverter() {
       {/* UTM → Lat/Lng */}
       <div className="space-y-2">
         <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">UTM → Lat/Lng</div>
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           <div><Label className="text-[10px]">Easting</Label><Input value={easting} onChange={e => setEasting(e.target.value)} type="number" placeholder="e.g. 551234" className="h-8 text-xs mt-0.5" /></div>
           <div><Label className="text-[10px]">Northing</Label><Input value={northing} onChange={e => setNorthing(e.target.value)} type="number" placeholder="e.g. 4180345" className="h-8 text-xs mt-0.5" /></div>
           <div><Label className="text-[10px]">Zone</Label><Input value={zone} onChange={e => setZone(e.target.value)} type="number" min="1" max="60" className="h-8 text-xs mt-0.5" /></div>
@@ -269,7 +269,7 @@ function UtmConverter() {
           </div>
         </div>
         {latlngResult && (
-          <div className="rounded-lg border border-emerald-200 dark:border-emerald-900 bg-emerald-50/50 dark:bg-emerald-950/20 p-3">
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-3 dark:border-emerald-900 dark:bg-emerald-950/20">
             <div className="text-[10px] text-muted-foreground">Latitude / Longitude (WGS84)</div>
             <div className="text-lg font-bold font-mono text-emerald-700 dark:text-emerald-300">
               {latlngResult.lat}, {latlngResult.lng}
@@ -335,17 +335,19 @@ function BatchConverter() {
 
   return (
     <div className="space-y-3">
-      <div className="flex gap-2">
-        <select value={convertType} onChange={e => setConvertType(e.target.value as any)} className="h-8 text-xs rounded-md border border-input bg-background px-2">
+      <div className="rounded-xl border border-border/70 bg-muted/20 p-3">
+        <Label className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Conversion output</Label>
+        <select value={convertType} onChange={e => setConvertType(e.target.value as any)} className="mt-1 h-10 w-full rounded-lg border border-input bg-background px-3 text-xs shadow-sm">
           <option value="decimal_to_utm">Decimal → UTM</option>
           <option value="decimal_to_dms">Decimal → DMS</option>
         </select>
       </div>
       <div>
-        <Label className="text-[10px]">Input CSV (must have latitude + longitude columns)</Label>
-        <Textarea value={csvInput} onChange={e => setCsvInput(e.target.value)} className="text-xs font-mono mt-0.5 min-h-[120px]" />
+        <Label className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Input CSV</Label>
+        <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">Include <code className="rounded bg-muted px-1">latitude</code> and <code className="rounded bg-muted px-1">longitude</code> columns.</p>
+        <Textarea value={csvInput} onChange={e => setCsvInput(e.target.value)} className="mt-2 min-h-[140px] text-xs font-mono" />
       </div>
-      <div className="flex gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row">
         <Button size="sm" variant="outline" onClick={copy} className="gap-1.5 text-xs flex-1">
           {copied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />} Copy Result
         </Button>
@@ -354,8 +356,11 @@ function BatchConverter() {
         </Button>
       </div>
       <div>
-        <Label className="text-[10px]">Output</Label>
-        <Textarea value={result} readOnly className="text-xs font-mono mt-0.5 min-h-[120px] bg-muted/30" />
+        <div className="mb-1 flex items-center justify-between gap-2">
+          <Label className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Output</Label>
+          <Badge variant="outline" className="text-[10px]">Ready to export</Badge>
+        </div>
+        <Textarea value={result} readOnly className="min-h-[140px] bg-muted/30 text-xs font-mono" />
       </div>
       <div className="text-[10px] text-muted-foreground bg-muted/20 rounded p-2">
         💡 Paste a CSV from Excel with latitude/longitude columns. The converter adds UTM or DMS columns to each row. Perfect for converting farm GPS data for use in maps or machinery.
@@ -375,8 +380,8 @@ function decimalToDmsStr(val: number, isLat: boolean): string {
 
 function TabBtn({ active, onClick, icon: Icon, label }: { active: boolean; onClick: () => void; icon: typeof MapPin; label: string }) {
   return (
-    <button onClick={onClick} className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${active ? 'bg-indigo-100 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300' : 'text-muted-foreground hover:bg-muted/50'}`}>
-      <Icon className="h-3.5 w-3.5" /><span className="hidden sm:inline">{label}</span>
+    <button type="button" onClick={onClick} aria-pressed={active} className={`flex min-h-9 items-center justify-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ${active ? 'bg-indigo-100 text-indigo-700 shadow-sm dark:bg-indigo-950/50 dark:text-indigo-300' : 'text-muted-foreground hover:bg-background/70 hover:text-foreground'}`}>
+      <Icon className="h-3.5 w-3.5" /><span>{label}</span>
     </button>
   );
 }

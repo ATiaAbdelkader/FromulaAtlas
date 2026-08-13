@@ -39,18 +39,18 @@ export function FieldBoundaryImporter() {
   const [sourceFormat, setSourceFormat] = useState<ImportFormat | null>(null);
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2">
-          <Shapes className="h-4 w-4 text-emerald-600" /> Field Boundary Importer
+    <Card className="overflow-hidden border-emerald-100/80 shadow-sm dark:border-emerald-950/60">
+      <CardHeader className="border-b border-emerald-100/70 bg-gradient-to-br from-emerald-50/70 via-card to-card pb-4 dark:border-emerald-950/70 dark:from-emerald-950/30">
+        <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-300"><Shapes className="h-4 w-4" /></span> Field Boundary Importer
         </CardTitle>
-        <div className="flex gap-1 mt-2 flex-wrap">
+        <div className="mt-3 grid grid-cols-1 gap-1 rounded-xl bg-muted/50 p-1 sm:grid-cols-3">
           <TabBtn active={tab === 'import'} onClick={() => setTab('import')} icon={Upload} label="Import" />
           <TabBtn active={tab === 'draw'} onClick={() => setTab('draw')} icon={Shapes} label="Draw" />
           <TabBtn active={tab === 'convert'} onClick={() => setTab('convert')} icon={ArrowRight} label="Convert / Export" disabled={!boundary} />
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-4 sm:p-5">
         {tab === 'import' && (
           <ImportPanel onImport={(b, fmt) => { setBoundary(b); setSourceFormat(fmt); setTab('convert'); }} />
         )}
@@ -135,7 +135,8 @@ function ImportPanel({ onImport }: { onImport: (b: Boundary, fmt: ImportFormat) 
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap gap-2 items-center">
+      <div className="rounded-xl border border-border/70 bg-muted/20 p-3">
+        <div className="flex flex-wrap items-center gap-2">
         <input
           ref={fileRef}
           type="file"
@@ -146,16 +147,18 @@ function ImportPanel({ onImport }: { onImport: (b: Boundary, fmt: ImportFormat) 
         <Button size="sm" variant="outline" onClick={() => fileRef.current?.click()} className="gap-1.5 text-xs">
           <Upload className="h-3.5 w-3.5" /> Upload File
         </Button>
-        <span className="text-[10px] text-muted-foreground">Accepts .geojson · .kml · .wkt · .csv</span>
+          <span className="text-[10px] text-muted-foreground">Accepts .geojson · .kml · .wkt · .csv</span>
+        </div>
+        <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">Upload a file or paste geometry below. The format is detected automatically.</p>
       </div>
 
       <div>
-        <Label className="text-[10px]">Paste GeoJSON / KML / WKT / CSV</Label>
+        <Label className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Paste geometry</Label>
         <Textarea
           value={text}
           onChange={e => { setText(e.target.value); setError(null); setParsedPreview(null); }}
           placeholder="Auto-detected — paste any supported format…"
-          className="text-xs font-mono mt-0.5 min-h-[140px]"
+          className="mt-2 min-h-[150px] text-xs font-mono"
         />
       </div>
 
@@ -171,9 +174,9 @@ function ImportPanel({ onImport }: { onImport: (b: Boundary, fmt: ImportFormat) 
         ))}
       </div>
 
-      <div className="flex gap-2">
-        <Button size="sm" variant="outline" onClick={handleParse} className="gap-1.5 text-xs">Validate</Button>
-        <Button size="sm" onClick={handleImport} className="gap-1.5 text-xs flex-1">
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <Button size="sm" variant="outline" onClick={handleParse} className="min-h-10 gap-1.5 text-xs sm:min-h-9">Validate</Button>
+        <Button size="sm" onClick={handleImport} className="min-h-10 flex-1 gap-1.5 text-xs sm:min-h-9">
           <CheckCircle2 className="h-3.5 w-3.5" /> Import Boundary
         </Button>
       </div>
@@ -362,7 +365,7 @@ function ConvertPanel({ boundary, sourceFormat }: { boundary: Boundary; sourceFo
             {metrics.valid ? 'Valid' : 'Invalid'}
           </Badge>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+        <div className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
           <Metric label="Area" value={fmtArea(metrics.areaM2)} />
           <Metric label="Perimeter" value={fmtLen(metrics.perimeterM)} />
           <Metric label="Vertices" value={String(metrics.vertexCount)} />
@@ -384,14 +387,16 @@ function ConvertPanel({ boundary, sourceFormat }: { boundary: Boundary; sourceFo
 
       <PolygonPreview boundary={boundary} bbox={metrics.bbox} />
 
-      <div className="flex gap-1">
+      <div className="grid grid-cols-2 gap-1 rounded-xl bg-muted/50 p-1 sm:grid-cols-4">
         {(['geojson', 'kml', 'wkt', 'csv'] as ExportFormat[]).map(f => {
           const Icon = FMT_ICON[f];
           return (
             <button
               key={f}
+              type="button"
               onClick={() => setTargetFmt(f)}
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${targetFmt === f ? 'bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300' : 'text-muted-foreground hover:bg-muted/50'}`}
+              aria-pressed={targetFmt === f}
+              className={`flex min-h-9 items-center justify-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ${targetFmt === f ? 'bg-emerald-100 text-emerald-700 shadow-sm dark:bg-emerald-950/50 dark:text-emerald-300' : 'text-muted-foreground hover:bg-background/70 hover:text-foreground'}`}
             >
               <Icon className="h-3.5 w-3.5" /> {FMT_LABEL[f]}
             </button>
@@ -399,9 +404,11 @@ function ConvertPanel({ boundary, sourceFormat }: { boundary: Boundary; sourceFo
         })}
       </div>
 
-      <Textarea value={output} readOnly className="text-xs font-mono min-h-[160px] bg-muted/30" />
+      <div className="rounded-xl border border-border/70 bg-muted/20 p-2">
+        <Textarea value={output} readOnly className="min-h-[160px] border-0 bg-transparent text-xs font-mono shadow-none focus-visible:ring-0" />
+      </div>
 
-      <div className="flex gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row">
         <Button size="sm" variant="outline" onClick={copy} className="gap-1.5 text-xs flex-1">
           {copied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />} Copy
         </Button>
@@ -453,7 +460,7 @@ function PolygonPreview({ boundary, bbox: bb }: { boundary: Boundary; bbox: Boun
   });
 
   return (
-    <div className="rounded-md border bg-gradient-to-br from-sky-50/40 to-emerald-50/30 dark:from-sky-950/10 dark:to-emerald-950/10 p-2">
+      <div className="overflow-hidden rounded-xl border bg-gradient-to-br from-sky-50/40 to-emerald-50/30 p-2 shadow-inner dark:from-sky-950/10 dark:to-emerald-950/10">
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label="Field boundary preview">
         <defs>
           <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
@@ -488,9 +495,11 @@ function PolygonPreview({ boundary, bbox: bb }: { boundary: Boundary; bbox: Boun
 function TabBtn({ active, onClick, icon: Icon, label, disabled }: { active: boolean; onClick: () => void; icon: typeof MapPin; label: string; disabled?: boolean }) {
   return (
     <button
+      type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${active ? 'bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300' : 'text-muted-foreground hover:bg-muted/50'}`}
+      aria-pressed={active}
+      className={`flex min-h-9 items-center justify-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${active ? 'bg-emerald-100 text-emerald-700 shadow-sm dark:bg-emerald-950/50 dark:text-emerald-300' : 'text-muted-foreground hover:bg-background/70 hover:text-foreground'}`}
     >
       <Icon className="h-3.5 w-3.5" /><span>{label}</span>
     </button>

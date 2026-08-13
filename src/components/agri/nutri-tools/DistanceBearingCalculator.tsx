@@ -50,19 +50,19 @@ export function DistanceBearingCalculator() {
   const [tab, setTab] = useState<Tab>('point');
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2">
-          <Compass className="h-4 w-4 text-cyan-600" /> Distance &amp; Bearing Calculator
+    <Card className="overflow-hidden border-cyan-100/80 shadow-sm dark:border-cyan-950/60">
+      <CardHeader className="border-b border-cyan-100/70 bg-gradient-to-br from-cyan-50/70 via-card to-card pb-4 dark:border-cyan-950/70 dark:from-cyan-950/30">
+        <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-100 text-cyan-700 dark:bg-cyan-950/70 dark:text-cyan-300"><Compass className="h-4 w-4" /></span> Distance &amp; Bearing Calculator
         </CardTitle>
-        <div className="flex gap-1 mt-2 flex-wrap">
+        <div className="mt-3 grid grid-cols-2 gap-1 rounded-xl bg-muted/50 p-1 sm:grid-cols-4">
           <TabBtn active={tab === 'point'} onClick={() => setTab('point')} icon={Navigation} label="Point-to-Point" />
           <TabBtn active={tab === 'destination'} onClick={() => setTab('destination')} icon={Globe2} label="Destination" />
           <TabBtn active={tab === 'batch'} onClick={() => setTab('batch')} icon={FileSpreadsheet} label="Batch CSV" />
           <TabBtn active={tab === 'fields'} onClick={() => setTab('fields')} icon={Layers} label="Field-to-Field" />
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-4 sm:p-5">
         {tab === 'point' && <PointToPoint />}
         {tab === 'destination' && <Destination />}
         {tab === 'batch' && <BatchCsv />}
@@ -114,38 +114,38 @@ function PointToPoint() {
 
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-2">
-          <div className="text-[10px] font-semibold text-cyan-700 dark:text-cyan-300 uppercase tracking-wide">Point A (from)</div>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="space-y-2 rounded-xl border border-cyan-200/70 bg-cyan-50/30 p-3 dark:border-cyan-950/70 dark:bg-cyan-950/10">
+          <div className="text-[10px] font-semibold uppercase tracking-wide text-cyan-700 dark:text-cyan-300">Point A (from)</div>
           <div>
             <Label className="text-[10px]">Latitude</Label>
-            <Input value={aLat} onChange={e => setALat(e.target.value)} type="number" step="0.000001" className="h-8 text-xs mt-0.5" />
+            <Input value={aLat} onChange={e => setALat(e.target.value)} type="number" step="0.000001" className="mt-1 h-10 text-xs sm:h-8" />
           </div>
           <div>
             <Label className="text-[10px]">Longitude</Label>
-            <Input value={aLng} onChange={e => setALng(e.target.value)} type="number" step="0.000001" className="h-8 text-xs mt-0.5" />
+            <Input value={aLng} onChange={e => setALng(e.target.value)} type="number" step="0.000001" className="mt-1 h-10 text-xs sm:h-8" />
           </div>
         </div>
-        <div className="space-y-2">
-          <div className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 uppercase tracking-wide">Point B (to)</div>
+        <div className="space-y-2 rounded-xl border border-emerald-200/70 bg-emerald-50/30 p-3 dark:border-emerald-950/70 dark:bg-emerald-950/10">
+          <div className="text-[10px] font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">Point B (to)</div>
           <div>
             <Label className="text-[10px]">Latitude</Label>
-            <Input value={bLat} onChange={e => setBLat(e.target.value)} type="number" step="0.000001" className="h-8 text-xs mt-0.5" />
+            <Input value={bLat} onChange={e => setBLat(e.target.value)} type="number" step="0.000001" className="mt-1 h-10 text-xs sm:h-8" />
           </div>
           <div>
             <Label className="text-[10px]">Longitude</Label>
-            <Input value={bLng} onChange={e => setBLng(e.target.value)} type="number" step="0.000001" className="h-8 text-xs mt-0.5" />
+            <Input value={bLng} onChange={e => setBLng(e.target.value)} type="number" step="0.000001" className="mt-1 h-10 text-xs sm:h-8" />
           </div>
         </div>
       </div>
 
       {result && (
         <>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <Metric label="Distance" value={formatDistance(result.distance)} sub={`${result.distance.toFixed(1)} m`} accent="cyan" />
             <Metric label="Initial Bearing" value={`${result.initialBearing.toFixed(1)}°`} sub={compass16(result.initialBearing)} accent="emerald" />
           </div>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <Metric label="Final Bearing" value={`${result.finalBearing.toFixed(1)}°`} sub={compass16(result.finalBearing)} accent="indigo" />
             {mid && (
               <Metric label="Midpoint" value={`${mid.lat.toFixed(5)}, ${mid.lng.toFixed(5)}`} sub="lat, lng" accent="amber" />
@@ -165,7 +165,7 @@ function PointToPoint() {
         </>
       )}
 
-      <div className="text-[10px] text-muted-foreground bg-muted/20 rounded p-2">
+      <div className="rounded-xl border border-border/70 bg-muted/20 p-3 text-[10px] leading-relaxed text-muted-foreground">
         💡 Vincenty inverse formula on the WGS84 ellipsoid gives millimetre-level accuracy — far better than haversine for surveyor-grade work. Bearing is initial (at A); final bearing differs slightly due to meridian convergence.
       </div>
     </div>
@@ -208,24 +208,24 @@ function Destination() {
 
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <div>
           <Label className="text-[10px]">Start Latitude</Label>
-          <Input value={lat} onChange={e => setLat(e.target.value)} type="number" step="0.000001" className="h-8 text-xs mt-0.5" />
+          <Input value={lat} onChange={e => setLat(e.target.value)} type="number" step="0.000001" className="mt-1 h-10 text-xs sm:h-8" />
         </div>
         <div>
           <Label className="text-[10px]">Start Longitude</Label>
-          <Input value={lng} onChange={e => setLng(e.target.value)} type="number" step="0.000001" className="h-8 text-xs mt-0.5" />
+          <Input value={lng} onChange={e => setLng(e.target.value)} type="number" step="0.000001" className="mt-1 h-10 text-xs sm:h-8" />
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <div>
           <Label className="text-[10px]">Bearing (° clockwise from N)</Label>
-          <Input value={bearing} onChange={e => setBearing(e.target.value)} type="number" step="0.1" className="h-8 text-xs mt-0.5" />
+          <Input value={bearing} onChange={e => setBearing(e.target.value)} type="number" step="0.1" className="mt-1 h-10 text-xs sm:h-8" />
         </div>
         <div>
           <Label className="text-[10px]">Distance (m)</Label>
-          <Input value={distance} onChange={e => setDistance(e.target.value)} type="number" step="0.01" className="h-8 text-xs mt-0.5" />
+          <Input value={distance} onChange={e => setDistance(e.target.value)} type="number" step="0.01" className="mt-1 h-10 text-xs sm:h-8" />
         </div>
       </div>
 
@@ -255,7 +255,7 @@ function Destination() {
         </>
       )}
 
-      <div className="text-[10px] text-muted-foreground bg-muted/20 rounded p-2">
+      <div className="rounded-xl border border-border/70 bg-muted/20 p-3 text-[10px] leading-relaxed text-muted-foreground">
         💡 Useful for "where will I end up if I walk 500 m NE from the barn?" or for laying out sample points at known offsets along a transect.
       </div>
     </div>
@@ -334,11 +334,11 @@ function BatchCsv() {
       <div className="grid grid-cols-2 gap-2 rounded-lg border border-cyan-200 dark:border-cyan-900 bg-cyan-50/40 dark:bg-cyan-950/20 p-3">
         <div>
           <Label className="text-[10px]">Origin Latitude</Label>
-          <Input value={originLat} onChange={e => setOriginLat(e.target.value)} type="number" step="0.000001" className="h-8 text-xs mt-0.5" />
+          <Input value={originLat} onChange={e => setOriginLat(e.target.value)} type="number" step="0.000001" className="mt-1 h-10 text-xs sm:h-8" />
         </div>
         <div>
           <Label className="text-[10px]">Origin Longitude</Label>
-          <Input value={originLng} onChange={e => setOriginLng(e.target.value)} type="number" step="0.000001" className="h-8 text-xs mt-0.5" />
+          <Input value={originLng} onChange={e => setOriginLng(e.target.value)} type="number" step="0.000001" className="mt-1 h-10 text-xs sm:h-8" />
         </div>
       </div>
 
@@ -404,7 +404,7 @@ function BatchCsv() {
         </>
       )}
 
-      <div className="text-[10px] text-muted-foreground bg-muted/20 rounded p-2">
+      <div className="rounded-xl border border-border/70 bg-muted/20 p-3 text-[10px] leading-relaxed text-muted-foreground">
         💡 Useful for "from the barn, how far is each field?" or for laying out irrigation mainline runs. Paste a CSV from Excel or from the Coordinate Converter's batch output.
       </div>
     </div>
@@ -558,7 +558,7 @@ function FieldToField() {
         </div>
       )}
 
-      <div className="text-[10px] text-muted-foreground bg-muted/20 rounded p-2">
+      <div className="rounded-xl border border-border/70 bg-muted/20 p-3 text-[10px] leading-relaxed text-muted-foreground">
         💡 Paste boundaries from the Field Boundary Importer (#2). Centroid distance is for planning travel routes; edge-to-edge minimum is for shared-fence / irrigation-line / spray-buffer calculations.
       </div>
     </div>
@@ -632,7 +632,7 @@ const ACCENT_BG: Record<string, string> = {
 
 function Metric({ label, value, sub, accent }: { label: string; value: string; sub?: string; accent: keyof typeof ACCENT_BG | string }) {
   return (
-    <div className={`rounded-md border px-2 py-1.5 ${ACCENT_BG[accent] || ACCENT_BG.cyan}`}>
+    <div className={`rounded-xl border px-3 py-2 ${ACCENT_BG[accent] || ACCENT_BG.cyan}`}>
       <div className="text-[9px] text-muted-foreground uppercase tracking-wide">{label}</div>
       <div className="font-mono text-sm font-semibold">{value}</div>
       {sub && <div className="text-[9px] text-muted-foreground">{sub}</div>}
@@ -642,9 +642,11 @@ function Metric({ label, value, sub, accent }: { label: string; value: string; s
 
 function TabBtn({ active, onClick, icon: Icon, label }: { active: boolean; onClick: () => void; icon: typeof Compass; label: string }) {
   return (
-    <button
+      <button
+      type="button"
       onClick={onClick}
-      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${active ? 'bg-cyan-100 dark:bg-cyan-950/50 text-cyan-700 dark:text-cyan-300' : 'text-muted-foreground hover:bg-muted/50'}`}
+      aria-pressed={active}
+      className={`flex min-h-9 items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium transition-colors ${active ? 'bg-cyan-100 text-cyan-700 shadow-sm dark:bg-cyan-950/50 dark:text-cyan-300' : 'text-muted-foreground hover:bg-background/70 hover:text-foreground'}`}
     >
       <Icon className="h-3.5 w-3.5" /><span>{label}</span>
     </button>

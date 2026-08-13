@@ -88,8 +88,8 @@ export function SeasonPlanGenerator({ open, onOpenChange }: { open: boolean; onO
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="!max-w-[1100px] w-[96vw] !max-h-[92vh] h-[92vh] overflow-hidden p-0 gap-0 flex flex-col">
-        <DialogHeader className="px-5 py-3 border-b border-border flex-shrink-0 bg-gradient-to-br from-emerald-700 via-green-700 to-teal-800 text-white">
+      <DialogContent className="!max-w-[1100px] w-[96vw] !max-h-[92vh] h-[92vh] overflow-hidden rounded-2xl border-emerald-200/70 p-0 gap-0 flex flex-col shadow-2xl dark:border-emerald-900/60">
+        <DialogHeader className="flex-shrink-0 border-b border-emerald-200/30 bg-gradient-to-br from-emerald-700 via-green-700 to-teal-800 px-4 py-4 text-white sm:px-6">
           <DialogTitle className="flex items-center gap-2 text-base">
             <Sparkles className="h-4 w-4" />
             Season Plan Generator
@@ -100,53 +100,53 @@ export function SeasonPlanGenerator({ open, onOpenChange }: { open: boolean; onO
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex-1 min-h-0 overflow-y-auto p-5 space-y-4">
+        <div className="flex-1 min-h-0 space-y-5 overflow-y-auto p-4 sm:p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-            <Field label="Crop"><Input value={crop} onChange={e => setCrop(e.target.value)} className="h-9" /></Field>
-            <Field label="Planting date"><Input type="date" value={plantingDate} onChange={e => setPlantingDate(e.target.value)} className="h-9" /></Field>
-            <Field label="Field area (ha)"><Input type="number" value={fieldAreaHa} onChange={e => setFieldAreaHa(e.target.value)} className="h-9" /></Field>
-            <Field label="Target yield"><Input value={targetYield} onChange={e => setTargetYield(e.target.value)} className="h-9" /></Field>
+            <Field label="Crop"><Input value={crop} onChange={e => setCrop(e.target.value)} className="h-10 sm:h-9" /></Field>
+            <Field label="Planting date"><Input type="date" value={plantingDate} onChange={e => setPlantingDate(e.target.value)} className="h-10 sm:h-9" /></Field>
+            <Field label="Field area (ha)"><Input type="number" value={fieldAreaHa} onChange={e => setFieldAreaHa(e.target.value)} className="h-10 sm:h-9" /></Field>
+            <Field label="Target yield"><Input value={targetYield} onChange={e => setTargetYield(e.target.value)} className="h-10 sm:h-9" /></Field>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="rounded-lg border border-emerald-200 dark:border-emerald-900 bg-emerald-50/40 dark:bg-emerald-950/20 p-3">
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-4 dark:border-emerald-900 dark:bg-emerald-950/20">
               <div className="text-[10px] uppercase tracking-wide text-emerald-700 dark:text-emerald-300 font-semibold mb-2">Soil summary</div>
-              <div className="grid grid-cols-4 gap-2">
-                <Field label="pH"><Input value={soil.ph} onChange={e => setSoil({ ...soil, ph: e.target.value })} className="h-9" /></Field>
-                <Field label="OM %"><Input value={soil.om} onChange={e => setSoil({ ...soil, om: e.target.value })} className="h-9" /></Field>
-                <Field label="CEC"><Input value={soil.cec} onChange={e => setSoil({ ...soil, cec: e.target.value })} className="h-9" /></Field>
-                <Field label="Texture"><Input value={soil.texture} onChange={e => setSoil({ ...soil, texture: e.target.value })} className="h-9" /></Field>
-                <Field label="Ca meq"><Input value={soil.ca} onChange={e => setSoil({ ...soil, ca: e.target.value })} className="h-9" /></Field>
-                <Field label="Mg meq"><Input value={soil.mg} onChange={e => setSoil({ ...soil, mg: e.target.value })} className="h-9" /></Field>
-                <Field label="K meq"><Input value={soil.k} onChange={e => setSoil({ ...soil, k: e.target.value })} className="h-9" /></Field>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <Field label="pH"><Input value={soil.ph} onChange={e => setSoil({ ...soil, ph: e.target.value })} className="h-10 sm:h-9" /></Field>
+                <Field label="OM %"><Input value={soil.om} onChange={e => setSoil({ ...soil, om: e.target.value })} className="h-10 sm:h-9" /></Field>
+                <Field label="CEC"><Input value={soil.cec} onChange={e => setSoil({ ...soil, cec: e.target.value })} className="h-10 sm:h-9" /></Field>
+                <Field label="Texture"><Input value={soil.texture} onChange={e => setSoil({ ...soil, texture: e.target.value })} className="h-10 sm:h-9" /></Field>
+                <Field label="Ca meq"><Input value={soil.ca} onChange={e => setSoil({ ...soil, ca: e.target.value })} className="h-10 sm:h-9" /></Field>
+                <Field label="Mg meq"><Input value={soil.mg} onChange={e => setSoil({ ...soil, mg: e.target.value })} className="h-10 sm:h-9" /></Field>
+                <Field label="K meq"><Input value={soil.k} onChange={e => setSoil({ ...soil, k: e.target.value })} className="h-10 sm:h-9" /></Field>
               </div>
             </div>
-            <div className="rounded-lg border border-cyan-200 dark:border-cyan-900 bg-cyan-50/40 dark:bg-cyan-950/20 p-3">
+            <div className="rounded-xl border border-cyan-200 bg-cyan-50/40 p-4 dark:border-cyan-900 dark:bg-cyan-950/20">
               <div className="text-[10px] uppercase tracking-wide text-cyan-700 dark:text-cyan-300 font-semibold mb-2">Irrigation water summary</div>
               <div className="grid grid-cols-2 gap-2">
-                <Field label="pH"><Input value={water.ph} onChange={e => setWater({ ...water, ph: e.target.value })} className="h-9" /></Field>
-                <Field label="EC (dS/m)"><Input value={water.ec} onChange={e => setWater({ ...water, ec: e.target.value })} className="h-9" /></Field>
-                <Field label="HCO₃⁻ (meq/L)"><Input value={water.hco3} onChange={e => setWater({ ...water, hco3: e.target.value })} className="h-9" /></Field>
-                <Field label="Hardness"><Input value={water.hardness} onChange={e => setWater({ ...water, hardness: e.target.value })} className="h-9" /></Field>
+                <Field label="pH"><Input value={water.ph} onChange={e => setWater({ ...water, ph: e.target.value })} className="h-10 sm:h-9" /></Field>
+                <Field label="EC (dS/m)"><Input value={water.ec} onChange={e => setWater({ ...water, ec: e.target.value })} className="h-10 sm:h-9" /></Field>
+                <Field label="HCO₃⁻ (meq/L)"><Input value={water.hco3} onChange={e => setWater({ ...water, hco3: e.target.value })} className="h-10 sm:h-9" /></Field>
+                <Field label="Hardness"><Input value={water.hardness} onChange={e => setWater({ ...water, hardness: e.target.value })} className="h-10 sm:h-9" /></Field>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 flex-wrap">
-            <Button onClick={generate} disabled={loading} className="bg-emerald-600 hover:bg-emerald-700">
+          <div className="flex flex-wrap items-center gap-3">
+            <Button onClick={generate} disabled={loading} className="w-full bg-emerald-600 hover:bg-emerald-700 sm:w-auto">
               {loading
                 ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generating 52-week plan…</>
                 : <><Sparkles className="h-4 w-4 mr-2" /> Generate 52-week plan</>}
             </Button>
             {plan && !loading && (
-              <Button variant="outline" onClick={downloadPdf}>
+              <Button variant="outline" onClick={downloadPdf} className="w-full sm:w-auto">
                 <Download className="h-4 w-4 mr-2" /> Download PDF
               </Button>
             )}
           </div>
 
           {error && (
-            <div className="flex items-start gap-2 text-sm text-destructive bg-destructive/10 rounded-md p-3 border border-destructive/30">
+            <div className="flex items-start gap-2 text-sm text-destructive bg-destructive/10 rounded-xl p-4 border border-destructive/30">
               <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
               <div>{error}</div>
             </div>
@@ -156,7 +156,7 @@ export function SeasonPlanGenerator({ open, onOpenChange }: { open: boolean; onO
             <>
               {/* AI executive summary */}
               {plan.aiSummary && (
-                <div className="rounded-lg p-3 border border-emerald-200 dark:border-emerald-900 bg-emerald-50/60 dark:bg-emerald-950/20">
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-4 dark:border-emerald-900 dark:bg-emerald-950/20">
                   <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-emerald-700 dark:text-emerald-300 font-semibold mb-1.5">
                     <Sparkles className="h-3 w-3" /> AI Executive Summary
                   </div>
@@ -166,7 +166,7 @@ export function SeasonPlanGenerator({ open, onOpenChange }: { open: boolean; onO
 
               {/* Soil/water warnings */}
               {plan.warnings && plan.warnings.length > 0 && (
-                <div className="rounded-lg p-3 border border-amber-200 dark:border-amber-900 bg-amber-50/60 dark:bg-amber-950/20">
+                <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-4 dark:border-amber-900 dark:bg-amber-950/20">
                   <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-amber-700 dark:text-amber-300 font-semibold mb-1.5">
                     <AlertCircle className="h-3 w-3" /> Soil & Water Warnings ({plan.warnings.length})
                   </div>
@@ -188,8 +188,8 @@ export function SeasonPlanGenerator({ open, onOpenChange }: { open: boolean; onO
 function PlanTable({ plan }: { plan: SeasonPlan }) {
   const ts = plan.totalSeason;
   return (
-    <div className="rounded-lg border border-border overflow-hidden">
-      <div className="bg-muted/40 px-3 py-2 flex items-center gap-2 flex-wrap">
+    <div className="overflow-hidden rounded-xl border border-border shadow-sm">
+      <div className="flex flex-wrap items-center gap-2 border-b bg-muted/40 px-3 py-3">
         <div className="text-sm font-semibold">52-week plan: {plan.crop}</div>
         <Badge variant="outline" className="text-[10px]">{plan.weeks.length} weeks</Badge>
         {ts && (
@@ -205,8 +205,8 @@ function PlanTable({ plan }: { plan: SeasonPlan }) {
           ))}
         </div>
       </div>
-      <div className="overflow-auto max-h-[440px]">
-        <table className="w-full text-xs">
+      <div className="max-h-[440px] overflow-auto">
+        <table className="w-full min-w-[760px] text-xs">
           <thead className="text-[10px] uppercase text-muted-foreground bg-muted/30 sticky top-0">
             <tr className="border-b">
               <th className="py-1.5 px-2 text-left">Wk</th>
@@ -222,7 +222,7 @@ function PlanTable({ plan }: { plan: SeasonPlan }) {
           </thead>
           <tbody>
             {plan.weeks.map(w => (
-              <tr key={w.week} className="border-b last:border-0 hover:bg-muted/20">
+              <tr key={w.week} className="border-b last:border-0 hover:bg-emerald-50/40 dark:hover:bg-emerald-950/20">
                 <td className="py-1.5 px-2 font-mono">{w.week}</td>
                 <td className="py-1.5 px-2">
                   <span className="inline-flex items-center gap-1.5">

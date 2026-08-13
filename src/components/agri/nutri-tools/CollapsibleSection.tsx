@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useId, useState, useEffect } from 'react';
 import { ChevronDown, ChevronUp, RotateCcw } from 'lucide-react';
 import { ToolExportLite } from './ToolExportLite';
 
@@ -25,6 +25,9 @@ export function CollapsibleSection({
 }: CollapsibleSectionProps) {
   const [open, setOpen] = useState(defaultOpen);
   const [mounted, setMounted] = useState(false);
+  const generatedId = useId();
+  const panelId = `${storageKey ?? generatedId}-panel`;
+  const titleId = `${panelId}-title`;
 
   useEffect(() => {
     if (storageKey) {
@@ -45,45 +48,70 @@ export function CollapsibleSection({
   };
 
   return (
-    <div className="rounded-xl border border-border overflow-hidden bg-card">
-      <div className="flex items-center gap-3 p-3 hover:bg-muted/40 transition-colors">
-        <button onClick={toggle} className="flex-1 flex items-center gap-3 text-left min-w-0">
+    <section
+      className={`group overflow-hidden rounded-2xl border bg-card/95 shadow-sm shadow-black/[0.03] transition-all duration-200 hover:shadow-md hover:shadow-emerald-950/[0.04] ${
+        open ? 'border-emerald-200/80 dark:border-emerald-900/70' : 'border-border/80'
+      }`}
+      aria-labelledby={titleId}
+    >
+      <div className="flex items-center gap-2 p-2.5 sm:gap-3 sm:p-3.5">
+        <button
+          type="button"
+          onClick={toggle}
+          aria-controls={panelId}
+          aria-expanded={open}
+          className="flex min-h-12 min-w-0 flex-1 items-center gap-3 rounded-xl px-1.5 text-left outline-none transition-colors hover:bg-muted/45 focus-visible:ring-2 focus-visible:ring-emerald-500/60 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-card"
+        >
           {Icon && (
-            <div className="flex items-center justify-center h-9 w-9 rounded-lg flex-shrink-0" style={{ background: `${color}20`, color }}>
-              <Icon className="h-4 w-4" />
-            </div>
+            <span
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ring-1 ring-inset ring-black/[0.04] transition-transform duration-200 group-hover:scale-[1.03] sm:h-11 sm:w-11"
+              style={{ background: `${color}18`, color }}
+              aria-hidden="true"
+            >
+              <Icon className="h-[18px] w-[18px]" />
+            </span>
           )}
-          <div className="flex-1 min-w-0">
-            <div className="text-sm font-semibold leading-tight">{title}</div>
-            {description && <div className="text-[11px] text-muted-foreground leading-tight mt-0.5 truncate">{description}</div>}
-          </div>
-          <div className="flex items-center justify-center h-7 w-7 rounded-md flex-shrink-0 text-muted-foreground hover:bg-muted transition-colors" style={open ? { color } : undefined}>
+          <span className="min-w-0 flex-1">
+            <span id={titleId} className="block text-sm font-semibold leading-snug tracking-[-0.01em] sm:text-[15px]">
+              {title}
+            </span>
+            {description && (
+              <span className="mt-0.5 block line-clamp-2 text-[11px] leading-relaxed text-muted-foreground sm:text-xs">
+                {description}
+              </span>
+            )}
+          </span>
+          <span
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted/50 text-muted-foreground transition-colors group-hover:bg-emerald-50 group-hover:text-emerald-700 dark:group-hover:bg-emerald-950/40 dark:group-hover:text-emerald-300"
+            aria-hidden="true"
+          >
             {open ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-          </div>
+          </span>
         </button>
         {onReset && open && (
           <button
+            type="button"
             onClick={(e) => { e.stopPropagation(); onReset(); }}
-            className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors flex-shrink-0"
+            className="flex min-h-9 shrink-0 items-center gap-1 rounded-lg px-2.5 text-[10px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/60 sm:min-h-10"
             title="Reset to defaults"
           >
-            <RotateCcw className="h-3 w-3" />
+            <RotateCcw className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Reset</span>
           </button>
         )}
       </div>
       {mounted && open && (
-        <div className="border-t border-border">
+        <div id={panelId} role="region" aria-labelledby={titleId} className="border-t border-emerald-100/80 bg-muted/[0.12] dark:border-emerald-950/60">
           {enableExport && (
-            <div className="px-4 pt-3">
+            <div className="px-3 pt-3 sm:px-5 sm:pt-4">
               <ToolExportLite title={title} description={description} />
             </div>
           )}
-          <div className="collapsible-body">
+          <div className="collapsible-body px-0.5 pb-1 sm:px-1">
             {children}
           </div>
         </div>
       )}
-    </div>
+    </section>
   );
 }
