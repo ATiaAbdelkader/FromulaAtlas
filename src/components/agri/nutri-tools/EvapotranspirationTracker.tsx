@@ -142,58 +142,57 @@ export function EvapotranspirationTracker() {
   const today = plan?.[0];
 
   return (
-    <Card>
+    <Card className="overflow-hidden border-cyan-100 shadow-sm dark:border-cyan-900/60">
       {/* Location + crop controls */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Droplets className="h-4 w-4 text-cyan-600" /> Evapotranspiration Tracker
-          </CardTitle>
+      <Card className="border-0 shadow-none">
+          <CardHeader className="border-b border-border/60 bg-cyan-50/40 pb-4 dark:bg-cyan-950/10">
+          <CardTitle className="flex items-center gap-2 text-base"><span className="rounded-lg bg-cyan-100 p-2 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300"><Droplets className="h-4 w-4" /></span> Evapotranspiration Tracker</CardTitle>
           <p className="text-[10px] text-muted-foreground">Free Open-Meteo API · no key required · FAO-56 Penman-Monteith ET₀</p>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
-              <Label className="text-[10px]">Latitude</Label>
-              <Input value={lat} onChange={e => setLat(e.target.value)} type="number" step="0.000001" className="h-8 text-xs mt-0.5" />
+              <Label className="text-xs font-medium">Latitude</Label>
+              <Input aria-label="Latitude" value={lat} onChange={e => setLat(e.target.value)} type="number" step="0.000001" className="mt-1 h-10 text-sm" />
             </div>
             <div>
-              <Label className="text-[10px]">Longitude</Label>
-              <Input value={lng} onChange={e => setLng(e.target.value)} type="number" step="0.000001" className="h-8 text-xs mt-0.5" />
+              <Label className="text-xs font-medium">Longitude</Label>
+              <Input aria-label="Longitude" value={lng} onChange={e => setLng(e.target.value)} type="number" step="0.000001" className="mt-1 h-10 text-sm" />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
-              <Label className="text-[10px]">Crop</Label>
+              <Label className="text-xs font-medium">Crop</Label>
               <select
                 value={cropName}
                 onChange={e => setCropName(e.target.value)}
-                className="h-8 text-xs w-full rounded-md border border-input bg-background px-2 mt-0.5"
+                aria-label="Crop"
+                className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
               >
                 {CROP_KCS.map(c => <option key={c.crop} value={c.crop}>{c.crop}</option>)}
               </select>
             </div>
             <div>
-              <Label className="text-[10px]">Day of season (1–{crop.seasonLength})</Label>
+              <Label className="text-xs font-medium">Day of season (1–{crop.seasonLength})</Label>
               <Input
                 value={dayOfSeason}
                 onChange={e => setDayOfSeason(Math.max(1, Math.min(crop.seasonLength, parseInt(e.target.value) || 1)))}
                 type="number" min={1} max={crop.seasonLength}
-                className="h-8 text-xs mt-0.5"
+                className="mt-1 h-10 text-sm"
               />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
-              <Label className="text-[10px]">Irrigation efficiency (%)</Label>
-              <Input value={irrigationEfficiency} onChange={e => setIrrigationEfficiency(Math.max(1, Math.min(100, parseInt(e.target.value) || 85)))} type="number" min={1} max={100} className="h-8 text-xs mt-0.5" />
+              <Label className="text-xs font-medium">Irrigation efficiency (%)</Label>
+              <Input aria-label="Irrigation efficiency percentage" value={irrigationEfficiency} onChange={e => setIrrigationEfficiency(Math.max(1, Math.min(100, parseInt(e.target.value) || 85)))} type="number" min={1} max={100} className="mt-1 h-10 text-sm" />
             </div>
             <div>
-              <Label className="text-[10px]">Managed allowed depletion (%)</Label>
-              <Input value={managedAllowedDepletion} onChange={e => setManagedAllowedDepletion(Math.max(1, Math.min(100, parseInt(e.target.value) || 50)))} type="number" min={1} max={100} className="h-8 text-xs mt-0.5" />
+              <Label className="text-xs font-medium">Managed allowed depletion (%)</Label>
+              <Input aria-label="Managed allowed depletion percentage" value={managedAllowedDepletion} onChange={e => setManagedAllowedDepletion(Math.max(1, Math.min(100, parseInt(e.target.value) || 50)))} type="number" min={1} max={100} className="mt-1 h-10 text-sm" />
             </div>
           </div>
-          <Button size="sm" onClick={fetchAll} disabled={loading} className="gap-1.5 w-full">
+          <Button size="sm" onClick={fetchAll} disabled={loading} className="h-10 w-full gap-1.5">
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
             {loading ? 'Fetching…' : 'Refresh forecast'}
           </Button>
@@ -212,8 +211,8 @@ export function EvapotranspirationTracker() {
 
       {/* Current Kc + today's snapshot */}
       {forecast && today && (
-        <Card>
-          <CardContent className="p-4 space-y-3">
+        <Card className="border-emerald-200/70 shadow-sm dark:border-emerald-900/60">
+          <CardContent className="space-y-4 p-4">
             <div className="flex items-center gap-2 flex-wrap">
               <Sprout className="h-3.5 w-3.5 text-emerald-600" />
               <span className="font-semibold text-sm">{crop.crop}</span>
@@ -223,7 +222,7 @@ export function EvapotranspirationTracker() {
             </div>
 
             {/* Today's stats grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               <Metric icon={Droplets} color="cyan" label="Today ET₀" value={`${today.et0.toFixed(1)}`} unit="mm/day" />
               <Metric icon={Sprout} color="emerald" label="Today ETc" value={`${today.etc.toFixed(1)}`} unit="mm/day" />
               <Metric icon={CloudRain} color="indigo" label="Today rain" value={`${today.rain.toFixed(1)}`} unit={`mm (${today.rainProb}%)`} />
@@ -231,7 +230,7 @@ export function EvapotranspirationTracker() {
             </div>
 
             {/* Current conditions strip */}
-            <div className="rounded-md border bg-muted/20 p-2 flex items-center gap-3 text-xs">
+            <div className="flex flex-wrap items-center gap-3 rounded-xl border bg-muted/20 p-3 text-xs">
               <span className="text-lg">{wmoDescription(forecast.current.weatherCode).icon}</span>
               <span className="font-medium">{wmoDescription(forecast.current.weatherCode).label}</span>
               <span className="text-muted-foreground">·</span>
@@ -248,8 +247,8 @@ export function EvapotranspirationTracker() {
       {/* 7-day plan */}
       {plan && totals && (
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2">
+          <CardHeader className="border-b border-border/60 pb-3">
+            <CardTitle className="flex items-center gap-2 text-sm">
               <Calendar className="h-3.5 w-3.5 text-indigo-600" /> 7-day irrigation plan
             </CardTitle>
           </CardHeader>
@@ -257,7 +256,7 @@ export function EvapotranspirationTracker() {
             {/* Daily cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {plan.map((d, i) => (
-                <div key={d.date} className={`rounded-md border p-2 text-xs ${i === 0 ? 'border-emerald-300 dark:border-emerald-800 bg-emerald-50/40 dark:bg-emerald-950/20' : ''}`}>
+                <div key={d.date} className={`rounded-xl border p-3 text-xs shadow-sm ${i === 0 ? 'border-emerald-300 bg-emerald-50/40 dark:border-emerald-800 dark:bg-emerald-950/20' : 'bg-card'}`}>
                   <div className="flex items-center justify-between mb-1">
                     <span className="font-medium">{i === 0 ? 'Today' : new Date(d.date + 'T00:00').toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}</span>
                     <span className="text-base">{wmoDescription(d.wmo).icon}</span>
@@ -276,7 +275,7 @@ export function EvapotranspirationTracker() {
 
             {/* Totals */}
             <div className="rounded-lg border border-indigo-200 dark:border-indigo-900 bg-indigo-50/40 dark:bg-indigo-950/20 p-3">
-              <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1.5">7-day totals</div>
+              <div className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">7-day totals</div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
                 <Stat label="Total ET₀" value={`${totals.et0.toFixed(1)} mm`} />
                 <Stat label="Total ETc" value={`${totals.etc.toFixed(1)} mm`} sub={`crop water need`} />
@@ -318,8 +317,8 @@ export function EvapotranspirationTracker() {
       {/* Historical context */}
       {history && history.daily.length > 0 && (
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2">
+          <CardHeader className="border-b border-border/60 pb-3">
+            <CardTitle className="flex items-center gap-2 text-sm">
               <TrendingUp className="h-3.5 w-3.5 text-violet-600" /> Last 7 days (historical ERA5)
             </CardTitle>
           </CardHeader>
@@ -329,7 +328,7 @@ export function EvapotranspirationTracker() {
               const totalRain = history.daily.reduce((s, d) => s + (d.precipitationSum || 0), 0);
               const avgT = history.daily.reduce((s, d) => s + (d.tempMean || 0), 0) / history.daily.length;
               return (
-                <div className="grid grid-cols-3 gap-2 text-xs">
+                <div className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-3">
                   <Stat label="Past 7-day ET₀" value={`${total.toFixed(1)} mm`} />
                   <Stat label="Past 7-day rain" value={`${totalRain.toFixed(1)} mm`} />
                   <Stat label="Avg temperature" value={`${avgT.toFixed(1)}°C`} />
@@ -361,7 +360,7 @@ function Metric({ icon: Icon, color, label, value, unit }: {
   icon: typeof Droplets; color: keyof typeof ACCENT_BG; label: string; value: string; unit?: string;
 }) {
   return (
-    <div className={`rounded-md border px-2 py-1.5 ${ACCENT_BG[color]}`}>
+    <div className={`rounded-xl border p-3 shadow-sm ${ACCENT_BG[color]}`}>
       <div className="flex items-center gap-1 text-[9px] text-muted-foreground uppercase tracking-wide">
         <Icon className="h-2.5 w-2.5" />{label}
       </div>
@@ -373,7 +372,7 @@ function Metric({ icon: Icon, color, label, value, unit }: {
 
 function Stat({ label, value, sub, accent }: { label: string; value: string; sub?: string; accent?: boolean }) {
   return (
-    <div className={`rounded-md border px-2 py-1.5 ${accent ? 'border-amber-300 dark:border-amber-800 bg-amber-50/40 dark:bg-amber-950/20' : 'bg-background/40'}`}>
+    <div className={`rounded-xl border p-3 shadow-sm ${accent ? 'border-amber-300 bg-amber-50/40 dark:border-amber-800 dark:bg-amber-950/20' : 'bg-background/40'}`}>
       <div className="text-[9px] text-muted-foreground uppercase tracking-wide">{label}</div>
       <div className="font-mono text-sm font-semibold">{value}</div>
       {sub && <div className="text-[9px] text-muted-foreground">{sub}</div>}

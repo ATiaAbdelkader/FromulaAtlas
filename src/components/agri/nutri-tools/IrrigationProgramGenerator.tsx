@@ -102,21 +102,17 @@ table{width:100%;border-collapse:collapse;margin-top:12px}td,th{border:1px solid
   ];
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-base">
-          <Droplets className="h-4 w-4 text-emerald-600" /> Irrigation Program Generator
-        </CardTitle>
-        <CardDescription className="text-xs">
-          Decadal (10-day) irrigation schedule from the BRL/COM memento, sized to your field and system.
-        </CardDescription>
+    <Card className="overflow-hidden border-emerald-100 shadow-sm dark:border-emerald-900/60">
+      <CardHeader className="border-b border-border/60 bg-emerald-50/50 pb-4 dark:bg-emerald-950/10">
+        <CardTitle className="flex items-center gap-2 text-base"><span className="rounded-lg bg-emerald-100 p-2 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"><Droplets className="h-4 w-4" /></span> Irrigation Program Generator</CardTitle>
+        <CardDescription className="mt-1 text-xs leading-relaxed">Decadal (10-day) irrigation schedule from the BRL/COM memento, sized to your field and system.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <div className="col-span-2">
-            <Label className="text-xs">Crop</Label>
+        <div className="grid grid-cols-1 gap-3 rounded-xl border border-emerald-200/70 bg-emerald-50/30 p-3 dark:border-emerald-900/60 dark:bg-emerald-950/10 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="sm:col-span-2">
+            <Label className="text-xs font-medium">Crop</Label>
             <Select value={cropId} onValueChange={setCropId}>
-              <SelectTrigger className="h-9 mt-1 w-full text-xs"><SelectValue /></SelectTrigger>
+              <SelectTrigger aria-label="Crop selection" className="mt-1 h-10 w-full text-sm"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {cropsByCat.map((g) => (
                   <div key={g.cat}>
@@ -130,16 +126,16 @@ table{width:100%;border-collapse:collapse;margin-top:12px}td,th{border:1px solid
             </Select>
           </div>
           <div>
-            <Label className="text-xs">Area (ha)</Label>
-            <Input type="number" min="0" value={areaHa} onChange={(e) => setAreaHa(e.target.value)} className="h-9 mt-1" />
+            <Label className="text-xs font-medium">Area (ha)</Label>
+            <Input aria-label="Irrigated area in hectares" type="number" min="0" value={areaHa} onChange={(e) => setAreaHa(e.target.value)} className="mt-1 h-10 text-sm" />
           </div>
           <div>
-            <Label className="text-xs">System</Label>
+            <Label className="text-xs font-medium">System</Label>
             <Select value={systemType} onValueChange={(v) => {
               setSystemType(v as SystemType);
               setEfficiency(String(SYSTEM_DEFAULT_EFFICIENCY[v as SystemType]));
             }}>
-              <SelectTrigger className="h-9 mt-1 w-full text-xs"><SelectValue /></SelectTrigger>
+              <SelectTrigger aria-label="Irrigation system type" className="mt-1 h-10 w-full text-sm"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="drip" className="text-xs">Drip</SelectItem>
                 <SelectItem value="sprinkler" className="text-xs">Sprinkler</SelectItem>
@@ -147,35 +143,35 @@ table{width:100%;border-collapse:collapse;margin-top:12px}td,th{border:1px solid
               </SelectContent>
             </Select>
           </div>
-          <div className="col-span-2 lg:col-span-1">
-            <Label className="text-xs">Efficiency (%)</Label>
-            <Input type="number" min="1" max="100" value={efficiency} onChange={(e) => setEfficiency(e.target.value)} className="h-9 mt-1" />
+          <div className="sm:col-span-2 lg:col-span-1">
+            <Label className="text-xs font-medium">Efficiency (%)</Label>
+            <Input aria-label="Irrigation efficiency percentage" type="number" min="1" max="100" value={efficiency} onChange={(e) => setEfficiency(e.target.value)} className="mt-1 h-10 text-sm" />
           </div>
         </div>
 
         {/* 4 summary cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
           {summary.map((s) => (
-            <div key={s.label} className="rounded-lg border p-3 bg-emerald-50/30 dark:bg-emerald-950/20">
-              <div className="text-[10px] uppercase tracking-wide text-muted-foreground flex items-center gap-1">
+            <div key={s.label} className="rounded-xl border border-emerald-200/70 bg-emerald-50/30 p-3 shadow-sm dark:border-emerald-900/60 dark:bg-emerald-950/20">
+              <div className="flex items-center gap-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
                 <s.icon className="h-3 w-3" /> {s.label}
               </div>
-              <div className={`text-2xl font-bold mt-1 ${s.color}`}>{s.value}</div>
+              <div className={`mt-1 text-xl font-bold tabular-nums ${s.color}`}>{s.value}</div>
               <div className="text-[10px] text-muted-foreground">{s.unit}</div>
             </div>
           ))}
         </div>
 
         {/* Monthly table with visual bars */}
-        <div className="rounded-lg border p-3">
-          <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2 flex items-center gap-1">
+        <div className="rounded-xl border border-border/70 bg-muted/10 p-3">
+          <div className="mb-3 flex items-center gap-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
             <Calendar className="h-3 w-3" /> Monthly irrigation (net, mm)
           </div>
           <div className="space-y-1.5">
             {MONTH_SHORT.map((m, i) => (
               <div key={m} className="flex items-center gap-2 text-xs">
-                <div className="w-8 text-muted-foreground">{m}</div>
-                <div className="flex-1 bg-muted rounded h-4 overflow-hidden">
+                <div className="w-9 text-xs font-medium text-muted-foreground">{m}</div>
+                <div className="h-4 flex-1 overflow-hidden rounded-full bg-muted">
                   <div className="h-full bg-emerald-500" style={{ width: `${(monthlyTotals[i] / maxMonthly) * 100}%` }} />
                 </div>
                 <div className="w-12 text-right tabular-nums font-medium">{monthlyTotals[i]} mm</div>
@@ -185,16 +181,16 @@ table{width:100%;border-collapse:collapse;margin-top:12px}td,th{border:1px solid
         </div>
 
         {/* 10-day schedule grid */}
-        <div className="rounded-lg border p-3">
-          <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2 flex items-center gap-1">
+        <div className="rounded-xl border border-border/70 bg-muted/10 p-3">
+          <div className="mb-3 flex items-center gap-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
             <Calendar className="h-3 w-3" /> 10-day (decadal) schedule — mm/decade
           </div>
-          <div className="grid grid-cols-6 gap-1.5 text-[10px]">
+          <div className="grid grid-cols-2 gap-2 text-[10px] sm:grid-cols-3 lg:grid-cols-6">
             {DECADAL_MONTHS.map((label, i) => {
               const v = crop.decadal_irrigation_mm[i];
               const isPeak = i === peakIdx && v > 0;
               return (
-                <div key={label} className={`rounded p-1.5 text-center border ${isPeak ? 'border-amber-400 bg-amber-50 dark:bg-amber-950/30' : 'border-border bg-card'}`}>
+                <div key={label} className={`rounded-xl border p-2 text-center shadow-sm ${isPeak ? 'border-amber-400 bg-amber-50 dark:bg-amber-950/30' : 'border-border bg-card'}`}>
                   <div className="text-[9px] text-muted-foreground">{label}</div>
                   <div className={`font-bold tabular-nums ${isPeak ? 'text-amber-700 dark:text-amber-300' : 'text-emerald-700 dark:text-emerald-300'}`}>{v}</div>
                   {isPeak && <Badge variant="outline" className="text-[8px] px-1 py-0 h-3 mt-0.5 border-amber-400 text-amber-700 dark:text-amber-300">PEAK</Badge>}
@@ -205,7 +201,7 @@ table{width:100%;border-collapse:collapse;margin-top:12px}td,th{border:1px solid
           <p className="text-[10px] text-muted-foreground mt-2">{crop.notes}</p>
         </div>
 
-        <Button onClick={handleExportPdf} variant="outline" size="sm" className="w-full">
+        <Button onClick={handleExportPdf} variant="outline" size="sm" className="h-10 w-full">
           <Download className="h-4 w-4 mr-1" /> Export to PDF
         </Button>
       </CardContent>

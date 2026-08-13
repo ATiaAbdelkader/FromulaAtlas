@@ -163,13 +163,11 @@ export function IrrigationScheduler() {
   }
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2">
-          <Clock className="h-4 w-4 text-cyan-600" /> Irrigation Scheduler
-        </CardTitle>
+    <Card className="overflow-hidden border-cyan-100 shadow-sm dark:border-cyan-900/60">
+      <CardHeader className="border-b border-border/60 bg-cyan-50/40 pb-4 dark:bg-cyan-950/10">
+        <CardTitle className="flex items-center gap-2 text-base"><span className="rounded-lg bg-cyan-100 p-2 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300"><Clock className="h-4 w-4" /></span> Irrigation Scheduler</CardTitle>
         <p className="text-[10px] text-muted-foreground">Controllers · Zones · Schedules · Sequences · Cycle-and-soak · YAML/CSV/JSON export</p>
-        <div className="flex gap-1 mt-2 flex-wrap">
+        <div className="mt-3 grid grid-cols-1 gap-1 rounded-xl border border-border/70 bg-background/70 p-1 sm:grid-cols-3">
           <TabBtn active={tab === 'zones'} onClick={() => setTab('zones')} icon={Settings} label="Zones" />
           <TabBtn active={tab === 'schedules'} onClick={() => setTab('schedules')} icon={CalendarIcon} label="Schedules" />
           <TabBtn active={tab === 'calendar'} onClick={() => setTab('calendar')} icon={Layers} label="Calendar & Export" />
@@ -215,50 +213,50 @@ function ZonesTab({ system, onUpdateController, onAddZone, onUpdateZone, onDelet
   return (
     <div className="space-y-3">
       {system.controllers.map(c => (
-        <div key={c.id} className="rounded-lg border p-3 space-y-3">
+        <div key={c.id} className="space-y-3 rounded-xl border border-border/70 bg-card p-3 shadow-sm">
           {/* Controller header */}
           <div className="flex items-center gap-2 flex-wrap">
             <Settings className="h-4 w-4 text-cyan-600" />
-            <Input
+            <Input aria-label="Controller name"
               value={c.name}
               onChange={e => onUpdateController(c.id, { name: e.target.value })}
-              className="h-7 text-xs font-semibold flex-1 min-w-[120px]"
+              className="h-10 min-w-[140px] flex-1 text-sm font-semibold"
             />
             <Badge variant={c.enabled ? 'default' : 'outline'} className="text-[9px]">{c.enabled ? 'ON' : 'OFF'}</Badge>
           </div>
 
           {/* Controller settings */}
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div>
-              <Label className="text-[9px]">Preamble (pump prime)</Label>
+              <Label className="text-xs font-medium">Preamble (pump prime)</Label>
               <Input
                 value={formatDuration(c.preamble)}
                 onChange={e => onUpdateController(c.id, { preamble: parseDuration(e.target.value) })}
-                className="h-7 text-[10px] font-mono mt-0.5"
+                className="mt-1 h-10 text-sm font-mono"
               />
             </div>
             <div>
-              <Label className="text-[9px]">Postamble (drain)</Label>
+              <Label className="text-xs font-medium">Postamble (drain)</Label>
               <Input
                 value={formatDuration(c.postamble)}
                 onChange={e => onUpdateController(c.id, { postamble: parseDuration(e.target.value) })}
-                className="h-7 text-[10px] font-mono mt-0.5"
+                className="mt-1 h-10 text-sm font-mono"
               />
             </div>
             <div>
-              <Label className="text-[9px]">Master valve entity</Label>
+              <Label className="text-xs font-medium">Master valve entity</Label>
               <Input
                 value={c.entityId ?? ''}
                 onChange={e => onUpdateController(c.id, { entityId: e.target.value })}
                 placeholder="switch.pump"
-                className="h-7 text-[10px] font-mono mt-0.5"
+                className="mt-1 h-10 text-sm font-mono"
               />
             </div>
           </div>
 
           {/* Zones */}
           <div className="space-y-2">
-            <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+            <div className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               <Layers className="h-3 w-3" /> Zones ({c.zones.length})
             </div>
             {c.zones.map(z => (
@@ -271,13 +269,13 @@ function ZonesTab({ system, onUpdateController, onAddZone, onUpdateZone, onDelet
             ))}
           </div>
 
-          <Button size="sm" variant="outline" onClick={() => onAddZone(c.id)} className="gap-1.5 text-xs w-full">
+          <Button size="sm" variant="outline" onClick={() => onAddZone(c.id)} className="h-10 w-full gap-1.5 text-xs">
             <Plus className="h-3.5 w-3.5" /> Add Zone
           </Button>
         </div>
       ))}
 
-      <div className="text-[10px] text-muted-foreground bg-muted/20 rounded p-2">
+      <div className="rounded-xl border bg-muted/20 p-3 text-[11px] leading-relaxed text-muted-foreground">
         💡 <strong>Preamble</strong> = master valve opens before any zone (pump prime). <strong>Postamble</strong> = master stays on after zones close (prevents water hammer). <strong>Eco-mode</strong> = cycle-and-soak for clay soils to prevent runoff.
       </div>
     </div>
@@ -291,65 +289,68 @@ function ZoneRow({ zone, onUpdate, onDelete }: {
 }) {
   const [expanded, setExpanded] = useState(false);
   return (
-    <div className="rounded-md border bg-background">
-      <div className="flex items-center gap-2 p-2">
+    <div className="rounded-xl border bg-background shadow-sm">
+      <div className="flex items-center gap-2 p-2.5">
         <button
+          aria-label={expanded ? `Collapse ${zone.name}` : `Expand ${zone.name}`}
           onClick={() => setExpanded(e => !e)}
-          className="text-muted-foreground hover:text-foreground"
+          className="flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
         >
           <ChevronRight className={`h-3 w-3 transition-transform ${expanded ? 'rotate-90' : ''}`} />
         </button>
         <Input
+          aria-label="Zone name"
           value={zone.name}
           onChange={e => onUpdate({ name: e.target.value })}
-          className="h-7 text-xs flex-1"
+          className="h-10 min-w-0 flex-1 text-sm"
         />
         <Badge variant={zone.enabled ? 'default' : 'outline'} className="text-[9px]">{zone.enabled ? 'ON' : 'OFF'}</Badge>
         <button
+          aria-label={zone.enabled ? `Pause ${zone.name}` : `Enable ${zone.name}`}
           onClick={() => onUpdate({ enabled: !zone.enabled })}
-          className="text-muted-foreground hover:text-foreground"
+          className="flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
         >
           {zone.enabled ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
         </button>
-        <button onClick={onDelete} className="text-rose-500 hover:text-rose-700">
+        <button aria-label={`Delete ${zone.name}`} onClick={onDelete} className="flex h-9 w-9 items-center justify-center rounded-md text-rose-500 hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-950/30">
           <Trash2 className="h-3 w-3" />
         </button>
       </div>
       {expanded && (
-        <div className="border-t p-2 space-y-2 bg-muted/10">
-          <div className="grid grid-cols-3 gap-2">
+        <div className="space-y-3 border-t bg-muted/10 p-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div>
-              <Label className="text-[9px]">Min run time</Label>
+              <Label className="text-xs font-medium">Min run time</Label>
               <Input
                 value={formatDuration(zone.minimum)}
                 onChange={e => onUpdate({ minimum: parseDuration(e.target.value) })}
-                className="h-7 text-[10px] font-mono mt-0.5"
+                className="mt-1 h-10 text-sm font-mono"
               />
             </div>
             <div>
-              <Label className="text-[9px]">Default duration</Label>
+              <Label className="text-xs font-medium">Default duration</Label>
               <Input
                 value={formatDuration(zone.duration)}
                 onChange={e => onUpdate({ duration: parseDuration(e.target.value) })}
-                className="h-7 text-[10px] font-mono mt-0.5"
+                className="mt-1 h-10 text-sm font-mono"
               />
             </div>
             <div>
-              <Label className="text-[9px]">Max run time (opt)</Label>
+              <Label className="text-xs font-medium">Max run time (opt)</Label>
               <Input
                 value={zone.maximum ? formatDuration(zone.maximum) : ''}
                 onChange={e => onUpdate({ maximum: e.target.value ? parseDuration(e.target.value) : undefined })}
                 placeholder="—"
-                className="h-7 text-[10px] font-mono mt-0.5"
+                className="mt-1 h-10 text-sm font-mono"
               />
             </div>
           </div>
 
           {/* Eco-mode */}
-          <div className="rounded border border-amber-200 dark:border-amber-900 bg-amber-50/40 dark:bg-amber-950/20 p-2">
+          <div className="rounded-xl border border-amber-200 bg-amber-50/40 p-3 dark:border-amber-900 dark:bg-amber-950/20">
             <div className="flex items-center gap-1.5 mb-1.5">
               <Zap className="h-3 w-3 text-amber-600" />
-              <span className="text-[10px] font-semibold text-amber-700 dark:text-amber-300 uppercase">Eco-Mode (Cycle & Soak)</span>
+              <span className="text-xs font-semibold uppercase text-amber-700 dark:text-amber-300">Eco-Mode (Cycle & Soak)</span>
               <Badge variant={zone.ecoMode ? 'default' : 'outline'} className="text-[9px] ml-auto">{zone.ecoMode ? 'ON' : 'OFF'}</Badge>
             </div>
             {zone.ecoMode ? (
@@ -360,7 +361,7 @@ function ZoneRow({ zone, onUpdate, onDelete }: {
                     type="number" min={10}
                     value={zone.ecoMode.onSec}
                     onChange={e => onUpdate({ ecoMode: { ...zone.ecoMode!, onSec: Math.max(10, parseInt(e.target.value) || 300) } })}
-                    className="h-7 text-[10px] font-mono mt-0.5"
+                    className="mt-1 h-10 text-sm font-mono"
                   />
                 </div>
                 <div>
@@ -369,7 +370,7 @@ function ZoneRow({ zone, onUpdate, onDelete }: {
                     type="number" min={0}
                     value={zone.ecoMode.offSec}
                     onChange={e => onUpdate({ ecoMode: { ...zone.ecoMode!, offSec: Math.max(0, parseInt(e.target.value) || 60) } })}
-                    className="h-7 text-[10px] font-mono mt-0.5"
+                    className="mt-1 h-10 text-sm font-mono"
                   />
                 </div>
                 <div>
@@ -378,24 +379,24 @@ function ZoneRow({ zone, onUpdate, onDelete }: {
                     type="number" min={2}
                     value={zone.ecoMode.repeat}
                     onChange={e => onUpdate({ ecoMode: { ...zone.ecoMode!, repeat: Math.max(2, parseInt(e.target.value) || 3) } })}
-                    className="h-7 text-[10px] font-mono mt-0.5"
+                    className="mt-1 h-10 text-sm font-mono"
                   />
                 </div>
               </div>
             ) : (
-              <Button size="sm" variant="outline" onClick={() => onUpdate({ ecoMode: { onSec: 300, offSec: 120, repeat: 3 } })} className="text-[10px] h-6 gap-1">
+              <Button size="sm" variant="outline" onClick={() => onUpdate({ ecoMode: { onSec: 300, offSec: 120, repeat: 3 } })} className="h-9 gap-1 text-xs">
                 <Plus className="h-3 w-3" /> Enable cycle-and-soak
               </Button>
             )}
           </div>
 
           <div>
-            <Label className="text-[9px]">Valve entity (for YAML export)</Label>
+            <Label className="text-xs font-medium">Valve entity (for YAML export)</Label>
             <Input
               value={zone.entityId ?? ''}
               onChange={e => onUpdate({ entityId: e.target.value })}
               placeholder="switch.zone_1_valve"
-              className="h-7 text-[10px] font-mono mt-0.5"
+              className="mt-1 h-10 text-sm font-mono"
             />
           </div>
         </div>
@@ -417,12 +418,12 @@ function SchedulesTab({ system, onAddSchedule, onUpdateSchedule, onDeleteSchedul
   return (
     <div className="space-y-3">
       {system.controllers.map(c => (
-        <div key={c.id} className="rounded-lg border p-3 space-y-2">
-          <div className="text-xs font-semibold flex items-center gap-1.5">
+        <div key={c.id} className="space-y-3 rounded-xl border border-border/70 bg-card p-3 shadow-sm">
+          <div className="flex items-center gap-1.5 text-sm font-semibold">
             <Settings className="h-3.5 w-3.5 text-cyan-600" /> {c.name}
           </div>
           {c.zones.map(z => (
-            <div key={z.id} className="rounded-md border bg-background p-2 space-y-2">
+            <div key={z.id} className="space-y-3 rounded-xl border bg-background p-3 shadow-sm">
               <div className="flex items-center gap-2">
                 <Layers className="h-3 w-3 text-muted-foreground" />
                 <span className="text-xs font-medium flex-1">{z.name}</span>
@@ -437,14 +438,14 @@ function SchedulesTab({ system, onAddSchedule, onUpdateSchedule, onDeleteSchedul
                   onDelete={() => onDeleteSchedule(c.id, z.id, s.id)}
                 />
               ))}
-              <Button size="sm" variant="outline" onClick={() => onAddSchedule(c.id, z.id)} className="gap-1.5 text-[10px] h-6 w-full">
+              <Button size="sm" variant="outline" onClick={() => onAddSchedule(c.id, z.id)} className="h-10 w-full gap-1.5 text-xs">
                 <Plus className="h-3 w-3" /> Add Schedule
               </Button>
             </div>
           ))}
         </div>
       ))}
-      <div className="text-[10px] text-muted-foreground bg-muted/20 rounded p-2">
+      <div className="rounded-xl border bg-muted/20 p-3 text-[11px] leading-relaxed text-muted-foreground">
         💡 <strong>Anchor = start</strong> = run begins at the time. <strong>Anchor = finish</strong> = run ends at the time. Sun events use Open-Meteo sunrise/sunset from the ET Tracker's location (configure on the Calendar tab).
       </div>
     </div>
@@ -458,15 +459,16 @@ function ScheduleRow({ schedule, onUpdate, onDelete }: {
 }) {
   const [expanded, setExpanded] = useState(false);
   return (
-    <div className="rounded border bg-muted/10">
-      <div className="flex items-center gap-1.5 p-1.5">
-        <button onClick={() => setExpanded(e => !e)} className="text-muted-foreground hover:text-foreground">
+    <div className="rounded-xl border bg-muted/10 shadow-sm">
+      <div className="flex items-center gap-1.5 p-2.5">
+        <button aria-label={expanded ? `Collapse ${schedule.name}` : `Expand ${schedule.name}`} onClick={() => setExpanded(e => !e)} className="flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground">
           <ChevronRight className={`h-3 w-3 transition-transform ${expanded ? 'rotate-90' : ''}`} />
         </button>
         <Input
+          aria-label="Schedule name"
           value={schedule.name}
           onChange={e => onUpdate({ name: e.target.value })}
-          className="h-6 text-[10px] flex-1"
+          className="h-10 min-w-0 flex-1 text-sm"
         />
         <Badge variant="outline" className="text-[9px] font-mono">
           {schedule.time.kind === 'absolute' && formatTimeOfDay(schedule.time.time)}
@@ -474,17 +476,17 @@ function ScheduleRow({ schedule, onUpdate, onDelete }: {
           {schedule.time.kind === 'cron' && 'cron'}
         </Badge>
         <Badge variant="outline" className="text-[9px] font-mono">{formatDuration(schedule.duration)}</Badge>
-        <button onClick={() => onUpdate({ enabled: !schedule.enabled })} className="text-muted-foreground hover:text-foreground">
+        <button aria-label={schedule.enabled ? `Pause ${schedule.name}` : `Enable ${schedule.name}`} onClick={() => onUpdate({ enabled: !schedule.enabled })} className="flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground">
           {schedule.enabled ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
         </button>
-        <button onClick={onDelete} className="text-rose-500 hover:text-rose-700">
+        <button aria-label={`Delete ${schedule.name}`} onClick={onDelete} className="flex h-9 w-9 items-center justify-center rounded-md text-rose-500 hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-950/30">
           <Trash2 className="h-3 w-3" />
         </button>
       </div>
       {expanded && (
-        <div className="border-t p-2 space-y-2 bg-background">
+        <div className="space-y-3 border-t bg-background p-3">
           {/* Time type */}
-          <div className="grid grid-cols-3 gap-1">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
             {(['absolute', 'sun', 'cron'] as const).map(k => (
               <button
                 key={k}
@@ -493,7 +495,7 @@ function ScheduleRow({ schedule, onUpdate, onDelete }: {
                   else if (k === 'sun') onUpdate({ time: { kind: 'sun', sun: 'sunrise' } });
                   else onUpdate({ time: { kind: 'cron', cron: '0 6 * * *' } });
                 }}
-                className={`text-[10px] py-1 rounded border ${schedule.time.kind === k ? 'bg-cyan-600 text-white border-cyan-600' : 'border-border'}`}
+                className={`h-10 rounded-lg border text-xs ${schedule.time.kind === k ? 'border-cyan-600 bg-cyan-600 text-white' : 'border-border bg-background'}`}
               >
                 {k === 'absolute' ? 'Time' : k === 'sun' ? 'Sun' : 'Cron'}
               </button>
@@ -510,7 +512,7 @@ function ScheduleRow({ schedule, onUpdate, onDelete }: {
                   const [h, m] = e.target.value.split(':').map(Number);
                   onUpdate({ time: { kind: 'absolute', time: h * 60 + m } });
                 }}
-                className="h-7 text-[10px] font-mono mt-0.5"
+                className="mt-1 h-10 text-sm font-mono"
               />
             </div>
           )}
@@ -525,7 +527,7 @@ function ScheduleRow({ schedule, onUpdate, onDelete }: {
                       onUpdate({ time: { ...schedule.time, sun: e.target.value as 'sunrise' | 'sunset' } });
                     }
                   }}
-                  className="h-7 text-[10px] w-full rounded-md border border-input bg-background px-1.5 mt-0.5"
+                  className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
                 >
                   <option value="sunrise">Sunrise</option>
                   <option value="sunset">Sunset</option>
@@ -541,7 +543,7 @@ function ScheduleRow({ schedule, onUpdate, onDelete }: {
                       onUpdate({ time: { ...schedule.time, before: parseInt(e.target.value) || 0 } });
                     }
                   }}
-                  className="h-7 text-[10px] font-mono mt-0.5"
+                  className="mt-1 h-10 text-sm font-mono"
                 />
               </div>
               <div>
@@ -554,7 +556,7 @@ function ScheduleRow({ schedule, onUpdate, onDelete }: {
                       onUpdate({ time: { ...schedule.time, after: parseInt(e.target.value) || 0 } });
                     }
                   }}
-                  className="h-7 text-[10px] font-mono mt-0.5"
+                  className="mt-1 h-10 text-sm font-mono"
                 />
               </div>
             </div>
@@ -566,26 +568,26 @@ function ScheduleRow({ schedule, onUpdate, onDelete }: {
                 value={schedule.time.cron}
                 onChange={e => onUpdate({ time: { kind: 'cron', cron: e.target.value } })}
                 placeholder="0 6 * * *"
-                className="h-7 text-[10px] font-mono mt-0.5"
+                className="mt-1 h-10 text-sm font-mono"
               />
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
-              <Label className="text-[9px]">Duration</Label>
+              <Label className="text-xs font-medium">Duration</Label>
               <Input
                 value={formatDuration(schedule.duration)}
                 onChange={e => onUpdate({ duration: parseDuration(e.target.value) })}
-                className="h-7 text-[10px] font-mono mt-0.5"
+                className="mt-1 h-10 text-sm font-mono"
               />
             </div>
             <div>
-              <Label className="text-[9px]">Anchor</Label>
+              <Label className="text-xs font-medium">Anchor</Label>
               <select
                 value={schedule.anchor}
                 onChange={e => onUpdate({ anchor: e.target.value as 'start' | 'finish' })}
-                className="h-7 text-[10px] w-full rounded-md border border-input bg-background px-1.5 mt-0.5"
+                className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
               >
                 <option value="start">Start at time</option>
                 <option value="finish">Finish at time</option>
@@ -595,7 +597,7 @@ function ScheduleRow({ schedule, onUpdate, onDelete }: {
 
           {/* Weekday filter */}
           <div>
-            <Label className="text-[9px]">Weekdays (none = all)</Label>
+            <Label className="text-xs font-medium">Weekdays (none = all)</Label>
             <div className="flex gap-0.5 mt-0.5">
               {ALL_WEEKDAYS.map(w => {
                 const active = schedule.weekday?.includes(w) ?? false;
@@ -607,7 +609,7 @@ function ScheduleRow({ schedule, onUpdate, onDelete }: {
                       const next = active ? current.filter(x => x !== w) : [...current, w];
                       onUpdate({ weekday: next.length === 0 ? undefined : next });
                     }}
-                    className={`flex-1 text-[9px] py-1 rounded border uppercase ${active ? 'bg-cyan-600 text-white border-cyan-600' : 'border-border'}`}
+                    className={`min-h-9 flex-1 rounded border text-[10px] uppercase ${active ? 'border-cyan-600 bg-cyan-600 text-white' : 'border-border bg-background'}`}
                   >
                     {w}
                   </button>
@@ -618,7 +620,7 @@ function ScheduleRow({ schedule, onUpdate, onDelete }: {
 
           {/* Month filter */}
           <div>
-            <Label className="text-[9px]">Months (none = all)</Label>
+            <Label className="text-xs font-medium">Months (none = all)</Label>
             <div className="flex flex-wrap gap-0.5 mt-0.5">
               {ALL_MONTHS.map(m => {
                 const active = schedule.month?.includes(m) ?? false;
@@ -630,7 +632,7 @@ function ScheduleRow({ schedule, onUpdate, onDelete }: {
                       const next = active ? current.filter(x => x !== m) : [...current, m];
                       onUpdate({ month: next.length === 0 ? undefined : next });
                     }}
-                    className={`text-[9px] py-0.5 px-1.5 rounded border uppercase ${active ? 'bg-cyan-600 text-white border-cyan-600' : 'border-border'}`}
+                    className={`min-h-9 rounded border px-2 text-[10px] uppercase ${active ? 'border-cyan-600 bg-cyan-600 text-white' : 'border-border bg-background'}`}
                   >
                     {m}
                   </button>
@@ -647,7 +649,7 @@ function ScheduleRow({ schedule, onUpdate, onDelete }: {
                 value={schedule.from ?? ''}
                 onChange={e => onUpdate({ from: e.target.value || undefined })}
                 placeholder="15 Mar"
-                className="h-7 text-[10px] font-mono mt-0.5"
+                className="mt-1 h-10 text-sm font-mono"
               />
             </div>
             <div>
@@ -656,7 +658,7 @@ function ScheduleRow({ schedule, onUpdate, onDelete }: {
                 value={schedule.until ?? ''}
                 onChange={e => onUpdate({ until: e.target.value || undefined })}
                 placeholder="15 Sep"
-                className="h-7 text-[10px] font-mono mt-0.5"
+                className="mt-1 h-10 text-sm font-mono"
               />
             </div>
           </div>
@@ -760,28 +762,28 @@ function CalendarTab({ system }: { system: IrrigationSystem }) {
   return (
     <div className="space-y-3">
       {/* Sun times + adjustment */}
-      <div className="rounded-lg border border-cyan-200 dark:border-cyan-900 bg-cyan-50/40 dark:bg-cyan-950/20 p-3 space-y-2">
-        <div className="flex items-center gap-1.5 text-[10px] font-semibold text-cyan-700 dark:text-cyan-300 uppercase tracking-wide">
+      <div className="space-y-3 rounded-xl border border-cyan-200 bg-cyan-50/40 p-4 shadow-sm dark:border-cyan-900 dark:bg-cyan-950/20">
+        <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-cyan-700 dark:text-cyan-300">
           <Sun className="h-3 w-3" /> Sun Times & Weather Adjustment
         </div>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
-            <Label className="text-[9px]">Latitude (for sunrise/sunset)</Label>
-            <Input value={lat} onChange={e => setLat(e.target.value)} type="number" step="0.0001" className="h-7 text-[10px] font-mono mt-0.5" />
+            <Label className="text-xs font-medium">Latitude (for sunrise/sunset)</Label>
+            <Input aria-label="Latitude for sunrise and sunset" value={lat} onChange={e => setLat(e.target.value)} type="number" step="0.0001" className="mt-1 h-10 text-sm font-mono" />
           </div>
           <div>
-            <Label className="text-[9px]">Longitude</Label>
-            <Input value={lng} onChange={e => setLng(e.target.value)} type="number" step="0.0001" className="h-7 text-[10px] font-mono mt-0.5" />
+            <Label className="text-xs font-medium">Longitude</Label>
+            <Input aria-label="Longitude for sunrise and sunset" value={lng} onChange={e => setLng(e.target.value)} type="number" step="0.0001" className="mt-1 h-10 text-sm font-mono" />
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button size="sm" variant="outline" onClick={fetchSunTimes} disabled={loadingSun} className="gap-1.5 text-[10px] h-7">
+          <Button size="sm" variant="outline" onClick={fetchSunTimes} disabled={loadingSun} className="h-10 gap-1.5 text-xs">
             <RefreshCw className={`h-3 w-3 ${loadingSun ? 'animate-spin' : ''}`} /> Fetch sun times
           </Button>
           <Badge variant="outline" className="text-[9px]">{Object.keys(sunTimes).length} days loaded</Badge>
         </div>
         <div>
-          <Label className="text-[9px]">Weather adjustment: {adjustPct}% of scheduled time</Label>
+          <Label className="text-xs font-medium">Weather adjustment: {adjustPct}% of scheduled time</Label>
           <input
             type="range" min={0} max={150} step={5}
             value={adjustPct}
@@ -795,20 +797,20 @@ function CalendarTab({ system }: { system: IrrigationSystem }) {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-2 text-xs">
+      <div className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-3">
         <StatCard icon={CalendarIcon} color="cyan" label="Events (7 days)" value={String(stats.totalEvents)} />
         <StatCard icon={Clock} color="emerald" label="Total run time" value={formatDuration(stats.totalDur)} />
         <StatCard icon={Zap} color="amber" label="Eco cycles" value={String(stats.ecoCount)} />
       </div>
 
       {/* Calendar grid */}
-      <div className="rounded-md border bg-background p-2">
-        <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1">
+      <div className="rounded-xl border bg-background p-3 shadow-sm">
+        <div className="mb-3 flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           <CalendarIcon className="h-3 w-3" /> 7-Day Calendar
         </div>
         <div className="space-y-1.5">
           {Object.entries(eventsByDay).map(([day, dayEvents]) => (
-            <div key={day} className="border-l-2 border-cyan-400 pl-2">
+            <div key={day} className="rounded-lg border-l-4 border-cyan-400 bg-cyan-50/30 py-2 pl-3 dark:bg-cyan-950/10">
               <div className="text-[10px] font-mono text-muted-foreground mb-0.5">
                 {new Date(day + 'T00:00').toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
                 <span className="ml-2 text-foreground">{dayEvents.length} run{dayEvents.length !== 1 ? 's' : ''}</span>
@@ -847,8 +849,8 @@ function CalendarTab({ system }: { system: IrrigationSystem }) {
 
       {/* By-zone breakdown */}
       {Object.keys(stats.byZone).length > 0 && (
-        <div className="rounded-md border bg-muted/20 p-2.5">
-          <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">Total run time by zone (7 days)</div>
+        <div className="rounded-xl border bg-muted/20 p-3 shadow-sm">
+          <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Total run time by zone (7 days)</div>
           <div className="space-y-1">
             {Object.entries(stats.byZone).sort((a, b) => b[1] - a[1]).map(([zone, dur]) => {
               const pct = stats.totalDur > 0 ? (dur / stats.totalDur) * 100 : 0;
@@ -867,8 +869,8 @@ function CalendarTab({ system }: { system: IrrigationSystem }) {
       )}
 
       {/* Export */}
-      <div className="space-y-2">
-        <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Export</div>
+      <div className="space-y-3">
+        <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Export and backup</div>
 
         {/* YAML */}
         <ExportBlock
@@ -913,7 +915,7 @@ function CalendarTab({ system }: { system: IrrigationSystem }) {
         />
       </div>
 
-      <div className="text-[10px] text-muted-foreground bg-muted/20 rounded p-2">
+      <div className="rounded-xl border bg-muted/20 p-3 text-[11px] leading-relaxed text-muted-foreground">
         💡 All data persists in your browser's localStorage. Use JSON export for backups. The YAML format is compatible with the <a href="https://github.com/rgc99/irrigation_unlimited" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Irrigation Unlimited</a> Home Assistant integration — configure visually here, then deploy to HA.
       </div>
     </div>
@@ -943,20 +945,20 @@ function ExportBlock({ icon: Icon, color, title, description, text, fmt, mime, c
     violet: 'border-violet-200 dark:border-violet-900 bg-violet-50/30 dark:bg-violet-950/10',
   };
   return (
-    <div className={`rounded-md border p-2 ${ACCENT[color]}`}>
+    <div className={`rounded-xl border p-3 shadow-sm ${ACCENT[color]}`}>
       <div className="flex items-start gap-2">
         <Icon className="h-4 w-4 shrink-0 mt-0.5" style={{ color: `var(--${color}-600, #0891b2)` }} />
         <div className="flex-1 min-w-0">
-          <div className="text-xs font-semibold">{title}</div>
+          <div className="text-sm font-semibold leading-snug">{title}</div>
           <div className="text-[10px] text-muted-foreground">{description}</div>
-          <div className="flex gap-1.5 mt-1.5">
-            <Button size="sm" variant="outline" onClick={onCopy} className="text-[10px] h-6 gap-1">
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Button size="sm" variant="outline" onClick={onCopy} className="h-10 gap-1 text-xs">
               {copied ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />} Copy
             </Button>
-            <Button size="sm" onClick={onDownload} className="text-[10px] h-6 gap-1">
+            <Button size="sm" onClick={onDownload} className="h-10 gap-1 text-xs">
               <Download className="h-3 w-3" /> .{fmt}
             </Button>
-            <Button size="sm" variant="ghost" onClick={() => setExpanded(e => !e)} className="text-[10px] h-6 ml-auto">
+            <Button size="sm" variant="ghost" onClick={() => setExpanded(e => !e)} className="h-10 text-xs sm:ml-auto">
               {expanded ? 'Hide' : 'Preview'}
             </Button>
           </div>
@@ -983,7 +985,7 @@ function StatCard({ icon: Icon, color, label, value }: {
   icon: typeof Clock; color: keyof typeof ACCENT_BG; label: string; value: string;
 }) {
   return (
-    <div className={`rounded-md border px-2 py-1.5 ${ACCENT_BG[color]}`}>
+    <div className={`rounded-xl border p-3 shadow-sm ${ACCENT_BG[color]}`}>
       <div className="flex items-center gap-1 text-[9px] text-muted-foreground uppercase tracking-wide">
         <Icon className="h-2.5 w-2.5" />{label}
       </div>
@@ -995,8 +997,10 @@ function StatCard({ icon: Icon, color, label, value }: {
 function TabBtn({ active, onClick, icon: Icon, label }: { active: boolean; onClick: () => void; icon: typeof Clock; label: string }) {
   return (
     <button
+      type="button"
+      aria-current={active ? 'page' : undefined}
       onClick={onClick}
-      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${active ? 'bg-cyan-100 dark:bg-cyan-950/50 text-cyan-700 dark:text-cyan-300' : 'text-muted-foreground hover:bg-muted/50'}`}
+      className={`flex min-h-10 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-colors ${active ? 'bg-cyan-100 text-cyan-700 dark:bg-cyan-950/50 dark:text-cyan-300' : 'text-muted-foreground hover:bg-muted/50'}`}
     >
       <Icon className="h-3.5 w-3.5" /><span>{label}</span>
     </button>

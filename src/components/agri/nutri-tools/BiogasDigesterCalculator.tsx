@@ -45,38 +45,38 @@ export function BiogasDigesterCalculator() {
   }, [substrate, dailyFeed, hrt, methanePct, electricityPrice]);
 
   return (
-    <Card>
-      <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><Flame className="h-4 w-4 text-orange-600" /> Biogas Digester Calculator</CardTitle><p className="text-[10px] text-muted-foreground">Biogas yield · digester sizing · energy + revenue · 5 substrates</p></CardHeader>
+    <Card className="overflow-hidden border-orange-100 shadow-sm dark:border-orange-900/60">
+      <CardHeader className="border-b border-border/60 bg-orange-50/50 pb-4 dark:bg-orange-950/10"><CardTitle className="flex items-center gap-2 text-base"><span className="rounded-lg bg-orange-100 p-2 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300"><Flame className="h-4 w-4" /></span> Biogas Digester Calculator</CardTitle><p className="mt-1 text-xs leading-relaxed text-muted-foreground">Biogas yield · digester sizing · energy + revenue · 5 substrates</p></CardHeader>
       <CardContent className="space-y-3">
-        <div className="grid grid-cols-2 gap-2">
-          <div><Label className="text-[10px]">Substrate</Label><select value={substrate} onChange={e => setSubstrate(e.target.value)} className="h-8 text-xs w-full rounded-md border border-input bg-background px-2 mt-0.5">{Object.entries(SUBSTRATES).map(([k, v]) => <option key={k} value={k}>{v.emoji} {v.name}</option>)}</select></div>
-          <div><Label className="text-[10px]">Daily feed (kg/day)</Label><Input value={dailyFeed} onChange={e => setDailyFeed(e.target.value)} type="number" step="5" className="h-8 text-xs mt-0.5" /></div>
+        <div className="grid grid-cols-1 gap-3 rounded-xl border border-orange-200/70 bg-orange-50/30 p-3 dark:border-orange-900/60 dark:bg-orange-950/10 sm:grid-cols-2">
+          <div><Label className="text-xs font-medium">Substrate</Label><select aria-label="Digester substrate" value={substrate} onChange={e => setSubstrate(e.target.value)} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{Object.entries(SUBSTRATES).map(([k, v]) => <option key={k} value={k}>{v.emoji} {v.name}</option>)}</select></div>
+          <div><Label className="text-xs font-medium">Daily feed (kg/day)</Label><Input aria-label="Daily feed quantity" value={dailyFeed} onChange={e => setDailyFeed(e.target.value)} type="number" step="5" className="mt-1 h-10 text-sm" /></div>
         </div>
-        <div className="grid grid-cols-3 gap-2">
-          <div><Label className="text-[10px]">HRT (days)</Label><Input value={hrt} onChange={e => setHrt(e.target.value)} type="number" step="5" className="h-8 text-xs mt-0.5" /></div>
-          <div><Label className="text-[10px]">CH₄ content (%)</Label><Input value={methanePct} onChange={e => setMethanePct(e.target.value)} type="number" step="5" className="h-8 text-xs mt-0.5" /></div>
-          <div><Label className="text-[10px]">Electricity ($/kWh)</Label><Input value={electricityPrice} onChange={e => setElectricityPrice(e.target.value)} type="number" step="0.01" className="h-8 text-xs mt-0.5" /></div>
+        <div className="grid grid-cols-1 gap-3 rounded-xl border border-border/70 bg-muted/20 p-3 sm:grid-cols-3">
+          <div><Label className="text-xs font-medium">HRT (days)</Label><Input aria-label="Hydraulic retention time" value={hrt} onChange={e => setHrt(e.target.value)} type="number" step="5" className="mt-1 h-10 text-sm" /></div>
+          <div><Label className="text-xs font-medium">CH₄ content (%)</Label><Input aria-label="Methane content" value={methanePct} onChange={e => setMethanePct(e.target.value)} type="number" step="5" className="mt-1 h-10 text-sm" /></div>
+          <div><Label className="text-xs font-medium">Electricity ($/kWh)</Label><Input aria-label="Electricity price" value={electricityPrice} onChange={e => setElectricityPrice(e.target.value)} type="number" step="0.01" className="mt-1 h-10 text-sm" /></div>
         </div>
         {result && (
           <div className="space-y-2">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               <Metric label="Daily biogas" value={`${result.biogasPerDay.toFixed(1)} m³`} color="orange" />
               <Metric label="CH₄ energy" value={`${result.energyPerDay.toFixed(1)} kWh`} color="amber" />
               <Metric label="Electricity" value={`${result.electricityPerDay.toFixed(1)} kWh`} color="cyan" />
               <Metric label="Daily revenue" value={`$${result.dailyRevenue.toFixed(2)}`} color="emerald" />
             </div>
             <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="rounded border p-2"><span className="text-muted-foreground">Digester volume:</span> <strong className="font-mono">{result.digesterVolume.toFixed(1)} m³</strong></div>
-              <div className="rounded border p-2"><span className="text-muted-foreground">Annual revenue:</span> <strong className="font-mono text-emerald-600">${result.annualRevenue.toFixed(0)}</strong></div>
+              <div className="rounded-xl border border-border/70 bg-muted/20 p-3"><span className="block text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Digester volume</span><strong className="mt-1 block font-mono text-base">{result.digesterVolume.toFixed(1)} m³</strong></div>
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-3 dark:border-emerald-900 dark:bg-emerald-950/20"><span className="block text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Annual revenue</span><strong className="mt-1 block font-mono text-base text-emerald-600 dark:text-emerald-300">${result.annualRevenue.toFixed(0)}</strong></div>
             </div>
             {result.cn < 15 ? (
-              <div className="rounded-md border border-amber-200 dark:border-amber-900 bg-amber-50/60 p-2 text-xs text-amber-700 dark:text-amber-300 flex items-start gap-1.5"><AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" /><span><strong>C:N = {result.cn}:1 — too low.</strong> Add carbon-rich co-substrate (straw, crop residue) to reach 20-30:1 for optimal digestion.</span></div>
+              <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50/60 p-3 text-xs leading-relaxed text-amber-700 dark:border-amber-900 dark:text-amber-300"><AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" /><span><strong>C:N = {result.cn}:1 — too low.</strong> Add carbon-rich co-substrate (straw, crop residue) to reach 20-30:1 for optimal digestion.</span></div>
             ) : result.cn > 35 ? (
-              <div className="rounded-md border border-amber-200 dark:border-amber-900 bg-amber-50/60 p-2 text-xs text-amber-700 dark:text-amber-300 flex items-start gap-1.5"><AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" /><span><strong>C:N = {result.cn}:1 — too high.</strong> Add nitrogen-rich co-substrate (manure, food waste) to reach 20-30:1.</span></div>
+              <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50/60 p-3 text-xs leading-relaxed text-amber-700 dark:border-amber-900 dark:text-amber-300"><AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" /><span><strong>C:N = {result.cn}:1 — too high.</strong> Add nitrogen-rich co-substrate (manure, food waste) to reach 20-30:1.</span></div>
             ) : (
-              <div className="rounded-md border border-emerald-200 dark:border-emerald-900 bg-emerald-50/60 p-2 text-xs text-emerald-700 dark:text-emerald-300 flex items-start gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 mt-0.5 shrink-0" /><span><strong>C:N = {result.cn}:1 — optimal.</strong> Mesophilic digester (35°C) with {result.digesterVolume.toFixed(0)} m³ working volume.</span></div>
+              <div className="flex items-start gap-2 rounded-xl border border-emerald-200 bg-emerald-50/60 p-3 text-xs leading-relaxed text-emerald-700 dark:border-emerald-900 dark:text-emerald-300"><CheckCircle2 className="h-3.5 w-3.5 mt-0.5 shrink-0" /><span><strong>C:N = {result.cn}:1 — optimal.</strong> Mesophilic digester (35°C) with {result.digesterVolume.toFixed(0)} m³ working volume.</span></div>
             )}
-            <div className="text-[10px] text-muted-foreground bg-muted/20 rounded p-2">💡 Use CHP (combined heat + power) for 85% efficiency: 35% electricity + 50% heat. Digestate is excellent organic fertilizer — NPK retains 80-90% of feed value.</div>
+            <div className="rounded-lg bg-muted/30 p-3 text-xs leading-relaxed text-muted-foreground">💡 Use CHP (combined heat + power) for 85% efficiency: 35% electricity + 50% heat. Digestate is excellent organic fertilizer — NPK retains 80-90% of feed value.</div>
           </div>
         )}
       </CardContent>
@@ -91,5 +91,5 @@ const ACCENT: Record<string, string> = {
   orange: 'border-orange-200 dark:border-orange-900 bg-orange-50/40 dark:bg-orange-950/20',
 };
 function Metric({ label, value, color }: { label: string; value: string; color: keyof typeof ACCENT }) {
-  return <div className={`rounded-md border px-2 py-1.5 ${ACCENT[color]}`}><div className="text-[9px] text-muted-foreground uppercase">{label}</div><div className="font-mono text-sm font-semibold">{value}</div></div>;
+  return <div className={`rounded-xl border p-3 shadow-sm ${ACCENT[color]}`}><div className="text-[9px] font-medium uppercase tracking-wide text-muted-foreground">{label}</div><div className="mt-1 font-mono text-base font-semibold">{value}</div></div>;
 }

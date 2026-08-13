@@ -269,39 +269,38 @@ h3{color:#4338ca;margin-top:18px}</style></head><body>
 
   // Render -----------------------------------------------------------
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-base">
-          <Settings className="h-4 w-4 text-indigo-600" /> Irrigation System Designer
-        </CardTitle>
-        <CardDescription className="text-xs">
-          Multi-zone sprinkler / drip / bubbler designer with valve &amp; pipe sizing, pump selection, and PDF export.
-        </CardDescription>
+    <Card className="overflow-hidden border-indigo-100 shadow-sm dark:border-indigo-900/60">
+      <CardHeader className="border-b border-border/60 bg-indigo-50/50 pb-4 dark:bg-indigo-950/10">
+        <CardTitle className="flex items-center gap-2 text-base"><span className="rounded-lg bg-indigo-100 p-2 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300"><Settings className="h-4 w-4" /></span> Irrigation System Designer</CardTitle>
+        <CardDescription className="mt-1 text-xs leading-relaxed">Multi-zone sprinkler / drip / bubbler designer with valve &amp; pipe sizing, pump selection, and PDF export.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Summary cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
           {[
             { icon: Settings,    label: 'Zones',      value: String(zones.length),                                   unit: '',    color: 'text-indigo-700 dark:text-indigo-300' },
             { icon: Droplets,    label: 'Total flow', value: totalFlow.toFixed(2),                                   unit: 'GPM', color: 'text-emerald-700 dark:text-emerald-300' },
             { icon: Gauge,       label: 'Max zone',   value: maxZoneFlow.toFixed(2),                                 unit: 'GPM', color: 'text-sky-700 dark:text-sky-300' },
             { icon: Zap,         label: 'Pump power', value: pumpResult.pumpPower_hp.toFixed(2),                     unit: 'HP',  color: 'text-amber-700 dark:text-amber-300' },
           ].map(s => (
-            <div key={s.label} className="rounded-lg border p-3 bg-indigo-50/30 dark:bg-indigo-950/20">
-              <div className="text-[10px] uppercase tracking-wide text-muted-foreground flex items-center gap-1">
+            <div key={s.label} className="rounded-xl border border-indigo-200/70 bg-indigo-50/30 p-3 shadow-sm dark:border-indigo-900/60 dark:bg-indigo-950/20">
+              <div className="flex items-center gap-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
                 <s.icon className="h-3 w-3" /> {s.label}
               </div>
-              <div className={`text-2xl font-bold mt-1 ${s.color}`}>{s.value}</div>
+              <div className={`mt-1 text-xl font-bold tabular-nums ${s.color}`}>{s.value}</div>
               <div className="text-[10px] text-muted-foreground">{s.unit}</div>
             </div>
           ))}
         </div>
 
         {/* Add-zone buttons */}
-        <div className="flex flex-wrap gap-2">
-          <Button size="sm" variant="outline" onClick={() => addZone('sprinkler')}><Plus className="h-3.5 w-3.5 mr-1" />Sprinkler zone</Button>
-          <Button size="sm" variant="outline" onClick={() => addZone('drip')}><Plus className="h-3.5 w-3.5 mr-1" />Drip zone</Button>
-          <Button size="sm" variant="outline" onClick={() => addZone('bubbler')}><Plus className="h-3.5 w-3.5 mr-1" />Bubbler zone</Button>
+        <div className="rounded-xl border border-border/70 bg-muted/20 p-3">
+          <div className="mb-2"><p className="text-xs font-semibold">Build your zones</p><p className="text-[11px] leading-relaxed text-muted-foreground">Add one zone per valve or irrigation method, then size the pump from the highest-flow station.</p></div>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+            <Button size="sm" variant="outline" onClick={() => addZone('sprinkler')} className="h-10"><Plus className="mr-1 h-3.5 w-3.5" />Sprinkler zone</Button>
+            <Button size="sm" variant="outline" onClick={() => addZone('drip')} className="h-10"><Plus className="mr-1 h-3.5 w-3.5" />Drip zone</Button>
+            <Button size="sm" variant="outline" onClick={() => addZone('bubbler')} className="h-10"><Plus className="mr-1 h-3.5 w-3.5" />Bubbler zone</Button>
+          </div>
         </div>
 
         {/* Zone cards */}
@@ -311,13 +310,13 @@ h3{color:#4338ca;margin-top:18px}</style></head><body>
             const valve = recommendValve(gpm);
             const pipe = recommendPipeSize(gpm);
             return (
-              <div key={z.id} className="rounded-lg border p-3 space-y-3 bg-card">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <Input value={z.name} onChange={e => updateZone(z.id, { name: e.target.value })}
-                    className="h-8 text-sm font-semibold flex-1 min-w-[160px]" />
+              <div key={z.id} className="space-y-3 rounded-xl border border-border/70 bg-card p-3 shadow-sm">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Input aria-label={`${ZONE_BADGES[z.type].label} zone name`} value={z.name} onChange={e => updateZone(z.id, { name: e.target.value })}
+                    className="h-10 min-w-[160px] flex-1 text-sm font-semibold" />
                   <Badge variant="outline" className={ZONE_BADGES[z.type].cls}>{ZONE_BADGES[z.type].label}</Badge>
                   <Badge variant="secondary" className="font-mono text-xs">{gpm.toFixed(2)} GPM</Badge>
-                  <Button size="sm" variant="ghost" onClick={() => removeZone(z.id)} className="h-7 px-2 text-red-600 hover:text-red-700">
+                  <Button size="sm" variant="ghost" aria-label={`Remove ${z.name}`} onClick={() => removeZone(z.id)} className="h-10 w-10 px-0 text-red-600 hover:text-red-700">
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>
                 </div>
@@ -340,7 +339,7 @@ h3{color:#4338ca;margin-top:18px}</style></head><body>
                 )}
 
                 {/* Recommendation footer */}
-                <div className="flex flex-wrap items-center gap-2 text-[11px] pt-1 border-t border-border">
+                <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3 text-[11px]">
                   <Badge variant="outline" className="gap-1"><Gauge className="h-3 w-3" />Valve: {valve.model} {valve.size}</Badge>
                   <Badge variant="outline" className="gap-1"><Activity className="h-3 w-3" />Pipe: {pipe}</Badge>
                   {z.type === 'sprinkler' && (() => {
@@ -361,41 +360,41 @@ h3{color:#4338ca;margin-top:18px}</style></head><body>
             );
           })}
           {zones.length === 0 && (
-            <div className="text-center text-xs text-muted-foreground py-6 border-2 border-dashed rounded-lg">
+            <div className="rounded-xl border-2 border-dashed py-8 text-center text-xs text-muted-foreground">
               No zones yet — add a sprinkler, drip, or bubbler zone above.
             </div>
           )}
         </div>
 
         {/* Pump sizing panel */}
-        <div className="rounded-lg border p-3 bg-indigo-50/30 dark:bg-indigo-950/20 space-y-3">
-          <div className="text-xs font-semibold flex items-center gap-1.5"><Zap className="h-3.5 w-3.5 text-indigo-600" />Pump Sizing</div>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+        <div className="space-y-3 rounded-xl border border-indigo-200/70 bg-indigo-50/30 p-3 dark:border-indigo-900/60 dark:bg-indigo-950/20">
+          <div><div className="flex items-center gap-1.5 text-sm font-semibold"><Zap className="h-4 w-4 text-indigo-600" />Pump sizing</div><p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">Use the highest station flow and site head assumptions to size the pump and pressure requirement.</p></div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
             <div>
-              <Label className="text-[10px]">Max station flow (GPM)</Label>
+              <Label className="text-xs font-medium">Max station flow (GPM)</Label>
               <Input type="number" value={pumpInput.maxStationFlow_gpm}
                 placeholder={`auto = ${maxZoneFlow.toFixed(2)}`}
-                onChange={e => setPumpInput(p => ({ ...p, maxStationFlow_gpm: e.target.value }))} className="h-8 mt-1 text-xs" />
+                onChange={e => setPumpInput(p => ({ ...p, maxStationFlow_gpm: e.target.value }))} className="mt-1 h-10 text-sm" />
             </div>
             <div>
-              <Label className="text-[10px]">Static head (m)</Label>
+              <Label className="text-xs font-medium">Static head (m)</Label>
               <Input type="number" value={pumpInput.staticHead_m}
-                onChange={e => setPumpInput(p => ({ ...p, staticHead_m: e.target.value }))} className="h-8 mt-1 text-xs" />
+                onChange={e => setPumpInput(p => ({ ...p, staticHead_m: e.target.value }))} className="mt-1 h-10 text-sm" />
             </div>
             <div>
-              <Label className="text-[10px]">Max distance (m)</Label>
+              <Label className="text-xs font-medium">Max distance (m)</Label>
               <Input type="number" value={pumpInput.maxDistance_m}
-                onChange={e => setPumpInput(p => ({ ...p, maxDistance_m: e.target.value }))} className="h-8 mt-1 text-xs" />
+                onChange={e => setPumpInput(p => ({ ...p, maxDistance_m: e.target.value }))} className="mt-1 h-10 text-sm" />
             </div>
             <div>
-              <Label className="text-[10px]">Duty pumps</Label>
+              <Label className="text-xs font-medium">Duty pumps</Label>
               <Input type="number" min="1" value={pumpInput.numberOfDutyPumps}
-                onChange={e => setPumpInput(p => ({ ...p, numberOfDutyPumps: e.target.value }))} className="h-8 mt-1 text-xs" />
+                onChange={e => setPumpInput(p => ({ ...p, numberOfDutyPumps: e.target.value }))} className="mt-1 h-10 text-sm" />
             </div>
             <div>
-              <Label className="text-[10px]">Standby pumps</Label>
+              <Label className="text-xs font-medium">Standby pumps</Label>
               <Input type="number" min="0" value={pumpInput.numberOfStandbyPumps}
-                onChange={e => setPumpInput(p => ({ ...p, numberOfStandbyPumps: e.target.value }))} className="h-8 mt-1 text-xs" />
+                onChange={e => setPumpInput(p => ({ ...p, numberOfStandbyPumps: e.target.value }))} className="mt-1 h-10 text-sm" />
             </div>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
@@ -406,7 +405,7 @@ h3{color:#4338ca;margin-top:18px}</style></head><body>
           </div>
         </div>
 
-        <Button onClick={handleExport} variant="outline" size="sm" className="w-full">
+        <Button onClick={handleExport} variant="outline" size="sm" className="h-10 w-full">
           <Download className="h-4 w-4 mr-1" /> Export Design to PDF
         </Button>
       </CardContent>
@@ -419,9 +418,9 @@ h3{color:#4338ca;margin-top:18px}</style></head><body>
 // ====================================================================
 function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
-    <div className="rounded border p-2 bg-card">
-      <div className="text-[9px] uppercase tracking-wide text-muted-foreground">{label}</div>
-      <div className="text-sm font-bold text-indigo-700 dark:text-indigo-300">{value}</div>
+    <div className="rounded-xl border border-border/70 bg-card p-3 shadow-sm">
+      <div className="text-[9px] font-medium uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className="mt-1 text-sm font-bold text-indigo-700 dark:text-indigo-300">{value}</div>
       {sub && <div className="text-[10px] text-muted-foreground">{sub}</div>}
     </div>
   );
@@ -435,9 +434,9 @@ function SprinklerEditor({ zone, onAdd, onUpdate, onRemove }: {
 }) {
   return (
     <div className="space-y-2">
-      <div className="text-[10px] uppercase tracking-wide text-muted-foreground flex items-center justify-between">
-        <span>Nozzle selections</span>
-        <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={onAdd}><Plus className="h-3 w-3 mr-1" />Add</Button>
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-xs font-semibold">Nozzle selections</span>
+        <Button size="sm" variant="ghost" className="h-9 px-3 text-xs" onClick={onAdd}><Plus className="mr-1 h-3 w-3" />Add</Button>
       </div>
       <div className="space-y-1.5">
         {zone.sprinklers.map(r => {
@@ -514,9 +513,9 @@ function BubblerEditor({ zone, onAdd, onUpdate, onRemove }: {
 }) {
   return (
     <div className="space-y-2">
-      <div className="text-[10px] uppercase tracking-wide text-muted-foreground flex items-center justify-between">
-        <span>Plant selections</span>
-        <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={onAdd}><Plus className="h-3 w-3 mr-1" />Add</Button>
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-xs font-semibold">Plant selections</span>
+        <Button size="sm" variant="ghost" className="h-9 px-3 text-xs" onClick={onAdd}><Plus className="mr-1 h-3 w-3" />Add</Button>
       </div>
       <div className="space-y-1.5">
         {zone.bubblers.map(r => {

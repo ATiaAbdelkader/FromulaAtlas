@@ -4842,3 +4842,11 @@ The local app opened successfully at `/app` and the Farm tab activated through t
 Completed Soil & Livestock tools in Farm-tab order: Soil Test History Tracker, Soil Color Identifier, Soil Texture Triangle, Post-Harvest Storage Calculator, Compost Mixer Calculator, Cover Crop Selector, Greenhouse Climate Designer, Grain Bin Inventory Tracker, Manure Management Planner, Machinery Cost Calculator, Yield Monitor Calibrator, Livestock Management, Feed Ration Balancer, Livestock Growth Benchmarks, Silage Fermentation Predictor, and Bee Hive + Honey Yield Calculator.
 
 No calculator formulas, data contracts, or persistence paths were intentionally changed; the work focused on hierarchy, responsive control framing, accessible labels/actions, metric cards, and empty/status guidance.
+
+## Water & Irrigation visual checkpoint — 2026-08-13
+The live `/app` Farm route is stable after activation. The Farm Management header, workspace foundation, and Fields & Crops cards render without a blocking runtime error. The redesigned Water & Irrigation group is below the current viewport in the long accordion page; continue with a lower-page scroll to inspect that group before final validation and commit.
+
+The lower-page checkpoint brought the full Water & Irrigation group into view. Water Harvesting, Biogas Digester, Irrigation Program, Irrigation System, Seasonal Planner, Evapotranspiration Tracker, and Irrigation Scheduler are all visible as distinct accordion rows with consistent rounded shells and touch-sized disclosure controls. The coordinate click expanded Irrigation System Designer rather than the final Scheduler row, but the accordion response itself is stable and no runtime error appeared.
+
+## Irrigation Scheduler visual checkpoint — 2026-08-13
+The final Irrigation Scheduler row was expanded through the rendered Farm page. Its disclosure state opened correctly at the bottom of the Water & Irrigation group, with the shared export row remaining visible and the page reporting only 736 px below the viewport. The long content continues below the fold, but the scheduler shell and expansion behavior are stable with no blocking runtime error.
