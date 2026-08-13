@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { Workflow } from '@/lib/workflows';
-import { useTranslation } from '@/lib/language-store';
+import { copyFor, useTranslation } from '@/lib/language-store';
 
 interface SeasonSchedulerProps {
   onLaunchWorkflow?: (workflow: Workflow) => void;
@@ -121,7 +121,7 @@ export function SeasonScheduler({ onLaunchWorkflow }: SeasonSchedulerProps) {
   // Defer date computation to after mount to avoid SSR hydration mismatch
   // (server renders in UTC, client in user's timezone — they can differ by a day)
   const [now, setNow] = useState<Date | null>(null);
-  const { isRTL } = useTranslation();
+  const { isRTL, language } = useTranslation();
 
   useEffect(() => {
     setNow(new Date());
@@ -196,6 +196,12 @@ export function SeasonScheduler({ onLaunchWorkflow }: SeasonSchedulerProps) {
   const localizedFocus = isRTL && ar ? ar.irrigationFocus : season.irrigationFocus;
   const localizedRisk = isRTL && ar && ar.riskAlert ? ar.riskAlert : season.riskAlert;
   const localizedRecs = isRTL && ar ? ar.recommendations : season.recommendations.map(r => r.text);
+  const localizedMonths = isRTL ? {
+    spring: 'مارس–مايو (شمال) / سبتمبر–نوفمبر (جنوب)',
+    summer: 'يونيو–أغسطس (شمال) / ديسمبر–فبراير (جنوب)',
+    autumn: 'سبتمبر–نوفمبر (شمال) / مارس–مايو (جنوب)',
+    winter: 'ديسمبر–فبراير (شمال) / يونيو–أغسطس (جنوب)',
+  }[seasonKey] : season.months;
 
   return (
     <section className="mb-8 rounded-2xl border border-amber-200/70 bg-gradient-to-br from-background to-amber-50/30 p-4 shadow-sm dark:border-amber-900/60 dark:to-amber-950/10 sm:p-5">
@@ -203,7 +209,7 @@ export function SeasonScheduler({ onLaunchWorkflow }: SeasonSchedulerProps) {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="rounded-lg bg-amber-100 p-2 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"><Calendar className="h-4 w-4" /></span>
-            <h2 className="text-lg font-semibold tracking-tight">{isRTL ? 'مخطّط الري الموسمي' : 'Seasonal Irrigation Planner'}</h2>
+            <h2 className="text-lg font-semibold tracking-tight">{copyFor(language, 'Seasonal Irrigation Planner', 'مخطّط الري الموسمي')}</h2>
           </div>
           <p className="text-sm text-muted-foreground">
             {isRTL ? `اليوم ${dayOfMonth} ${monthName}. إليك ما يجب التركيز عليه هذا الموسم.` : `Today is ${monthName} ${dayOfMonth}. Here's what to focus on this season.`}
@@ -220,7 +226,7 @@ export function SeasonScheduler({ onLaunchWorkflow }: SeasonSchedulerProps) {
                 : 'bg-background text-muted-foreground border-border'
             )}
           >
-            {isRTL ? 'شمالي' : 'Northern'}
+            {copyFor(language, 'Northern', 'شمالي')}
           </button>
           <button
             onClick={() => setHemisphere('southern')}
@@ -231,7 +237,7 @@ export function SeasonScheduler({ onLaunchWorkflow }: SeasonSchedulerProps) {
                 : 'bg-background text-muted-foreground border-border'
             )}
           >
-            {isRTL ? 'جنوبي' : 'Southern'}
+            {copyFor(language, 'Southern', 'جنوبي')}
           </button>
         </div>
       </div>
@@ -246,7 +252,7 @@ export function SeasonScheduler({ onLaunchWorkflow }: SeasonSchedulerProps) {
             <div className="flex flex-wrap items-center gap-2">
               <h3 className={cn('text-xl font-bold', season.color)}>{localizedName}</h3>
               <Badge variant="outline" className="text-[10px] font-normal">
-                {season.months}
+                {localizedMonths}
               </Badge>
             </div>
             <p className="text-sm text-muted-foreground mt-0.5">
@@ -268,7 +274,7 @@ export function SeasonScheduler({ onLaunchWorkflow }: SeasonSchedulerProps) {
         {/* Recommendations */}
         <div className="space-y-2">
           <div className="mb-3 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-            {isRTL ? 'أولويات هذا الموسم' : 'This Season\'s Priorities'}
+            {copyFor(language, "This Season's Priorities", 'أولويات هذا الموسم')}
           </div>
           {season.recommendations.map((rec, idx) => (
             <div
