@@ -1,17 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
 import ZAI from 'z-ai-web-dev-sdk';
-import fs from 'fs/promises';
+import {
+  clampConfidence,
+  consumeAiRateLimit,
+  getClientKey,
+  publicAiError,
+  validateImageDataUrl,
+} from '@/lib/ai-governance';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
+const REPORT_TYPES = ['soil', 'water', 'fertilizer_bag', 'lab_report', 'unknown'] as const;
+const SUGGESTED_TOOLS = [
+  'soil-water-texture', 'amendment-balance', 'water-hardness', 'hydro-solution',
+  'granular-mix', 'fertilizer-composition', 'nutrient-units', 'unknown',
+] as const;
+type ReportType = typeof REPORT_TYPES[number];
+type SuggestedTool = typeof SUGGESTED_TOOLS[number];
+
 interface ParsedReport {
-  type: 'soil' | 'water' | 'fertilizer_bag' | 'lab_report' | 'unknown';
+  type: ReportType;
   confidence: number;
   values: Record<string, number | string>;
   notes: string;
-  suggestedTool: string;
+  suggestedTool: SuggestedTool;
+  reviewRequired: boolean;
 }
 
 const SYSTEM_PROMPT = `You are an agricultural data extraction assistant. You analyze photos of:
@@ -25,96 +40,98 @@ Respond with a JSON object ONLY (no markdown, no explanation), in this exact sch
 {
   "type": "soil" | "water" | "fertilizer_bag" | "lab_report" | "unknown",
   "confidence": 0.0-1.0,
-  "values": {
-    // For soil: ph, om_percent, cec_meq_100g, ca_meq_100g, mg_meq_100g, k_meq_100g, na_meq_100g, h_meq_100g, al_meq_100g, p_ppm, k_ppm, sand_percent, silt_percent, clay_percent, bulk_density
-    // For water: ph, ec_ds_m, hardness_ppm, ca_ppm, mg_ppm, na_ppm, k_ppm, hco3_meq_l, co3_meq_l, cl_meq_l, so4_meq_l, no3_ppm, nh4_ppm
-    // For fertilizer: npk_grade (string like "19-19-19"), formula (string like "KNO3"), n_percent, p2o5_percent, k2o_percent, ca_percent, mg_percent, s_percent, weight_kg
-  },
+  "values": {},
   "notes": "short description of what was detected + any caveats",
   "suggestedTool": "soil-water-texture" | "amendment-balance" | "water-hardness" | "hydro-solution" | "granular-mix" | "fertilizer-composition" | "nutrient-units" | "unknown"
 }
 
-Map the suggested tool:
-- soil report with CEC + cations → "amendment-balance"
-- soil report with texture (sand/silt/clay) → "soil-water-texture"
-- water report with HCO₃⁻/hardness → "water-hardness"
-- water report with ions (Ca, Mg, Na, Cl, SO₄) → "hydro-solution"
-- fertilizer bag with NPK grade → "granular-mix"
-- fertilizer bag with chemical formula → "fertilizer-composition"
-- any report with mixed units → "nutrient-units"
+Never invent unreadable values. If the image is not a report or fertilizer label, return type="unknown", confidence=0, empty values, notes="Image not recognized", suggestedTool="unknown".`;
 
-If the image is not a lab report / water analysis / fertilizer label, respond with type="unknown", confidence=0, empty values, notes="Image not recognized", suggestedTool="unknown".`;
+function unknownReport(notes = 'The image could not be confidently interpreted.') : ParsedReport {
+  return { type: 'unknown', confidence: 0, values: {}, notes, suggestedTool: 'unknown', reviewRequired: true };
+}
+
+function normalizeReport(input: unknown): ParsedReport {
+  if (!input || typeof input !== 'object') return unknownReport();
+  const raw = input as Record<string, unknown>;
+  const type = REPORT_TYPES.includes(raw.type as ReportType) ? raw.type as ReportType : 'unknown';
+  const suggestedTool = SUGGESTED_TOOLS.includes(raw.suggestedTool as SuggestedTool) ? raw.suggestedTool as SuggestedTool : 'unknown';
+  const values: Record<string, number | string> = {};
+  if (raw.values && typeof raw.values === 'object') {
+    Object.entries(raw.values as Record<string, unknown>).slice(0, 50).forEach(([key, value]) => {
+      if (!/^[a-z][a-z0-9_]{0,48}$/i.test(key)) return;
+      if (typeof value === 'number' && Number.isFinite(value)) values[key] = value;
+      else if (typeof value === 'string' && value.trim().length <= 120) values[key] = value.trim();
+    });
+  }
+  const confidence = clampConfidence(raw.confidence);
+  const notes = typeof raw.notes === 'string' ? raw.notes.trim().slice(0, 1_000) : '';
+  return {
+    type,
+    confidence,
+    values,
+    notes: notes || (type === 'unknown' ? 'No report type was confidently identified.' : 'Review extracted values against the original report.'),
+    suggestedTool,
+    reviewRequired: confidence < 0.75 || Object.keys(values).length === 0,
+  };
+}
 
 export async function POST(req: NextRequest) {
+  const limit = consumeAiRateLimit(getClientKey(req));
+  if (!limit.allowed) {
+    return NextResponse.json(
+      { error: 'Too many AI requests. Please wait before trying again.', retryAfterSeconds: limit.retryAfterSeconds },
+      { status: 429, headers: { 'Retry-After': String(limit.retryAfterSeconds) } },
+    );
+  }
+
   try {
     const body = await req.json();
-    const { image } = body as { image?: string };
-
-    if (!image || typeof image !== 'string') {
-      return NextResponse.json({ error: 'image (base64 data URL) required' }, { status: 400 });
-    }
-
-    // Validate it's a data URL
-    if (!image.startsWith('data:image/')) {
-      return NextResponse.json({ error: 'image must be a base64 data URL (data:image/...;base64,...)' }, { status: 400 });
-    }
+    const image = validateImageDataUrl(body?.image);
+    if (!image.ok) return NextResponse.json({ error: image.error }, { status: 400 });
 
     const zai = await ZAI.create();
     const completion = await zai.chat.completions.createVision({
       model: 'glm-4.6v',
       messages: [
-        {
-          role: 'assistant',
-          content: [{ type: 'text', text: SYSTEM_PROMPT }],
-        },
+        { role: 'assistant', content: [{ type: 'text', text: SYSTEM_PROMPT }] },
         {
           role: 'user',
           content: [
-            { type: 'text', text: 'Extract all numeric values from this image and respond as JSON per the schema.' },
-            { type: 'image_url', image_url: { url: image } },
+            { type: 'text', text: 'Extract all readable values from this image and respond as JSON per the schema. Do not guess.' },
+            { type: 'image_url', image_url: { url: image.value } },
           ],
-        },
+        } as any,
       ],
       thinking: { type: 'disabled' },
     });
 
     const response = completion.choices[0]?.message?.content;
-    if (!response) {
-      return NextResponse.json({ error: 'Empty response from vision model' }, { status: 502 });
+    if (!response || typeof response !== 'string') {
+      return NextResponse.json({ error: 'The AI returned no usable extraction. Please retry with a clearer image.' }, { status: 502 });
     }
 
-    // Parse JSON — be lenient about markdown fences
-    let cleaned = response.trim();
-    if (cleaned.startsWith('```')) {
-      cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
-    }
-    let parsed: ParsedReport;
+    let parsed: unknown;
     try {
+      const cleaned = response.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
       parsed = JSON.parse(cleaned);
     } catch {
-      return NextResponse.json({
-        error: 'Failed to parse model response as JSON',
-        raw: response,
-      }, { status: 502 });
+      return NextResponse.json(unknownReport('The model response was not structured. Please retry with a clearer image.'), { status: 200 });
     }
 
-    return NextResponse.json(parsed);
+    return NextResponse.json(normalizeReport(parsed));
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error('Parse lab report error:', message);
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error('Parse lab report error:', error instanceof Error ? error.message : 'unknown error');
+    return NextResponse.json({ error: publicAiError(error) }, { status: 503 });
   }
 }
 
 export async function GET() {
   return NextResponse.json({
     name: 'NutriPlant PRO Lab Report Parser',
-    description: 'Extracts numeric values from photos of soil/water lab reports and fertilizer labels.',
+    description: 'Extracts numeric values from photos of soil/water lab reports and fertilizer labels with review-required confidence metadata.',
     endpoint: 'POST /api/parse-lab-report',
-    body: { image: 'base64 data URL (data:image/...;base64,...)' },
-    response: 'ParsedReport { type, confidence, values, notes, suggestedTool }',
+    body: { image: 'base64 data URL (PNG, JPG, WEBP, or GIF; max 8 MB)' },
+    response: 'ParsedReport { type, confidence, values, notes, suggestedTool, reviewRequired }',
   });
 }
-
-// Suppress unused import warning
-void fs;

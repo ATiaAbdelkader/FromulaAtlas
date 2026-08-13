@@ -51,10 +51,23 @@ export function AgriPlannerSuite() {
   );
 }
 
+interface SymptomResult {
+  problem_type: string;
+  problem_name: string;
+  problem_name_ar?: string;
+  confidence: number;
+  symptoms_observed: string[];
+  possible_causes: string[];
+  severity: string;
+  recommendation: string;
+  suggested_active_matters: string[];
+  reviewRequired?: boolean;
+}
+
 function DiseaseTab() {
   const [cropFilter, setCropFilter] = useState<string>('all');
   const [imagePreview, setImagePreview] = useState<string>('');
-  const [vlmResponse, setVlmResponse] = useState<Record<string, unknown> | null>(null);
+  const [vlmResponse, setVlmResponse] = useState<SymptomResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -63,30 +76,39 @@ function DiseaseTab() {
   const handleUpload = async (file: File) => {
     setError('');
     setVlmResponse(null);
+    if (!file.type.startsWith('image/')) {
+      setError('Please upload a JPG, PNG, WEBP, or GIF image.');
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      setError('Please choose an image smaller than 8 MB.');
+      return;
+    }
     const reader = new FileReader();
     reader.onload = async () => {
       const dataUrl = reader.result as string;
       setImagePreview(dataUrl);
       setLoading(true);
       try {
-        const res = await fetch('/api/parse-lab-report', {
+        const res = await fetch('/api/identify-symptom', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ image: dataUrl }),
         });
         const data = await res.json();
         if (!res.ok || data.error) setError(data.error || `HTTP ${res.status}`);
-        else setVlmResponse(data);
+        else setVlmResponse(data as SymptomResult);
       } catch (e) {
-        setError(e instanceof Error ? e.message : 'Network error');
+        setError(e instanceof Error ? e.message : 'The AI service is temporarily unavailable.');
       } finally {
         setLoading(false);
       }
     };
+    reader.onerror = () => setError('Failed to read the image.');
     reader.readAsDataURL(file);
   };
 
-  const isUnknown = vlmResponse && (vlmResponse as { type?: string }).type === 'unknown';
+  const isUnknown = vlmResponse?.problem_type === 'unknown';
 
   return (
     <div className="space-y-3 pt-2">
@@ -94,26 +116,23 @@ function DiseaseTab() {
         <div className="space-y-2">
           <Label className="text-xs">Upload leaf / plant photo</Label>
           <label htmlFor="disease-photo" className="block cursor-pointer border-2 border-dashed rounded-lg p-4 text-center text-xs text-muted-foreground hover:border-emerald-400 hover:bg-emerald-50/30 transition-colors">
-            {imagePreview ? (
-              <img src={imagePreview} alt="preview" className="max-h-32 mx-auto rounded" />
-            ) : (
-              <><Upload className="h-6 w-6 mx-auto mb-1 text-emerald-600" />Click to upload (JPG/PNG)</>
-            )}
+            {imagePreview ? <img src={imagePreview} alt="preview" className="max-h-32 mx-auto rounded" /> : <><Upload className="h-6 w-6 mx-auto mb-1 text-emerald-600" />Click to upload (JPG/PNG, max 8 MB)</>}
           </label>
-          <input id="disease-photo" type="file" accept="image/*" className="hidden"
-            onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0])} />
-          {loading && <div className="text-xs text-muted-foreground flex items-center gap-1"><Loader2 className="h-3 w-3 animate-spin" />Analyzing with VLM…</div>}
+          <input id="disease-photo" type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0])} />
+          {loading && <div className="text-xs text-muted-foreground flex items-center gap-1"><Loader2 className="h-3 w-3 animate-spin" />Analyzing image…</div>}
           {error && <div className="text-xs text-red-600">{error}</div>}
-          {vlmResponse && (
-            <div className="text-[10px] font-mono bg-muted p-2 rounded max-h-40 overflow-auto whitespace-pre-wrap">
-              {JSON.stringify(vlmResponse, null, 2)}
+          {vlmResponse && !loading && (
+            <div className="rounded-lg border bg-background p-3 space-y-2 text-xs">
+              <div className="flex items-center gap-2 flex-wrap"><Badge variant="outline" className="capitalize">{vlmResponse.problem_type.replace('_', ' ')}</Badge><Badge variant="outline">{Math.round(vlmResponse.confidence * 100)}% confidence</Badge><Badge variant="outline" className="capitalize">{vlmResponse.severity} severity</Badge></div>
+              <div className="font-semibold">{vlmResponse.problem_name || 'Uncertain identification'}</div>
+              {vlmResponse.symptoms_observed.length > 0 && <div><span className="font-medium">Observed: </span>{vlmResponse.symptoms_observed.join(' · ')}</div>}
+              {vlmResponse.possible_causes.length > 0 && <div><span className="font-medium">Possible causes: </span>{vlmResponse.possible_causes.join(' · ')}</div>}
+              <div className="rounded bg-muted/40 p-2">{vlmResponse.recommendation}</div>
+              {vlmResponse.suggested_active_matters.length > 0 && <div className="text-muted-foreground"><span className="font-medium">Possible active matters: </span>{vlmResponse.suggested_active_matters.join(' · ')}</div>}
+              {vlmResponse.reviewRequired && <div className="text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-900 rounded p-2">Review this result with the original symptoms, local product label, and a qualified agronomist before acting. The model is advisory and may be wrong.</div>}
             </div>
           )}
-          {isUnknown && (
-            <div className="text-[10px] text-amber-700 dark:text-amber-300">
-              VLM didn't detect a soil/water/lab pattern. Browse the disease database below to identify by symptoms.
-            </div>
-          )}
+          {isUnknown && <div className="text-[10px] text-amber-700 dark:text-amber-300">The image was not confidently identified. Browse the disease database below and capture a clearer photo with the leaf, stem, and surrounding field context.</div>}
         </div>
         <div>
           <Label className="text-xs">Filter disease database by crop</Label>
@@ -128,23 +147,8 @@ function DiseaseTab() {
       </div>
 
       <div className="rounded-lg border p-2 max-h-80 overflow-y-auto space-y-2">
-        <div className="text-[10px] uppercase tracking-wide text-muted-foreground sticky top-0 bg-card py-1">
-          Disease database — {filtered.length} entries
-        </div>
-        {filtered.map((d) => (
-          <div key={d.id} className="border rounded p-2 text-xs space-y-1">
-            <div className="flex items-center justify-between gap-2">
-              <div className="font-medium">
-                <span className="text-emerald-700 dark:text-emerald-300">{d.crop}</span> · {d.disease_name}
-              </div>
-              <Badge variant="outline" className={`text-[10px] ${SEVERITY_CLASSES[d.severity]}`}>{d.severity}</Badge>
-            </div>
-            <p className="text-muted-foreground text-[11px] leading-relaxed">{d.description}</p>
-            {!d.is_healthy && (
-              <div className="text-[10px]"><span className="font-medium">Treatment: </span>{d.treatment}</div>
-            )}
-          </div>
-        ))}
+        <div className="text-[10px] uppercase tracking-wide text-muted-foreground sticky top-0 bg-card py-1">Disease database — {filtered.length} entries</div>
+        {filtered.map((d) => <div key={d.id} className="border rounded p-2 text-xs space-y-1"><div className="flex items-center justify-between gap-2"><div className="font-medium"><span className="text-emerald-700 dark:text-emerald-300">{d.crop}</span> · {d.disease_name}</div><Badge variant="outline" className={`text-[10px] ${SEVERITY_CLASSES[d.severity]}`}>{d.severity}</Badge></div><p className="text-muted-foreground text-[11px] leading-relaxed">{d.description}</p>{!d.is_healthy && <div className="text-[10px]"><span className="font-medium">Treatment: </span>{d.treatment}</div>}</div>)}
       </div>
     </div>
   );
