@@ -24,6 +24,7 @@ import { FieldWorkbench } from '@/components/agri/nutri-tools/FieldWorkbench';
 import { YieldGapAnalysis } from '@/components/agri/nutri-tools/YieldGapAnalysis';
 import { SustainabilityScorecard } from '@/components/agri/nutri-tools/SustainabilityScorecard';
 import { FieldScoutingLog } from '@/components/agri/nutri-tools/FieldScoutingLog';
+import { FieldRecordBook } from '@/components/agri/field-record-book';
 import { AIFieldScout } from '@/components/agri/ai-field-scout';
 import { CollapsibleSection } from '@/components/agri/nutri-tools/CollapsibleSection';
 import { IrrigationProgramGenerator } from '@/components/agri/nutri-tools/IrrigationProgramGenerator';
@@ -115,6 +116,7 @@ import { WorkspacePanel } from '@/components/agri/workspace-panel';
 import { CropSimulator } from '@/components/agri/simulator/CropSimulator';
 import { FarmDigitalTwin } from '@/components/agri/farm-digital-twin';
 import { SatelliteCropHealthMonitor } from '@/components/agri/satellite-crop-health-monitor';
+import { DemoScenarioStudio } from '@/components/agri/demo-scenario-studio';
 
 type TabId = 'home' | 'formulas' | 'tools' | 'farm' | 'simulator' | 'insights' | 'about';
 
@@ -447,6 +449,10 @@ export default function Page() {
           <SatelliteCropHealthMonitor
             onOpenFarmTool={(storageKey) => openTool('farm', storageKey)}
           />
+
+          <CollapsibleSection title={tr('Demo Scenario Studio', 'استوديو سيناريوهات العرض', language)} description={tr('Reproducible Algeria-aware synthetic farm data for demos, onboarding, and QA — not for agronomic decisions', 'Données agricoles algériennes synthétiques et reproductibles pour démonstration, accueil et tests — pas pour décisions agronomiques', language)} icon={Sparkles} color="#7c3aed" storageKey="collapse_demo_scenario" defaultOpen={false} enableExport><div className="p-4"><DemoScenarioStudio /></div></CollapsibleSection>
+
+          <CollapsibleSection title={tr('Field Record Book', 'دفتر سجل الحقل', language)} description={tr('Traceable timeline for field decisions, scouting, soil tests, satellite checks, inputs, irrigation, and harvest', 'سجل زمني قابل للتتبع لقرارات الحقل والكشف وتحاليل التربة والأقمار الصناعية والمدخلات والري والحصاد', language)} icon={BookOpen} color="#047857" storageKey="collapse_field_records" defaultOpen={true} enableExport><div className="p-4"><FieldRecordBook /></div></CollapsibleSection>
 
           {/* Sub-category: Fields & Crops */}
           <div className="space-y-3">

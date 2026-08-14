@@ -54,6 +54,10 @@ const FRENCH_TOOL_COPY: Record<string, string> = {
   'Labor Calendar': 'Calendrier de la main-d’œuvre',
   'Yield Gap Analysis': 'Analyse de l’écart de rendement',
   'Field Scouting Log': 'Journal de prospection au champ',
+  'Field Record Book': 'Carnet de parcelle',
+  'Traceable timeline for field decisions, scouting, soil tests, satellite checks, inputs, irrigation, and harvest': 'Chronologie traçable des décisions, observations, analyses de sol, contrôles satellite, intrants, irrigation et récoltes',
+  'Demo Scenario Studio': 'Studio de scénarios de démonstration',
+  'Reproducible Algeria-aware synthetic farm data for demos, onboarding, and QA': 'Données agricoles algériennes synthétiques et reproductibles pour démonstration, accueil et tests',
   'Soil Test History Tracker': 'Suivi historique des analyses de sol',
   'Livestock Management': 'Gestion de l’élevage',
   'Irrigation Program Generator': 'Générateur de programme d’irrigation',
@@ -99,6 +103,8 @@ export const TOOL_REGISTRY: ToolEntry[] = [
   { id: 'labor-calendar', title: 'Labor Calendar', description: 'Phenology-driven field operations · Person-days/ha', keywords: 'labor calendar operations work phenology person days', tab: 'farm', storageKey: 'collapse_labor_cal', icon: Calendar, category: 'farm', color: '#0891b2' },
   { id: 'yield-gap', title: 'Yield Gap Analysis', description: 'Benchmark actual vs potential yield by crop and climate', keywords: 'yield gap potential benchmark climate crop', tab: 'farm', storageKey: 'collapse_yieldgap', icon: TrendingUp, category: 'farm', color: '#0891b2' },
   { id: 'scouting-log', title: 'Field Scouting Log', description: 'Voice + photo field observations with severity tagging', keywords: 'scouting field observation pest disease photo voice', tab: 'farm', storageKey: 'collapse_scouting', icon: Sprout, category: 'farm', color: '#84cc16' },
+  { id: 'field-record-book', title: 'Field Record Book', description: 'Traceable timeline for field decisions, scouting, soil tests, satellite checks, inputs, irrigation, and harvest', keywords: 'field record book journal timeline history scouting soil satellite input irrigation harvest cost decision', tab: 'farm', storageKey: 'collapse_field_records', icon: BookOpen, category: 'farm', color: '#047857' },
+  { id: 'demo-scenario', title: 'Demo Scenario Studio', description: 'Reproducible Algeria-aware synthetic farm data for demos, onboarding, and QA', keywords: 'demo scenario synthetic farm data seed manifest qa investor onboarding test fixture', tab: 'farm', storageKey: 'collapse_demo_scenario', icon: Sparkles, category: 'farm', color: '#7c3aed' },
 
   // ==========================================================================
   // FARM TAB — Soil & Livestock

@@ -20,6 +20,8 @@ const suites = [
   'scripts/test-crop-simulator.ts',
   'scripts/test-farm-digital-twin.ts',
   'scripts/test-satellite-health.ts',
+  'scripts/test-field-record-book.ts',
+  'scripts/test-demo-scenario.ts',
   'scripts/test-ai-agent-orchestrator.ts',
 ];
 
