@@ -11,15 +11,46 @@ import {
   ROLE_OPTIONS, CROP_OPTIONS, type UserRole,
 } from '@/lib/onboarding-store';
 import { useTranslation } from '@/lib/language-store';
+import { FREE_TOOL_COUNT } from '@/lib/catalog-stats';
+import { USER_LEVEL_OPTIONS, localizedUserLevelCopy, useUserLevelStore, type UserLevel } from '@/lib/user-level';
 
-type Step = 'welcome' | 'role' | 'crop' | 'features' | 'finish';
+type Step = 'welcome' | 'level' | 'role' | 'crop' | 'features' | 'finish';
+
+const ROLE_LABEL_AR: Record<UserRole, string> = {
+  grower: 'مزارع',
+  agronomist: 'مهندس زراعي',
+  consultant: 'استشاري',
+  student: 'طالب',
+  other: 'أخرى',
+};
+
+const ROLE_DESCRIPTION_AR: Record<UserRole, string> = {
+  grower: 'أدير مزرعة أو محصولاً',
+  agronomist: 'أقدّم المشورة للمزارعين في التغذية والزراعة',
+  consultant: 'أستشير في تخطيط المحاصيل والاستدامة',
+  student: 'أدرس علم الزراعة أو الزراعة التطبيقية',
+  other: 'أحب النباتات فحسب',
+};
+
+const CROP_LABEL_AR: Record<string, string> = {
+  tomato: 'طماطم',
+  strawberry: 'فراولة',
+  avocado: 'أفوكادو',
+  blueberry: 'توت أزرق',
+  lettuce: 'خس',
+  pepper: 'فلفل حلو',
+  cucumber: 'خيار',
+  citrus: 'حمضيات',
+  coffee: 'قهوة',
+  maize: 'ذرة',
+};
 
 const FEATURE_HIGHLIGHTS = [
   {
     icon: Calculator,
     color: '#16a34a',
-    title: '91 Free Agronomic Tools',
-    title_ar: '91 أداة زراعية مجانية',
+    title: `${FREE_TOOL_COUNT} Free Agronomic Tools`,
+    title_ar: `${FREE_TOOL_COUNT} أداة زراعية مجانية`,
     description: 'Converters, hydro solution designer, VPD estimator, fertilizer compatibility matrix, soil texture triangle, and more — all native, no sign-up.',
     description_ar: 'محوّلات، مصمّم محاليل مائية، مقدّر VPD، مصفوفة توافق الأسمدة، مثلث نسجة التربة، والمزيد — كلها أصيلة بلا تسجيل.',
     badge: 'Tools tab',
@@ -30,8 +61,8 @@ const FEATURE_HIGHLIGHTS = [
     color: '#0891b2',
     title: 'AI Agronomist Assistant',
     title_ar: 'مساعد المهندس الزراعي بالذكاء',
-    description: 'A floating chat that knows all 91 tools. Describe a symptom or share lab values — it tells you exactly which tool to open and what to enter.',
-    description_ar: 'دردشة عائمة تعرف كل الـ91 أداة. صِف عرضاً أو شارك قيم المختبر — يخبرك بالضبط بأي أداة تفتحها وماذا تدخل.',
+    description: `A floating chat that knows the ${FREE_TOOL_COUNT} free calculators. Describe a symptom or share lab values — it tells you exactly which tool to open and what to enter.`,
+    description_ar: `دردشة عائمة تعرف ${FREE_TOOL_COUNT} حاسبة مجانية. صِف عرضاً أو شارك قيم المختبر — يخبرك بالضبط بأي أداة تفتحها وماذا تدخل.`,
     badge: 'Bottom-right',
     badge_ar: 'أسفل اليمين',
   },
@@ -56,7 +87,9 @@ export function OnboardingFlow() {
   const [step, setStep] = useState<Step>('welcome');
   const [role, setRole] = useState<UserRole | null>(null);
   const [crop, setCrop] = useState<string | null>(null);
-  const { isRTL } = useTranslation();
+  const [level, setLevel] = useState<UserLevel>(useUserLevelStore.getState().level);
+  const saveUserLevel = useUserLevelStore(state => state.setLevel);
+  const { isRTL, language } = useTranslation();
 
   // Auto-show on first visit (client-side check)
   useEffect(() => {
@@ -74,14 +107,16 @@ export function OnboardingFlow() {
   }, [close]);
 
   const handleFinish = useCallback(() => {
+    saveUserLevel(level);
     if (role && crop) completeOnboarding(role, crop);
     else skipOnboarding();
     close();
-  }, [role, crop, close]);
+  }, [level, role, crop, close, saveUserLevel]);
 
   const next = useCallback(() => {
     setStep(s => {
-      if (s === 'welcome') return 'role';
+      if (s === 'welcome') return 'level';
+      if (s === 'level') return 'role';
       if (s === 'role') return 'crop';
       if (s === 'crop') return 'features';
       if (s === 'features') return 'finish';
@@ -94,15 +129,16 @@ export function OnboardingFlow() {
       if (s === 'finish') return 'features';
       if (s === 'features') return 'crop';
       if (s === 'crop') return 'role';
-      if (s === 'role') return 'welcome';
+      if (s === 'role') return 'level';
+      if (s === 'level') return 'welcome';
       return s;
     });
   }, []);
 
   if (!visible) return null;
 
-  const stepIndex = ['welcome', 'role', 'crop', 'features', 'finish'].indexOf(step);
-  const stepCount = 5;
+  const stepIndex = ['welcome', 'level', 'role', 'crop', 'features', 'finish'].indexOf(step);
+  const stepCount = 6;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -113,7 +149,7 @@ export function OnboardingFlow() {
         <div className="absolute -bottom-20 left-1/3 w-80 h-80 rounded-full bg-cyan-500/15 blur-3xl" style={{ animation: 'ob-float 9s ease-in-out infinite 2s' }} />
       </div>
 
-      <div className="relative w-full max-w-2xl bg-card/95 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl overflow-hidden" style={{ animation: 'ob-slide-up 0.5s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+      <div dir={isRTL ? 'rtl' : 'ltr'} className="relative w-full max-w-2xl bg-card/95 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl overflow-hidden" style={{ animation: 'ob-slide-up 0.5s cubic-bezier(0.16, 1, 0.3, 1)' }}>
         {step !== 'welcome' && step !== 'finish' && (
           <div className="absolute top-0 left-0 right-0 h-1 bg-muted/40 z-10">
             <div className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-500 ease-out" style={{ width: `${(stepIndex / (stepCount - 2)) * 100}%` }} />
@@ -145,13 +181,13 @@ export function OnboardingFlow() {
                 </h1>
                 <p className="text-sm text-muted-foreground mt-2 max-w-md mx-auto leading-relaxed">
                   {isRTL
-                    ? 'منصة زراعية شاملة — 91 حاسبة دقيقة، ومهندس زراعي بالذكاء الاصطناعي، ومولّد خطة موسم 52 أسبوعاً. لنأخذ جولة 60 ثانية.'
-                    : 'Your all-in-one agronomy platform — 91 precision calculators, an AI agronomist, and a 52-week season plan generator. Let\'s take a 60-second tour.'}
+                    ? `منصة زراعية شاملة — ${FREE_TOOL_COUNT} حاسبة مجانية، ومهندس زراعي بالذكاء الاصطناعي، ومولّد خطة موسم 52 أسبوعاً. لنأخذ جولة 60 ثانية.`
+                    : `Your all-in-one agronomy platform — ${FREE_TOOL_COUNT} free calculators, an AI agronomist, and a 52-week season plan generator. Let\'s take a 60-second tour.`}
                 </p>
               </div>
               <div className="grid grid-cols-3 gap-3 w-full max-w-md mt-2">
                 {[
-                  { icon: Calculator, label: isRTL ? '91 أداة' : '91 Tools', color: '#16a34a' },
+                  { icon: Calculator, label: isRTL ? `${FREE_TOOL_COUNT} أداة` : `${FREE_TOOL_COUNT} Free Tools`, color: '#16a34a' },
                   { icon: Bot, label: isRTL ? 'مساعد ذكاء' : 'AI Assistant', color: '#0891b2' },
                   { icon: Calendar, label: isRTL ? 'خطة موسمية' : 'Season Plan', color: '#7c3aed' },
                 ].map((f, i) => (
@@ -170,6 +206,34 @@ export function OnboardingFlow() {
             </div>
           )}
 
+          {step === 'level' && (
+            <div className="flex-1 flex flex-col space-y-4" style={{ animation: 'ob-fade-in 0.4s ease-out' }}>
+              <div className="text-center space-y-1">
+                <h2 className="text-xl font-bold text-foreground">{language === 'ar' ? 'كيف ستستخدم Formula Atlas؟' : language === 'fr' ? 'Comment utiliserez-vous Formula Atlas ?' : 'How will you use Formula Atlas?'}</h2>
+                <p className="text-xs text-muted-foreground">{language === 'ar' ? 'سنُظهر لك الأدوات المناسبة أولاً.' : language === 'fr' ? 'Nous afficherons d’abord les outils adaptés à vos besoins.' : 'We will show the tools that fit your work first.'}</p>
+              </div>
+              <div className="grid gap-3 flex-1">
+                {USER_LEVEL_OPTIONS.map(option => {
+                  const selected = level === option.id;
+                  return (
+                    <button key={option.id} type="button" onClick={() => { setLevel(option.id); setTimeout(next, 200); }} className={`flex items-center gap-3 rounded-xl border-2 p-4 text-left transition-all ${selected ? 'border-emerald-500 bg-emerald-50/60 dark:bg-emerald-950/30' : 'border-border hover:border-emerald-300 hover:bg-muted/40'}`}>
+                      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-muted/60 text-xl">{option.id === 'farmer' ? '🌱' : option.id === 'manager' ? '📋' : '🔬'}</div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-semibold text-foreground">{localizedUserLevelCopy(language, option.copy.name)}</div>
+                        <div className="mt-0.5 text-[11px] leading-tight text-muted-foreground">{localizedUserLevelCopy(language, option.copy.description)}</div>
+                      </div>
+                      {selected && <Check className="h-4 w-4 flex-shrink-0 text-emerald-600" />}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="flex justify-between items-center pt-2">
+                <Button variant="ghost" size="sm" onClick={back} className="gap-1.5 text-muted-foreground"><ArrowLeft className="h-3.5 w-3.5" /> {isRTL ? 'رجوع' : language === 'fr' ? 'Retour' : 'Back'}</Button>
+                <Button onClick={next} disabled={!level} size="sm" className="gap-1.5">{isRTL ? 'متابعة' : language === 'fr' ? 'Continuer' : 'Continue'} <ArrowRight className="h-3.5 w-3.5" /></Button>
+              </div>
+            </div>
+          )}
+
           {step === 'role' && (
             <div className="flex-1 flex flex-col space-y-4" style={{ animation: 'ob-fade-in 0.4s ease-out' }}>
               <div className="text-center space-y-1">
@@ -185,8 +249,8 @@ export function OnboardingFlow() {
                   >
                     <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-muted/60 text-xl flex-shrink-0">{r.emoji}</div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-semibold text-foreground">{r.label}</div>
-                      <div className="text-[11px] text-muted-foreground leading-tight mt-0.5">{r.description}</div>
+                      <div className="text-sm font-semibold text-foreground">{isRTL ? ROLE_LABEL_AR[r.id] : r.label}</div>
+                      <div className="text-[11px] text-muted-foreground leading-tight mt-0.5">{isRTL ? ROLE_DESCRIPTION_AR[r.id] : r.description}</div>
                     </div>
                     {role === r.id && <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" />}
                   </button>
@@ -213,7 +277,7 @@ export function OnboardingFlow() {
                     className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all ${crop === c.id ? 'border-emerald-500 bg-emerald-50/60 dark:bg-emerald-950/30 scale-105' : 'border-border hover:border-emerald-300 hover:bg-muted/40'}`}
                   >
                     <span className="text-3xl">{c.emoji}</span>
-                    <span className="text-xs font-medium text-foreground">{c.label}</span>
+                    <span className="text-xs font-medium text-foreground">{isRTL ? CROP_LABEL_AR[c.id] : c.label}</span>
                     {crop === c.id && <Check className="h-3 w-3 text-emerald-600" />}
                   </button>
                 ))}
@@ -270,8 +334,8 @@ export function OnboardingFlow() {
                   {role && crop ? (
                     isRTL ? (
                       <>
-                        بصفتك <strong className="text-foreground">{ROLE_OPTIONS.find(r => r.id === role)?.label}</strong> الذي يزرع{' '}
-                        <strong className="text-foreground">{CROP_OPTIONS.find(c => c.id === crop)?.label}</strong>، إعداداتك المسبقة جاهزة.
+                        بصفتك <strong className="text-foreground">{ROLE_LABEL_AR[role]}</strong> الذي يزرع{' '}
+                        <strong className="text-foreground">{CROP_LABEL_AR[crop]}</strong>، إعداداتك المسبقة جاهزة.
                         افتح <strong className="text-foreground">تبويب الأدوات</strong> للبدء، أو اضغط زر{' '}
                         <strong className="text-foreground">المهندس الزراعي بالذكاء</strong> عندما تحتاج إرشاداً.
                       </>
@@ -285,14 +349,14 @@ export function OnboardingFlow() {
                     )
                   ) : (
                     isRTL
-                      ? <>افتح تبويب الأدوات لاستكشاف كل الحاسبات الـ91، أو اضغط زر المهندس الزراعي بالذكاء لإرشاد فوري.</>
-                      : <>Open the Tools tab to explore all 91 calculators, or click the AI Agronomist button for instant guidance.</>
+                      ? <>افتح تبويب الأدوات لاستكشاف كل الحاسبات الـ{FREE_TOOL_COUNT}، أو اضغط زر المهندس الزراعي بالذكاء لإرشاد فوري.</>
+                      : <>Open the Tools tab to explore all {FREE_TOOL_COUNT} free calculators, or click the AI Agronomist button for instant guidance.</>
                   )}
                 </p>
               </div>
               <div className="grid grid-cols-3 gap-2 w-full max-w-sm">
                 <div className="rounded-lg p-2.5 bg-muted/40 border border-border">
-                  <div className="text-lg font-bold text-emerald-600">91</div>
+                  <div className="text-lg font-bold text-emerald-600">{FREE_TOOL_COUNT}</div>
                   <div className="text-[10px] text-muted-foreground">{isRTL ? 'أداة' : 'Tools'}</div>
                 </div>
                 <div className="rounded-lg p-2.5 bg-muted/40 border border-border">

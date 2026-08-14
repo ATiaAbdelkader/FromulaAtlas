@@ -16,17 +16,40 @@ import {
   getBenchmarks, addBenchmark, getBenchmarkForCrop,
   type Post, type Reply, type UserProfile, type PostType, type BenchmarkEntry,
 } from '@/lib/community-store';
-import { useTranslation } from '@/lib/language-store';
+import { useTranslation, type Language } from '@/lib/language-store';
 
-const POST_TYPE_CONFIG: Record<PostType, { label: string; label_ar: string; color: string; icon: string }> = {
-  question:      { label: 'Question',       label_ar: 'سؤال',           color: '#3b82f6', icon: '❓' },
-  experience:    { label: 'Experience',     label_ar: 'تجربة',          color: '#16a34a', icon: '💡' },
-  success_story: { label: 'Success Story',  label_ar: 'قصة نجاح',      color: '#f59e0b', icon: '🏆' },
-  tip:           { label: 'Tip',            label_ar: 'نصيحة',          color: '#8b5cf6', icon: '⚡' },
-  market_info:   { label: 'Market Info',    label_ar: 'معلومات السوق',  color: '#0891b2', icon: '📈' },
+const POST_TYPE_CONFIG: Record<PostType, { label: string; label_fr: string; label_ar: string; color: string; icon: string }> = {
+  question:      { label: 'Question',       label_fr: 'Question',       label_ar: 'سؤال',           color: '#3b82f6', icon: '❓' },
+  experience:    { label: 'Experience',     label_fr: 'Expérience',     label_ar: 'تجربة',          color: '#16a34a', icon: '💡' },
+  success_story: { label: 'Success Story',  label_fr: 'Réussite',       label_ar: 'قصة نجاح',      color: '#f59e0b', icon: '🏆' },
+  tip:           { label: 'Tip',            label_fr: 'Conseil',         label_ar: 'نصيحة',          color: '#8b5cf6', icon: '⚡' },
+  market_info:   { label: 'Market Info',    label_fr: 'Marché',          label_ar: 'معلومات السوق',  color: '#0891b2', icon: '📈' },
 };
 
+function copyFor(language: Language, en: string, fr: string, ar: string) {
+  return language === 'ar' ? ar : language === 'fr' ? fr : en;
+}
+
 const BENCHMARK_CROPS = ['Tomato', 'Maize', 'Wheat', 'Potato', 'Rice', 'Soybean', 'Avocado'];
+const BENCHMARK_CROP_LABELS: Record<string, string> = {
+  Tomato: 'طماطم', Maize: 'ذرة', Wheat: 'قمح', Potato: 'بطاطا',
+  Rice: 'أرز', Soybean: 'فول الصويا', Avocado: 'أفوكادو',
+};
+
+function cropLabel(crop: string, language: Language): string {
+  return language === 'ar' ? BENCHMARK_CROP_LABELS[crop] ?? crop : crop;
+}
+
+function roleLabel(role: string, language: Language): string {
+  const labels: Record<string, string> = {
+    grower: copyFor(language, 'Grower', 'Producteur', 'مزارع'),
+    agronomist: copyFor(language, 'Agronomist', 'Agronome', 'مهندس زراعي'),
+    consultant: copyFor(language, 'Consultant', 'Conseiller', 'استشاري'),
+    student: copyFor(language, 'Student', 'Étudiant', 'طالب'),
+    other: copyFor(language, 'Other', 'Autre', 'أخرى'),
+  };
+  return labels[role] ?? role;
+}
 
 export function FarmerCommunity() {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -37,8 +60,8 @@ export function FarmerCommunity() {
   const [searchQuery, setSearchQuery] = useState('');
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
-  const { isRTL } = useTranslation();
-  const typeLabel = (t: PostType) => isRTL ? POST_TYPE_CONFIG[t].label_ar : POST_TYPE_CONFIG[t].label;
+  const { language } = useTranslation();
+  const typeLabel = (t: PostType) => language === 'ar' ? POST_TYPE_CONFIG[t].label_ar : language === 'fr' ? POST_TYPE_CONFIG[t].label_fr : POST_TYPE_CONFIG[t].label;
 
   // New post form
   const [newPost, setNewPost] = useState({ type: 'question' as PostType, title: '', body: '', crop: '', region: '', tags: '' });
@@ -121,6 +144,20 @@ export function FarmerCommunity() {
   const userBench = benchmark.user;
   const timeAgo = (ts: number) => {
     const d = Math.floor((Date.now() - ts) / 86400000);
+    if (language === 'ar') {
+      if (d === 0) return 'اليوم';
+      if (d === 1) return 'أمس';
+      if (d < 7) return `منذ ${d} أيام`;
+      if (d < 30) return `منذ ${Math.floor(d / 7)} أسابيع`;
+      return `منذ ${Math.floor(d / 30)} أشهر`;
+    }
+    if (language === 'fr') {
+      if (d === 0) return 'aujourd’hui';
+      if (d === 1) return 'hier';
+      if (d < 7) return `il y a ${d} jours`;
+      if (d < 30) return `il y a ${Math.floor(d / 7)} sem.`;
+      return `il y a ${Math.floor(d / 30)} mois`;
+    }
     if (d === 0) return 'today';
     if (d === 1) return 'yesterday';
     if (d < 7) return `${d} days ago`;
@@ -132,9 +169,9 @@ export function FarmerCommunity() {
     <Card>
       {/* Tab bar */}
       <div className="flex gap-1 border-b border-border">
-        <TabBtn active={tab === 'feed'} onClick={() => setTab('feed')} icon={MessageCircle} label={isRTL ? 'المجتمع' : 'Community Feed'} />
-        <TabBtn active={tab === 'benchmark'} onClick={() => setTab('benchmark')} icon={TrendingUp} label={isRTL ? 'المقارنة' : 'Benchmark'} />
-        <TabBtn active={tab === 'profile'} onClick={() => setTab('profile')} icon={Users} label={isRTL ? 'ملفي' : 'My Profile'} />
+        <TabBtn active={tab === 'feed'} onClick={() => setTab('feed')} icon={MessageCircle} label={copyFor(language, 'Community Feed', 'Fil de la communauté', 'المجتمع')} />
+        <TabBtn active={tab === 'benchmark'} onClick={() => setTab('benchmark')} icon={TrendingUp} label={copyFor(language, 'Benchmark', 'Comparaison', 'المقارنة')} />
+        <TabBtn active={tab === 'profile'} onClick={() => setTab('profile')} icon={Users} label={copyFor(language, 'My Profile', 'Mon profil', 'ملفي')} />
       </div>
 
       {/* === FEED TAB === */}
@@ -144,10 +181,10 @@ export function FarmerCommunity() {
           <div className="flex gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-              <Input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder={isRTL ? 'ابحث في المنشورات...' : 'Search posts...'} className="h-9 pl-8 text-sm" />
+              <Input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder={copyFor(language, 'Search posts...', 'Rechercher dans les publications…', 'ابحث في المنشورات...')} className="h-9 pl-8 text-sm" />
             </div>
             <Button size="sm" onClick={() => setShowNewPost(!showNewPost)} className="gap-1.5">
-              <Plus className="h-4 w-4" /> {isRTL ? 'منشور' : 'Post'}
+              <Plus className="h-4 w-4" /> {copyFor(language, 'Post', 'Publication', 'منشور')}
             </Button>
           </div>
 
@@ -163,17 +200,17 @@ export function FarmerCommunity() {
                   </button>
                 ))}
               </div>
-              <Input value={newPost.title} onChange={e => setNewPost({ ...newPost, title: e.target.value })} placeholder={isRTL ? 'العنوان...' : 'Title...'} className="h-8 text-sm" />
-              <Textarea value={newPost.body} onChange={e => setNewPost({ ...newPost, body: e.target.value })} placeholder={isRTL ? 'شارك سؤالك أو تجربتك أو نصيحتك...' : 'Share your question, experience, or tip...'} className="text-sm min-h-[80px]" />
+              <Input value={newPost.title} onChange={e => setNewPost({ ...newPost, title: e.target.value })} placeholder={copyFor(language, 'Title...', 'Titre…', 'العنوان...')} className="h-8 text-sm" />
+              <Textarea value={newPost.body} onChange={e => setNewPost({ ...newPost, body: e.target.value })} placeholder={copyFor(language, 'Share your question, experience, or tip...', 'Partagez votre question, votre expérience ou votre conseil…', 'شارك سؤالك أو تجربتك أو نصيحتك...')} className="text-sm min-h-[80px]" />
               <div className="grid grid-cols-3 gap-2">
-                <Input value={newPost.crop} onChange={e => setNewPost({ ...newPost, crop: e.target.value })} placeholder={isRTL ? 'المحصول (اختياري)' : 'Crop (optional)'} className="h-8 text-xs" />
-                <Input value={newPost.region} onChange={e => setNewPost({ ...newPost, region: e.target.value })} placeholder={isRTL ? 'المنطقة (اختياري)' : 'Region (optional)'} className="h-8 text-xs" />
-                <Input value={newPost.tags} onChange={e => setNewPost({ ...newPost, tags: e.target.value })} placeholder={isRTL ? 'وسوم، بفاصلة' : 'tags, comma, sep'} className="h-8 text-xs" />
+                <Input value={newPost.crop} onChange={e => setNewPost({ ...newPost, crop: e.target.value })} placeholder={copyFor(language, 'Crop (optional)', 'Culture (facultatif)', 'المحصول (اختياري)')} className="h-8 text-xs" />
+                <Input value={newPost.region} onChange={e => setNewPost({ ...newPost, region: e.target.value })} placeholder={copyFor(language, 'Region (optional)', 'Région (facultatif)', 'المنطقة (اختياري)')} className="h-8 text-xs" />
+                <Input value={newPost.tags} onChange={e => setNewPost({ ...newPost, tags: e.target.value })} placeholder={copyFor(language, 'tags, comma, sep', 'étiquettes, séparées par des virgules', 'وسوم، بفاصلة')} className="h-8 text-xs" />
               </div>
               <div className="flex gap-2 justify-end">
-                <Button size="sm" variant="ghost" onClick={() => setShowNewPost(false)}>{isRTL ? 'إلغاء' : 'Cancel'}</Button>
+                <Button size="sm" variant="ghost" onClick={() => setShowNewPost(false)}>{copyFor(language, 'Cancel', 'Annuler', 'إلغاء')}</Button>
                 <Button size="sm" onClick={handlePost} disabled={!newPost.title.trim() || !newPost.body.trim()} className="gap-1.5">
-                  <Send className="h-3.5 w-3.5" /> {isRTL ? 'نشر' : 'Publish'}
+                  <Send className="h-3.5 w-3.5" /> {copyFor(language, 'Publish', 'Publier', 'نشر')}
                 </Button>
               </div>
             </div>
@@ -181,7 +218,7 @@ export function FarmerCommunity() {
 
           {/* Filter chips */}
           <div className="flex gap-1.5 flex-wrap">
-            <Chip active={filterType === 'all'} onClick={() => setFilterType('all')} label={isRTL ? 'الكل' : 'All'} />
+            <Chip active={filterType === 'all'} onClick={() => setFilterType('all')} label={copyFor(language, 'All', 'Tous', 'الكل')} />
             {(Object.keys(POST_TYPE_CONFIG) as PostType[]).map(t => (
               <Chip key={t} active={filterType === t} onClick={() => setFilterType(t)} label={`${POST_TYPE_CONFIG[t].icon} ${typeLabel(t)}`} />
             ))}
@@ -201,8 +238,8 @@ export function FarmerCommunity() {
                     <div>
                       <div className="text-sm font-semibold leading-tight">{post.title}</div>
                       <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground mt-0.5">
-                        <span className="font-medium">{post.author}</span>
-                        <Badge variant="outline" className="text-[8px] px-1 py-0 capitalize">{post.authorRole}</Badge>
+                        <span className="font-medium">{post.author === 'Anonymous Farmer' ? copyFor(language, 'Anonymous Farmer', 'Agriculteur anonyme', 'مزارع مجهول') : post.author}</span>
+                        <Badge variant="outline" className="text-[8px] px-1 py-0 capitalize">{roleLabel(post.authorRole, language)}</Badge>
                         {post.crop && <span>· {post.crop}</span>}
                         {post.region && <span>· <MapPin className="h-2 w-2 inline" /> {post.region}</span>}
                         <span>· {timeAgo(post.createdAt)}</span>
@@ -242,8 +279,8 @@ export function FarmerCommunity() {
                     {post.replies.map(r => (
                       <div key={r.id} className="text-xs">
                         <div className="flex items-center gap-1.5">
-                          <span className="font-medium">{r.author}</span>
-                          {r.isExpert && <Badge variant="outline" className="text-[8px] text-emerald-600 border-emerald-300 px-1 py-0 gap-0.5"><Star className="h-2 w-2" fill="currentColor" /> {isRTL ? 'خبير' : 'Expert'}</Badge>}
+                          <span className="font-medium">{r.author === 'Anonymous Farmer' ? copyFor(language, 'Anonymous Farmer', 'Agriculteur anonyme', 'مزارع مجهول') : r.author}</span>
+                          {r.isExpert && <Badge variant="outline" className="text-[8px] text-emerald-600 border-emerald-300 px-1 py-0 gap-0.5"><Star className="h-2 w-2" fill="currentColor" /> {copyFor(language, 'Expert', 'Expert', 'خبير')}</Badge>}
                           <span className="text-[9px] text-muted-foreground">{timeAgo(r.createdAt)}</span>
                         </div>
                         <p className="text-muted-foreground mt-0.5">{r.body}</p>
@@ -255,7 +292,7 @@ export function FarmerCommunity() {
                 {/* Reply input */}
                 {replyingTo === post.id && (
                   <div className="flex gap-1.5 pl-4">
-                    <Input value={replyText} onChange={e => setReplyText(e.target.value)} placeholder={isRTL ? 'اكتب ردّاً...' : 'Write a reply...'} className="h-7 text-xs"
+                    <Input value={replyText} onChange={e => setReplyText(e.target.value)} placeholder={copyFor(language, 'Write a reply...', 'Écrire une réponse…', 'اكتب ردّاً...')} className="h-7 text-xs"
                       onKeyDown={e => { if (e.key === 'Enter') handleReply(post.id); }} />
                     <Button size="sm" onClick={() => handleReply(post.id)} disabled={!replyText.trim()} className="h-7 px-2">
                       <Send className="h-3 w-3" />
@@ -269,7 +306,7 @@ export function FarmerCommunity() {
           {filteredPosts.length === 0 && (
             <div className="text-center py-8 text-sm text-muted-foreground">
               <MessageCircle className="h-8 w-8 mx-auto mb-2 opacity-40" />
-              {isRTL ? 'لا منشورات بعد. كن أول من يشارك!' : 'No posts yet. Be the first to share!'}
+              {copyFor(language, 'No posts yet. Be the first to share!', 'Aucune publication. Soyez le premier à partager !', 'لا منشورات بعد. كن أول من يشارك!')}
             </div>
           )}
         </div>
@@ -280,41 +317,41 @@ export function FarmerCommunity() {
         <div className="space-y-4">
           <div className="rounded-lg p-3 bg-indigo-50/50 dark:bg-indigo-950/20 border border-indigo-200 dark:border-indigo-900">
             <div className="flex items-center gap-1.5 text-xs font-semibold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide mb-2">
-              <TrendingUp className="h-3.5 w-3.5" /> {isRTL ? 'قارن مزرعتك' : 'Benchmark Your Farm'}
+              <TrendingUp className="h-3.5 w-3.5" /> {copyFor(language, 'Benchmark Your Farm', 'Comparez votre ferme', 'قارن مزرعتك')}
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <div>
-                <Label className="text-[10px]">{isRTL ? 'المحصول' : 'Crop'}</Label>
+                <Label className="text-[10px]">{copyFor(language, 'Crop', 'Culture', 'المحصول')}</Label>
                 <select value={benchCrop} onChange={e => setBenchCrop(e.target.value)} className="h-8 text-xs w-full rounded-md border border-input bg-background px-2 mt-0.5">
-                  {BENCHMARK_CROPS.map(c => <option key={c} value={c}>{c}</option>)}
+                  {BENCHMARK_CROPS.map(c => <option key={c} value={c}>{cropLabel(c, language)}</option>)}
                 </select>
               </div>
               <div>
-                <Label className="text-[10px]">{isRTL ? 'الإنتاج (ط/هـ)' : 'Yield (t/ha)'}</Label>
+                <Label className="text-[10px]">{copyFor(language, 'Yield (t/ha)', 'Rendement (t/ha)', 'الإنتاج (ط/هـ)')}</Label>
                 <Input value={benchYield} onChange={e => setBenchYield(e.target.value)} type="number" className="h-8 text-xs mt-0.5" />
               </div>
               <div>
-                <Label className="text-[10px]">{isRTL ? 'كفاءة N (%)' : 'NUE (%)'}</Label>
+                <Label className="text-[10px]">{copyFor(language, 'NUE (%)', 'EUN (%)', 'كفاءة N (%)')}</Label>
                 <Input value={benchNue} onChange={e => setBenchNue(e.target.value)} type="number" className="h-8 text-xs mt-0.5" />
               </div>
               <div>
-                <Label className="text-[10px]">{isRTL ? 'إنتاجية الماء (كغ/م³)' : 'Water Prod (kg/m³)'}</Label>
+                <Label className="text-[10px]">{copyFor(language, 'Water Prod (kg/m³)', 'Productivité de l’eau (kg/m³)', 'إنتاجية الماء (كغ/م³)')}</Label>
                 <Input value={benchWp} onChange={e => setBenchWp(e.target.value)} type="number" className="h-8 text-xs mt-0.5" />
               </div>
             </div>
             <Button onClick={submitBenchmark} size="sm" className="w-full mt-2 gap-1.5">
-              <Award className="h-3.5 w-3.5" /> {isRTL ? 'أرسل أرقامي' : 'Submit My Numbers'}
+              <Award className="h-3.5 w-3.5" /> {copyFor(language, 'Submit My Numbers', 'Envoyer mes chiffres', 'أرسل أرقامي')}
             </Button>
           </div>
 
           {/* Comparison */}
           {benchmark.avg && benchmark.top && (
             <div className="space-y-2">
-              <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{benchCrop} — {isRTL ? 'كيف تقارن؟' : 'How do you compare?'}</div>
+              <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{cropLabel(benchCrop, language)} — {copyFor(language, 'How do you compare?', 'Comment vous situez-vous ?', 'كيف تقارن؟')}</div>
               {[
-                { label: isRTL ? 'الإنتاج (ط/هـ)' : 'Yield (t/ha)', avg: benchmark.avg.yield, top: benchmark.top.yield, user: userBench?.yield },
-                { label: isRTL ? 'كفاءة N (%)' : 'NUE (%)', avg: benchmark.avg.nUe, top: benchmark.top.nUe, user: userBench?.nUe },
-                { label: isRTL ? 'إنتاجية الماء (كغ/م³)' : 'Water Prod (kg/m³)', avg: benchmark.avg.waterProductivity, top: benchmark.top.waterProductivity, user: userBench?.waterProductivity },
+                { label: copyFor(language, 'Yield (t/ha)', 'Rendement (t/ha)', 'الإنتاج (ط/هـ)'), avg: benchmark.avg.yield, top: benchmark.top.yield, user: userBench?.yield },
+                { label: copyFor(language, 'NUE (%)', 'EUN (%)', 'كفاءة N (%)'), avg: benchmark.avg.nUe, top: benchmark.top.nUe, user: userBench?.nUe },
+                { label: copyFor(language, 'Water Prod (kg/m³)', 'Productivité de l’eau (kg/m³)', 'إنتاجية الماء (كغ/م³)'), avg: benchmark.avg.waterProductivity, top: benchmark.top.waterProductivity, user: userBench?.waterProductivity },
               ].map(metric => {
                 const maxVal = Math.max(metric.avg, metric.top, metric.user || 0, 0.1);
                 return (
@@ -323,14 +360,14 @@ export function FarmerCommunity() {
                       <span className="text-xs font-medium">{metric.label}</span>
                       {metric.user != null && (
                         <span className="text-[10px] font-mono">
-                          {isRTL ? 'أنت: ' : 'You: '}<strong>{metric.user}</strong> · {isRTL ? 'المتوسط: ' : 'Avg: '}{metric.avg} · {isRTL ? 'أعلى 25%: ' : 'Top 25%: '}{metric.top}
+                          {copyFor(language, 'You: ', 'Vous : ', 'أنت: ')}<strong>{metric.user}</strong> · {copyFor(language, 'Avg: ', 'Moy. : ', 'المتوسط: ')}{metric.avg} · {copyFor(language, 'Top 25%: ', 'Top 25 % : ', 'أعلى 25%: ')}{metric.top}
                         </span>
                       )}
                     </div>
                     <div className="space-y-1">
-                      <BenchBar label={isRTL ? 'متوسط عالمي' : 'Global avg'} value={metric.avg} max={maxVal} color="#94a3b8" />
-                      <BenchBar label={isRTL ? 'أعلى 25%' : 'Top 25%'} value={metric.top} max={maxVal} color="#16a34a" />
-                      {metric.user != null && <BenchBar label={isRTL ? 'أنت' : 'You'} value={metric.user} max={maxVal} color="#6366f1" />}
+                      <BenchBar label={copyFor(language, 'Global avg', 'Moyenne mondiale', 'متوسط عالمي')} value={metric.avg} max={maxVal} color="#94a3b8" />
+                      <BenchBar label={copyFor(language, 'Top 25%', 'Top 25 %', 'أعلى 25%')} value={metric.top} max={maxVal} color="#16a34a" />
+                      {metric.user != null && <BenchBar label={copyFor(language, 'You', 'Vous', 'أنت')} value={metric.user} max={maxVal} color="#6366f1" />}
                     </div>
                   </div>
                 );
@@ -339,9 +376,9 @@ export function FarmerCommunity() {
               {userBench && (
                 <div className="rounded-lg p-3 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900">
                   <div className="text-xs">
-                    {userBench.yield >= benchmark.top.yield ? (isRTL ? '🏆 أنت ضمن أعلى 25% في الإنتاج!' : '🏆 You\'re in the top 25% for yield!') :
-                     userBench.yield >= benchmark.avg.yield ? (isRTL ? '✅ أنت فوق المتوسط العالمي. لديك مساحة للوصول لأعلى 25%.' : '✅ You\'re above the global average. Room to improve to reach top 25%.') :
-                     (isRTL ? '⚠️ أنت تحت المتوسط العالمي. تحقّق من أداة تحليل فجوة الإنتاج لتوصيات.' : '⚠️ You\'re below the global average. Check the Yield Gap Analysis tool for recommendations.')}
+                    {userBench.yield >= benchmark.top.yield ? (copyFor(language, '🏆 You\'re in the top 25% for yield!', '🏆 Vous êtes dans les 25 % supérieurs pour le rendement !', '🏆 أنت ضمن أعلى 25% في الإنتاج!')) :
+                     userBench.yield >= benchmark.avg.yield ? (copyFor(language, '✅ You\'re above the global average. Room to improve to reach top 25%.', '✅ Vous êtes au-dessus de la moyenne mondiale. Il reste une marge pour atteindre le top 25 %.', '✅ أنت فوق المتوسط العالمي. لديك مساحة للوصول لأعلى 25%.')) :
+                     (copyFor(language, '⚠️ You\'re below the global average. Check the Yield Gap Analysis tool for recommendations.', '⚠️ Vous êtes sous la moyenne mondiale. Consultez l’outil d’analyse de l’écart de rendement pour obtenir des recommandations.', '⚠️ أنت تحت المتوسط العالمي. تحقّق من أداة تحليل فجوة الإنتاج لتوصيات.'))}
                   </div>
                 </div>
               )}
@@ -353,36 +390,36 @@ export function FarmerCommunity() {
       {/* === PROFILE TAB === */}
       {tab === 'profile' && (
         <div className="space-y-3 max-w-md">
-          <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{isRTL ? 'ملفك في المجتمع' : 'Your Community Profile'}</div>
+          <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{copyFor(language, 'Your Community Profile', 'Votre profil communautaire', 'ملفك في المجتمع')}</div>
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <Label className="text-[10px]">{isRTL ? 'الاسم' : 'Name'}</Label>
-              <Input value={profile?.name || ''} onChange={e => { const p = { ...profile, name: e.target.value } as UserProfile; setProfile(p); saveProfile(p); }} className="h-8 text-xs mt-0.5" placeholder={isRTL ? 'اسمك' : 'Your name'} />
+              <Label className="text-[10px]">{copyFor(language, 'Name', 'Nom', 'الاسم')}</Label>
+              <Input value={profile?.name || ''} onChange={e => { const p = { ...profile, name: e.target.value } as UserProfile; setProfile(p); saveProfile(p); }} className="h-8 text-xs mt-0.5" placeholder={copyFor(language, 'Your name', 'Votre nom', 'اسمك')} />
             </div>
             <div>
-              <Label className="text-[10px]">{isRTL ? 'الدور' : 'Role'}</Label>
+              <Label className="text-[10px]">{copyFor(language, 'Role', 'Rôle', 'الدور')}</Label>
               <select value={profile?.role || 'grower'} onChange={e => { const p = { ...profile, role: e.target.value as UserProfile['role'] } as UserProfile; setProfile(p); saveProfile(p); }} className="h-8 text-xs w-full rounded-md border border-input bg-background px-2 mt-0.5">
-                <option value="grower">{isRTL ? 'مزارع' : 'Grower'}</option>
-                <option value="agronomist">{isRTL ? 'مهندس زراعي' : 'Agronomist'}</option>
-                <option value="consultant">{isRTL ? 'استشاري' : 'Consultant'}</option>
-                <option value="student">{isRTL ? 'طالب' : 'Student'}</option>
-                <option value="other">{isRTL ? 'أخرى' : 'Other'}</option>
+                <option value="grower">{copyFor(language, 'Grower', 'Producteur', 'مزارع')}</option>
+                <option value="agronomist">{copyFor(language, 'Agronomist', 'Agronome', 'مهندس زراعي')}</option>
+                <option value="consultant">{copyFor(language, 'Consultant', 'Conseiller', 'استشاري')}</option>
+                <option value="student">{copyFor(language, 'Student', 'Étudiant', 'طالب')}</option>
+                <option value="other">{copyFor(language, 'Other', 'Autre', 'أخرى')}</option>
               </select>
             </div>
             <div>
-              <Label className="text-[10px]">{isRTL ? 'اسم المزرعة' : 'Farm name'}</Label>
-              <Input value={profile?.farm || ''} onChange={e => { const p = { ...profile, farm: e.target.value } as UserProfile; setProfile(p); saveProfile(p); }} className="h-8 text-xs mt-0.5" placeholder={isRTL ? 'اسم المزرعة' : 'Farm name'} />
+              <Label className="text-[10px]">{copyFor(language, 'Farm name', 'Nom de la ferme', 'اسم المزرعة')}</Label>
+              <Input value={profile?.farm || ''} onChange={e => { const p = { ...profile, farm: e.target.value } as UserProfile; setProfile(p); saveProfile(p); }} className="h-8 text-xs mt-0.5" placeholder={copyFor(language, 'Farm name', 'Nom de la ferme', 'اسم المزرعة')} />
             </div>
             <div>
-              <Label className="text-[10px]">{isRTL ? 'المنطقة' : 'Region'}</Label>
-              <Input value={profile?.region || ''} onChange={e => { const p = { ...profile, region: e.target.value } as UserProfile; setProfile(p); saveProfile(p); }} className="h-8 text-xs mt-0.5" placeholder={isRTL ? 'منطقتك' : 'Your region'} />
+              <Label className="text-[10px]">{copyFor(language, 'Region', 'Région', 'المنطقة')}</Label>
+              <Input value={profile?.region || ''} onChange={e => { const p = { ...profile, region: e.target.value } as UserProfile; setProfile(p); saveProfile(p); }} className="h-8 text-xs mt-0.5" placeholder={copyFor(language, 'Your region', 'Votre région', 'منطقتك')} />
             </div>
           </div>
           <div>
-            <Label className="text-[10px]">{isRTL ? 'محاصيل تزرعها (بفاصلة)' : 'Crops you grow (comma-separated)'}</Label>
-            <Input value={(profile?.crops || []).join(', ')} onChange={e => { const p = { ...profile, crops: e.target.value.split(',').map(c => c.trim()).filter(Boolean) } as UserProfile; setProfile(p); saveProfile(p); }} className="h-8 text-xs mt-0.5" placeholder="tomato, maize, avocado" />
+            <Label className="text-[10px]">{copyFor(language, 'Crops you grow (comma-separated)', 'Cultures cultivées (séparées par des virgules)', 'محاصيل تزرعها (بفاصلة)')}</Label>
+            <Input value={(profile?.crops || []).join(', ')} onChange={e => { const p = { ...profile, crops: e.target.value.split(',').map(c => c.trim()).filter(Boolean) } as UserProfile; setProfile(p); saveProfile(p); }} className="h-8 text-xs mt-0.5" placeholder={copyFor(language, 'tomato, maize, avocado', 'tomate, maïs, avocat', 'طماطم، ذرة، أفوكادو')} />
           </div>
-          <div className="text-[10px] text-muted-foreground text-center pt-2">{isRTL ? 'ملفك مخزّن محلياً ومرفق بمنشوراتك في المجتمع.' : 'Your profile is stored locally and attached to your community posts.'}</div>
+          <div className="text-[10px] text-muted-foreground text-center pt-2">{copyFor(language, 'Your profile is stored locally and attached to your community posts.', 'Votre profil est stocké localement et associé à vos publications communautaires.', 'ملفك مخزّن محلياً ومرفق بمنشوراتك في المجتمع.')}</div>
         </div>
       )}
     </Card>

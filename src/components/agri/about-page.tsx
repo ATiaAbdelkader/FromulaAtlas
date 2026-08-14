@@ -11,6 +11,7 @@ import {
   MapPin, BookOpen, Heart, ArrowRight,
 } from 'lucide-react';
 import { useTranslation } from '@/lib/language-store';
+import { FORMULA_COUNT, FREE_TOOL_COUNT } from '@/lib/catalog-stats';
 
 export function AboutPage() {
   const { isRTL } = useTranslation();
@@ -171,14 +172,14 @@ export function AboutPage() {
         </h3>
         <p className="text-sm leading-relaxed text-foreground/90">
           {isRTL ? (
-            <><strong>أطلس المعادلات</strong> هو نظام تشغيلي الشخصي للزراعة — مكان لتنظيم الأفكار وإدارة المشاريع وتتبع التقدّم والتحسين المستمر. يجمع <strong>500 معادلة زراعية</strong>، <strong>91 أداة تفاعلية</strong>، <strong>قدرات GIS</strong>، <strong>10 وكلاء ذكاء اصطناعي</strong>، و<strong>جدولة الري</strong> في منصة واحدة. كل ميزة موجودة لأنني احتجتها في عملي — وأشاركها ليستفيد منها مزارعون وباحثون وطلاب آخرون.</>
+            <><strong>أطلس المعادلات</strong> هو نظام تشغيلي الشخصي للزراعة — مكان لتنظيم الأفكار وإدارة المشاريع وتتبع التقدّم والتحسين المستمر. يجمع <strong>{FORMULA_COUNT} معادلة زراعية</strong>، <strong>{FREE_TOOL_COUNT} أداة مجانية تفاعلية</strong>، <strong>قدرات GIS</strong>، <strong>10 وكلاء ذكاء اصطناعي</strong>، و<strong>جدولة الري</strong> في منصة واحدة. كل ميزة موجودة لأنني احتجتها في عملي — وأشاركها ليستفيد منها مزارعون وباحثون وطلاب آخرون.</>
           ) : (
-            <><strong>Formula Atlas</strong> is my personal operating system for agriculture — a place to organize ideas, manage projects, track progress, and continuously improve. It bundles <strong>500 agronomic formulas</strong>, <strong>91 interactive tools</strong>, <strong>GIS capabilities</strong>, <strong>10 AI specialists</strong>, and <strong>irrigation scheduling</strong> into one platform. Every feature exists because I needed it for my own work — and I'm sharing it so other farmers, researchers, and students can benefit too.</>
+            <><strong>Formula Atlas</strong> is my personal operating system for agriculture — a place to organize ideas, manage projects, track progress, and continuously improve. It bundles <strong>{FORMULA_COUNT} agronomic formulas</strong>, <strong>{FREE_TOOL_COUNT} free interactive tools</strong>, <strong>GIS capabilities</strong>, <strong>10 AI specialists</strong>, and <strong>irrigation scheduling</strong> into one platform. Every feature exists because I needed it for my own work — and I'm sharing it so other farmers, researchers, and students can benefit too.</>
           )}
         </p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4">
-          <Stat value="500" label={isRTL ? 'معادلة' : 'Formulas'} />
-          <Stat value="91" label={isRTL ? 'أداة' : 'Tools'} />
+          <Stat value={String(FORMULA_COUNT)} label={isRTL ? 'معادلة' : 'Formulas'} />
+          <Stat value={String(FREE_TOOL_COUNT)} label={isRTL ? 'أداة مجانية' : 'Free tools'} />
           <Stat value="10" label={isRTL ? 'وكلاء ذكاء' : 'AI Agents'} />
           <Stat value="20" label={isRTL ? 'محصول' : 'Crop profiles'} />
         </div>

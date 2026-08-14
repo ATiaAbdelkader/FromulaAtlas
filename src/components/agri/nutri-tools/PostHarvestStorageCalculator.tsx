@@ -21,6 +21,7 @@ import { Badge } from '@/components/ui/badge';
 import {
   Warehouse, Droplets, Wind, Zap, AlertTriangle, CheckCircle2, Download, FlaskConical,
 } from 'lucide-react';
+import { copyFor, useTranslation } from '@/lib/language-store';
 
 type Tab = 'storage' | 'drying' | 'aeration';
 
@@ -36,6 +37,11 @@ const CROP_EMC: Record<string, { A: number; B: number; name: string; emoji: stri
 };
 
 // Safe storage constants (Fraser-Dua) — a, b, c
+const CROP_AR: Record<string, string> = { wheat: 'قمح', maize: 'ذرة', rice: 'أرز', barley: 'شعير', sorghum: 'سورغم', soybean: 'فول الصويا', oats: 'شوفان' };
+const AIRFLOW_AR: Record<string, string> = { '0.1': 'تبريد فقط', '0.5': 'تجفيف خفيف', '1.0': 'تجفيف قياسي', '2.0': 'تجفيف سريع' };
+type UiLanguage = Parameters<typeof copyFor>[0];
+const cropLabel = (language: UiLanguage, key: string, name: string) => copyFor(language, name, CROP_AR[key] || name);
+
 const SAFE_STORAGE: Record<string, { a: number; b: number; c: number }> = {
   wheat:    { a: 8.5, b: 0.35, c: 0.12 },
   maize:    { a: 8.5, b: 0.35, c: 0.12 },
@@ -47,25 +53,25 @@ const SAFE_STORAGE: Record<string, { a: number; b: number; c: number }> = {
 };
 
 export function PostHarvestStorageCalculator() {
+  const { language } = useTranslation();
   const [tab, setTab] = useState<Tab>('storage');
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2">
-          <Warehouse className="h-4 w-4 text-amber-600" /> Post-Harvest Storage Calculator
+    <Card className="overflow-hidden border-amber-100 shadow-sm dark:border-amber-900/60">
+      <CardHeader className="border-b border-border/60 bg-amber-50/50 pb-4 dark:bg-amber-950/10">
+        <CardTitle className="flex items-center gap-2 text-base"><span className="rounded-lg bg-amber-100 p-2 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"><Warehouse className="h-4 w-4" /></span> {copyFor(language, 'Post-Harvest Storage Calculator', 'حاسبة تخزين ما بعد الحصاد')}
         </CardTitle>
-        <p className="text-[10px] text-muted-foreground">EMC · Safe storage days · Drying time + cost · Bin aeration fan sizing — 7 crops</p>
-        <div className="flex gap-1 mt-2">
-          <TabBtn active={tab === 'storage'} onClick={() => setTab('storage')} icon={Droplets} label="EMC + Safe Storage" />
-          <TabBtn active={tab === 'drying'} onClick={() => setTab('drying')} icon={Zap} label="Drying" />
-          <TabBtn active={tab === 'aeration'} onClick={() => setTab('aeration')} icon={Wind} label="Bin Aeration" />
+        <p className="text-[10px] text-muted-foreground">{copyFor(language, 'EMC · Safe storage days · Drying time + cost · Bin aeration fan sizing — 7 crops', 'رطوبة الاتزان EMC · أيام التخزين الآمن · زمن وتكلفة التجفيف · تحجيم مروحة تهوية الصومعة — 7 محاصيل')}</p>
+        <div className="mt-3 grid grid-cols-1 gap-1 rounded-xl bg-amber-100/70 p-1 dark:bg-amber-950/30 sm:grid-cols-3">
+          <TabBtn active={tab === 'storage'} onClick={() => setTab('storage')} icon={Droplets} label={copyFor(language, 'EMC + Safe Storage', 'EMC + تخزين آمن')} />
+          <TabBtn active={tab === 'drying'} onClick={() => setTab('drying')} icon={Zap} label={copyFor(language, 'Drying', 'التجفيف')} />
+          <TabBtn active={tab === 'aeration'} onClick={() => setTab('aeration')} icon={Wind} label={copyFor(language, 'Bin Aeration', 'تهوية الصومعة')} />
         </div>
       </CardHeader>
       <CardContent>
-        {tab === 'storage' && <StorageTab />}
-        {tab === 'drying' && <DryingTab />}
-        {tab === 'aeration' && <AerationTab />}
+        {tab === 'storage' && <StorageTab language={language} />}
+        {tab === 'drying' && <DryingTab language={language} />}
+        {tab === 'aeration' && <AerationTab language={language} />}
       </CardContent>
     </Card>
   );
@@ -75,7 +81,7 @@ export function PostHarvestStorageCalculator() {
 // Tab 1: EMC + Safe Storage
 // ============================================================================
 
-function StorageTab() {
+function StorageTab({ language }: { language: UiLanguage }) {
   const [crop, setCrop] = useState('wheat');
   const [temp, setTemp] = useState('25');
   const [rh, setRh] = useState('70');
@@ -100,67 +106,67 @@ function StorageTab() {
 
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-3 rounded-xl border border-amber-200/70 bg-amber-50/30 p-3 sm:grid-cols-2 dark:border-amber-900/60 dark:bg-amber-950/10">
         <div>
-          <Label className="text-[10px]">Crop</Label>
-          <select value={crop} onChange={e => setCrop(e.target.value)} className="h-8 text-xs w-full rounded-md border border-input bg-background px-2 mt-0.5">
+          <Label className="text-[10px]">{copyFor(language, 'Crop', 'المحصول')}</Label>
+          <select value={crop} onChange={e => setCrop(e.target.value)} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
             {Object.entries(CROP_EMC).map(([k, v]) => (
-              <option key={k} value={k}>{v.emoji} {v.name}</option>
+              <option key={k} value={k}>{v.emoji} {cropLabel(language, k, v.name)}</option>
             ))}
           </select>
         </div>
         <div>
-          <Label className="text-[10px]">Current moisture (% wet basis)</Label>
-          <Input value={moisture} onChange={e => setMoisture(e.target.value)} type="number" step="0.1" className="h-8 text-xs mt-0.5" />
+          <Label className="text-[10px]">{copyFor(language, 'Current moisture (% wet basis)', 'الرطوبة الحالية (% على أساس رطب)')}</Label>
+          <Input value={moisture} onChange={e => setMoisture(e.target.value)} type="number" step="0.1" className="mt-1 h-10 text-sm" />
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-3 rounded-xl border border-amber-200/70 bg-amber-50/30 p-3 sm:grid-cols-2 dark:border-amber-900/60 dark:bg-amber-950/10">
         <div>
-          <Label className="text-[10px]">Storage temperature (°C)</Label>
-          <Input value={temp} onChange={e => setTemp(e.target.value)} type="number" step="0.1" className="h-8 text-xs mt-0.5" />
+          <Label className="text-[10px]">{copyFor(language, 'Storage temperature (°C)', 'درجة حرارة التخزين (°م)')}</Label>
+          <Input value={temp} onChange={e => setTemp(e.target.value)} type="number" step="0.1" className="mt-1 h-10 text-sm" />
         </div>
         <div>
-          <Label className="text-[10px]">Storage relative humidity (%)</Label>
-          <Input value={rh} onChange={e => setRh(e.target.value)} type="number" step="1" min="0" max="100" className="h-8 text-xs mt-0.5" />
+          <Label className="text-[10px]">{copyFor(language, 'Storage relative humidity (%)', 'الرطوبة النسبية للتخزين (%)')}</Label>
+          <Input value={rh} onChange={e => setRh(e.target.value)} type="number" step="1" min="0" max="100" className="mt-1 h-10 text-sm" />
         </div>
       </div>
 
       {result && (
         <div className="space-y-2">
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="rounded-lg border p-3" style={{ borderColor: result.safe ? '#10b98160' : '#dc262660', backgroundColor: result.safe ? '#10b98110' : '#dc262610' }}>
-              <div className="text-[10px] text-muted-foreground uppercase">Equilibrium Moisture</div>
+              <div className="text-[10px] text-muted-foreground uppercase">{copyFor(language, 'Equilibrium Moisture', 'رطوبة الاتزان')}</div>
               <div className="text-2xl font-bold font-mono">{result.emc.toFixed(1)}%</div>
-              <div className="text-[10px] text-muted-foreground">at {temp}°C, {rh}% RH</div>
+              <div className="text-[10px] text-muted-foreground">{copyFor(language, 'at', 'عند')} {temp}°C، {rh}% RH</div>
             </div>
             <div className="rounded-lg border p-3" style={{ borderColor: result.safeDays > 30 ? '#10b98160' : result.safeDays > 7 ? '#f59e0b60' : '#dc262660', backgroundColor: result.safeDays > 30 ? '#10b98110' : result.safeDays > 7 ? '#f59e0b10' : '#dc262610' }}>
-              <div className="text-[10px] text-muted-foreground uppercase">Safe Storage Days</div>
+              <div className="text-[10px] text-muted-foreground uppercase">{copyFor(language, 'Safe Storage Days', 'أيام التخزين الآمن')}</div>
               <div className="text-2xl font-bold font-mono">{result.safeDays < 1 ? '<1' : result.safeDays.toFixed(0)}</div>
-              <div className="text-[10px] text-muted-foreground">days (with 0.7× safety)</div>
+              <div className="text-[10px] text-muted-foreground">{copyFor(language, 'days (with 0.7× safety)', 'يوماً (بمعامل أمان 0.7×)')}</div>
             </div>
           </div>
 
           {result.safe ? (
             <div className="rounded-md border border-emerald-200 dark:border-emerald-900 bg-emerald-50/60 dark:bg-emerald-950/20 p-2 text-xs text-emerald-700 dark:text-emerald-300 flex items-start gap-1.5">
               <CheckCircle2 className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-              <span><strong>Safe to store.</strong> Current moisture ({moisture}%) is at or below EMC ({result.emc.toFixed(1)}%). Grain will not gain moisture.</span>
+              <span><strong>{copyFor(language, 'Safe to store.', 'آمن للتخزين.')}</strong> {copyFor(language, `Current moisture (${moisture}%) is at or below EMC (${result.emc.toFixed(1)}%). Grain will not gain moisture.`, `الرطوبة الحالية (${moisture}%) عند أو أقل من رطوبة الاتزان EMC (${result.emc.toFixed(1)}%). لن تكتسب الحبوب رطوبة.`)}</span>
             </div>
           ) : (
             <div className="rounded-md border border-rose-200 dark:border-rose-900 bg-rose-50/60 dark:bg-rose-950/20 p-2 text-xs text-rose-700 dark:text-rose-300 flex items-start gap-1.5">
               <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-              <span><strong>Not safe to store.</strong> Grain will absorb moisture from air (EMC {result.emc.toFixed(1)}% &gt; current {moisture}%). Dry grain first or reduce storage RH.</span>
+              <span><strong>{copyFor(language, 'Not safe to store.', 'غير آمن للتخزين.')}</strong> {copyFor(language, `Grain will absorb moisture from air (EMC ${result.emc.toFixed(1)}% > current ${moisture}%). Dry grain first or reduce storage RH.`, `ستمتص الحبوب الرطوبة من الهواء (رطوبة الاتزان EMC ${result.emc.toFixed(1)}% > الحالية ${moisture}%). جفف الحبوب أولاً أو خفّض الرطوبة النسبية للتخزين.`)}</span>
             </div>
           )}
 
           {result.safeDays < 30 && (
             <div className="rounded-md border border-amber-200 dark:border-amber-900 bg-amber-50/60 dark:bg-amber-950/20 p-2 text-xs text-amber-700 dark:text-amber-300 flex items-start gap-1.5">
               <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-              <span><strong>Dry within {Math.ceil(result.safeDays / 2)} days.</strong> Below 30-day safe storage — risk of mold + aflatoxin. Go to Drying tab.</span>
+              <span><strong>{copyFor(language, `Dry within ${Math.ceil(result.safeDays / 2)} days.`, `جفف خلال ${Math.ceil(result.safeDays / 2)} أيام.`)}</strong> {copyFor(language, 'Below 30-day safe storage — risk of mold + aflatoxin. Go to Drying tab.', 'التخزين الآمن أقل من 30 يوماً — خطر العفن والأفلاتوكسين. انتقل إلى تبويب التجفيف.')}</span>
             </div>
           )}
 
-          <div className="text-[10px] text-muted-foreground bg-muted/20 rounded p-2">
-            💡 Safe moisture for long-term storage of {result.crop.name}: {result.crop.safeMoisture}%. At this moisture + 25°C, expect ~100+ safe days.
+          <div className="rounded-lg bg-muted/30 p-3 text-xs leading-relaxed text-muted-foreground">
+            💡 {copyFor(language, `Safe moisture for long-term storage of ${result.crop.name}: ${result.crop.safeMoisture}%. At this moisture + 25°C, expect ~100+ safe days.`, `الرطوبة الآمنة للتخزين طويل الأمد لـ ${cropLabel(language, crop, result.crop.name)}: ${result.crop.safeMoisture}%. عند هذه الرطوبة ودرجة 25°م، يُتوقع أكثر من 100 يوم آمن تقريباً.`)}
           </div>
         </div>
       )}
@@ -172,7 +178,7 @@ function StorageTab() {
 // Tab 2: Drying
 // ============================================================================
 
-function DryingTab() {
+function DryingTab({ language }: { language: UiLanguage }) {
   const [crop, setCrop] = useState('wheat');
   const [mStart, setMStart] = useState('20');
   const [mTarget, setMTarget] = useState('14');
@@ -216,55 +222,55 @@ function DryingTab() {
 
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-3 rounded-xl border border-amber-200/70 bg-amber-50/30 p-3 sm:grid-cols-2 dark:border-amber-900/60 dark:bg-amber-950/10">
         <div>
-          <Label className="text-[10px]">Crop</Label>
-          <select value={crop} onChange={e => setCrop(e.target.value)} className="h-8 text-xs w-full rounded-md border border-input bg-background px-2 mt-0.5">
+          <Label className="text-[10px]">{copyFor(language, 'Crop', 'المحصول')}</Label>
+          <select value={crop} onChange={e => setCrop(e.target.value)} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
             {Object.entries(CROP_EMC).map(([k, v]) => (
-              <option key={k} value={k}>{v.emoji} {v.name}</option>
+              <option key={k} value={k}>{v.emoji} {cropLabel(language, k, v.name)}</option>
             ))}
           </select>
         </div>
         <div>
-          <Label className="text-[10px]">Air temperature (°C)</Label>
-          <Input value={airTemp} onChange={e => setAirTemp(e.target.value)} type="number" step="1" className="h-8 text-xs mt-0.5" />
+          <Label className="text-[10px]">{copyFor(language, 'Air temperature (°C)', 'درجة حرارة الهواء (°م)')}</Label>
+          <Input value={airTemp} onChange={e => setAirTemp(e.target.value)} type="number" step="1" className="mt-1 h-10 text-sm" />
         </div>
       </div>
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-1 gap-3 rounded-xl border border-amber-200/70 bg-amber-50/30 p-3 sm:grid-cols-3 dark:border-amber-900/60 dark:bg-amber-950/10">
         <div>
-          <Label className="text-[10px]">Start moisture (%)</Label>
-          <Input value={mStart} onChange={e => setMStart(e.target.value)} type="number" step="0.1" className="h-8 text-xs mt-0.5" />
+          <Label className="text-[10px]">{copyFor(language, 'Start moisture (%)', 'الرطوبة الابتدائية (%)')}</Label>
+          <Input value={mStart} onChange={e => setMStart(e.target.value)} type="number" step="0.1" className="mt-1 h-10 text-sm" />
         </div>
         <div>
-          <Label className="text-[10px]">Target moisture (%)</Label>
-          <Input value={mTarget} onChange={e => setMTarget(e.target.value)} type="number" step="0.1" className="h-8 text-xs mt-0.5" />
+          <Label className="text-[10px]">{copyFor(language, 'Target moisture (%)', 'الرطوبة المستهدفة (%)')}</Label>
+          <Input value={mTarget} onChange={e => setMTarget(e.target.value)} type="number" step="0.1" className="mt-1 h-10 text-sm" />
         </div>
         <div>
-          <Label className="text-[10px]">Dryer efficiency (0–1)</Label>
-          <Input value={efficiency} onChange={e => setEfficiency(e.target.value)} type="number" step="0.05" min="0.3" max="0.9" className="h-8 text-xs mt-0.5" />
+          <Label className="text-[10px]">{copyFor(language, 'Dryer efficiency (0–1)', 'كفاءة المجفف (0–1)')}</Label>
+          <Input value={efficiency} onChange={e => setEfficiency(e.target.value)} type="number" step="0.05" min="0.3" max="0.9" className="mt-1 h-10 text-sm" />
         </div>
       </div>
       <div>
-        <Label className="text-[10px]">Electricity price ($/kWh)</Label>
-        <Input value={electricityPrice} onChange={e => setElectricityPrice(e.target.value)} type="number" step="0.01" className="h-8 text-xs mt-0.5" />
+        <Label className="text-[10px]">{copyFor(language, 'Electricity price ($/kWh)', 'سعر الكهرباء ($/ك.و.س)')}</Label>
+        <Input value={electricityPrice} onChange={e => setElectricityPrice(e.target.value)} type="number" step="0.01" className="mt-1 h-10 text-sm" />
       </div>
 
       {result?.error && (
         <div className="rounded-md border border-rose-200 dark:border-rose-900 bg-rose-50/50 dark:bg-rose-950/20 p-2 text-xs text-rose-700 dark:text-rose-300">
-          {result.error}
+          {copyFor(language, result.error, 'الرطوبة المستهدفة أقل من رطوبة الاتزان في هذه الظروف — العملية غير ممكنة.')}
         </div>
       )}
 
       {result && !result.error && result.dryingTime !== undefined && (
         <div className="space-y-2">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            <Metric label="Drying time" value={`${result.dryingTime!.toFixed(1)} hr`} color="amber" />
-            <Metric label="Water removed" value={`${result.waterRemoved!.toFixed(0)} kg/t`} color="cyan" />
-            <Metric label="Energy" value={`${result.energyKWh!.toFixed(1)} kWh/t`} color="violet" />
-            <Metric label="Cost" value={`$${result.costPerTonne!.toFixed(2)}/t`} color="emerald" />
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <Metric label={copyFor(language, 'Drying time', 'زمن التجفيف')} value={`${result.dryingTime!.toFixed(1)} hr`} color="amber" />
+            <Metric label={copyFor(language, 'Water removed', 'الماء المُزال')} value={`${result.waterRemoved!.toFixed(0)} kg/t`} color="cyan" />
+            <Metric label={copyFor(language, 'Energy', 'الطاقة')} value={`${result.energyKWh!.toFixed(1)} kWh/t`} color="violet" />
+            <Metric label={copyFor(language, 'Cost', 'التكلفة')} value={`$${result.costPerTonne!.toFixed(2)}/t`} color="emerald" />
           </div>
-          <div className="text-[10px] text-muted-foreground bg-muted/20 rounded p-2">
-            💡 EMC at {airTemp}°C drying air: {result.Me!.toFixed(1)}%. Page equation with k={(0.02 * Math.exp(0.03 * parseFloat(airTemp))).toFixed(3)} hr⁻¹. Increase air temp to cut drying time exponentially.
+          <div className="rounded-lg bg-muted/30 p-3 text-xs leading-relaxed text-muted-foreground">
+            💡 {copyFor(language, `EMC at ${airTemp}°C drying air: ${result.Me!.toFixed(1)}%. Page equation with k=${(0.02 * Math.exp(0.03 * parseFloat(airTemp))).toFixed(3)} hr⁻¹. Increase air temp to cut drying time exponentially.`, `رطوبة الاتزان EMC عند هواء تجفيف ${airTemp}°م: ${result.Me!.toFixed(1)}%. معادلة Page بقيمة k=${(0.02 * Math.exp(0.03 * parseFloat(airTemp))).toFixed(3)} ساعة⁻¹. ارفع درجة حرارة الهواء لخفض زمن التجفيف أُسّياً.`)}
           </div>
         </div>
       )}
@@ -276,7 +282,7 @@ function DryingTab() {
 // Tab 3: Bin Aeration
 // ============================================================================
 
-function AerationTab() {
+function AerationTab({ language }: { language: UiLanguage }) {
   const [binDiameter, setBinDiameter] = useState('6');
   const [grainDepth, setGrainDepth] = useState('3');
   const [crop, setCrop] = useState('wheat');
@@ -317,46 +323,46 @@ function AerationTab() {
 
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-3 rounded-xl border border-amber-200/70 bg-amber-50/30 p-3 sm:grid-cols-2 dark:border-amber-900/60 dark:bg-amber-950/10">
         <div>
-          <Label className="text-[10px]">Bin diameter (m)</Label>
-          <Input value={binDiameter} onChange={e => setBinDiameter(e.target.value)} type="number" step="0.5" className="h-8 text-xs mt-0.5" />
+          <Label className="text-[10px]">{copyFor(language, 'Bin diameter (m)', 'قطر الصومعة (م)')}</Label>
+          <Input value={binDiameter} onChange={e => setBinDiameter(e.target.value)} type="number" step="0.5" className="mt-1 h-10 text-sm" />
         </div>
         <div>
-          <Label className="text-[10px]">Grain depth (m)</Label>
-          <Input value={grainDepth} onChange={e => setGrainDepth(e.target.value)} type="number" step="0.5" className="h-8 text-xs mt-0.5" />
+          <Label className="text-[10px]">{copyFor(language, 'Grain depth (m)', 'عمق الحبوب (م)')}</Label>
+          <Input value={grainDepth} onChange={e => setGrainDepth(e.target.value)} type="number" step="0.5" className="mt-1 h-10 text-sm" />
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-3 rounded-xl border border-amber-200/70 bg-amber-50/30 p-3 sm:grid-cols-2 dark:border-amber-900/60 dark:bg-amber-950/10">
         <div>
-          <Label className="text-[10px]">Crop</Label>
-          <select value={crop} onChange={e => setCrop(e.target.value)} className="h-8 text-xs w-full rounded-md border border-input bg-background px-2 mt-0.5">
+          <Label className="text-[10px]">{copyFor(language, 'Crop', 'المحصول')}</Label>
+          <select value={crop} onChange={e => setCrop(e.target.value)} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
             {Object.entries(CROP_EMC).map(([k, v]) => (
-              <option key={k} value={k}>{v.emoji} {v.name}</option>
+              <option key={k} value={k}>{v.emoji} {cropLabel(language, k, v.name)}</option>
             ))}
           </select>
         </div>
         <div>
-          <Label className="text-[10px]">Airflow rate (m³/min/t)</Label>
-          <select value={airflowRate} onChange={e => setAirflowRate(e.target.value)} className="h-8 text-xs w-full rounded-md border border-input bg-background px-2 mt-0.5">
-            <option value="0.1">0.1 — Cooling only</option>
-            <option value="0.5">0.5 — Light drying</option>
-            <option value="1.0">1.0 — Standard drying</option>
-            <option value="2.0">2.0 — Fast drying</option>
+          <Label className="text-[10px]">{copyFor(language, 'Airflow rate (m³/min/t)', 'معدل تدفق الهواء (م³/دقيقة/طن)')}</Label>
+          <select value={airflowRate} onChange={e => setAirflowRate(e.target.value)} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
+            <option value="0.1">0.1 — {copyFor(language, 'Cooling only', 'تبريد فقط')}</option>
+            <option value="0.5">0.5 — {copyFor(language, 'Light drying', 'تجفيف خفيف')}</option>
+            <option value="1.0">1.0 — {copyFor(language, 'Standard drying', 'تجفيف قياسي')}</option>
+            <option value="2.0">2.0 — {copyFor(language, 'Fast drying', 'تجفيف سريع')}</option>
           </select>
         </div>
       </div>
 
       {result && (
         <div className="space-y-2">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            <Metric label="Grain in bin" value={`${result.grainT.toFixed(1)} t`} sub={`${result.grainBu.toFixed(0)} bu`} color="amber" />
-            <Metric label="Required CFM" value={result.cfm.toFixed(0)} sub="cubic ft/min" color="cyan" />
-            <Metric label="Static pressure" value={`${result.sp.toFixed(0)} Pa`} sub="resistance" color="violet" />
-            <Metric label="Fan power" value={`${result.fanPower.toFixed(1)} kW`} sub="minimum" color="emerald" />
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <Metric label={copyFor(language, 'Grain in bin', 'الحبوب في الصومعة')} value={`${result.grainT.toFixed(1)} t`} sub={`${result.grainBu.toFixed(0)} bu`} color="amber" />
+            <Metric label={copyFor(language, 'Required CFM', 'CFM المطلوب')} value={result.cfm.toFixed(0)} sub={copyFor(language, 'cubic ft/min', 'قدم³/دقيقة')} color="cyan" />
+            <Metric label={copyFor(language, 'Static pressure', 'الضغط الساكن')} value={`${result.sp.toFixed(0)} Pa`} sub={copyFor(language, 'resistance', 'المقاومة')} color="violet" />
+            <Metric label={copyFor(language, 'Fan power', 'قدرة المروحة')} value={`${result.fanPower.toFixed(1)} kW`} sub={copyFor(language, 'minimum', 'الحد الأدنى')} color="emerald" />
           </div>
-          <div className="text-[10px] text-muted-foreground bg-muted/20 rounded p-2">
-            💡 Select fan with ≥{result.cfm.toFixed(0)} CFM at {result.sp.toFixed(0)} Pa static pressure. Add 20% safety margin. Run fans at night (cool, dry air) for first 2 weeks.
+          <div className="rounded-lg bg-muted/30 p-3 text-xs leading-relaxed text-muted-foreground">
+            💡 {copyFor(language, `Select fan with ≥${result.cfm.toFixed(0)} CFM at ${result.sp.toFixed(0)} Pa static pressure. Add 20% safety margin. Run fans at night (cool, dry air) for first 2 weeks.`, `اختر مروحة بقدرة ≥${result.cfm.toFixed(0)} CFM عند ضغط ساكن ${result.sp.toFixed(0)} باسكال. أضف هامش أمان 20%. شغّل المراوح ليلاً (هواء بارد وجاف) خلال أول أسبوعين.`)}
           </div>
         </div>
       )}
@@ -377,8 +383,8 @@ const ACCENT_BG: Record<string, string> = {
 
 function Metric({ label, value, sub, color }: { label: string; value: string; sub?: string; color: keyof typeof ACCENT_BG }) {
   return (
-    <div className={`rounded-md border px-2 py-1.5 ${ACCENT_BG[color]}`}>
-      <div className="text-[9px] text-muted-foreground uppercase tracking-wide">{label}</div>
+    <div className={`rounded-xl border p-3 shadow-sm ${ACCENT_BG[color]}`}>
+      <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{label}</div>
       <div className="font-mono text-sm font-semibold leading-tight">{value}</div>
       {sub && <div className="text-[9px] text-muted-foreground">{sub}</div>}
     </div>
@@ -387,8 +393,8 @@ function Metric({ label, value, sub, color }: { label: string; value: string; su
 
 function TabBtn({ active, onClick, icon: Icon, label }: { active: boolean; onClick: () => void; icon: typeof Droplets; label: string }) {
   return (
-    <button onClick={onClick} className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${active ? 'bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300' : 'text-muted-foreground hover:bg-muted/50'}`}>
-      <Icon className="h-3.5 w-3.5" /><span>{label}</span>
+    <button type="button" aria-pressed={active} onClick={onClick} className={`flex min-h-11 items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${active ? 'bg-background text-amber-700 shadow-sm dark:text-amber-300' : 'text-muted-foreground hover:text-foreground'}`}>
+      <Icon className="h-4 w-4" /><span>{label}</span>
     </button>
   );
 }

@@ -22,6 +22,7 @@ interface UserState {
   notes: Record<string, string>;
   setNote: (code: string, note: string) => void;
   removeNote: (code: string) => void;
+  restoreUserData: (data: { favorites: string[]; notes: Record<string, string>; calcHistory: CalcHistoryEntry[] }) => void;
 }
 
 export const useUserStore = create<UserState>()(
@@ -49,6 +50,7 @@ export const useUserStore = create<UserState>()(
         return { notes: next };
       }),
       removeNote: (code) => set(state => { const next = { ...state.notes }; delete next[code]; return { notes: next }; }),
+      restoreUserData: (data) => set(data),
     }),
     { name: 'agri-atlas-user-state', version: 1 }
   )

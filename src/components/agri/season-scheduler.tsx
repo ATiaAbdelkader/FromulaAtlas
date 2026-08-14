@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { Workflow } from '@/lib/workflows';
-import { useTranslation } from '@/lib/language-store';
+import { copyFor, useTranslation } from '@/lib/language-store';
 
 interface SeasonSchedulerProps {
   onLaunchWorkflow?: (workflow: Workflow) => void;
@@ -121,7 +121,7 @@ export function SeasonScheduler({ onLaunchWorkflow }: SeasonSchedulerProps) {
   // Defer date computation to after mount to avoid SSR hydration mismatch
   // (server renders in UTC, client in user's timezone — they can differ by a day)
   const [now, setNow] = useState<Date | null>(null);
-  const { isRTL } = useTranslation();
+  const { isRTL, language } = useTranslation();
 
   useEffect(() => {
     setNow(new Date());
@@ -196,57 +196,63 @@ export function SeasonScheduler({ onLaunchWorkflow }: SeasonSchedulerProps) {
   const localizedFocus = isRTL && ar ? ar.irrigationFocus : season.irrigationFocus;
   const localizedRisk = isRTL && ar && ar.riskAlert ? ar.riskAlert : season.riskAlert;
   const localizedRecs = isRTL && ar ? ar.recommendations : season.recommendations.map(r => r.text);
+  const localizedMonths = isRTL ? {
+    spring: 'مارس–مايو (شمال) / سبتمبر–نوفمبر (جنوب)',
+    summer: 'يونيو–أغسطس (شمال) / ديسمبر–فبراير (جنوب)',
+    autumn: 'سبتمبر–نوفمبر (شمال) / مارس–مايو (جنوب)',
+    winter: 'ديسمبر–فبراير (شمال) / يونيو–أغسطس (جنوب)',
+  }[seasonKey] : season.months;
 
   return (
-    <section className="mb-8">
-      <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+    <section className="mb-8 rounded-2xl border border-amber-200/70 bg-gradient-to-br from-background to-amber-50/30 p-4 shadow-sm dark:border-amber-900/60 dark:to-amber-950/10 sm:p-5">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <Calendar className="h-4 w-4 text-emerald-600" />
-            <h2 className="text-lg font-semibold tracking-tight">{isRTL ? 'مخطّط الري الموسمي' : 'Seasonal Irrigation Planner'}</h2>
+            <span className="rounded-lg bg-amber-100 p-2 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"><Calendar className="h-4 w-4" /></span>
+            <h2 className="text-lg font-semibold tracking-tight">{copyFor(language, 'Seasonal Irrigation Planner', 'مخطّط الري الموسمي')}</h2>
           </div>
           <p className="text-sm text-muted-foreground">
             {isRTL ? `اليوم ${dayOfMonth} ${monthName}. إليك ما يجب التركيز عليه هذا الموسم.` : `Today is ${monthName} ${dayOfMonth}. Here's what to focus on this season.`}
           </p>
         </div>
-        <div className="flex items-center gap-1">
-          <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
+        <div className="flex items-center gap-1 rounded-lg border border-border/70 bg-background/70 p-1">
+          <MapPin className="ml-1 h-3.5 w-3.5 text-muted-foreground" />
           <button
             onClick={() => setHemisphere('northern')}
             className={cn(
-              'px-2 py-1 rounded-md text-[10px] font-medium transition-all border',
+              'min-h-9 rounded-md border px-3 py-1 text-[10px] font-medium transition-all',
               hemisphere === 'northern'
                 ? 'bg-foreground text-background border-foreground'
                 : 'bg-background text-muted-foreground border-border'
             )}
           >
-            {isRTL ? 'شمالي' : 'Northern'}
+            {copyFor(language, 'Northern', 'شمالي')}
           </button>
           <button
             onClick={() => setHemisphere('southern')}
             className={cn(
-              'px-2 py-1 rounded-md text-[10px] font-medium transition-all border',
+              'min-h-9 rounded-md border px-3 py-1 text-[10px] font-medium transition-all',
               hemisphere === 'southern'
                 ? 'bg-foreground text-background border-foreground'
                 : 'bg-background text-muted-foreground border-border'
             )}
           >
-            {isRTL ? 'جنوبي' : 'Southern'}
+            {copyFor(language, 'Southern', 'جنوبي')}
           </button>
         </div>
       </div>
 
-      <div className={cn('rounded-xl border-2 p-5', season.border, season.bg)}>
+      <div className={cn('rounded-2xl border-2 p-4 sm:p-5', season.border, season.bg)}>
         {/* Season header */}
-        <div className="flex items-center gap-3 mb-4">
-          <div className={cn('flex items-center justify-center h-12 w-12 rounded-lg', season.bg, season.color)}>
+        <div className="mb-5 flex flex-wrap items-center gap-3">
+          <div className={cn('flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-current/10', season.bg, season.color)}>
             <SeasonIcon className="h-6 w-6" />
           </div>
           <div className="flex-1">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <h3 className={cn('text-xl font-bold', season.color)}>{localizedName}</h3>
               <Badge variant="outline" className="text-[10px] font-normal">
-                {season.months}
+                {localizedMonths}
               </Badge>
             </div>
             <p className="text-sm text-muted-foreground mt-0.5">
@@ -257,7 +263,7 @@ export function SeasonScheduler({ onLaunchWorkflow }: SeasonSchedulerProps) {
 
         {/* Risk alert */}
         {localizedRisk && (
-          <div className="mb-4 rounded-lg border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 p-3 flex items-start gap-2">
+          <div className="mb-5 flex items-start gap-2 rounded-xl border border-amber-300 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-950/30">
             <span className="text-amber-600 dark:text-amber-400 text-sm">⚠</span>
             <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
               {localizedRisk}
@@ -267,15 +273,15 @@ export function SeasonScheduler({ onLaunchWorkflow }: SeasonSchedulerProps) {
 
         {/* Recommendations */}
         <div className="space-y-2">
-          <div className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground mb-2">
-            {isRTL ? 'أولويات هذا الموسم' : 'This Season\'s Priorities'}
+          <div className="mb-3 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+            {copyFor(language, "This Season's Priorities", 'أولويات هذا الموسم')}
           </div>
           {season.recommendations.map((rec, idx) => (
             <div
               key={idx}
-              className="flex items-start gap-3 p-2.5 rounded-lg bg-background/60 border border-border/50 hover:border-emerald-300 dark:hover:border-emerald-800 transition-colors"
+              className="flex items-start gap-3 rounded-xl border border-border/50 bg-background/70 p-3 transition-colors hover:border-emerald-300 dark:hover:border-emerald-800"
             >
-              <div className={cn('flex items-center justify-center h-6 w-6 rounded-full flex-shrink-0 text-[10px] font-bold', season.bg, season.color)}>
+              <div className={cn('flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold', season.bg, season.color)}>
                 {idx + 1}
               </div>
               <div className="flex-1 min-w-0">
@@ -295,11 +301,11 @@ export function SeasonScheduler({ onLaunchWorkflow }: SeasonSchedulerProps) {
         </div>
 
         {/* Quick action */}
-        <div className="mt-4 pt-4 border-t border-border/50">
+        <div className="mt-5 border-t border-border/50 pt-4">
           <Button
             variant="outline"
             size="sm"
-            className="gap-1.5 text-xs"
+            className="h-10 gap-1.5 text-xs"
             onClick={() => {
               // Launch the most relevant workflow for the season
               const workflowMap: Record<string, string> = {

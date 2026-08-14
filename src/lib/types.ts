@@ -10,6 +10,10 @@ export interface Formula {
   pitfall: string;
   decision: string;
   notes: string;
+  /** Optional Arabic translations populated for localized formula search and display. */
+  name_ar?: string;
+  purpose_ar?: string;
+  variables_ar?: string;
   part: string;
   part_roman: string;
   chapter: string;

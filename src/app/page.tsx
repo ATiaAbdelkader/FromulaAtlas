@@ -25,6 +25,7 @@ import {
 import { AnimatedCounter } from '@/components/agri/nutri-tools/AnimatedCounter';
 import { LanguageToggle } from '@/components/language-toggle';
 import { useTranslation } from '@/lib/language-store';
+import { FORMULA_COUNT, FREE_TOOL_COUNT } from '@/lib/catalog-stats';
 
 export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
@@ -105,8 +106,8 @@ export default function LandingPage() {
           {/* Subtitle */}
           <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto mb-8 leading-relaxed">
             {isRTL
-              ? '500 معادلة زراعية. أكثر من 91 أداة تفاعلية. نظم معلومات جغرافية، وكلاء ذكاء اصطناعي، جدولة ري، و ET₀ وفق FAO-56 — كل ذلك في منصة واحدة. صمّمه باحث، للمزارعين والمهندسين الزراعيين والطلاب.'
-              : '500 agronomic formulas. 91+ interactive tools. GIS, AI specialists, irrigation scheduling, and FAO-56 ET₀ — all in one platform. Built by a researcher, for farmers, agronomists, and students.'}
+              ? `${FORMULA_COUNT} معادلة زراعية. ${FREE_TOOL_COUNT} حاسبة مجانية. نظم معلومات جغرافية، وكلاء ذكاء اصطناعي، جدولة ري، و ET₀ وفق FAO-56 — كل ذلك في منصة واحدة. صمّمه باحث، للمزارعين والمهندسين الزراعيين والطلاب.`
+              : `${FORMULA_COUNT} agronomic formulas. ${FREE_TOOL_COUNT} free calculators. GIS, AI specialists, irrigation scheduling, and FAO-56 ET₀ — all in one platform. Built by a researcher, for farmers, agronomists, and students.`}
           </p>
 
           {/* CTAs */}
@@ -239,7 +240,7 @@ export default function LandingPage() {
       <section className="py-20 bg-muted/20">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-3">{isRTL ? 'أكثر من 91 أداة، بلا احتكاك' : '91+ tools, zero friction'}</h2>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-3">{isRTL ? `${FREE_TOOL_COUNT} حاسبة مجانية، بلا احتكاك` : `${FREE_TOOL_COUNT} free calculators, zero friction`}</h2>
             <p className="text-sm text-muted-foreground max-w-xl mx-auto">{isRTL ? 'اضغط ⌘K من أي مكان في التطبيق لإيجاد أي أداة في أجزاء من الثانية.' : 'Press ⌘K from anywhere in the app to find any tool in milliseconds.'}</p>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -291,8 +292,8 @@ export default function LandingPage() {
               color="#6366f1"
               title={isRTL ? 'الباحثون' : 'Researchers'}
               description={isRTL
-                ? '500 معادلة مع مراجع، رياضيات FAO-56 ET₀، وبيانات قابلة للتصدير للأبحاث.'
-                : '500 formulas with citations, FAO-56 ET₀ math, and exportable data for papers.'}
+                ? `${FORMULA_COUNT} معادلة مع مراجع، رياضيات FAO-56 ET₀، وبيانات قابلة للتصدير للأبحاث.`
+                : `${FORMULA_COUNT} formulas with citations, FAO-56 ET₀ math, and exportable data for papers.`}
               points={isRTL
                 ? ['FAO-56 + فينسنتي', 'جاهز للاقتباس', 'تصدير CSV/JSON', 'مصادر بيانات مفتوحة']
                 : ['FAO-56 + Vincenty', 'Citation-ready', 'CSV/JSON export', 'Open data sources']}
@@ -418,8 +419,8 @@ export default function LandingPage() {
                 <ArrowRight className="h-5 w-5" />
               </Link>
               <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-8 text-xs text-emerald-100">
-                <span className="flex items-center gap-1"><Check className="h-3 w-3" /> {isRTL ? '500 معادلة' : '500 formulas'}</span>
-                <span className="flex items-center gap-1"><Check className="h-3 w-3" /> {isRTL ? '91+ أداة' : '91+ tools'}</span>
+                <span className="flex items-center gap-1"><Check className="h-3 w-3" /> {isRTL ? `${FORMULA_COUNT} معادلة` : `${FORMULA_COUNT} formulas`}</span>
+                <span className="flex items-center gap-1"><Check className="h-3 w-3" /> {isRTL ? `${FREE_TOOL_COUNT} حاسبة مجانية` : `${FREE_TOOL_COUNT} free calculators`}</span>
                 <span className="flex items-center gap-1"><Check className="h-3 w-3" /> {isRTL ? '10 وكلاء ذكاء' : '10 AI agents'}</span>
                 <span className="flex items-center gap-1"><Check className="h-3 w-3" /> {isRTL ? 'حزمة GIS' : 'GIS suite'}</span>
                 <span className="flex items-center gap-1"><Check className="h-3 w-3" /> FAO-56 ET₀</span>

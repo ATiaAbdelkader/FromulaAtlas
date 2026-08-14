@@ -14,7 +14,17 @@ import {
   getEntries, addEntry, removeEntry, computeSummary, scenarioImpact, SEED_ENTRIES,
   CATEGORY_META, type FinancialEntry, type FinancialSummary,
 } from '@/lib/financial-store';
-import { useTranslation } from '@/lib/language-store';
+import { copyFor, useTranslation } from '@/lib/language-store';
+
+const CATEGORY_LABELS: Record<FinancialEntry['category'], string> = {
+  seed: 'بذور', fertilizer: 'أسمدة', crop_protection: 'وقاية المحصول', irrigation: 'ري',
+  fuel: 'وقود وطاقة', labor: 'عمالة', rent: 'إيجار الأرض', machinery: 'آلات',
+  other_cost: 'تكاليف أخرى', crop_revenue: 'مبيعات المحصول', subsidy: 'إعانات', other_revenue: 'إيرادات أخرى',
+};
+
+function categoryLabel(category: FinancialEntry['category'], language: Parameters<typeof copyFor>[0]): string {
+  return copyFor(language, CATEGORY_META[category].label, CATEGORY_LABELS[category]);
+}
 
 export function FinancialDashboard() {
   const [entries, setEntries] = useState<FinancialEntry[]>([]);
@@ -23,7 +33,7 @@ export function FinancialDashboard() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newEntry, setNewEntry] = useState({ category: 'fertilizer' as FinancialEntry['category'], label: '', amount: '' });
   const [scenario, setScenario] = useState({ costDeltaPct: 0, priceDeltaPct: 0, yieldDeltaPct: 0 });
-  const { isRTL } = useTranslation();
+  const { isRTL, language } = useTranslation();
 
   useEffect(() => {
     let e = getEntries();
@@ -52,10 +62,11 @@ export function FinancialDashboard() {
 
   const exportPdf = () => {
     const win = window.open('', '_blank');
+    const tr = (english: string, arabic: string) => copyFor(language, english, arabic);
     if (!win) return;
-    const costRows = costs.map((e, i) => `<tr><td>${i+1}</td><td>${CATEGORY_META[e.category].emoji} ${CATEGORY_META[e.category].label}</td><td>${e.label}</td><td style="text-align:right">$${e.amount.toFixed(2)}</td></tr>`).join('');
-    const revRows = revenues.map((e, i) => `<tr><td>${i+1}</td><td>${CATEGORY_META[e.category].emoji} ${CATEGORY_META[e.category].label}</td><td>${e.label}</td><td style="text-align:right">$${e.amount.toFixed(2)}</td></tr>`).join('');
-    win.document.write(`<!DOCTYPE html><html><head><title>Farm Financial Report</title><style>
+    const costRows = costs.map((e, i) => `<tr><td>${i+1}</td><td>${CATEGORY_META[e.category].emoji} ${categoryLabel(e.category, language)}</td><td>${e.label}</td><td style="text-align:right">$${e.amount.toFixed(2)}</td></tr>`).join('');
+    const revRows = revenues.map((e, i) => `<tr><td>${i+1}</td><td>${CATEGORY_META[e.category].emoji} ${categoryLabel(e.category, language)}</td><td>${e.label}</td><td style="text-align:right">$${e.amount.toFixed(2)}</td></tr>`).join('');
+    win.document.write(`<!DOCTYPE html><html><head><title>${tr('Farm Financial Report', 'التقرير المالي للمزرعة')}</title><style>
       body{font-family:system-ui,sans-serif;margin:24px;color:#0f172a} h1{color:#16a34a;font-size:20px}
       .meta{color:#475569;font-size:12px;margin-bottom:16px}
       .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
@@ -63,35 +74,35 @@ export function FinancialDashboard() {
       .neg{color:#dc2626} .pos{color:#16a34a}
       table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:16px} th{background:#ecfdf5;color:#047857;padding:6px;border:1px solid #a7f3d0;text-align:left} td{padding:4px 6px;border:1px solid #d1fae5}
       @page{size:landscape;margin:12mm}
-    </style></head><body>
-      <h1>💰 Farm Financial Report</h1>
-      <div class="meta">Yield: ${yieldT} t/ha · Price: $${pricePerT}/t · Generated: ${new Date().toLocaleString()}</div>
+    </style></head><body dir="${language === 'ar' ? 'rtl' : 'ltr'}">
+      <h1>💰 ${tr('Farm Financial Report', 'التقرير المالي للمزرعة')}</h1>
+      <div class="meta">${tr('Yield', 'الإنتاج')}: ${yieldT} t/ha · ${tr('Price', 'السعر')}: $${pricePerT}/t · ${tr('Generated', 'أُنشئ')}: ${new Date().toLocaleString(language === 'ar' ? 'ar' : undefined)}</div>
       <div class="summary">
-        <div class="stat"><div class="stat-label">Total Costs</div><div class="stat-value neg">$${summary.totalCosts.toFixed(0)}</div></div>
-        <div class="stat"><div class="stat-label">Total Revenue</div><div class="stat-value pos">$${summary.totalRevenue.toFixed(0)}</div></div>
-        <div class="stat"><div class="stat-label">Gross Margin</div><div class="stat-value ${summary.grossMargin >= 0 ? 'pos' : 'neg'}">$${summary.grossMargin.toFixed(0)}</div></div>
-        <div class="stat"><div class="stat-label">ROI</div><div class="stat-value ${summary.roi >= 0 ? 'pos' : 'neg'}">${summary.roi.toFixed(1)}%</div></div>
+        <div class="stat"><div class="stat-label">${tr('Total Costs', 'إجمالي التكاليف')}</div><div class="stat-value neg">$${summary.totalCosts.toFixed(0)}</div></div>
+        <div class="stat"><div class="stat-label">${tr('Total Revenue', 'إجمالي الإيرادات')}</div><div class="stat-value pos">$${summary.totalRevenue.toFixed(0)}</div></div>
+        <div class="stat"><div class="stat-label">${tr('Gross Margin', 'الهامش الإجمالي')}</div><div class="stat-value ${summary.grossMargin >= 0 ? 'pos' : 'neg'}">$${summary.grossMargin.toFixed(0)}</div></div>
+        <div class="stat"><div class="stat-label">${tr('ROI', 'العائد على الاستثمار')}</div><div class="stat-value ${summary.roi >= 0 ? 'pos' : 'neg'}">${summary.roi.toFixed(1)}%</div></div>
       </div>
-      <h2>Costs ($${summary.totalCosts.toFixed(2)}/ha)</h2><table><thead><tr><th>#</th><th>Category</th><th>Description</th><th>Amount ($/ha)</th></tr></thead><tbody>${costRows}</tbody></table>
-      <h2>Revenue ($${summary.totalRevenue.toFixed(2)}/ha)</h2><table><thead><tr><th>#</th><th>Category</th><th>Description</th><th>Amount ($/ha)</th></tr></thead><tbody>${revRows}</tbody></table>
+      <h2>${tr('Costs', 'التكاليف')} ($${summary.totalCosts.toFixed(2)}/ha)</h2><table><thead><tr><th>#</th><th>${tr('Category', 'الفئة')}</th><th>${tr('Description', 'الوصف')}</th><th>${tr('Amount ($/ha)', 'المبلغ ($/هـ)')}</th></tr></thead><tbody>${costRows}</tbody></table>
+      <h2>${tr('Revenue', 'الإيرادات')} ($${summary.totalRevenue.toFixed(2)}/ha)</h2><table><thead><tr><th>#</th><th>${tr('Category', 'الفئة')}</th><th>${tr('Description', 'الوصف')}</th><th>${tr('Amount ($/ha)', 'المبلغ ($/هـ)')}</th></tr></thead><tbody>${revRows}</tbody></table>
       <div class="summary">
-        <div class="stat"><div class="stat-label">Break-even yield</div><div class="stat-value">${summary.breakEvenYield.toFixed(2)} t/ha</div></div>
-        <div class="stat"><div class="stat-label">Break-even price</div><div class="stat-value">$${summary.breakEvenPrice.toFixed(0)}/t</div></div>
-        <div class="stat"><div class="stat-label">Cost per tonne</div><div class="stat-value">$${summary.costPerTonne.toFixed(0)}/t</div></div>
-        <div class="stat"><div class="stat-label">Margin %</div><div class="stat-value">${summary.grossMarginPct.toFixed(1)}%</div></div>
+        <div class="stat"><div class="stat-label">${tr('Break-even yield', 'إنتاج التعادل')}</div><div class="stat-value">${summary.breakEvenYield.toFixed(2)} t/ha</div></div>
+        <div class="stat"><div class="stat-label">${tr('Break-even price', 'سعر التعادل')}</div><div class="stat-value">$${summary.breakEvenPrice.toFixed(0)}/t</div></div>
+        <div class="stat"><div class="stat-label">${tr('Cost per tonne', 'تكلفة الطن')}</div><div class="stat-value">$${summary.costPerTonne.toFixed(0)}/t</div></div>
+        <div class="stat"><div class="stat-label">${tr('Margin %', 'الهامش %')}</div><div class="stat-value">${summary.grossMarginPct.toFixed(1)}%</div></div>
       </div>
     </body></html>`);
     win.document.close(); setTimeout(() => win.print(), 300);
   };
 
   return (
-    <Card>
+    <Card dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Yield + price inputs */}
       <div className="grid grid-cols-3 gap-2">
         <div><Label className="text-[10px]">{isRTL ? 'الإنتاج (ط/هـ)' : 'Yield (t/ha)'}</Label><Input value={yieldT} onChange={e => setYieldT(e.target.value)} type="number" className="h-8 text-xs mt-0.5" /></div>
         <div><Label className="text-[10px]">{isRTL ? 'السعر ($/ط)' : 'Price ($/t)'}</Label><Input value={pricePerT} onChange={e => setPricePerT(e.target.value)} type="number" className="h-8 text-xs mt-0.5" /></div>
         <div className="flex items-end gap-1">
-          <Button size="sm" variant="outline" onClick={exportPdf} className="gap-1 text-xs h-8"><Download className="h-3 w-3" /> PDF</Button>
+          <Button size="sm" variant="outline" onClick={exportPdf} className="gap-1 text-xs h-8"><Download className="h-3 w-3" /> {isRTL ? 'PDF' : 'PDF'}</Button>
           <Button size="sm" variant="ghost" onClick={loadSeedData} className="text-[10px] h-8" title={isRTL ? 'تحميل بيانات نموذجية' : 'Load sample data'}>{isRTL ? 'نموذج' : 'Sample'}</Button>
         </div>
       </div>
@@ -139,7 +150,7 @@ export function FinancialDashboard() {
                 </div>
                 <span className="text-xs font-mono w-12 text-right">${e.amount.toFixed(0)}</span>
                 <span className="text-[9px] text-muted-foreground w-8 text-right">{pct.toFixed(0)}%</span>
-                <button onClick={() => handleRemove(e.id)} className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="h-3 w-3" /></button>
+                <button onClick={() => handleRemove(e.id)} aria-label={isRTL ? 'حذف السجل' : 'Remove entry'} className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="h-3 w-3" /></button>
               </div>
             );
           })}
@@ -151,7 +162,7 @@ export function FinancialDashboard() {
         <div className="rounded-lg border-2 border-emerald-200 dark:border-emerald-800 bg-emerald-50/30 dark:bg-emerald-950/10 p-3 space-y-2">
           <div className="grid grid-cols-3 gap-2">
             <select value={newEntry.category} onChange={e => setNewEntry({ ...newEntry, category: e.target.value as FinancialEntry['category'] })} className="h-8 text-xs rounded-md border border-input bg-background px-2">
-              {(Object.keys(CATEGORY_META) as FinancialEntry['category'][]).map(c => <option key={c} value={c}>{CATEGORY_META[c].emoji} {CATEGORY_META[c].label}</option>)}
+              {(Object.keys(CATEGORY_META) as FinancialEntry['category'][]).map(c => <option key={c} value={c}>{CATEGORY_META[c].emoji} {categoryLabel(c, language)}</option>)}
             </select>
             <Input value={newEntry.label} onChange={e => setNewEntry({ ...newEntry, label: e.target.value })} placeholder={isRTL ? 'الوصف' : 'Description'} className="h-8 text-xs" />
             <Input value={newEntry.amount} onChange={e => setNewEntry({ ...newEntry, amount: e.target.value })} type="number" placeholder={isRTL ? '$ المبلغ/هـ' : '$ amount/ha'} className="h-8 text-xs" />

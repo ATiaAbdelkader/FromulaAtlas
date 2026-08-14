@@ -25,6 +25,7 @@ import {
   PLANT_PROBLEMS, ALGERIAN_ACTIVE_MATTERS, ACTIVE_MATTER_BY_ID,
   type PlantProblem, type ActiveMatter,
 } from './algeria-phyto-data';
+import { getFertialGuidance, type FertialCropGuidance } from './fertial-fertilization';
 
 // ============================================================================
 // Kc interpolation for CropLifecycle (mirrors open-meteo.ts kcForDay but for
@@ -104,6 +105,7 @@ export interface CropCalendarResult {
     riskCount: number;
   };
   weeks: CalendarEntry[];
+  fertialGuidance?: FertialCropGuidance;
 }
 
 // ============================================================================
@@ -247,6 +249,7 @@ export function generateCropCalendar(input: CalendarInput): CropCalendarResult |
   const avgET0 = input.avgET0 ?? 5; // mm/day default
   const allRisks = getRisksForCrop(input.cropId);
   const seedRate = computeSeedRate(input.cropId);
+  const fertialGuidance = getFertialGuidance(input.cropId);
 
   const weeks: CalendarEntry[] = [];
   let totalN = 0, totalP = 0, totalK = 0, totalIrrM3 = 0, totalLaborDays = 0;
@@ -343,5 +346,6 @@ export function generateCropCalendar(input: CalendarInput): CropCalendarResult |
       riskCount: allRisks.length,
     },
     weeks,
+    fertialGuidance,
   };
 }

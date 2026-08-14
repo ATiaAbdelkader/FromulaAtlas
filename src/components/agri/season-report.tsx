@@ -40,33 +40,33 @@ interface SeasonReportButtonProps {
 // --- Formatting helpers ----------------------------------------------------
 
 function cropLabel(value: string): string {
-  return cropOptions.find((o) => o.value === value)?.label ?? value;
+  return cropOptions.includes(value) ? value : value;
 }
 
 function soilLabel(value: Farm['soilType']): string {
-  return soilTypeOptions.find((o) => o.value === value)?.label ?? value;
+  return soilTypeOptions.includes(value) ? value : value;
 }
 
 function irrigationLabel(value: Farm['irrigationType']): string {
-  return irrigationTypeOptions.find((o) => o.value === value)?.label ?? value;
+  return irrigationTypeOptions.includes(value) ? value : value;
 }
 
-function formatDate(iso: string | null | undefined): string {
-  if (!iso) return '—';
+function formatDate(value: string | number | null | undefined): string {
+  if (value == null || value === '') return '—';
   try {
-    return new Date(iso).toLocaleDateString(undefined, {
+    return new Date(value).toLocaleDateString(undefined, {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
     });
   } catch {
-    return iso;
+    return String(value);
   }
 }
 
-function formatDateTime(iso: string): string {
+function formatDateTime(value: string | number): string {
   try {
-    return new Date(iso).toLocaleString(undefined, {
+    return new Date(value).toLocaleString(undefined, {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -74,7 +74,7 @@ function formatDateTime(iso: string): string {
       minute: '2-digit',
     });
   } catch {
-    return iso;
+    return String(value);
   }
 }
 
@@ -128,8 +128,8 @@ function renderCalcRow(entry: FarmCalcEntry, idx: number): string {
       <td class="cell-code">${esc(entry.formulaCode)}</td>
       <td class="cell-name">${esc(entry.formulaName)}</td>
       <td class="cell-result">
-        <span class="result-value">${esc(entry.resultValue)}</span>
-        <span class="result-label">${esc(entry.resultLabel)}</span>
+        <span class="result-value">${esc(entry.result.value)}</span>
+        <span class="result-label">${esc(entry.result.label)}</span>
       </td>
       <td class="cell-inputs">${inputs}${extraInputs}</td>
     </tr>`;
@@ -139,9 +139,7 @@ function renderSeasonReportHtml(data: SeasonReportData): string {
   const { farm, entries, weather, weatherLocation, generatedAt } = data;
 
   // Sort oldest → newest so the log reads chronologically.
-  const sorted = [...entries].sort((a, b) =>
-    a.timestamp.localeCompare(b.timestamp),
-  );
+  const sorted = [...entries].sort((a, b) => a.timestamp - b.timestamp);
 
   // Summary stats
   const totalCalcs = sorted.length;
@@ -166,11 +164,10 @@ function renderSeasonReportHtml(data: SeasonReportData): string {
   // since the Farm interface does not currently expose a dedicated plantingDate.
   const farmFields = [
     renderFarmField('Crop', cropLabel(farm.crop)),
-    renderFarmField('Area', `${farm.areaHa.toFixed(2)} ha`),
+    renderFarmField('Area', `${farm.area.toFixed(2)} ha`),
     renderFarmField('Soil type', soilLabel(farm.soilType)),
     renderFarmField('Irrigation', irrigationLabel(farm.irrigationType)),
-    renderFarmField('Planting date', formatDate(farm.createdAt)),
-    farm.location ? renderFarmField('Location', farm.location) : '',
+    renderFarmField('Planting date', formatDate(farm.plantingDate ?? farm.createdAt)),
   ]
     .filter(Boolean)
     .join('');
@@ -182,20 +179,20 @@ function renderSeasonReportHtml(data: SeasonReportData): string {
           <h2>Weather at time of report</h2>
           ${
             weatherLocation
-              ? `<div class="weather-loc">📍 ${esc(weatherLocation.label)}</div>`
+              ? `<div class="weather-loc">📍 ${esc(weatherLocation.name)}</div>`
               : ''
           }
           <div class="weather-grid">
-            ${renderWeatherStat('Conditions', weatherCodeToText(weather.weatherCode))}
-            ${renderWeatherStat('Temperature', `${weather.temperature.toFixed(1)} °C`)}
-            ${renderWeatherStat('Feels like', `${weather.apparentTemperature.toFixed(1)} °C`)}
-            ${renderWeatherStat('Humidity', `${weather.humidity.toFixed(0)} %`)}
-            ${renderWeatherStat('Wind', `${weather.windSpeed.toFixed(1)} km/h`)}
-            ${renderWeatherStat('Precipitation', `${weather.precipitation.toFixed(1)} mm`)}
-            ${renderWeatherStat('Cloud cover', `${weather.cloudCover.toFixed(0)} %`)}
-            ${renderWeatherStat('Pressure', `${weather.pressure.toFixed(0)} hPa`)}
+            ${renderWeatherStat('Conditions', weatherCodeToText(weather.current.weatherCode).text)}
+            ${renderWeatherStat('Temperature', `${weather.current.temperature.toFixed(1)} °C`)}
+            ${renderWeatherStat('Humidity', `${weather.current.humidity.toFixed(0)} %`)}
+            ${renderWeatherStat('Wind', `${weather.current.windSpeed.toFixed(1)} km/h`)}
+            ${renderWeatherStat('Precipitation', `${weather.current.precipitation.toFixed(1)} mm`)}
+            ${renderWeatherStat('ET₀ today', `${weather.daily.et0.toFixed(1)} mm`)}
+            ${renderWeatherStat('Today range', `${weather.daily.tempMin.toFixed(1)}–${weather.daily.tempMax.toFixed(1)} °C`)}
+            ${renderWeatherStat('Today rain', `${weather.daily.precipitationSum.toFixed(1)} mm`)}
           </div>
-          <p class="muted weather-stamp">Observation time: ${esc(formatDateTime(weather.time))}</p>
+          <p class="muted weather-stamp">Observation time: ${esc(formatDateTime(weather.fetchedAt))}</p>
         </section>`
     : '';
 
@@ -346,7 +343,7 @@ function renderSeasonReportHtml(data: SeasonReportData): string {
   <div class="brand">🌱 Agri-Atlas · Season Report</div>
   <h1>${esc(farm.name)}</h1>
   <div class="meta">Generated ${esc(formatDateTime(generatedAt))}${
-    farm.location ? ` · Location: ${esc(farm.location)}` : ''
+    weatherLocation ? ` · Location: ${esc(weatherLocation.name)}` : ''
   }</div>
 
   <section class="block">

@@ -144,18 +144,18 @@ ${description ? `<p class="desc">${description}</p>` : ''}
   };
 
   return (
-    <div data-export-bar className="flex flex-wrap items-center gap-1.5 mb-3 pb-2 border-b border-border/40">
-      <Button size="sm" variant="ghost" onClick={onCopy} className="h-7 gap-1 text-[11px] text-muted-foreground hover:text-foreground">
+    <div data-export-bar role="group" aria-label={`${title} export actions`} className="flex flex-wrap items-center gap-1.5 mb-3 border-b border-border/40 pb-2">
+      <Button size="sm" variant="ghost" onClick={onCopy} className="min-h-9 touch-manipulation gap-1 text-[11px] text-muted-foreground transition-transform active:scale-[0.98] hover:text-foreground focus-visible:ring-2 focus-visible:ring-emerald-500/60">
         {copied === 'copy' ? <Check className="h-3 w-3 text-emerald-600" /> : <ClipboardCopy className="h-3 w-3" />}
         {copied === 'copy' ? 'Copied' : 'Copy'}
       </Button>
-      <Button size="sm" variant="ghost" onClick={onCsv} className="h-7 gap-1 text-[11px] text-muted-foreground hover:text-foreground">
+      <Button size="sm" variant="ghost" onClick={onCsv} className="min-h-9 touch-manipulation gap-1 text-[11px] text-muted-foreground transition-transform active:scale-[0.98] hover:text-foreground focus-visible:ring-2 focus-visible:ring-emerald-500/60">
         <FileSpreadsheet className="h-3 w-3" /> CSV
       </Button>
-      <Button size="sm" variant="ghost" onClick={onPdf} className="h-7 gap-1 text-[11px] text-muted-foreground hover:text-foreground">
+      <Button size="sm" variant="ghost" onClick={onPdf} className="min-h-9 touch-manipulation gap-1 text-[11px] text-muted-foreground transition-transform active:scale-[0.98] hover:text-foreground focus-visible:ring-2 focus-visible:ring-emerald-500/60">
         <FileText className="h-3 w-3" /> PDF
       </Button>
-      <Button size="sm" variant="ghost" onClick={onShare} className="h-7 gap-1 text-[11px] text-muted-foreground hover:text-foreground">
+      <Button size="sm" variant="ghost" onClick={onShare} className="min-h-9 touch-manipulation gap-1 text-[11px] text-muted-foreground transition-transform active:scale-[0.98] hover:text-foreground focus-visible:ring-2 focus-visible:ring-emerald-500/60">
         {copied === 'share' ? <Check className="h-3 w-3 text-emerald-600" /> : <Share2 className="h-3 w-3" />}
         {copied === 'share' ? 'Link copied' : 'Share'}
       </Button>

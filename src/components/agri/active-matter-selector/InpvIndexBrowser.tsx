@@ -65,19 +65,19 @@ export function InpvIndexBrowser() {
   const shown = filtered.slice(0, visible);
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
+    <Card className="overflow-hidden rounded-2xl border-emerald-200/60 shadow-sm dark:border-emerald-900/60">
+      <CardHeader className="border-b bg-emerald-50/40 pb-4 dark:bg-emerald-950/20">
         <CardTitle className="flex items-center gap-2 text-base">
           <FileText className="h-4 w-4 text-emerald-600" />
-          Index INPV 2017 — produits phytosanitaires (Algérie)
+          <span>Index INPV 2017 — produits phytosanitaires (Algérie)</span>
         </CardTitle>
         <CardDescription>
           {products
-            ? `${products.length} spécialités extraites de l'index officiel (pages 21-232) — n° d'homologation, nom commercial, substance active, concentration, formulation.`
+            ? `${products.length} spécialités extraites de l’index officiel (pages 21–232) — homologation, marque, substance active, concentration et formulation.`
             : 'Chargement de l’index officiel…'}
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-4 p-4 sm:p-5">
         {error ? (
           <p className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
@@ -101,7 +101,7 @@ export function InpvIndexBrowser() {
                     setVisible(PAGE_SIZE);
                   }}
                   placeholder="Rechercher : marque, substance active, société, n° d’homologation…"
-                  className="pl-8 text-xs"
+                  className="h-10 pl-9 text-sm"
                 />
               </div>
               <Select
@@ -111,7 +111,7 @@ export function InpvIndexBrowser() {
                   setVisible(PAGE_SIZE);
                 }}
               >
-                <SelectTrigger className="text-xs"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="min-h-10 text-sm"><SelectValue /></SelectTrigger>
                 <SelectContent className="max-h-72">
                   <SelectItem value="all">Toutes les sections</SelectItem>
                   {sections.map((s) => (
@@ -123,7 +123,7 @@ export function InpvIndexBrowser() {
               </Select>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-muted/20 p-2">
               <Badge variant="secondary" className="text-xs">{filtered.length} spécialité{filtered.length > 1 ? 's' : ''}</Badge>
               {query && (
                 <Badge variant="outline" className="text-[10px]">filtre : « {query} »</Badge>
@@ -140,7 +140,7 @@ export function InpvIndexBrowser() {
                 {shown.map((p) => (
                   <div
                     key={`${p.homologation}-${p.brand}-${p.page}`}
-                    className="flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-lg border bg-card px-3 py-2.5 transition hover:border-emerald-400/60"
+                    className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border bg-card p-3 shadow-sm transition hover:border-emerald-400/60 hover:shadow-md"
                   >
                     <Badge className="shrink-0 bg-slate-800 font-mono text-[10px] text-white dark:bg-slate-200 dark:text-slate-900">
                       <Hash className="mr-1 h-3 w-3" />{p.homologation}
@@ -174,6 +174,7 @@ export function InpvIndexBrowser() {
                       type="button"
                       variant="outline"
                       size="sm"
+                      className="min-h-10"
                       onClick={() => setVisible((v) => v + PAGE_SIZE)}
                     >
                       Afficher {Math.min(PAGE_SIZE, filtered.length - shown.length)} autres spécialités
@@ -183,7 +184,7 @@ export function InpvIndexBrowser() {
               </div>
             )}
 
-            <p className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300">
+            <p className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-xs leading-relaxed text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300">
               <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
               Index officiel de 2017 : une homologation peut avoir été retirée, renouvelée ou modifiée depuis.
               Vérifiez toujours auprès de l’INPV la validité actuelle avant toute utilisation.

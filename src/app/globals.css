@@ -171,3 +171,14 @@
 [dir="rtl"] {
   text-align: start;
 }
+
+/* Keep Farm-tool interaction feedback accessible for reduced-motion users. */
+@media (prefers-reduced-motion: reduce) {
+  [data-farm-tool],
+  [data-farm-tool] * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

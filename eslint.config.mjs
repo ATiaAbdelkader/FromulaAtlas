@@ -18,6 +18,10 @@ const eslintConfig = [...nextCoreWebVitals, ...nextTypescript, {
     
     // React rules
     "react-hooks/exhaustive-deps": "off",
+    // These React 19 compiler diagnostics are not yet adopted across the legacy UI.
+    "react-hooks/set-state-in-effect": "off",
+    "react-hooks/refs": "off",
+    "react-hooks/preserve-manual-memoization": "off",
     "react-hooks/purity": "off",
     "react/no-unescaped-entities": "off",
     "react/display-name": "off",

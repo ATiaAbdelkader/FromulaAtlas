@@ -18,6 +18,8 @@ import {
   Satellite, Bug, DollarSign, ShoppingCart, Leaf, Users, FileText,
   Calculator, Network, TableProperties, Star, Columns2,
 } from 'lucide-react';
+import { FORMULA_COUNT, FREE_TOOL_COUNT } from './catalog-stats';
+import type { Language } from './language-store';
 
 export type TabId = 'home' | 'formulas' | 'tools' | 'farm' | 'insights';
 
@@ -39,6 +41,53 @@ export interface ToolEntry {
   color: string;
 }
 
+const FRENCH_TOOL_COPY: Record<string, string> = {
+  'Multi-Field Dashboard': 'Tableau multi-parcelles',
+  'Track every field, crop stage and irrigation demand': 'Suivez chaque parcelle, stade de culture et besoin d’irrigation',
+  'Coordinate Converter': 'Convertisseur de coordonnées',
+  'Field Boundary Importer': 'Importateur de limites de parcelle',
+  'Distance & Bearing Calculator': 'Calculateur de distance et de relèvement',
+  'Elevation & Slope Analyzer': 'Analyseur d’altitude et de pente',
+  'Crop Rotation Planner': 'Planificateur de rotation des cultures',
+  'Season Plan Generator': 'Générateur de plan de saison',
+  'Fertilization Generator': 'Générateur de fertilisation',
+  'Labor Calendar': 'Calendrier de la main-d’œuvre',
+  'Yield Gap Analysis': 'Analyse de l’écart de rendement',
+  'Field Scouting Log': 'Journal de prospection au champ',
+  'Field Record Book': 'Carnet de parcelle',
+  'Traceable timeline for field decisions, scouting, soil tests, satellite checks, inputs, irrigation, and harvest': 'Chronologie traçable des décisions, observations, analyses de sol, contrôles satellite, intrants, irrigation et récoltes',
+  'Demo Scenario Studio': 'Studio de scénarios de démonstration',
+  'Reproducible Algeria-aware synthetic farm data for demos, onboarding, and QA': 'Données agricoles algériennes synthétiques et reproductibles pour démonstration, accueil et tests',
+  'Soil Test History Tracker': 'Suivi historique des analyses de sol',
+  'Livestock Management': 'Gestion de l’élevage',
+  'Irrigation Program Generator': 'Générateur de programme d’irrigation',
+  'Irrigation System Designer': 'Concepteur de système d’irrigation',
+  'Seasonal Irrigation Planner': 'Planificateur d’irrigation saisonnière',
+  'Evapotranspiration Tracker': 'Suivi de l’évapotranspiration',
+  'Irrigation Scheduler': 'Planificateur d’irrigation',
+  'NDVI Satellite Field Maps': 'Cartes NDVI des parcelles par satellite',
+  'Weather Radar + Frost Maps': 'Radar météo et cartes du gel',
+  'Smart Agriculture Suite': 'Suite d’agriculture intelligente',
+  'AI Specialists (Multi-Agent Chat)': 'Spécialistes IA (chat multi-agents)',
+  'Financial Dashboard': 'Tableau de bord financier',
+  'Marketplace — Buy Fertilizers': 'Marché — acheter des engrais',
+  'Sustainability Scorecard': 'Tableau de bord de durabilité',
+  'Farmer Community': 'Communauté agricole',
+  'Professional Report Generator': 'Générateur de rapports professionnels',
+  'Service Integrations': 'Intégrations de services',
+  'Home Dashboard': 'Tableau de bord d’accueil',
+};
+
+/** Return the registry entry with a localized display title and description. */
+export function localizeToolEntry(entry: ToolEntry, language: Language): ToolEntry {
+  if (language !== 'fr') return entry;
+  return {
+    ...entry,
+    title: FRENCH_TOOL_COPY[entry.title] ?? entry.title,
+    description: FRENCH_TOOL_COPY[entry.description] ?? entry.description,
+  };
+}
+
 export const TOOL_REGISTRY: ToolEntry[] = [
   // ==========================================================================
   // FARM TAB — Fields & Crops
@@ -54,6 +103,8 @@ export const TOOL_REGISTRY: ToolEntry[] = [
   { id: 'labor-calendar', title: 'Labor Calendar', description: 'Phenology-driven field operations · Person-days/ha', keywords: 'labor calendar operations work phenology person days', tab: 'farm', storageKey: 'collapse_labor_cal', icon: Calendar, category: 'farm', color: '#0891b2' },
   { id: 'yield-gap', title: 'Yield Gap Analysis', description: 'Benchmark actual vs potential yield by crop and climate', keywords: 'yield gap potential benchmark climate crop', tab: 'farm', storageKey: 'collapse_yieldgap', icon: TrendingUp, category: 'farm', color: '#0891b2' },
   { id: 'scouting-log', title: 'Field Scouting Log', description: 'Voice + photo field observations with severity tagging', keywords: 'scouting field observation pest disease photo voice', tab: 'farm', storageKey: 'collapse_scouting', icon: Sprout, category: 'farm', color: '#84cc16' },
+  { id: 'field-record-book', title: 'Field Record Book', description: 'Traceable timeline for field decisions, scouting, soil tests, satellite checks, inputs, irrigation, and harvest', keywords: 'field record book journal timeline history scouting soil satellite input irrigation harvest cost decision', tab: 'farm', storageKey: 'collapse_field_records', icon: BookOpen, category: 'farm', color: '#047857' },
+  { id: 'demo-scenario', title: 'Demo Scenario Studio', description: 'Reproducible Algeria-aware synthetic farm data for demos, onboarding, and QA', keywords: 'demo scenario synthetic farm data seed manifest qa investor onboarding test fixture', tab: 'farm', storageKey: 'collapse_demo_scenario', icon: Sparkles, category: 'farm', color: '#7c3aed' },
 
   // ==========================================================================
   // FARM TAB — Soil & Livestock
@@ -95,8 +146,8 @@ export const TOOL_REGISTRY: ToolEntry[] = [
   // ==========================================================================
   // TOOLS TAB (FreeToolsSection — represents the whole section)
   // ==========================================================================
-  { id: 'tools-tab', title: 'All Free Tools (18 calculators)', description: 'Oxide/elemental, units, hydro, water, fertilizers, soil, reference', keywords: 'free tools calculator oxide elemental units hydro water fertilizer soil reference', tab: 'tools', icon: Wrench, category: 'tools', color: '#0891b2' },
-  { id: 'formulas-tab', title: 'Formula Atlas (332 formulas)', description: 'Browse all 332 agronomic formulas with 218 interactive calculators', keywords: 'formula atlas browse all 332 218 interactive calculator', tab: 'formulas', icon: BookOpen, category: 'formulas', color: '#f59e0b' },
+  { id: 'tools-tab', title: `All Free Tools (${FREE_TOOL_COUNT} calculators)`, description: 'Oxide/elemental, units, hydro, water, fertilizers, soil, reference', keywords: 'free tools calculator oxide elemental units hydro water fertilizer soil reference', tab: 'tools', icon: Wrench, category: 'tools', color: '#0891b2' },
+  { id: 'formulas-tab', title: `Formula Atlas (${FORMULA_COUNT} formulas)`, description: `Browse all ${FORMULA_COUNT} agronomic formulas with 218 interactive calculators`, keywords: 'formula atlas browse formulas interactive calculator', tab: 'formulas', icon: BookOpen, category: 'formulas', color: '#f59e0b' },
 
   // ==========================================================================
   // Quick actions (not real tools, but navigable shortcuts)
@@ -154,7 +205,20 @@ export function searchTools(query: string, limit = 8): SearchResult[] {
 // ============================================================================
 
 const RECENT_KEY = 'recent_tools_v1';
+const PINNED_KEY = 'pinned_tools_v1';
+const TOOL_PINS_CHANGED_EVENT = 'formula-atlas-tool-pins-changed';
 const MAX_RECENT = 6;
+
+function readIds(key: string): string[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const saved = localStorage.getItem(key);
+    const ids = saved ? JSON.parse(saved) : [];
+    return Array.isArray(ids) ? ids.filter((id): id is string => typeof id === 'string') : [];
+  } catch {
+    return [];
+  }
+}
 
 export function getRecentTools(): ToolEntry[] {
   try {
@@ -171,10 +235,43 @@ export function getRecentTools(): ToolEntry[] {
 
 export function recordToolUse(toolId: string): void {
   try {
-    const saved = localStorage.getItem(RECENT_KEY);
-    const ids: string[] = saved ? JSON.parse(saved) : [];
+    const ids = readIds(RECENT_KEY);
     // Remove if already present, then prepend
     const next = [toolId, ...ids.filter(id => id !== toolId)].slice(0, MAX_RECENT);
     localStorage.setItem(RECENT_KEY, JSON.stringify(next));
   } catch { /* ignore */ }
 }
+
+export function getPinnedToolIds(): string[] {
+  return readIds(PINNED_KEY);
+}
+
+export function getPinnedTools(): ToolEntry[] {
+  const pinned = new Set(getPinnedToolIds());
+  return TOOL_REGISTRY.filter(entry => pinned.has(entry.id));
+}
+
+export function isToolPinned(toolId: string): boolean {
+  return getPinnedToolIds().includes(toolId);
+}
+
+export function toggleToolPin(toolId: string): string[] {
+  const ids = getPinnedToolIds();
+  const next = ids.includes(toolId) ? ids.filter(id => id !== toolId) : [toolId, ...ids];
+  try {
+    localStorage.setItem(PINNED_KEY, JSON.stringify(next));
+    window.dispatchEvent(new CustomEvent(TOOL_PINS_CHANGED_EVENT, { detail: next }));
+  } catch { /* ignore */ }
+  return next;
+}
+
+export function setPinnedToolIds(toolIds: string[]): string[] {
+  const validIds = [...new Set(toolIds)].filter(id => TOOL_REGISTRY.some(tool => tool.id === id));
+  try {
+    localStorage.setItem(PINNED_KEY, JSON.stringify(validIds));
+    window.dispatchEvent(new CustomEvent(TOOL_PINS_CHANGED_EVENT, { detail: validIds }));
+  } catch { /* ignore */ }
+  return validIds;
+}
+
+export { TOOL_PINS_CHANGED_EVENT };

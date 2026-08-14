@@ -13,6 +13,7 @@ interface ParsedReport {
   values: Record<string, number | string>;
   notes: string;
   suggestedTool: string;
+  reviewRequired?: boolean;
 }
 
 const TYPE_LABELS: Record<string, { label: string; color: string }> = {
@@ -109,6 +110,7 @@ export function FieldDataCapture() {
   const [parsed, setParsed] = useState<ParsedReport | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  const [reviewAcknowledged, setReviewAcknowledged] = useState(false);
   const { isRTL } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -117,9 +119,14 @@ export function FieldDataCapture() {
       setError('Please upload an image file (PNG, JPG, etc.)');
       return;
     }
+    if (file.size > 8 * 1024 * 1024) {
+      setError('Please upload an image smaller than 8 MB.');
+      return;
+    }
     setLoading(true);
     setError(null);
     setParsed(null);
+    setReviewAcknowledged(false);
 
     // Read as data URL for preview + API
     const reader = new FileReader();
@@ -138,6 +145,7 @@ export function FieldDataCapture() {
           throw new Error(err.error || `HTTP ${res.status}`);
         }
         const data: ParsedReport = await res.json();
+        setReviewAcknowledged(false);
         setParsed(data);
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Failed to parse image';
@@ -154,7 +162,7 @@ export function FieldDataCapture() {
   };
 
   const sendToTool = () => {
-    if (!parsed) return;
+    if (!parsed || (parsed.reviewRequired && !reviewAcknowledged)) return;
     const payload = buildBridgePayload(parsed);
     if (!payload) return;
     sendToBridge({
@@ -172,6 +180,7 @@ export function FieldDataCapture() {
     setParsed(null);
     setPreview(null);
     setError(null);
+    setReviewAcknowledged(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -313,6 +322,13 @@ export function FieldDataCapture() {
                         </div>
                       )}
 
+                      {parsed.reviewRequired && (
+                        <label className="flex items-start gap-2 rounded-lg border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/30 p-3 text-xs text-amber-800 dark:text-amber-200">
+                          <input type="checkbox" checked={reviewAcknowledged} onChange={(event) => setReviewAcknowledged(event.target.checked)} className="mt-0.5" />
+                          <span>{isRTL ? 'راجعت القيم مقابل التقرير الأصلي وأفهم أن نتائج الذكاء الاصطناعي استشارية وقد تكون غير دقيقة.' : 'I reviewed these values against the original report and understand that AI extraction is advisory and may be inaccurate.'}</span>
+                        </label>
+                      )}
+
                       {/* Suggested tool + send button */}
                       {parsed.suggestedTool && parsed.suggestedTool !== 'unknown' && valueEntries.length > 0 && (
                         <div className="flex items-center justify-between gap-3 p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900">
@@ -320,7 +336,7 @@ export function FieldDataCapture() {
                             <div className="text-[10px] uppercase tracking-wide text-emerald-700 dark:text-emerald-300 font-semibold">{isRTL ? 'الأداة المقترحة' : 'Suggested tool'}</div>
                             <div className="font-medium">{TOOL_LABELS[parsed.suggestedTool] || parsed.suggestedTool}</div>
                           </div>
-                          <Button onClick={sendToTool} size="sm" className="bg-emerald-600 hover:bg-emerald-700">
+                          <Button onClick={sendToTool} disabled={Boolean(parsed.reviewRequired && !reviewAcknowledged)} size="sm" className="bg-emerald-600 hover:bg-emerald-700">
                             {isRTL ? 'إرسال إلى الأداة ←' : 'Send to tool →'}
                           </Button>
                         </div>

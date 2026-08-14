@@ -110,10 +110,11 @@ export function SmartAlerts() {
   const alerts = useMemo<WeatherAlert[]>(() => {
     if (!weather) return [];
 
-    const et0 = estimateET0(weather.temperature, weather.apparentTemperature);
-    const thi = computeTHI(weather.temperature, weather.humidity);
-    const rainfall = weather.precipitation;
-    const tempC = weather.temperature;
+    const tempC = weather.current.temperature;
+    const humidity = weather.current.humidity;
+    const rainfall = weather.current.precipitation;
+    const et0 = weather.daily.et0;
+    const thi = computeTHI(tempC, humidity);
 
     const list: WeatherAlert[] = [];
 

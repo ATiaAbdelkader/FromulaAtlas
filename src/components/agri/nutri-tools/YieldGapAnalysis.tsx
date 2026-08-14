@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { TrendingUp, DollarSign, Lightbulb, Gauge } from 'lucide-react';
+import { copyFor, useTranslation } from '@/lib/language-store';
 
 type ClimateZone = 'tropical_lowland' | 'tropical_highland' | 'subtropical' | 'temperate' | 'arid' | 'mediterranean';
 
@@ -39,6 +40,15 @@ const CLIMATE_LABELS: Record<ClimateZone, string> = {
   arid: 'Arid',
   mediterranean: 'Mediterranean',
 };
+const CROP_LABELS_AR: Record<string, string> = {
+  tomato: '🍅 طماطم', maize: '🌽 ذرة', wheat: '🌾 قمح', rice: '🍚 أرز',
+  potato: '🥔 بطاطا', soybean: '🫘 فول الصويا', cassava: '🥖 كسافا', banana: '🍌 موز',
+};
+const CLIMATE_LABELS_AR: Record<ClimateZone, string> = {
+  tropical_lowland: 'منخفض استوائي', tropical_highland: 'مرتفعات استوائية', subtropical: 'شبه استوائي',
+  temperate: 'معتدل', arid: 'جاف', mediterranean: 'متوسطي',
+};
+const GAP_LABELS_AR = { Excellent: 'ممتاز', Good: 'جيد', Moderate: 'متوسط', 'Large gap': 'فجوة كبيرة' } as const;
 
 function classifyGap(pct: number): { label: string; color: string; bg: string } {
   if (pct < 20) return { label: 'Excellent',  color: '#15803d', bg: '#dcfce7' };
@@ -48,6 +58,7 @@ function classifyGap(pct: number): { label: string; color: string; bg: string } 
 }
 
 export function YieldGapAnalysis() {
+  const { language } = useTranslation();
   const [crop, setCrop] = useState('maize');
   const [climate, setClimate] = useState<ClimateZone>('tropical_lowland');
   const [actualStr, setActualStr] = useState('7');
@@ -65,78 +76,81 @@ export function YieldGapAnalysis() {
   const economicLoss = gap * area * price; // t/ha × ha × USD/t
 
   const recommendation = useMemo(() => {
-    if (gapPct < 20) return `Excellent — you're within 20% of potential. Focus on consistency, quality, and risk management rather than closing the gap.`;
+    if (gapPct < 20) return copyFor(language, `Excellent — you're within 20% of potential. Focus on consistency, quality, and risk management rather than closing the gap.`, 'ممتاز — أنت ضمن 20٪ من الإنتاجية المحتملة. ركّز على الاتساق والجودة وإدارة المخاطر بدلاً من التركيز على سد الفجوة.');
     const recover = (frac: number) => (gap * frac * area * price);
-    if (gapPct < 40) return `Good — close ~50% of the gap via tuned nutrient timing and variety choice → recover ~$${recover(0.5).toFixed(0)}/ha total across the field.`;
-    if (gapPct < 60) return `Moderate — prioritise integrated soil fertility, water management, and pest control. Closing 40% recovers ~$${recover(0.4).toFixed(0)}/ha total.`;
-    return `Large gap — address foundational constraints first (soil pH, drainage, varieties, basic agronomy). Closing 30% recovers ~$${recover(0.3).toFixed(0)}/ha total.`;
-  }, [gapPct, gap, area, price]);
+    if (gapPct < 40) return copyFor(language, `Good — close ~50% of the gap via tuned nutrient timing and variety choice → recover ~$${recover(0.5).toFixed(0)}/ha total across the field.`, `جيد — سد نحو 50٪ من الفجوة عبر ضبط توقيت العناصر الغذائية واختيار الصنف → استرداد نحو ${recover(0.5).toFixed(0)} دولار/هكتار على مستوى الحقل.`);
+    if (gapPct < 60) return copyFor(language, `Moderate — prioritise integrated soil fertility, water management, and pest control. Closing 40% recovers ~$${recover(0.4).toFixed(0)}/ha total.`, `متوسط — أعطِ الأولوية لخصوبة التربة المتكاملة وإدارة المياه ومكافحة الآفات. سد 40٪ يسترد نحو ${recover(0.4).toFixed(0)} دولار/هكتار.`);
+    return copyFor(language, `Large gap — address foundational constraints first (soil pH, drainage, varieties, basic agronomy). Closing 30% recovers ~$${recover(0.3).toFixed(0)}/ha total.`, `فجوة كبيرة — عالج القيود الأساسية أولاً (درجة حموضة التربة والصرف والأصناف والممارسات الزراعية الأساسية). سد 30٪ يسترد نحو ${recover(0.3).toFixed(0)} دولار/هكتار.`);
+  }, [gapPct, gap, area, price, language]);
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
+    <Card className="overflow-hidden border-emerald-200/60 shadow-sm dark:border-emerald-900/60">
+      <CardHeader className="border-b bg-gradient-to-r from-emerald-50 via-background to-teal-50/50 pb-4 dark:from-emerald-950/30 dark:via-background dark:to-teal-950/20">
         <CardTitle className="flex items-center gap-2 text-base">
           <TrendingUp className="h-4 w-4 text-emerald-600" />
-          Yield Gap Analysis
+          {copyFor(language, 'Yield Gap Analysis', 'تحليل فجوة الإنتاجية')}
         </CardTitle>
         <CardDescription className="text-xs">
-          Compare actual yield against FAO potential yield (GYGA) for your crop × climate zone.
+          {copyFor(language, 'Compare actual yield against FAO potential yield (GYGA) for your crop × climate zone.', 'قارن الإنتاجية الفعلية بالإنتاجية المحتملة وفق FAO (GYGA) لمحصولك ومنطقتك المناخية.')}
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <CardContent className="space-y-5 p-4 sm:p-5">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <Label className="text-xs">Crop</Label>
+            <Label className="text-xs font-medium">{copyFor(language, 'Crop', 'المحصول')}</Label>
             <Select value={crop} onValueChange={setCrop}>
-              <SelectTrigger className="h-9 mt-1 w-full text-xs"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="mt-1 h-10 w-full text-sm"><SelectValue /></SelectTrigger>
               <SelectContent>
-                {Object.keys(POTENTIAL_YIELD).map(c => <SelectItem key={c} value={c} className="text-xs">{CROP_LABELS[c]}</SelectItem>)}
+                {Object.keys(POTENTIAL_YIELD).map(c => <SelectItem key={c} value={c} className="text-xs">{copyFor(language, CROP_LABELS[c], CROP_LABELS_AR[c])}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <div>
-            <Label className="text-xs">Climate zone</Label>
+            <Label className="text-xs font-medium">{copyFor(language, 'Climate zone', 'المنطقة المناخية')}</Label>
             <Select value={climate} onValueChange={(v) => setClimate(v as ClimateZone)}>
-              <SelectTrigger className="h-9 mt-1 w-full text-xs"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="mt-1 h-10 w-full text-sm"><SelectValue /></SelectTrigger>
               <SelectContent>
-                {(Object.keys(CLIMATE_LABELS) as ClimateZone[]).map(k => <SelectItem key={k} value={k} className="text-xs">{CLIMATE_LABELS[k]}</SelectItem>)}
+                {(Object.keys(CLIMATE_LABELS) as ClimateZone[]).map(k => <SelectItem key={k} value={k} className="text-xs">{copyFor(language, CLIMATE_LABELS[k], CLIMATE_LABELS_AR[k])}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <div>
-            <Label className="text-xs">Actual yield (t/ha)</Label>
-            <Input type="number" value={actualStr} onChange={e => setActualStr(e.target.value)} className="h-9 mt-1" />
+            <Label className="text-xs font-medium">{copyFor(language, 'Actual yield (t/ha)', 'الإنتاجية الفعلية (طن/هكتار)')}</Label>
+            <Input aria-label={copyFor(language, 'Actual yield in tonnes per hectare', 'الإنتاجية الفعلية بالطن لكل هكتار')} type="number" value={actualStr} onChange={e => setActualStr(e.target.value)} className="mt-1 h-10 text-sm" />
           </div>
           <div>
-            <Label className="text-xs">Area (ha)</Label>
-            <Input type="number" value={areaStr} onChange={e => setAreaStr(e.target.value)} className="h-9 mt-1" />
+            <Label className="text-xs font-medium">{copyFor(language, 'Area (ha)', 'المساحة (هكتار)')}</Label>
+            <Input aria-label={copyFor(language, 'Field area in hectares', 'مساحة الحقل بالهكتار')} type="number" value={areaStr} onChange={e => setAreaStr(e.target.value)} className="mt-1 h-10 text-sm" />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-          <div className="rounded-lg p-4 border" style={{ background: cls.bg, borderColor: cls.color + '40' }}>
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+          <div className="rounded-xl border p-4 shadow-sm" style={{ background: cls.bg, borderColor: cls.color + '40' }}>
             <div className="text-[10px] uppercase tracking-wide text-muted-foreground flex items-center gap-1">
-              <Gauge className="h-3 w-3" /> Yield gap
+              <Gauge className="h-3 w-3" /> {copyFor(language, 'Yield gap', 'فجوة الإنتاجية')}
             </div>
-            <div className="text-3xl font-bold mt-1" style={{ color: cls.color }}>{gap.toFixed(1)} t/ha</div>
-            <div className="text-xs font-medium mt-1" style={{ color: cls.color }}>{gapPct.toFixed(0)}% · {cls.label}</div>
-            <div className="text-[11px] text-muted-foreground mt-1">Potential {potential} · Actual {actual} t/ha</div>
+            <div className="mt-1 text-3xl font-bold tracking-tight" style={{ color: cls.color }}>{gap.toFixed(1)} t/ha</div>
+            <div className="text-xs font-medium mt-1" style={{ color: cls.color }}>{gapPct.toFixed(0)}% · {copyFor(language, cls.label, GAP_LABELS_AR[cls.label as keyof typeof GAP_LABELS_AR])}</div>
+            <div className="text-[11px] text-muted-foreground mt-1">{copyFor(language, 'Potential', 'المحتملة')} {potential} · {copyFor(language, 'Actual', 'الفعلية')} {actual} t/ha</div>
           </div>
 
-          <div className="rounded-lg border p-3 lg:col-span-2">
-            <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">Actual vs potential (t/ha)</div>
+          <div className="rounded-xl border bg-background p-4 shadow-sm lg:col-span-2">
+            <div className="mb-2 flex items-center justify-between gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <span>{copyFor(language, 'Actual vs potential', 'الفعلية مقابل المحتملة')}</span>
+              <span className="font-mono normal-case tracking-normal">t/ha</span>
+            </div>
             <BarPair actual={actual} potential={potential} />
             <div className="flex items-center gap-3 mt-2 text-[10px] text-muted-foreground">
-              <span className="flex items-center gap-1"><span className="inline-block w-3 h-2.5 rounded-sm bg-emerald-500" />Actual</span>
-              <span className="flex items-center gap-1"><span className="inline-block w-3 h-2.5 rounded-sm bg-slate-400" />Potential</span>
+              <span className="flex items-center gap-1"><span className="inline-block w-3 h-2.5 rounded-sm bg-emerald-500" />{copyFor(language, 'Actual', 'الفعلية')}</span>
+              <span className="flex items-center gap-1"><span className="inline-block w-3 h-2.5 rounded-sm bg-slate-400" />{copyFor(language, 'Potential', 'المحتملة')}</span>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="rounded-lg p-4 border bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-900">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-4 shadow-sm dark:border-emerald-900 dark:bg-emerald-950/20">
             <div className="text-[10px] uppercase tracking-wide text-muted-foreground flex items-center gap-1">
-              <DollarSign className="h-3 w-3" /> Economic loss (this season)
+              <DollarSign className="h-3 w-3" /> {copyFor(language, 'Economic loss (this season)', 'الخسارة الاقتصادية (هذا الموسم)')}
             </div>
             <div className="text-2xl font-bold mt-1 text-emerald-700 dark:text-emerald-300">
               ${economicLoss.toLocaleString(undefined, { maximumFractionDigits: 0 })}
@@ -145,16 +159,16 @@ export function YieldGapAnalysis() {
               {gap.toFixed(1)} t/ha × {area} ha × ${price}/t
             </div>
             <div className="mt-2">
-              <Label className="text-[10px] text-muted-foreground">Price override (USD/t)</Label>
-              <Input type="number" value={priceStr} onChange={e => setPriceStr(e.target.value)} placeholder={`Default: ${DEFAULT_PRICES[crop]}`} className="h-8 mt-1 text-xs" />
+              <Label className="text-[10px] text-muted-foreground">{copyFor(language, 'Price override (USD/t)', 'تعديل السعر (دولار/طن)')}</Label>
+              <Input aria-label={copyFor(language, 'Price override in US dollars per tonne', 'تعديل السعر بالدولار الأمريكي للطن')} type="number" value={priceStr} onChange={e => setPriceStr(e.target.value)} placeholder={`${copyFor(language, 'Default', 'افتراضي')}: ${DEFAULT_PRICES[crop]}`} className="mt-1 h-10 text-sm" />
             </div>
           </div>
-          <div className="rounded-lg p-4 border bg-amber-50/50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900">
+          <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-4 shadow-sm dark:border-amber-900 dark:bg-amber-950/20">
             <div className="text-[10px] uppercase tracking-wide text-muted-foreground flex items-center gap-1">
-              <Lightbulb className="h-3 w-3" /> Recommendation
+              <Lightbulb className="h-3 w-3" /> {copyFor(language, 'Recommendation', 'التوصية')}
             </div>
-            <p className="text-xs mt-1 leading-relaxed">{recommendation}</p>
-            <Badge variant="outline" className="mt-2 text-[10px]" style={{ color: cls.color, borderColor: cls.color + '40' }}>{cls.label}</Badge>
+            <p className="mt-2 text-sm leading-relaxed text-foreground/90">{recommendation}</p>
+            <Badge variant="outline" className="mt-2 text-[10px]" style={{ color: cls.color, borderColor: cls.color + '40' }}>{copyFor(language, cls.label, GAP_LABELS_AR[cls.label as keyof typeof GAP_LABELS_AR])}</Badge>
           </div>
         </div>
       </CardContent>

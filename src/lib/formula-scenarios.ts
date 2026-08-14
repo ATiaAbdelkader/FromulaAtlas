@@ -16,9 +16,11 @@ export interface FormulaScenario {
   id: string;
   title: string;
   title_ar: string;
+  title_fr: string;
   emoji: string;
   subtitle: string;
   subtitle_ar: string;
+  subtitle_fr: string;
   /** Gradient for the card background */
   gradient: string;
   /** Solid color for accents */
@@ -36,9 +38,11 @@ export const FORMULA_SCENARIOS: FormulaScenario[] = [
     id: 'crop-planning',
     title: 'Plan My Crop',
     title_ar: 'خطّط محصولي',
+    title_fr: 'Planifier ma culture',
     emoji: '🌱',
     subtitle: 'Planting density · Growth stages · Phenology · GDD',
     subtitle_ar: 'كثافة الزراعة · مراحل النمو · الفينولوجيا · درجات النمو الحرارية',
+    subtitle_fr: 'Densité de plantation · Stades de croissance · Phénologie · Degrés-jours',
     gradient: 'from-emerald-500 to-green-700',
     color: '#16a34a',
     parts: [
@@ -52,9 +56,11 @@ export const FORMULA_SCENARIOS: FormulaScenario[] = [
     id: 'water-management',
     title: 'Manage My Water',
     title_ar: 'أدر مائي',
+    title_fr: 'Gérer mon eau',
     emoji: '💧',
     subtitle: 'ET₀ · Kc · Irrigation scheduling · System design · Water harvesting',
     subtitle_ar: 'ET₀ · Kc · جدولة الري · تصميم النظام · حصاد المياه',
+    subtitle_fr: 'ET₀ · Kc · Calendrier d’irrigation · Conception du système · Collecte de l’eau',
     gradient: 'from-cyan-500 to-blue-700',
     color: '#0891b2',
     parts: [
@@ -69,9 +75,11 @@ export const FORMULA_SCENARIOS: FormulaScenario[] = [
     id: 'soil-health',
     title: 'Test My Soil',
     title_ar: 'افحص تربتي',
+    title_fr: 'Analyser mon sol',
     emoji: '🧪',
     subtitle: 'pH · CEC · NPK · Organic matter · Soil physics · Erosion',
     subtitle_ar: 'pH · CEC · NPK · مادة عضوية · فيزياء التربة · التعرّف',
+    subtitle_fr: 'pH · CEC · NPK · Matière organique · Physique du sol · Érosion',
     gradient: 'from-amber-500 to-orange-700',
     color: '#d97706',
     parts: [
@@ -85,9 +93,11 @@ export const FORMULA_SCENARIOS: FormulaScenario[] = [
     id: 'plant-protection',
     title: 'Protect My Plants',
     title_ar: 'احمِ نباتاتي',
+    title_fr: 'Protéger mes plantes',
     emoji: '🛡️',
     subtitle: 'Pest thresholds · Disease forecasting · Weed science · Spray timing',
     subtitle_ar: 'عتبات الآفات · التنبؤ بالأمراض · علم الأعشاب · توقيت الرش',
+    subtitle_fr: 'Seuils de ravageurs · Prévision des maladies · Adventices · Moment du traitement',
     gradient: 'from-red-500 to-rose-700',
     color: '#dc2626',
     parts: [
@@ -100,9 +110,11 @@ export const FORMULA_SCENARIOS: FormulaScenario[] = [
     id: 'yield-harvest',
     title: 'Estimate My Yield',
     title_ar: 'قدّر إنتاجي',
+    title_fr: 'Estimer mon rendement',
     emoji: '📊',
     subtitle: 'Yield prediction · Harvest timing · Post-harvest storage · Quality',
     subtitle_ar: 'التنبؤ بالإنتاج · توقيت الحصاد · التخزين بعد الحصاد · الجودة',
+    subtitle_fr: 'Prévision du rendement · Date de récolte · Stockage après récolte · Qualité',
     gradient: 'from-lime-500 to-green-700',
     color: '#65a30d',
     parts: [
@@ -115,9 +127,11 @@ export const FORMULA_SCENARIOS: FormulaScenario[] = [
     id: 'livestock',
     title: 'Feed My Animals',
     title_ar: 'غذّ حيواناتي',
+    title_fr: 'Nourrir mes animaux',
     emoji: '🐄',
     subtitle: 'Nutrition · Rations · Growth · Reproduction · Aquaculture · Beekeeping',
     subtitle_ar: 'التغذية · العلائق · النمو · التناسل · الاستزراع المائي · النحل',
+    subtitle_fr: 'Nutrition · Rations · Croissance · Reproduction · Aquaculture · Apiculture',
     gradient: 'from-orange-500 to-amber-700',
     color: '#ea580c',
     parts: [
@@ -135,9 +149,11 @@ export const FORMULA_SCENARIOS: FormulaScenario[] = [
     id: 'farm-economics',
     title: 'Run My Business',
     title_ar: 'أدر عملي',
+    title_fr: 'Gérer mon exploitation',
     emoji: '💰',
     subtitle: 'Costs · Revenue · ROI · Break-even · Scenarios · Precision ag',
     subtitle_ar: 'التكاليف · الإيرادات · العائد · التعادل · السيناريوهات · الزراعة الدقيقة',
+    subtitle_fr: 'Coûts · Revenus · ROI · Seuil de rentabilité · Scénarios · Agriculture de précision',
     gradient: 'from-violet-500 to-purple-700',
     color: '#7c3aed',
     parts: [
@@ -154,9 +170,11 @@ export const FORMULA_SCENARIOS: FormulaScenario[] = [
     id: 'sustainability',
     title: 'Score My Sustainability',
     title_ar: 'قيّس استدامتي',
+    title_fr: 'Évaluer ma durabilité',
     emoji: '🌿',
     subtitle: 'Carbon · Water productivity · NUE · Climate-smart · Agroforestry · Bioenergy',
     subtitle_ar: 'الكربون · إنتاجية الماء · كفاءة النيتروجين · المناخ · الحراج الزراعي · الطاقة الحيوية',
+    subtitle_fr: 'Carbone · Productivité de l’eau · EUN · Climat · Agroforesterie · Bioénergie',
     gradient: 'from-teal-500 to-emerald-700',
     color: '#14b8a6',
     parts: [

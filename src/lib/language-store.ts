@@ -1,25 +1,30 @@
-// Language state: 'en' or 'ar'. Persisted to localStorage via Zustand.
+// Language state: English, French, or Arabic. Persisted to localStorage via Zustand.
 //
 // This is the single source of truth for UI strings in Formula Atlas.
 // Components consume it via the `useTranslation()` hook and read from
 // the `t` object returned. Every key MUST be present in both `en`
-// and `ar` — TypeScript will not warn you if you forget a key, so add
-// new keys to both languages at the same time.
+//, `fr`, and `ar` — TypeScript will not warn you if you forget a key, so add
+// new shared keys to all language overlays at the same time.
 //
 // When adding a new string:
 //   1. Pick a stable, descriptive camelCase key.
 //   2. Add it to `en` first (source of truth, English copy).
-//   3. Add the Arabic equivalent to `ar` — keep it concise and natural.
-//   4. Use `t.yourKey` in the component.
+//   3. Add the French equivalent to the French overlay — keep it concise and natural.
+//   4. Add the Arabic equivalent to `ar` — keep it concise and natural.
+//   5. Use `t.yourKey` in the component.
 //
 // For dynamic / domain content (formula names, tool descriptions, crop
 // data), translate via separate per-entity dictionaries — do not bloat
 // this file with hundreds of entries.
 
 import { create } from 'zustand';
+import { FREE_TOOL_COUNT, FORMULA_COUNT } from './catalog-stats';
+import { frenchUiStrings } from './french-translations';
 import { persist } from 'zustand/middleware';
 
-export type Language = 'en' | 'ar';
+export type Language = 'en' | 'fr' | 'ar';
+
+const LANGUAGE_ORDER: Language[] = ['en', 'fr', 'ar'];
 
 interface LanguageState {
   language: Language;
@@ -32,7 +37,11 @@ export const useLanguageStore = create<LanguageState>()(
     (set, get) => ({
       language: 'en',
       setLanguage: (lang) => set({ language: lang }),
-      toggleLanguage: () => set({ language: get().language === 'en' ? 'ar' : 'en' }),
+      toggleLanguage: () => {
+        const currentIndex = LANGUAGE_ORDER.indexOf(get().language);
+        const nextLanguage = LANGUAGE_ORDER[(currentIndex + 1) % LANGUAGE_ORDER.length];
+        set({ language: nextLanguage });
+      },
     }),
     { name: 'agri-atlas-language', version: 2 }
   )
@@ -47,7 +56,7 @@ export const uiStrings = {
     // App identity
     appName: 'Formula Atlas',
     appSubtitle: 'Your AI-powered agronomy platform',
-    appTagline: '500 formulas · 91 tools · 10 AI specialists · 1 free platform',
+    appTagline: `${FORMULA_COUNT} formulas · ${FREE_TOOL_COUNT} free tools · 10 AI specialists · 1 free platform`,
 
     // Top-level navigation tabs
     tabHome: 'Home',
@@ -187,7 +196,9 @@ export const uiStrings = {
     themeSystem: 'System',
 
     // Language toggle tooltip
-    switchToArabic: 'التبديل إلى العربية',
+    switchLanguage: 'Change language',
+    switchToArabic: 'Switch to Arabic',
+    switchToFrench: 'Switch to French',
     switchToEnglish: 'Switch to English',
 
     // Empty states
@@ -224,7 +235,7 @@ export const uiStrings = {
     // App identity
     appName: 'أطلس المعادلات',
     appSubtitle: 'منصة زراعية مدعومة بالذكاء الاصطناعي',
-    appTagline: '500 معادلة · 91 أداة · 10 وكلاء ذكاء · منصة مجانية واحدة',
+    appTagline: `${FORMULA_COUNT} معادلة · ${FREE_TOOL_COUNT} أداة مجانية · 10 وكلاء ذكاء · منصة مجانية واحدة`,
 
     // Top-level navigation tabs
     tabHome: 'الرئيسية',
@@ -364,7 +375,9 @@ export const uiStrings = {
     themeSystem: 'النظام',
 
     // Language toggle tooltip
+    switchLanguage: 'تغيير اللغة',
     switchToArabic: 'التبديل إلى العربية',
+    switchToFrench: 'التبديل إلى الفرنسية',
     switchToEnglish: 'التبديل إلى الإنجليزية',
 
     // Empty states
@@ -398,8 +411,30 @@ export const uiStrings = {
   },
 } as const;
 
-export type TranslationKey = keyof typeof uiStrings.en;
-export type TranslationDict = typeof uiStrings.en;
+/** French overlays the English dictionary so newly added keys remain safe. */
+export const allUiStrings = {
+  ...uiStrings,
+  fr: { ...uiStrings.en, ...frenchUiStrings },
+} as const;
+
+export type TranslationKey = keyof typeof allUiStrings.en;
+export type TranslationDict = typeof allUiStrings.en;
+
+/**
+ * Localize component-specific copy without adding domain labels to the shared
+ * UI dictionary. Keep the English string as the source-of-truth fallback and
+ * provide concise, natural Arabic (and optional French) copy at the call site.
+ */
+export function copyFor(
+  language: Language,
+  english: string,
+  arabic: string,
+  french = english,
+): string {
+  if (language === 'ar') return arabic;
+  if (language === 'fr') return french;
+  return english;
+}
 
 /**
  * Returns the translation dictionary for the active language + the
@@ -412,6 +447,6 @@ export type TranslationDict = typeof uiStrings.en;
  */
 export function useTranslation() {
   const language = useLanguageStore(s => s.language);
-  const strings = uiStrings[language];
+  const strings = allUiStrings[language];
   return { t: strings, language, isRTL: language === 'ar' };
 }

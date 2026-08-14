@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, type ReactNode } from 'react';
-import { glossaryTerms } from '@/lib/glossary';
+import { GLOSSARY } from '@/lib/glossary';
 import { GlossaryTooltip } from './glossary-tooltip';
 
 interface FormulaTextProps {
@@ -23,7 +23,7 @@ interface Segment {
  * The matcher is case-insensitive and whole-word (using \b) so that, e.g.,
  * "Kc" does not match inside "kick".
  */
-function buildMatcher(terms: typeof glossaryTerms): { regex: RegExp; lookup: Map<string, string> } {
+function buildMatcher(terms: typeof GLOSSARY): { regex: RegExp; lookup: Map<string, string> } {
   const lookup = new Map<string, string>(); // lowercase match → canonical term
   const needles: string[] = [];
   for (const t of terms) {
@@ -52,7 +52,7 @@ function buildMatcher(terms: typeof glossaryTerms): { regex: RegExp; lookup: Map
  * elements; everything else is rendered as plain text.
  */
 export function FormulaText({ children, className }: FormulaTextProps) {
-  const { regex, lookup } = useMemo(() => buildMatcher(glossaryTerms), []);
+  const { regex, lookup } = useMemo(() => buildMatcher(GLOSSARY), []);
 
   const segments = useMemo<Segment[]>(() => {
     if (!children) return [];

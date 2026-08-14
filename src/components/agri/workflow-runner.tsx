@@ -14,6 +14,11 @@ import { allFormulas } from '@/lib/formulas-data';
 import { calculators } from './calculators';
 import { cn } from '@/lib/utils';
 import * as LucideIcons from 'lucide-react';
+import { useTranslation, type Language } from '@/lib/language-store';
+
+function copyFor(language: Language, en: string, fr: string, ar: string) {
+  return language === 'ar' ? ar : language === 'fr' ? fr : en;
+}
 
 interface WorkflowRunnerProps {
   workflow: Workflow | null;
@@ -25,6 +30,7 @@ export function WorkflowRunner({ workflow, open, onOpenChange }: WorkflowRunnerP
   const [currentStep, setCurrentStep] = useState(0);
   const [stepResults, setStepResults] = useState<Record<string, { inputs: Record<string, number>; result: { value: string; label: string; interpretation?: string } }> | null>(null);
   const [inputValues, setInputValues] = useState<Record<string, number>>({});
+  const { language, isRTL } = useTranslation();
 
   const activeStep: WorkflowStep | null = workflow?.steps[currentStep] ?? null;
   const activeFormula = useMemo(() => activeStep ? allFormulas.find(f => f.code === activeStep.formulaCode) ?? null : null, [activeStep]);
@@ -80,7 +86,7 @@ export function WorkflowRunner({ workflow, open, onOpenChange }: WorkflowRunnerP
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-3xl !max-h-[92vh] h-[92vh] flex flex-col p-0 gap-0 overflow-hidden">
+      <DialogContent dir={isRTL ? 'rtl' : 'ltr'} className="max-w-3xl !max-h-[92vh] h-[92vh] flex flex-col p-0 gap-0 overflow-hidden">
         <DialogHeader className="p-6 pb-4 border-b border-border bg-gradient-to-r from-emerald-50 via-background to-background dark:from-emerald-950/40 dark:via-background dark:to-background flex-shrink-0">
           <div className="flex items-start justify-between gap-3 mb-2">
             <div className="flex items-center gap-3 min-w-0">
@@ -89,7 +95,7 @@ export function WorkflowRunner({ workflow, open, onOpenChange }: WorkflowRunnerP
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap mb-1">
-                  <Badge variant="outline" className="text-[10px] uppercase tracking-wider font-semibold bg-background/60">Guided Workflow</Badge>
+                  <Badge variant="outline" className="text-[10px] uppercase tracking-wider font-semibold bg-background/60">{copyFor(language, 'Guided Workflow', 'Workflow guidé', 'سير عمل إرشادي')}</Badge>
                   <Badge variant="outline" className="text-[10px] font-normal bg-background/60">{workflow.duration}</Badge>
                   <Badge variant="outline" className="text-[10px] font-normal capitalize bg-background/60">{workflow.difficulty}</Badge>
                 </div>
@@ -104,7 +110,7 @@ export function WorkflowRunner({ workflow, open, onOpenChange }: WorkflowRunnerP
         {/* Progress bar */}
         <div className="px-6 py-3 border-b border-border bg-muted/30 flex-shrink-0">
           <div className="flex items-center justify-between gap-2 mb-2">
-            <span className="text-xs font-medium text-muted-foreground">Step {currentStep + 1} of {workflow.steps.length}</span>
+            <span className="text-xs font-medium text-muted-foreground">{copyFor(language, `Step ${currentStep + 1} of ${workflow.steps.length}`, `Étape ${currentStep + 1} sur ${workflow.steps.length}`, `الخطوة ${currentStep + 1} من ${workflow.steps.length}`)}</span>
           </div>
           <div className="flex items-center gap-1.5">
             {workflow.steps.map((step, idx) => (
@@ -132,7 +138,7 @@ export function WorkflowRunner({ workflow, open, onOpenChange }: WorkflowRunnerP
                   <p className="text-sm text-muted-foreground leading-relaxed">{activeStep.prompt}</p>
                   {activeStep.why && (
                     <div className="rounded-md bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 p-3 text-xs text-blue-800 dark:text-blue-300 leading-relaxed">
-                      <span className="font-semibold">Why this matters: </span>{activeStep.why}
+                      <span className="font-semibold">{copyFor(language, 'Why this matters: ', 'Pourquoi c’est important : ', 'لماذا هذا مهم: ')}</span>{activeStep.why}
                     </div>
                   )}
                 </div>
@@ -140,7 +146,7 @@ export function WorkflowRunner({ workflow, open, onOpenChange }: WorkflowRunnerP
                 {activeStep.carryForward && currentStep > 0 && stepResults && (
                   <div className="rounded-md bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900 p-3 flex items-center gap-2 text-xs text-emerald-800 dark:text-emerald-300">
                     <ArrowRight className="h-3.5 w-3.5 flex-shrink-0" />
-                    <span>Auto-filled from previous step</span>
+                    <span>{copyFor(language, 'Auto-filled from previous step', 'Rempli automatiquement depuis l’étape précédente', 'معبّأ تلقائياً من الخطوة السابقة')}</span>
                   </div>
                 )}
 
@@ -162,7 +168,7 @@ export function WorkflowRunner({ workflow, open, onOpenChange }: WorkflowRunnerP
 
                 {currentResult && (
                   <div className="rounded-lg border-2 border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/30 p-4 space-y-1">
-                    <div className="text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-500 font-semibold">Result</div>
+                    <div className="text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-500 font-semibold">{copyFor(language, 'Result', 'Résultat', 'النتيجة')}</div>
                     <div className="font-mono text-2xl font-bold text-emerald-900 dark:text-emerald-300">{currentResult.value} <span className="text-base font-normal text-emerald-700 dark:text-emerald-500">{currentResult.label}</span></div>
                     {currentResult.interpretation && <p className="text-xs text-emerald-800 dark:text-emerald-400 leading-relaxed pt-1">{currentResult.interpretation}</p>}
                   </div>
@@ -172,7 +178,7 @@ export function WorkflowRunner({ workflow, open, onOpenChange }: WorkflowRunnerP
                   <>
                     <Separator />
                     <div className="rounded-lg border border-emerald-300 dark:border-emerald-800 bg-gradient-to-br from-emerald-50 to-background dark:from-emerald-950/30 dark:to-background p-4 space-y-3">
-                      <div className="flex items-center gap-2 text-sm font-semibold text-emerald-800 dark:text-emerald-300"><Target className="h-4 w-4" />Workflow Complete</div>
+                      <div className="flex items-center gap-2 text-sm font-semibold text-emerald-800 dark:text-emerald-300"><Target className="h-4 w-4" />{copyFor(language, 'Workflow Complete', 'Workflow terminé', 'اكتمل سير العمل')}</div>
                       <p className="text-xs text-muted-foreground leading-relaxed">{workflow.outcome}</p>
                     </div>
                   </>
@@ -185,13 +191,13 @@ export function WorkflowRunner({ workflow, open, onOpenChange }: WorkflowRunnerP
         {/* Footer — fixed at bottom, never scrolls away */}
         <div className="p-4 border-t border-border bg-muted/30 flex items-center justify-between gap-2 flex-shrink-0">
           <div className="flex items-center gap-2">
-            {currentStep > 0 && <Button variant="outline" size="sm" onClick={handleBack} className="gap-1.5"><ChevronLeft className="h-4 w-4" />Back</Button>}
-            {currentStep > 0 && <Button variant="ghost" size="sm" onClick={handleRestart} className="gap-1.5 text-xs"><RotateCcw className="h-3.5 w-3.5" />Restart</Button>}
+            {currentStep > 0 && <Button variant="outline" size="sm" onClick={handleBack} className="gap-1.5"><ChevronLeft className="h-4 w-4" />{copyFor(language, 'Back', 'Retour', 'رجوع')}</Button>}
+            {currentStep > 0 && <Button variant="ghost" size="sm" onClick={handleRestart} className="gap-1.5 text-xs"><RotateCcw className="h-3.5 w-3.5" />{copyFor(language, 'Restart', 'Recommencer', 'إعادة البدء')}</Button>}
           </div>
           {!isLastStep ? (
-            <Button onClick={handleNext} size="sm" disabled={!currentResult} className="gap-1.5 bg-emerald-600 hover:bg-emerald-700">Next step<ChevronRight className="h-4 w-4" /></Button>
+            <Button onClick={handleNext} size="sm" disabled={!currentResult} className="gap-1.5 bg-emerald-600 hover:bg-emerald-700">{copyFor(language, 'Next step', 'Étape suivante', 'الخطوة التالية')}<ChevronRight className="h-4 w-4" /></Button>
           ) : (
-            <Button onClick={handleClose} size="sm" className="gap-1.5 bg-emerald-600 hover:bg-emerald-700"><Check className="h-4 w-4" />Done</Button>
+            <Button onClick={handleClose} size="sm" className="gap-1.5 bg-emerald-600 hover:bg-emerald-700"><Check className="h-4 w-4" />{copyFor(language, 'Done', 'Terminé', 'تم')}</Button>
           )}
         </div>
       </DialogContent>

@@ -45,19 +45,19 @@ export function ElevationSlopeAnalyzer() {
   const [tab, setTab] = useState<Tab>('point');
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2">
-          <Mountain className="h-4 w-4 text-stone-600" /> Elevation &amp; Slope Analyzer
+    <Card className="overflow-hidden border-stone-200/80 shadow-sm dark:border-stone-800/80">
+      <CardHeader className="border-b border-stone-200/70 bg-gradient-to-br from-stone-50/80 via-card to-card pb-4 dark:border-stone-800/70 dark:from-stone-950/30">
+        <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-stone-100 text-stone-700 dark:bg-stone-900 dark:text-stone-300"><Mountain className="h-4 w-4" /></span> Elevation &amp; Slope Analyzer
         </CardTitle>
         <p className="text-[10px] text-muted-foreground">Free Open-Meteo elevation API · no key required · slope / aspect / hillshade / frost risk</p>
-        <div className="flex gap-1 mt-2 flex-wrap">
+        <div className="mt-3 grid grid-cols-3 gap-1 rounded-xl bg-muted/50 p-1">
           <TabBtn active={tab === 'point'} onClick={() => setTab('point')} icon={MapPin} label="Point" />
           <TabBtn active={tab === 'path'} onClick={() => setTab('path')} icon={Route} label="Path Profile" />
           <TabBtn active={tab === 'grid'} onClick={() => setTab('grid')} icon={Grid3x3} label="Slope Grid" />
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-4 sm:p-5">
         {tab === 'point' && <PointTab />}
         {tab === 'path' && <PathTab />}
         {tab === 'grid' && <GridTab />}
@@ -113,14 +113,14 @@ function PointTab() {
 
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <div>
           <Label className="text-[10px]">Latitude</Label>
-          <Input value={lat} onChange={e => setLat(e.target.value)} type="number" step="0.000001" className="h-8 text-xs mt-0.5" />
+          <Input value={lat} onChange={e => setLat(e.target.value)} type="number" step="0.000001" className="mt-1 h-10 text-xs sm:h-8" />
         </div>
         <div>
           <Label className="text-[10px]">Longitude</Label>
-          <Input value={lng} onChange={e => setLng(e.target.value)} type="number" step="0.000001" className="h-8 text-xs mt-0.5" />
+          <Input value={lng} onChange={e => setLng(e.target.value)} type="number" step="0.000001" className="mt-1 h-10 text-xs sm:h-8" />
         </div>
       </div>
       <Button size="sm" onClick={fetchElev} disabled={loading} className="gap-1.5 w-full">
@@ -128,20 +128,20 @@ function PointTab() {
         {loading ? 'Fetching…' : 'Get elevation'}
       </Button>
       {error && (
-        <div className="rounded-md border border-rose-200 dark:border-rose-900 bg-rose-50/50 dark:bg-rose-950/20 p-2 text-xs text-rose-700 dark:text-rose-300 flex items-start gap-1.5">
+        <div className="rounded-xl border border-rose-200 bg-rose-50/50 p-3 dark:border-rose-900 dark:bg-rose-950/20 text-xs text-rose-700 dark:text-rose-300 flex items-start gap-1.5">
           <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
           <span className="font-mono">{error}</span>
         </div>
       )}
       {elev !== null && (
         <>
-          <div className="rounded-lg border border-stone-200 dark:border-stone-800 bg-stone-50/40 dark:bg-stone-950/20 p-3">
+          <div className="rounded-xl border border-stone-200 bg-stone-50/40 p-4 shadow-sm dark:border-stone-800 dark:bg-stone-950/20">
             <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Elevation above sea level</div>
             <div className="font-mono text-2xl font-bold text-stone-700 dark:text-stone-200">{formatElevation(elev)}</div>
             <div className="text-[10px] text-muted-foreground mt-0.5">{elev.toFixed(1)} m · {elev < 0 ? 'below sea level' : elev < 200 ? 'lowland' : elev < 1000 ? 'upland' : 'highland'}</div>
           </div>
           {frost && (
-            <div className={`rounded-md border p-2 text-xs flex items-start gap-1.5 ${
+            <div className={`rounded-xl border p-3 text-xs flex items-start gap-2 shadow-sm ${
               frost.risk === 'low' ? 'border-emerald-200 dark:border-emerald-900 bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-300'
               : frost.risk === 'moderate' ? 'border-amber-200 dark:border-amber-900 bg-amber-50/50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-300'
               : 'border-rose-200 dark:border-rose-900 bg-rose-50/50 dark:bg-rose-950/20 text-rose-700 dark:text-rose-300'
@@ -154,7 +154,7 @@ function PointTab() {
           )}
         </>
       )}
-      <div className="text-[10px] text-muted-foreground bg-muted/20 rounded p-2">
+      <div className="rounded-xl border border-border/70 bg-muted/20 p-3 text-[10px] leading-relaxed text-muted-foreground">
         💡 Elevation affects growing season length (≈ 0.6 °C cooler per 100 m), frost risk, and pump head for irrigation. Use this to plan crop variety selection and pipeline sizing.
       </div>
     </div>
@@ -192,27 +192,27 @@ function PathTab() {
 
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
           <div className="text-[10px] font-semibold text-stone-700 dark:text-stone-300 uppercase">Start (A)</div>
           <div>
             <Label className="text-[10px]">Latitude</Label>
-            <Input value={aLat} onChange={e => setALat(e.target.value)} type="number" step="0.000001" className="h-8 text-xs mt-0.5" />
+            <Input value={aLat} onChange={e => setALat(e.target.value)} type="number" step="0.000001" className="mt-1 h-10 text-xs sm:h-8" />
           </div>
           <div>
             <Label className="text-[10px]">Longitude</Label>
-            <Input value={aLng} onChange={e => setALng(e.target.value)} type="number" step="0.000001" className="h-8 text-xs mt-0.5" />
+            <Input value={aLng} onChange={e => setALng(e.target.value)} type="number" step="0.000001" className="mt-1 h-10 text-xs sm:h-8" />
           </div>
         </div>
         <div className="space-y-1.5">
           <div className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 uppercase">End (B)</div>
           <div>
             <Label className="text-[10px]">Latitude</Label>
-            <Input value={bLat} onChange={e => setBLat(e.target.value)} type="number" step="0.000001" className="h-8 text-xs mt-0.5" />
+            <Input value={bLat} onChange={e => setBLat(e.target.value)} type="number" step="0.000001" className="mt-1 h-10 text-xs sm:h-8" />
           </div>
           <div>
             <Label className="text-[10px]">Longitude</Label>
-            <Input value={bLng} onChange={e => setBLng(e.target.value)} type="number" step="0.000001" className="h-8 text-xs mt-0.5" />
+            <Input value={bLng} onChange={e => setBLng(e.target.value)} type="number" step="0.000001" className="mt-1 h-10 text-xs sm:h-8" />
           </div>
         </div>
       </div>
@@ -229,7 +229,7 @@ function PathTab() {
         {loading ? 'Fetching…' : 'Compute path profile'}
       </Button>
       {error && (
-        <div className="rounded-md border border-rose-200 dark:border-rose-900 bg-rose-50/50 dark:bg-rose-950/20 p-2 text-xs text-rose-700 dark:text-rose-300 flex items-start gap-1.5">
+        <div className="rounded-xl border border-rose-200 bg-rose-50/50 p-3 dark:border-rose-900 dark:bg-rose-950/20 text-xs text-rose-700 dark:text-rose-300 flex items-start gap-1.5">
           <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
           <span className="font-mono">{error}</span>
         </div>
@@ -237,13 +237,13 @@ function PathTab() {
       {profile && (
         <>
           <ProfileChart profile={profile} />
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 text-xs">
             <Stat icon={TrendingUp} color="emerald" label="Total ascent" value={formatElevation(profile.ascent)} />
             <Stat icon={TrendingUp} color="rose" label="Total descent" value={formatElevation(profile.descent)} rotate />
             <Stat icon={Mountain} color="indigo" label="Max elevation" value={formatElevation(profile.maxElev)} />
             <Stat icon={Mountain} color="amber" label="Min elevation" value={formatElevation(profile.minElev)} />
           </div>
-          <div className="grid grid-cols-3 gap-2 text-xs">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 text-xs">
             <Stat icon={Route} color="cyan" label="Path length" value={`${(profile.totalDistance / 1000).toFixed(2)} km`} />
             <Stat icon={TrendingUp} color="violet" label="Avg slope" value={formatSlope(profile.avgSlope)} />
             <Stat icon={TrendingUp} color="rose" label="Max slope" value={formatSlope(profile.maxSlope)} />
@@ -258,7 +258,7 @@ function PathTab() {
           )}
         </>
       )}
-      <div className="text-[10px] text-muted-foreground bg-muted/20 rounded p-2">
+      <div className="rounded-xl border border-border/70 bg-muted/20 p-3 text-[10px] leading-relaxed text-muted-foreground">
         💡 Use this for irrigation pipeline planning (pump head), access road design, and gravity-fed water system layout. Each 10 m of rise needs ~1 bar extra pump pressure.
       </div>
     </div>
@@ -303,25 +303,25 @@ function GridTab() {
 
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <div>
           <Label className="text-[10px]">North lat</Label>
-          <Input value={nLat} onChange={e => setNLat(e.target.value)} type="number" step="0.0001" className="h-8 text-xs mt-0.5" />
+          <Input value={nLat} onChange={e => setNLat(e.target.value)} type="number" step="0.0001" className="mt-1 h-10 text-xs sm:h-8" />
         </div>
         <div>
           <Label className="text-[10px]">South lat</Label>
-          <Input value={sLat} onChange={e => setSLat(e.target.value)} type="number" step="0.0001" className="h-8 text-xs mt-0.5" />
+          <Input value={sLat} onChange={e => setSLat(e.target.value)} type="number" step="0.0001" className="mt-1 h-10 text-xs sm:h-8" />
         </div>
         <div>
           <Label className="text-[10px]">East lng</Label>
-          <Input value={eLng} onChange={e => setELng(e.target.value)} type="number" step="0.0001" className="h-8 text-xs mt-0.5" />
+          <Input value={eLng} onChange={e => setELng(e.target.value)} type="number" step="0.0001" className="mt-1 h-10 text-xs sm:h-8" />
         </div>
         <div>
           <Label className="text-[10px]">West lng</Label>
-          <Input value={wLng} onChange={e => setWLng(e.target.value)} type="number" step="0.0001" className="h-8 text-xs mt-0.5" />
+          <Input value={wLng} onChange={e => setWLng(e.target.value)} type="number" step="0.0001" className="mt-1 h-10 text-xs sm:h-8" />
         </div>
       </div>
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
         <div>
           <Label className="text-[10px]">Grid size ({gridSize}×{gridSize})</Label>
           <input type="range" min={3} max={20} step={1} value={gridSize} onChange={e => setGridSize(parseInt(e.target.value))} className="w-full h-1.5 mt-2" />
@@ -340,7 +340,7 @@ function GridTab() {
         {loading ? 'Fetching elevations…' : `Survey ${gridSize * gridSize} points`}
       </Button>
       {error && (
-        <div className="rounded-md border border-rose-200 dark:border-rose-900 bg-rose-50/50 dark:bg-rose-950/20 p-2 text-xs text-rose-700 dark:text-rose-300 flex items-start gap-1.5">
+        <div className="rounded-xl border border-rose-200 bg-rose-50/50 p-3 dark:border-rose-900 dark:bg-rose-950/20 text-xs text-rose-700 dark:text-rose-300 flex items-start gap-1.5">
           <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
           <span className="font-mono">{error}</span>
         </div>
@@ -348,7 +348,7 @@ function GridTab() {
       {grid && (
         <>
           <GridMap grid={grid} />
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 text-xs">
             <Stat icon={Mountain} color="indigo" label="Avg elevation" value={formatElevation(grid.stats.avgElevation)} />
             <Stat icon={TrendingUp} color="violet" label="Avg slope" value={formatSlope(grid.stats.avgSlope)} />
             <Stat icon={TrendingUp} color="rose" label="Max slope" value={formatSlope(grid.stats.maxSlope)} />
@@ -356,7 +356,7 @@ function GridTab() {
           </div>
 
           {/* Slope distribution */}
-          <div className="rounded-md border bg-muted/20 p-2.5">
+          <div className="rounded-xl border border-border/70 bg-muted/20 p-3">
             <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">Slope distribution</div>
             <div className="space-y-1">
               {(['flat', 'gentle', 'moderate', 'steep', 'very_steep'] as const).map(cls => {
@@ -391,7 +391,7 @@ function GridTab() {
             const dominant = classes[0];
             const info = SLOPE_CLASS_INFO[dominant.cls];
             return (
-              <div className="rounded-md border p-2 text-xs flex items-start gap-1.5" style={{ borderColor: info.color + '60', backgroundColor: info.color + '15' }}>
+              <div className="rounded-xl border p-3 text-xs flex items-start gap-2 shadow-sm" style={{ borderColor: info.color + '60', backgroundColor: info.color + '15' }}>
                 <CheckCircle2 className="h-3.5 w-3.5 mt-0.5 shrink-0" style={{ color: info.color }} />
                 <div>
                   <strong style={{ color: info.color }}>{dominant.pct.toFixed(0)}% of the area is {info.label.toLowerCase()}.</strong>{' '}
@@ -402,7 +402,7 @@ function GridTab() {
           })()}
         </>
       )}
-      <div className="text-[10px] text-muted-foreground bg-muted/20 rounded p-2">
+      <div className="rounded-xl border border-border/70 bg-muted/20 p-3 text-[10px] leading-relaxed text-muted-foreground">
         💡 Larger grids (20×20 = 400 points) take a few seconds — Open-Meteo limits to 100 points per call. Use slope maps to plan terraces, drainage, and avoid cultivating steep zones (erosion risk).
       </div>
     </div>
@@ -559,7 +559,7 @@ function Stat({ icon: Icon, color, label, value, rotate }: {
   icon: typeof Mountain; color: keyof typeof ACCENT_BG; label: string; value: string; rotate?: boolean;
 }) {
   return (
-    <div className={`rounded-md border px-2 py-1.5 ${ACCENT_BG[color]}`}>
+    <div className={`rounded-xl border px-3 py-2 ${ACCENT_BG[color]}`}>
       <div className="flex items-center gap-1 text-[9px] text-muted-foreground uppercase tracking-wide">
         <Icon className={`h-2.5 w-2.5 ${rotate ? 'rotate-180' : ''}`} />{label}
       </div>
@@ -571,8 +571,10 @@ function Stat({ icon: Icon, color, label, value, rotate }: {
 function TabBtn({ active, onClick, icon: Icon, label }: { active: boolean; onClick: () => void; icon: typeof MapPin; label: string }) {
   return (
     <button
+      type="button"
       onClick={onClick}
-      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${active ? 'bg-stone-100 dark:bg-stone-950/50 text-stone-700 dark:text-stone-300' : 'text-muted-foreground hover:bg-muted/50'}`}
+      aria-pressed={active}
+      className={`flex min-h-9 items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium transition-colors ${active ? 'bg-stone-100 text-stone-700 shadow-sm dark:bg-stone-950/50 dark:text-stone-300' : 'text-muted-foreground hover:bg-background/70 hover:text-foreground'}`}
     >
       <Icon className="h-3.5 w-3.5" /><span>{label}</span>
     </button>

@@ -11,6 +11,7 @@ import {
   Settings, Droplets, Plus, Trash2, Download, Gauge, Sun, Trees,
   Activity, Zap,
 } from 'lucide-react';
+import { copyFor, useTranslation } from '@/lib/language-store';
 import {
   NOZZLES, ARC_ANGLES, getNozzle, recommendValve, recommendPipeSize,
   PLANT_WATER_NEEDS, DRIP_DEFAULTS, sizePump,
@@ -153,8 +154,22 @@ const ZONE_BADGES: Record<ZoneType, { label: string; cls: string }> = {
   bubbler:   { label: 'Bubbler',   cls: 'bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-950/40 dark:text-amber-300' },
 };
 
+const ZONE_TYPE_AR: Record<ZoneType, string> = { sprinkler: 'رشاش', drip: 'تنقيط', bubbler: 'فقاعي' };
+const ZONE_NAME_AR: Record<string, string> = { 'Lawn — North': 'العشب — الشمال', 'Orchard — Drip': 'البستان — تنقيط', 'Trees — Bubbler': 'الأشجار — فقاعي' };
+const PLANT_NAME_AR: Record<string, string> = {
+  'Small Shrubs': 'شجيرات صغيرة', 'Large Shrubs': 'شجيرات كبيرة', 'Small Tree': 'شجرة صغيرة', 'Large Tree': 'شجرة كبيرة',
+  'Palm Tree': 'نخلة', Evergreen: 'شجرة دائمة الخضرة', 'Ground Cover': 'غطاء أرضي', 'Bedding Plants': 'نباتات أحواض',
+  'Container Small': 'حاوية صغيرة', 'Container Large': 'حاوية كبيرة',
+};
+const STAT_LABEL_AR: Record<string, string> = {
+  Zones: 'المناطق', 'Total flow': 'التدفق الكلي', 'Max zone': 'أقصى منطقة', 'Pump power': 'قدرة المضخة',
+  'Total head': 'الرفع الكلي', Pressure: 'الضغط', 'Pump flow': 'تدفق المضخة', Power: 'القدرة', Emitters: 'النقاطات', 'Precip. rate': 'معدل الهطول',
+};
+const localizeZoneName = (name: string, language: Parameters<typeof copyFor>[0]) => copyFor(language, name, ZONE_NAME_AR[name] ?? name);
+
 // ====================================================================
 export function IrrigationSystemDesigner() {
+  const { language } = useTranslation();
   const [zones, setZones] = useState<Zone[]>(sampleZones);
   const [pumpInput, setPumpInput] = useState({
     maxStationFlow_gpm: '0',
@@ -229,38 +244,38 @@ export function IrrigationSystemDesigner() {
         const pr = precipitationRate(zoneFlows[i], area).toFixed(2);
         const valve = recommendValve(zoneFlows[i]);
         const pipe = recommendPipeSize(zoneFlows[i]);
-        return `<tr><td>${z.name}</td><td>Sprinkler</td><td>${z.sprinklers.length}</td><td>${gpm}</td><td>${pr}</td><td>${valve.model} ${valve.size}</td><td>${pipe}</td></tr>`;
+        return `<tr><td>${localizeZoneName(z.name, language)}</td><td>${copyFor(language, 'Sprinkler', 'رشاش')}</td><td>${z.sprinklers.length}</td><td>${gpm}</td><td>${pr}</td><td>${valve.model} ${valve.size}</td><td>${pipe}</td></tr>`;
       }
       if (z.type === 'drip') {
         const d = dripZoneCalc(z.drip);
-        return `<tr><td>${z.name}</td><td>Drip</td><td>${d.emitters}</td><td>${gpm}</td><td>${d.pr.toFixed(2)}</td><td>${recommendValve(zoneFlows[i]).model}</td><td>${recommendPipeSize(zoneFlows[i])}</td></tr>`;
+        return `<tr><td>${localizeZoneName(z.name, language)}</td><td>${copyFor(language, 'Drip', 'تنقيط')}</td><td>${d.emitters}</td><td>${gpm}</td><td>${d.pr.toFixed(2)}</td><td>${recommendValve(zoneFlows[i]).model}</td><td>${recommendPipeSize(zoneFlows[i])}</td></tr>`;
       }
       const b = bubblerZoneCalc(z.bubblers);
-      return `<tr><td>${z.name}</td><td>Bubbler</td><td>${z.bubblers.reduce((s, r) => s + r.count, 0)}</td><td>${gpm}</td><td>—</td><td>${recommendValve(zoneFlows[i]).model}</td><td>${recommendPipeSize(zoneFlows[i])}</td></tr>`;
+      return `<tr><td>${localizeZoneName(z.name, language)}</td><td>${copyFor(language, 'Bubbler', 'فقاعي')}</td><td>${z.bubblers.reduce((s, r) => s + r.count, 0)}</td><td>${gpm}</td><td>—</td><td>${recommendValve(zoneFlows[i]).model}</td><td>${recommendPipeSize(zoneFlows[i])}</td></tr>`;
     }).join('');
-    w.document.write(`<!doctype html><html><head><title>Irrigation System Design</title>
+    w.document.write(`<!doctype html><html><head><title>${copyFor(language, 'Irrigation System Design', 'تصميم نظام الري')}</title>
 <style>body{font-family:system-ui;padding:24px;color:#0f172a}h1{color:#4338ca;margin:0 0 4px}
 .stat{display:inline-block;padding:10px 14px;border:1px solid #cbd5e1;border-radius:8px;margin:4px 4px 0 0;min-width:120px}
 .stat .l{font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:.04em}
 .stat .v{font-size:18px;font-weight:700;color:#4338ca}
 table{width:100%;border-collapse:collapse;margin-top:12px}td,th{border:1px solid #cbd5e1;padding:6px 10px;font-size:12px;text-align:left}
 h3{color:#4338ca;margin-top:18px}</style></head><body>
-<h1>Irrigation System Design</h1>
-<p style="font-size:11px;color:#64748b;margin:0 0 8px">Generated ${new Date().toLocaleString()}</p>
+<h1>${copyFor(language, 'Irrigation System Design', 'تصميم نظام الري')}</h1>
+<p style="font-size:11px;color:#64748b;margin:0 0 8px">${copyFor(language, 'Generated', 'تم الإنشاء')} ${new Date().toLocaleString(language === 'ar' ? 'ar-EG' : undefined)}</p>
 <div>
-<div class="stat"><div class="l">Zones</div><div class="v">${zones.length}</div></div>
-<div class="stat"><div class="l">Total flow</div><div class="v">${totalFlow.toFixed(2)} GPM</div></div>
-<div class="stat"><div class="l">Max zone</div><div class="v">${maxZoneFlow.toFixed(2)} GPM</div></div>
-<div class="stat"><div class="l">Pump power</div><div class="v">${pumpResult.pumpPower_hp.toFixed(2)} HP</div></div>
+<div class="stat"><div class="l">${copyFor(language, 'Zones', 'المناطق')}</div><div class="v">${zones.length}</div></div>
+<div class="stat"><div class="l">${copyFor(language, 'Total flow', 'التدفق الكلي')}</div><div class="v">${totalFlow.toFixed(2)} GPM</div></div>
+<div class="stat"><div class="l">${copyFor(language, 'Max zone', 'أقصى منطقة')}</div><div class="v">${maxZoneFlow.toFixed(2)} GPM</div></div>
+<div class="stat"><div class="l">${copyFor(language, 'Pump power', 'قدرة المضخة')}</div><div class="v">${pumpResult.pumpPower_hp.toFixed(2)} HP</div></div>
 </div>
-<h3>Zones</h3>
-<table><thead><tr><th>Name</th><th>Type</th><th>Heads/Emitters</th><th>GPM</th><th>Precip. (in/h)</th><th>Valve</th><th>Pipe</th></tr></thead><tbody>${zoneRows}</tbody></table>
-<h3>Pump sizing</h3>
+<h3>${copyFor(language, 'Zones', 'المناطق')}</h3>
+<table><thead><tr><th>${copyFor(language, 'Name', 'الاسم')}</th><th>${copyFor(language, 'Type', 'النوع')}</th><th>${copyFor(language, 'Heads/Emitters', 'الرشاشات/النقاطات')}</th><th>GPM</th><th>${copyFor(language, 'Precip. (in/h)', 'الهطول (بوصة/ساعة)')}</th><th>${copyFor(language, 'Valve', 'الصمام')}</th><th>${copyFor(language, 'Pipe', 'الأنبوب')}</th></tr></thead><tbody>${zoneRows}</tbody></table>
+<h3>${copyFor(language, 'Pump sizing', 'تحديد حجم المضخة')}</h3>
 <table>
-<tr><td>Total head</td><td>${pumpResult.totalHead_m.toFixed(2)} m</td></tr>
-<tr><td>Pressure</td><td>${pumpResult.pressure_psi.toFixed(1)} psi (${psiToBar(pumpResult.pressure_psi).toFixed(2)} bar)</td></tr>
-<tr><td>Flow per pump</td><td>${pumpResult.pumpFlow_gpm.toFixed(2)} GPM</td></tr>
-<tr><td>Power</td><td>${pumpResult.pumpPower_hp.toFixed(2)} HP (${hpToKw(pumpResult.pumpPower_hp).toFixed(2)} kW)</td></tr>
+<tr><td>${copyFor(language, 'Total head', 'الرفع الكلي')}</td><td>${pumpResult.totalHead_m.toFixed(2)} m</td></tr>
+<tr><td>${copyFor(language, 'Pressure', 'الضغط')}</td><td>${pumpResult.pressure_psi.toFixed(1)} psi (${psiToBar(pumpResult.pressure_psi).toFixed(2)} bar)</td></tr>
+<tr><td>${copyFor(language, 'Flow per pump', 'التدفق لكل مضخة')}</td><td>${pumpResult.pumpFlow_gpm.toFixed(2)} GPM</td></tr>
+<tr><td>${copyFor(language, 'Power', 'القدرة')}</td><td>${pumpResult.pumpPower_hp.toFixed(2)} HP (${hpToKw(pumpResult.pumpPower_hp).toFixed(2)} kW)</td></tr>
 </table>
 </body></html>`);
     w.document.close();
@@ -269,39 +284,38 @@ h3{color:#4338ca;margin-top:18px}</style></head><body>
 
   // Render -----------------------------------------------------------
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-base">
-          <Settings className="h-4 w-4 text-indigo-600" /> Irrigation System Designer
-        </CardTitle>
-        <CardDescription className="text-xs">
-          Multi-zone sprinkler / drip / bubbler designer with valve &amp; pipe sizing, pump selection, and PDF export.
-        </CardDescription>
+    <Card className="overflow-hidden border-indigo-100 shadow-sm dark:border-indigo-900/60">
+      <CardHeader className="border-b border-border/60 bg-indigo-50/50 pb-4 dark:bg-indigo-950/10">
+        <CardTitle className="flex items-center gap-2 text-base"><span className="rounded-lg bg-indigo-100 p-2 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300"><Settings className="h-4 w-4" /></span> {copyFor(language, 'Irrigation System Designer', 'مصمم نظام الري')}</CardTitle>
+        <CardDescription className="mt-1 text-xs leading-relaxed">{copyFor(language, 'Multi-zone sprinkler / drip / bubbler designer with valve &amp; pipe sizing, pump selection, and PDF export.', 'مصمم متعدد المناطق للرش والتنقيط والري الفقاعي مع تحديد حجم الصمامات والأنابيب، واختيار المضخة، وتصدير PDF.')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Summary cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
           {[
-            { icon: Settings,    label: 'Zones',      value: String(zones.length),                                   unit: '',    color: 'text-indigo-700 dark:text-indigo-300' },
-            { icon: Droplets,    label: 'Total flow', value: totalFlow.toFixed(2),                                   unit: 'GPM', color: 'text-emerald-700 dark:text-emerald-300' },
-            { icon: Gauge,       label: 'Max zone',   value: maxZoneFlow.toFixed(2),                                 unit: 'GPM', color: 'text-sky-700 dark:text-sky-300' },
-            { icon: Zap,         label: 'Pump power', value: pumpResult.pumpPower_hp.toFixed(2),                     unit: 'HP',  color: 'text-amber-700 dark:text-amber-300' },
+            { icon: Settings,    label: copyFor(language, 'Zones', 'المناطق'),      value: String(zones.length),                                   unit: '',    color: 'text-indigo-700 dark:text-indigo-300' },
+            { icon: Droplets,    label: copyFor(language, 'Total flow', 'التدفق الكلي'), value: totalFlow.toFixed(2),                                   unit: 'GPM', color: 'text-emerald-700 dark:text-emerald-300' },
+            { icon: Gauge,       label: copyFor(language, 'Max zone', 'أقصى منطقة'),   value: maxZoneFlow.toFixed(2),                                 unit: 'GPM', color: 'text-sky-700 dark:text-sky-300' },
+            { icon: Zap,         label: copyFor(language, 'Pump power', 'قدرة المضخة'), value: pumpResult.pumpPower_hp.toFixed(2),                     unit: 'HP',  color: 'text-amber-700 dark:text-amber-300' },
           ].map(s => (
-            <div key={s.label} className="rounded-lg border p-3 bg-indigo-50/30 dark:bg-indigo-950/20">
-              <div className="text-[10px] uppercase tracking-wide text-muted-foreground flex items-center gap-1">
+            <div key={s.label} className="rounded-xl border border-indigo-200/70 bg-indigo-50/30 p-3 shadow-sm dark:border-indigo-900/60 dark:bg-indigo-950/20">
+              <div className="flex items-center gap-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
                 <s.icon className="h-3 w-3" /> {s.label}
               </div>
-              <div className={`text-2xl font-bold mt-1 ${s.color}`}>{s.value}</div>
-              <div className="text-[10px] text-muted-foreground">{s.unit}</div>
+              <div className={`mt-1 text-xl font-bold tabular-nums ${s.color}`}>{s.value}</div>
+              <div className="text-[10px] text-muted-foreground">{copyFor(language, s.unit, s.unit)}</div>
             </div>
           ))}
         </div>
 
         {/* Add-zone buttons */}
-        <div className="flex flex-wrap gap-2">
-          <Button size="sm" variant="outline" onClick={() => addZone('sprinkler')}><Plus className="h-3.5 w-3.5 mr-1" />Sprinkler zone</Button>
-          <Button size="sm" variant="outline" onClick={() => addZone('drip')}><Plus className="h-3.5 w-3.5 mr-1" />Drip zone</Button>
-          <Button size="sm" variant="outline" onClick={() => addZone('bubbler')}><Plus className="h-3.5 w-3.5 mr-1" />Bubbler zone</Button>
+        <div className="rounded-xl border border-border/70 bg-muted/20 p-3">
+          <div className="mb-2"><p className="text-xs font-semibold">{copyFor(language, 'Build your zones', 'أنشئ مناطقك')}</p><p className="text-[11px] leading-relaxed text-muted-foreground">{copyFor(language, 'Add one zone per valve or irrigation method, then size the pump from the highest-flow station.', 'أضف منطقة لكل صمام أو طريقة ري، ثم حدّد حجم المضخة وفقاً لأعلى محطة تدفقاً.')}</p></div>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+            <Button size="sm" variant="outline" onClick={() => addZone('sprinkler')} className="h-10"><Plus className="mr-1 h-3.5 w-3.5" />{copyFor(language, 'Sprinkler zone', 'منطقة رشاش')}</Button>
+            <Button size="sm" variant="outline" onClick={() => addZone('drip')} className="h-10"><Plus className="mr-1 h-3.5 w-3.5" />{copyFor(language, 'Drip zone', 'منطقة تنقيط')}</Button>
+            <Button size="sm" variant="outline" onClick={() => addZone('bubbler')} className="h-10"><Plus className="mr-1 h-3.5 w-3.5" />{copyFor(language, 'Bubbler zone', 'منطقة فقاعية')}</Button>
+          </div>
         </div>
 
         {/* Zone cards */}
@@ -311,13 +325,13 @@ h3{color:#4338ca;margin-top:18px}</style></head><body>
             const valve = recommendValve(gpm);
             const pipe = recommendPipeSize(gpm);
             return (
-              <div key={z.id} className="rounded-lg border p-3 space-y-3 bg-card">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <Input value={z.name} onChange={e => updateZone(z.id, { name: e.target.value })}
-                    className="h-8 text-sm font-semibold flex-1 min-w-[160px]" />
-                  <Badge variant="outline" className={ZONE_BADGES[z.type].cls}>{ZONE_BADGES[z.type].label}</Badge>
+              <div key={z.id} className="space-y-3 rounded-xl border border-border/70 bg-card p-3 shadow-sm">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Input aria-label={`${copyFor(language, ZONE_BADGES[z.type].label, ZONE_TYPE_AR[z.type])} ${copyFor(language, 'zone name', 'اسم المنطقة')}`} value={z.name} onChange={e => updateZone(z.id, { name: e.target.value })}
+                    className="h-10 min-w-[160px] flex-1 text-sm font-semibold" />
+                  <Badge variant="outline" className={ZONE_BADGES[z.type].cls}>{copyFor(language, ZONE_BADGES[z.type].label, ZONE_TYPE_AR[z.type])}</Badge>
                   <Badge variant="secondary" className="font-mono text-xs">{gpm.toFixed(2)} GPM</Badge>
-                  <Button size="sm" variant="ghost" onClick={() => removeZone(z.id)} className="h-7 px-2 text-red-600 hover:text-red-700">
+                  <Button size="sm" variant="ghost" aria-label={`${copyFor(language, 'Remove', 'إزالة')} ${z.name}`} onClick={() => removeZone(z.id)} className="h-10 w-10 px-0 text-red-600 hover:text-red-700">
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>
                 </div>
@@ -340,62 +354,62 @@ h3{color:#4338ca;margin-top:18px}</style></head><body>
                 )}
 
                 {/* Recommendation footer */}
-                <div className="flex flex-wrap items-center gap-2 text-[11px] pt-1 border-t border-border">
-                  <Badge variant="outline" className="gap-1"><Gauge className="h-3 w-3" />Valve: {valve.model} {valve.size}</Badge>
-                  <Badge variant="outline" className="gap-1"><Activity className="h-3 w-3" />Pipe: {pipe}</Badge>
+                <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3 text-[11px]">
+                  <Badge variant="outline" className="gap-1"><Gauge className="h-3 w-3" />{copyFor(language, 'Valve', 'الصمام')}: {valve.model} {valve.size}</Badge>
+                  <Badge variant="outline" className="gap-1"><Activity className="h-3 w-3" />{copyFor(language, 'Pipe', 'الأنبوب')}: {pipe}</Badge>
                   {z.type === 'sprinkler' && (() => {
                     const area = sprinklerZoneArea(z.sprinklers);
                     const pr = precipitationRate(gpm, area);
-                    return <Badge variant="outline" className="gap-1"><Sun className="h-3 w-3" />PR: {pr.toFixed(2)} in/h</Badge>;
+                    return <Badge variant="outline" className="gap-1"><Sun className="h-3 w-3" />{copyFor(language, 'PR', 'معدل')}: {pr.toFixed(2)} in/h</Badge>;
                   })()}
                   {z.type === 'drip' && (() => {
                     const d = dripZoneCalc(z.drip);
-                    return <Badge variant="outline" className="gap-1"><Sun className="h-3 w-3" />PR: {d.pr.toFixed(2)} in/h · {d.emitters} emitters</Badge>;
+                    return <Badge variant="outline" className="gap-1"><Sun className="h-3 w-3" />{copyFor(language, 'PR', 'معدل')}: {d.pr.toFixed(2)} in/h · {d.emitters} {copyFor(language, 'emitters', 'نقاطات')}</Badge>;
                   })()}
                   {z.type === 'bubbler' && (() => {
                     const b = bubblerZoneCalc(z.bubblers);
-                    return <Badge variant="outline" className="gap-1"><Trees className="h-3 w-3" />{b.totalGal.toFixed(1)} gal/wk</Badge>;
+                    return <Badge variant="outline" className="gap-1"><Trees className="h-3 w-3" />{b.totalGal.toFixed(1)} {copyFor(language, 'gal/wk', 'غالون/أسبوع')}</Badge>;
                   })()}
                 </div>
               </div>
             );
           })}
           {zones.length === 0 && (
-            <div className="text-center text-xs text-muted-foreground py-6 border-2 border-dashed rounded-lg">
-              No zones yet — add a sprinkler, drip, or bubbler zone above.
+            <div className="rounded-xl border-2 border-dashed py-8 text-center text-xs text-muted-foreground">
+              {copyFor(language, 'No zones yet — add a sprinkler, drip, or bubbler zone above.', 'لا توجد مناطق بعد — أضف منطقة رشاش أو تنقيط أو ري فقاعي أعلاه.')}
             </div>
           )}
         </div>
 
         {/* Pump sizing panel */}
-        <div className="rounded-lg border p-3 bg-indigo-50/30 dark:bg-indigo-950/20 space-y-3">
-          <div className="text-xs font-semibold flex items-center gap-1.5"><Zap className="h-3.5 w-3.5 text-indigo-600" />Pump Sizing</div>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+        <div className="space-y-3 rounded-xl border border-indigo-200/70 bg-indigo-50/30 p-3 dark:border-indigo-900/60 dark:bg-indigo-950/20">
+          <div><div className="flex items-center gap-1.5 text-sm font-semibold"><Zap className="h-4 w-4 text-indigo-600" />{copyFor(language, 'Pump sizing', 'تحديد حجم المضخة')}</div><p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">{copyFor(language, 'Use the highest station flow and site head assumptions to size the pump and pressure requirement.', 'استخدم أعلى تدفق للمحطة وافتراضات الرفع في الموقع لتحديد حجم المضخة ومتطلبات الضغط.')}</p></div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
             <div>
-              <Label className="text-[10px]">Max station flow (GPM)</Label>
+              <Label className="text-xs font-medium">{copyFor(language, 'Max station flow (GPM)', 'أقصى تدفق للمحطة (GPM)')}</Label>
               <Input type="number" value={pumpInput.maxStationFlow_gpm}
-                placeholder={`auto = ${maxZoneFlow.toFixed(2)}`}
-                onChange={e => setPumpInput(p => ({ ...p, maxStationFlow_gpm: e.target.value }))} className="h-8 mt-1 text-xs" />
+                placeholder={`${copyFor(language, 'auto', 'تلقائي')} = ${maxZoneFlow.toFixed(2)}`}
+                onChange={e => setPumpInput(p => ({ ...p, maxStationFlow_gpm: e.target.value }))} className="mt-1 h-10 text-sm" />
             </div>
             <div>
-              <Label className="text-[10px]">Static head (m)</Label>
+              <Label className="text-xs font-medium">{copyFor(language, 'Static head (m)', 'الرفع الساكن (م)')}</Label>
               <Input type="number" value={pumpInput.staticHead_m}
-                onChange={e => setPumpInput(p => ({ ...p, staticHead_m: e.target.value }))} className="h-8 mt-1 text-xs" />
+                onChange={e => setPumpInput(p => ({ ...p, staticHead_m: e.target.value }))} className="mt-1 h-10 text-sm" />
             </div>
             <div>
-              <Label className="text-[10px]">Max distance (m)</Label>
+              <Label className="text-xs font-medium">{copyFor(language, 'Max distance (m)', 'أقصى مسافة (م)')}</Label>
               <Input type="number" value={pumpInput.maxDistance_m}
-                onChange={e => setPumpInput(p => ({ ...p, maxDistance_m: e.target.value }))} className="h-8 mt-1 text-xs" />
+                onChange={e => setPumpInput(p => ({ ...p, maxDistance_m: e.target.value }))} className="mt-1 h-10 text-sm" />
             </div>
             <div>
-              <Label className="text-[10px]">Duty pumps</Label>
+              <Label className="text-xs font-medium">{copyFor(language, 'Duty pumps', 'مضخات التشغيل')}</Label>
               <Input type="number" min="1" value={pumpInput.numberOfDutyPumps}
-                onChange={e => setPumpInput(p => ({ ...p, numberOfDutyPumps: e.target.value }))} className="h-8 mt-1 text-xs" />
+                onChange={e => setPumpInput(p => ({ ...p, numberOfDutyPumps: e.target.value }))} className="mt-1 h-10 text-sm" />
             </div>
             <div>
-              <Label className="text-[10px]">Standby pumps</Label>
+              <Label className="text-xs font-medium">{copyFor(language, 'Standby pumps', 'المضخات الاحتياطية')}</Label>
               <Input type="number" min="0" value={pumpInput.numberOfStandbyPumps}
-                onChange={e => setPumpInput(p => ({ ...p, numberOfStandbyPumps: e.target.value }))} className="h-8 mt-1 text-xs" />
+                onChange={e => setPumpInput(p => ({ ...p, numberOfStandbyPumps: e.target.value }))} className="mt-1 h-10 text-sm" />
             </div>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
@@ -406,8 +420,8 @@ h3{color:#4338ca;margin-top:18px}</style></head><body>
           </div>
         </div>
 
-        <Button onClick={handleExport} variant="outline" size="sm" className="w-full">
-          <Download className="h-4 w-4 mr-1" /> Export Design to PDF
+        <Button onClick={handleExport} variant="outline" size="sm" className="h-10 w-full">
+          <Download className="h-4 w-4 mr-1" /> {copyFor(language, 'Export Design to PDF', 'تصدير التصميم إلى PDF')}
         </Button>
       </CardContent>
     </Card>
@@ -418,10 +432,11 @@ h3{color:#4338ca;margin-top:18px}</style></head><body>
 // Sub-components
 // ====================================================================
 function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
+  const { language } = useTranslation();
   return (
-    <div className="rounded border p-2 bg-card">
-      <div className="text-[9px] uppercase tracking-wide text-muted-foreground">{label}</div>
-      <div className="text-sm font-bold text-indigo-700 dark:text-indigo-300">{value}</div>
+    <div className="rounded-xl border border-border/70 bg-card p-3 shadow-sm">
+      <div className="text-[9px] font-medium uppercase tracking-wide text-muted-foreground">{copyFor(language, label, STAT_LABEL_AR[label] ?? label)}</div>
+      <div className="mt-1 text-sm font-bold text-indigo-700 dark:text-indigo-300">{value}</div>
       {sub && <div className="text-[10px] text-muted-foreground">{sub}</div>}
     </div>
   );
@@ -433,11 +448,12 @@ function SprinklerEditor({ zone, onAdd, onUpdate, onRemove }: {
   onUpdate: (id: string, patch: Partial<SprinklerRow>) => void;
   onRemove: (id: string) => void;
 }) {
+  const { language } = useTranslation();
   return (
     <div className="space-y-2">
-      <div className="text-[10px] uppercase tracking-wide text-muted-foreground flex items-center justify-between">
-        <span>Nozzle selections</span>
-        <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={onAdd}><Plus className="h-3 w-3 mr-1" />Add</Button>
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-xs font-semibold">{copyFor(language, 'Nozzle selections', 'اختيارات الفوهات')}</span>
+        <Button size="sm" variant="ghost" className="h-9 px-3 text-xs" onClick={onAdd}><Plus className="mr-1 h-3 w-3" />{copyFor(language, 'Add', 'إضافة')}</Button>
       </div>
       <div className="space-y-1.5">
         {zone.sprinklers.map(r => {
@@ -461,39 +477,40 @@ function SprinklerEditor({ zone, onAdd, onUpdate, onRemove }: {
                   </SelectContent>
                 </Select>
               </div>
-              <Input type="number" min="0" value={r.count} onChange={e => onUpdate(r.id, { count: parseInt(e.target.value) || 0 })} className="col-span-2 h-7 text-xs" title="Count" />
-              <Input type="number" min="0" value={r.spacing_ft} onChange={e => onUpdate(r.id, { spacing_ft: parseFloat(e.target.value) || 0 })} className="col-span-2 h-7 text-xs" title="Spacing ft" />
+              <Input type="number" min="0" value={r.count} onChange={e => onUpdate(r.id, { count: parseInt(e.target.value) || 0 })} className="col-span-2 h-7 text-xs" title={copyFor(language, 'Count', 'العدد')} />
+              <Input type="number" min="0" value={r.spacing_ft} onChange={e => onUpdate(r.id, { spacing_ft: parseFloat(e.target.value) || 0 })} className="col-span-2 h-7 text-xs" title={copyFor(language, 'Spacing ft', 'التباعد بالقدم')} />
               <div className="col-span-2 text-right text-[10px] text-muted-foreground">{flowPer.toFixed(2)} × {r.count} = <span className="font-semibold text-emerald-700 dark:text-emerald-300">{(flowPer * r.count).toFixed(2)}</span></div>
               <Button size="sm" variant="ghost" className="col-span-1 h-7 px-0 text-red-600" onClick={() => onRemove(r.id)}><Trash2 className="h-3 w-3" /></Button>
             </div>
           );
         })}
       </div>
-      <div className="text-[10px] text-muted-foreground">Nozzle · Arc · Count · Spacing(ft) · GPM</div>
+      <div className="text-[10px] text-muted-foreground">{copyFor(language, 'Nozzle · Arc · Count · Spacing(ft) · GPM', 'الفوهة · القوس · العدد · التباعد (قدم) · GPM')}</div>
     </div>
   );
 }
 
 function DripEditor({ zone, onUpdate }: { zone: Zone; onUpdate: (p: Partial<DripState>) => void }) {
+  const { language } = useTranslation();
   const d = zone.drip;
   const calc = dripZoneCalc(d);
   return (
     <div className="space-y-2">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
         <div>
-          <Label className="text-[10px]">Line length (ft)</Label>
+          <Label className="text-[10px]">{copyFor(language, 'Line length (ft)', 'طول الخط (قدم)')}</Label>
           <Input type="number" value={d.lineLength_ft} onChange={e => onUpdate({ lineLength_ft: parseFloat(e.target.value) || 0 })} className="h-8 mt-1 text-xs" />
         </div>
         <div>
-          <Label className="text-[10px]">Emitter spacing (in)</Label>
+          <Label className="text-[10px]">{copyFor(language, 'Emitter spacing (in)', 'تباعد النقاطات (بوصة)')}</Label>
           <Input type="number" value={d.emitterSpacing_inch} onChange={e => onUpdate({ emitterSpacing_inch: parseFloat(e.target.value) || 0 })} className="h-8 mt-1 text-xs" />
         </div>
         <div>
-          <Label className="text-[10px]">Flow/emitter (gph)</Label>
+          <Label className="text-[10px]">{copyFor(language, 'Flow/emitter (gph)', 'تدفق/نقاط (غالون/ساعة)')}</Label>
           <Input type="number" value={d.flowPerEmitter_gph} onChange={e => onUpdate({ flowPerEmitter_gph: parseFloat(e.target.value) || 0 })} className="h-8 mt-1 text-xs" />
         </div>
         <div>
-          <Label className="text-[10px]">Area (ft²)</Label>
+          <Label className="text-[10px]">{copyFor(language, 'Area (ft²)', 'المساحة (قدم²)')}</Label>
           <Input type="number" value={d.area_ft2} onChange={e => onUpdate({ area_ft2: parseFloat(e.target.value) || 0 })} className="h-8 mt-1 text-xs" />
         </div>
       </div>
@@ -512,11 +529,12 @@ function BubblerEditor({ zone, onAdd, onUpdate, onRemove }: {
   onUpdate: (id: string, patch: Partial<BubblerRow>) => void;
   onRemove: (id: string) => void;
 }) {
+  const { language } = useTranslation();
   return (
     <div className="space-y-2">
-      <div className="text-[10px] uppercase tracking-wide text-muted-foreground flex items-center justify-between">
-        <span>Plant selections</span>
-        <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={onAdd}><Plus className="h-3 w-3 mr-1" />Add</Button>
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-xs font-semibold">{copyFor(language, 'Plant selections', 'اختيارات النباتات')}</span>
+        <Button size="sm" variant="ghost" className="h-9 px-3 text-xs" onClick={onAdd}><Plus className="mr-1 h-3 w-3" />{copyFor(language, 'Add', 'إضافة')}</Button>
       </div>
       <div className="space-y-1.5">
         {zone.bubblers.map(r => {
@@ -527,19 +545,19 @@ function BubblerEditor({ zone, onAdd, onUpdate, onRemove }: {
                 <Select value={r.plantType} onValueChange={v => onUpdate(r.id, { plantType: v })}>
                   <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {Object.keys(PLANT_WATER_NEEDS).map(p => <SelectItem key={p} value={p} className="text-xs">{p}</SelectItem>)}
+                    {Object.keys(PLANT_WATER_NEEDS).map(p => <SelectItem key={p} value={p} className="text-xs">{copyFor(language, p, PLANT_NAME_AR[p] ?? p)}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
-              <Input type="number" min="0" value={r.count} onChange={e => onUpdate(r.id, { count: parseInt(e.target.value) || 0 })} className="col-span-2 h-7 text-xs" title="Count" />
-              <Input type="number" min="1" value={r.runMinutes} onChange={e => onUpdate(r.id, { runMinutes: parseInt(e.target.value) || 1 })} className="col-span-2 h-7 text-xs" title="Run min/wk" />
+              <Input type="number" min="0" value={r.count} onChange={e => onUpdate(r.id, { count: parseInt(e.target.value) || 0 })} className="col-span-2 h-7 text-xs" title={copyFor(language, 'Count', 'العدد')} />
+              <Input type="number" min="1" value={r.runMinutes} onChange={e => onUpdate(r.id, { runMinutes: parseInt(e.target.value) || 1 })} className="col-span-2 h-7 text-xs" title={copyFor(language, 'Run min/wk', 'دقائق التشغيل/أسبوع')} />
               <div className="col-span-2 text-right text-[10px] text-muted-foreground">{need} × {r.count} = <span className="font-semibold text-amber-700 dark:text-amber-300">{(need * r.count).toFixed(1)}</span></div>
               <Button size="sm" variant="ghost" className="col-span-1 h-7 px-0 text-red-600" onClick={() => onRemove(r.id)}><Trash2 className="h-3 w-3" /></Button>
             </div>
           );
         })}
       </div>
-      <div className="text-[10px] text-muted-foreground">Plant · Count · Run min/wk · Gallons/wk</div>
+      <div className="text-[10px] text-muted-foreground">{copyFor(language, 'Plant · Count · Run min/wk · Gallons/wk', 'النبات · العدد · دقائق التشغيل/أسبوع · غالون/أسبوع')}</div>
     </div>
   );
 }

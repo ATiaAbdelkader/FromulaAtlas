@@ -112,8 +112,8 @@ export function EphyIndexBrowser() {
   const reset = () => { setVisible(PAGE_SIZE); };
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
+    <Card className="overflow-hidden rounded-2xl border-sky-200/60 shadow-sm dark:border-sky-900/60">
+      <CardHeader className="border-b bg-sky-50/40 pb-4 dark:bg-sky-950/20">
         <CardTitle className="flex items-center gap-2 text-base">
           <FlaskConical className="h-4 w-4 text-sky-600" />
           Catalogue E-Phy — France (Anses)
@@ -124,7 +124,7 @@ export function EphyIndexBrowser() {
           E-Phy, Licence Ouverte 2.0.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-4 p-4 sm:p-5">
         <Tabs
           value={kind}
           onValueChange={(v) => {
@@ -133,9 +133,9 @@ export function EphyIndexBrowser() {
             setVisible(PAGE_SIZE);
           }}
         >
-          <TabsList className="grid w-full max-w-md grid-cols-2">
-            <TabsTrigger value="ppp">🧪 Produits phyto ({ppp ? ppp.length : '…'})</TabsTrigger>
-            <TabsTrigger value="mfsc">🌱 Fertilisants ({mfsc ? mfsc.length : '…'})</TabsTrigger>
+          <TabsList className="grid h-auto w-full max-w-md grid-cols-2 gap-1 p-1">
+            <TabsTrigger value="ppp" className="min-h-10 text-sm">🧪 Produits phyto ({ppp ? ppp.length : '…'})</TabsTrigger>
+            <TabsTrigger value="mfsc" className="min-h-10 text-sm">🌱 Fertilisants ({mfsc ? mfsc.length : '…'})</TabsTrigger>
           </TabsList>
 
           <div className="mt-3 space-y-2">
@@ -149,12 +149,12 @@ export function EphyIndexBrowser() {
                     ? 'Rechercher : nom, substance active, titulaire, n° AMM…'
                     : 'Rechercher : nom, composition, classe, titulaire, n° AMM…'
                 }
-                className="pl-8 text-xs"
+                className="h-10 pl-9 text-sm"
               />
             </div>
             <div className="grid gap-2 sm:grid-cols-3">
               <Select value={etat} onValueChange={(v) => { setEtat(v); reset(); }}>
-                <SelectTrigger className="text-xs"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="min-h-10 text-sm"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Autorisation : toutes</SelectItem>
                   <SelectItem value="AUTORISE">Autorisés</SelectItem>
@@ -163,7 +163,7 @@ export function EphyIndexBrowser() {
               </Select>
               {kind === 'ppp' ? (
                 <Select value={fonction} onValueChange={(v) => { setFonction(v); reset(); }}>
-                  <SelectTrigger className="text-xs"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="min-h-10 text-sm"><SelectValue /></SelectTrigger>
                   <SelectContent className="max-h-72">
                     <SelectItem value="all">Fonction : toutes</SelectItem>
                     {fonctions.map((f) => (
@@ -173,7 +173,7 @@ export function EphyIndexBrowser() {
                 </Select>
               ) : (
                 <Select value={classe} onValueChange={(v) => { setClasse(v); reset(); }}>
-                  <SelectTrigger className="text-xs"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="min-h-10 text-sm"><SelectValue /></SelectTrigger>
                   <SelectContent className="max-h-72">
                     <SelectItem value="all">Classe : toutes</SelectItem>
                     {classes.map((c) => (
@@ -201,7 +201,7 @@ export function EphyIndexBrowser() {
           </div>
         ) : (
           <>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-muted/20 p-2">
               <Badge variant="secondary" className="text-xs">
                 {filtered.length} produit{filtered.length > 1 ? 's' : ''}
               </Badge>
@@ -229,6 +229,7 @@ export function EphyIndexBrowser() {
                       type="button"
                       variant="outline"
                       size="sm"
+                      className="min-h-10"
                       onClick={() => setVisible((v) => v + PAGE_SIZE)}
                     >
                       Afficher {Math.min(PAGE_SIZE, filtered.length - shown.length)} autres produits
@@ -238,7 +239,7 @@ export function EphyIndexBrowser() {
               </div>
             )}
 
-            <p className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300">
+            <p className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-xs leading-relaxed text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300">
               <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
               Catalogue E-Phy (France) : l’autorisation française ne vaut pas autorisation en Algérie.
               L’utilisation reste soumise à l’homologation INPV en vigueur et aux mentions de l’étiquette.
@@ -252,7 +253,7 @@ export function EphyIndexBrowser() {
 
 function PppRow({ p }: { p: EphyPppProduct }) {
   return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-lg border bg-card px-3 py-2.5 transition hover:border-sky-400/60">
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border bg-card p-3 shadow-sm transition hover:border-sky-400/60 hover:shadow-md">
       <Badge className="shrink-0 bg-slate-800 font-mono text-[10px] text-white dark:bg-slate-200 dark:text-slate-900">
         <Hash className="mr-1 h-3 w-3" />{p.amm}
       </Badge>
@@ -284,7 +285,7 @@ function PppRow({ p }: { p: EphyPppProduct }) {
 
 function MfscRow({ p }: { p: EphyMfscProduct }) {
   return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-lg border bg-card px-3 py-2.5 transition hover:border-sky-400/60">
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border bg-card p-3 shadow-sm transition hover:border-sky-400/60 hover:shadow-md">
       <Badge className="shrink-0 bg-slate-800 font-mono text-[10px] text-white dark:bg-slate-200 dark:text-slate-900">
         <Hash className="mr-1 h-3 w-3" />{p.amm || '—'}
       </Badge>
