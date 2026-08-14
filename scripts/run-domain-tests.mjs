@@ -22,6 +22,8 @@ const suites = [
   'scripts/test-satellite-health.ts',
   'scripts/test-field-record-book.ts',
   'scripts/test-demo-scenario.ts',
+  'scripts/test-disease-reference-matcher.ts',
+  'scripts/test-fertial-fertilization.ts',
   'scripts/test-ai-agent-orchestrator.ts',
 ];
 

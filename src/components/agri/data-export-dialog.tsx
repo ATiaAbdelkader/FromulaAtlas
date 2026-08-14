@@ -40,6 +40,7 @@ import { useUserStore, type CalcHistoryEntry } from '@/lib/user-store';
 import { useFarmStore, type Farm, type FarmCalcEntry } from '@/lib/farm-store';
 import {
   loadScoutEntries,
+  normalizeScoutEntry,
   saveScoutEntries,
   SCOUT_ENTRIES_CHANGED_EVENT,
   type ScoutEntry,
@@ -243,7 +244,7 @@ function normalizeScoutEntries(value: unknown): ScoutEntry[] {
     const location = isRecord(item.location) && finiteNumber(item.location.lat) !== null && finiteNumber(item.location.lng) !== null
       ? { lat: finiteNumber(item.location.lat) ?? 0, lng: finiteNumber(item.location.lng) ?? 0 }
       : undefined;
-    return [{
+    return [normalizeScoutEntry({
       id: item.id,
       timestamp: finiteNumber(item.timestamp) ?? Date.now(),
       fieldName: item.fieldName,
@@ -252,8 +253,10 @@ function normalizeScoutEntries(value: unknown): ScoutEntry[] {
       note: item.note,
       severity: item.severity as ScoutSeverity,
       photo: typeof item.photo === 'string' ? item.photo : undefined,
+      additionalPhotos: Array.isArray(item.additionalPhotos) ? item.additionalPhotos.filter((photo): photo is string => typeof photo === 'string').slice(0, 2) : undefined,
       voiceTranscript: typeof item.voiceTranscript === 'string' ? item.voiceTranscript : undefined,
-    }];
+      diagnosis: item.diagnosis as ScoutEntry['diagnosis'],
+    })];
   });
 }
 

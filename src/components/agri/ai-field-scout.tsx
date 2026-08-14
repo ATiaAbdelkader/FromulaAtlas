@@ -5,6 +5,7 @@ import {
   AlertTriangle,
   Camera,
   CheckCircle2,
+  ExternalLink,
   Loader2,
   MapPin,
   Mic,
@@ -21,7 +22,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { copyFor, useTranslation, type Language } from '@/lib/language-store';
-import { appendScoutEntry, type ScoutSeverity } from '@/lib/scouting-store';
+import { appendScoutEntry, type ScoutDiagnosis, type ScoutSeverity } from '@/lib/scouting-store';
+import { getDiseaseReference, type ReferenceMatch } from '@/lib/disease-reference-matcher';
 import { getPhytoOptionsForCrop } from '@/lib/crop-simulator';
 import { readSavedFields, type SavedFieldRecord } from '@/lib/farm-digital-twin';
 
@@ -36,6 +38,10 @@ interface SymptomResult {
   recommendation: string;
   suggested_active_matters: string[];
   reviewRequired: boolean;
+  referenceMatches?: ReferenceMatch[];
+  needsSecondPhoto?: boolean;
+  nextPhotoTarget?: string;
+  modelProvider?: string;
 }
 
 interface AIFieldScoutProps {
@@ -68,6 +74,7 @@ export function AIFieldScout({ onOpenFarmTool }: AIFieldScoutProps) {
   const [note, setNote] = useState('');
   const [voiceTranscript, setVoiceTranscript] = useState('');
   const [photo, setPhoto] = useState<string | null>(null);
+  const [followUpPhoto, setFollowUpPhoto] = useState<string | null>(null);
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [result, setResult] = useState<SymptomResult | null>(null);
   const [loading, setLoading] = useState(false);
@@ -77,6 +84,7 @@ export function AIFieldScout({ onOpenFarmTool }: AIFieldScoutProps) {
   const [listening, setListening] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const followUpInputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
@@ -125,6 +133,7 @@ export function AIFieldScout({ onOpenFarmTool }: AIFieldScoutProps) {
     const reader = new FileReader();
     reader.onload = () => {
       setPhoto(reader.result as string);
+      setFollowUpPhoto(null);
       setResult(null);
       setError('');
     };
@@ -171,15 +180,16 @@ export function AIFieldScout({ onOpenFarmTool }: AIFieldScoutProps) {
     );
   };
 
-  const analyzePhoto = async () => {
-    if (!photo) return;
+  const analyzePhoto = async (imageOverride?: string) => {
+    const imageToAnalyze = imageOverride ?? photo;
+    if (!imageToAnalyze) return;
     setLoading(true);
     setError('');
     try {
       const response = await fetch('/api/identify-symptom', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: photo }),
+        body: JSON.stringify({ image: imageToAnalyze, crop: crop.trim() || undefined }),
       });
       const payload = await response.json().catch(() => null);
       if (!response.ok) throw new Error(payload?.error || t('AI analysis failed. Please retry.', 'L’analyse IA a échoué. Réessayez.', 'فشل تحليل الذكاء الاصطناعي. حاول مرة أخرى.'));
@@ -191,6 +201,23 @@ export function AIFieldScout({ onOpenFarmTool }: AIFieldScoutProps) {
     }
   };
 
+  const handleFollowUpPhoto = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/') || file.size > 8 * 1024 * 1024) {
+      setError(t('Please choose an image smaller than 8 MB.', 'Choisissez une image de moins de 8 Mo.', 'يرجى اختيار صورة أصغر من 8 ميغابايت.'));
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const nextPhoto = reader.result as string;
+      setFollowUpPhoto(nextPhoto);
+      void analyzePhoto(nextPhoto);
+    };
+    reader.onerror = () => setError(t('Could not read the follow-up image.', 'Impossible de lire la photo de vérification.', 'تعذر قراءة صورة التحقق.'));
+    reader.readAsDataURL(file);
+  };
+
   const saveObservation = () => {
     if (!note.trim() && !photo && !result) {
       setError(t('Add a note, voice recording, or photo before saving.', 'Ajoutez une note, une voix ou une photo avant d’enregistrer.', 'أضف ملاحظة أو تسجيلاً صوتياً أو صورة قبل الحفظ.'));
@@ -199,6 +226,24 @@ export function AIFieldScout({ onOpenFarmTool }: AIFieldScoutProps) {
     setSaving(true);
     const diagnosis = result ? `${resultLabel(language, result)}${result.recommendation ? ` — ${result.recommendation}` : ''}` : '';
     const combinedNote = [note.trim(), diagnosis].filter(Boolean).join('\n\n');
+    const diagnosisEvidence: ScoutDiagnosis | undefined = result ? {
+      problemType: result.problem_type,
+      problemName: result.problem_name,
+      problemNameAr: result.problem_name_ar || undefined,
+      confidence: result.confidence,
+      referenceMatches: (result.referenceMatches ?? []).map((match) => ({
+        diseaseRefId: match.diseaseRefId,
+        rank: match.rank,
+        matchReason: match.matchReason,
+        sourceDataset: match.source.dataset,
+        sourceUrl: match.source.url,
+        imageCount: match.source.imageCount,
+      })),
+      needsSecondPhoto: result.needsSecondPhoto ?? false,
+      nextPhotoTarget: result.nextPhotoTarget,
+      modelProvider: result.modelProvider,
+      verificationStatus: 'pending',
+    } : undefined;
     const entry = appendScoutEntry({
       id: `ai-scout-${Date.now()}`,
       timestamp: Date.now(),
@@ -208,9 +253,11 @@ export function AIFieldScout({ onOpenFarmTool }: AIFieldScoutProps) {
       note: combinedNote,
       voiceTranscript: voiceTranscript.trim() || undefined,
       photo: photo || undefined,
+      additionalPhotos: followUpPhoto ? [followUpPhoto] : undefined,
+      diagnosis: diagnosisEvidence,
       severity: resultSeverity(result),
       status: resultSeverity(result) === 'critical' ? 'open' : 'monitoring',
-      followUpTask: result?.reviewRequired ? t('Review AI result with a local agronomist and verify the label.', 'Vérifier le résultat IA avec un agronome local et contrôler l’étiquette.', 'مراجعة نتيجة الذكاء الاصطناعي مع مهندس زراعي محلي والتحقق من الملصق.') : undefined,
+      followUpTask: result?.reviewRequired || result?.needsSecondPhoto ? t('Review the Gallery evidence, add the requested second photo, and verify the label.', 'Vérifier les preuves de la galerie, ajouter la seconde photo demandée et contrôler l’étiquette.', 'راجع أدلة المعرض وأضف صورة التحقق المطلوبة وتحقق من الملصق.') : undefined,
       updatedAt: Date.now(),
     });
     setSaving(false);
@@ -219,6 +266,7 @@ export function AIFieldScout({ onOpenFarmTool }: AIFieldScoutProps) {
     setNote('');
     setVoiceTranscript('');
     setPhoto(null);
+    setFollowUpPhoto(null);
     setLocation(null);
     setResult(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
@@ -226,6 +274,7 @@ export function AIFieldScout({ onOpenFarmTool }: AIFieldScoutProps) {
 
   const reset = () => {
     setPhoto(null);
+    setFollowUpPhoto(null);
     setResult(null);
     setError('');
     setNote('');
@@ -271,7 +320,7 @@ export function AIFieldScout({ onOpenFarmTool }: AIFieldScoutProps) {
             <label className="text-xs font-semibold text-muted-foreground">{t('Photo evidence', 'Preuve photo', 'دليل الصورة')}</label>
             <input ref={fileInputRef} type="file" accept="image/*" capture="environment" onChange={handlePhoto} className="hidden" />
             {!photo ? <button type="button" onClick={() => fileInputRef.current?.click()} className="flex min-h-24 w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed border-emerald-200 bg-emerald-50/40 px-3 py-4 text-center transition-colors hover:border-emerald-400 hover:bg-emerald-50 dark:border-emerald-900 dark:bg-emerald-950/20 dark:hover:bg-emerald-950/40"><Camera className="mb-2 h-7 w-7 text-emerald-600" /><span className="text-xs font-semibold">{t('Take or upload a crop photo', 'Prendre ou importer une photo', 'التقط أو ارفع صورة للمحصول')}</span><span className="mt-1 text-[10px] text-muted-foreground">JPG, PNG, WEBP · max 8 MB</span></button> : <div className="relative overflow-hidden rounded-2xl border bg-muted/20"><img src={photo} alt={t('Crop evidence', 'Photo de culture', 'صورة المحصول')} className="h-32 w-full object-cover" /><button type="button" onClick={() => { setPhoto(null); setResult(null); if (fileInputRef.current) fileInputRef.current.value = ''; }} className="absolute right-2 top-2 rounded-full bg-background/85 p-1.5 shadow" title={t('Remove photo', 'Retirer la photo', 'إزالة الصورة')}><X className="h-3.5 w-3.5" /></button></div>}
-            <Button type="button" onClick={analyzePhoto} disabled={!photo || loading} className="w-full gap-2 bg-emerald-700 hover:bg-emerald-800"><ScanLine className="h-4 w-4" />{loading ? <><Loader2 className="h-4 w-4 animate-spin" />{t('Analyzing…', 'Analyse…', 'جارٍ التحليل…')}</> : t('Analyze with AI', 'Analyser avec l’IA', 'تحليل بالذكاء الاصطناعي')}</Button>
+            <Button type="button" onClick={() => { void analyzePhoto(); }} disabled={!photo || loading} className="w-full gap-2 bg-emerald-700 hover:bg-emerald-800"><ScanLine className="h-4 w-4" />{loading ? <><Loader2 className="h-4 w-4 animate-spin" />{t('Analyzing…', 'Analyse…', 'جارٍ التحليل…')}</> : t('Analyze with AI', 'Analyser avec l’IA', 'تحليل بالذكاء الاصطناعي')}</Button>
           </div>
         </div>
 
@@ -282,7 +331,10 @@ export function AIFieldScout({ onOpenFarmTool }: AIFieldScoutProps) {
           <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start"><div><div className="flex flex-wrap items-center gap-2"><Badge variant="outline" className="text-[10px] uppercase tracking-wide">{result.problem_type.replace('_', ' ')}</Badge><Badge variant="outline" className="text-[10px]">{Math.round(result.confidence * 100)}% {t('confidence', 'confiance', 'ثقة')}</Badge></div><h3 className="mt-2 text-sm font-bold">{resultLabel(language, result)}</h3></div><div className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide opacity-75"><ShieldCheck className="h-3.5 w-3.5" />{result.reviewRequired ? t('Verify before action', 'Vérifier avant action', 'تحقق قبل الإجراء') : t('Reviewable suggestion', 'Suggestion à vérifier', 'اقتراح قابل للمراجعة')}</div></div>
           {result.symptoms_observed.length > 0 && <div className="mt-3 flex flex-wrap gap-1.5">{result.symptoms_observed.slice(0, 5).map((symptom) => <Badge key={symptom} variant="secondary" className="text-[10px]">{symptom}</Badge>)}</div>}
           {result.recommendation && <p className="mt-3 text-xs leading-relaxed">{result.recommendation}</p>}
-          {matchedPhyto.length > 0 && <div className="mt-4 rounded-xl border border-emerald-200/80 bg-background/60 p-3 dark:border-emerald-900/60"><div className="flex flex-wrap items-center justify-between gap-2"><div className="text-xs font-bold">{t('Matched Algeria phyto options', 'Options phyto algériennes correspondantes', 'خيارات الوقاية النباتية الجزائرية المطابقة')}</div><Button type="button" variant="outline" size="sm" onClick={() => onOpenFarmTool?.('collapse_ipm_action')} className="h-7 gap-1 text-[10px]"><Sparkles className="h-3 w-3" />{t('Open IPM planner', 'Ouvrir le planificateur IPM', 'فتح مخطط IPM')}</Button></div><div className="mt-2 grid gap-2 sm:grid-cols-2">{matchedPhyto.map((option) => <div key={option.activeMatter.id} className="rounded-lg border bg-background/70 p-2"><div className="text-xs font-semibold">{option.activeMatter.name}</div><div className="mt-0.5 text-[10px] text-muted-foreground">{option.activeMatter.activeSubstance} · {option.activeMatter.applicationRate}</div></div>)}</div></div>}
+          {(result.referenceMatches?.length ?? 0) > 0 && <div className="mt-4 rounded-xl border border-cyan-200/80 bg-cyan-50/50 p-3 dark:border-cyan-900/60 dark:bg-cyan-950/20"><div className="flex items-center gap-2 text-xs font-bold"><ShieldCheck className="h-3.5 w-3.5 text-cyan-700" />{t('Reference evidence from the Gallery', 'Preuves de référence de la galerie', 'أدلة مرجعية من المعرض')}</div><div className="mt-2 space-y-2">{result.referenceMatches?.map((match) => { const reference = getDiseaseReference(match.diseaseRefId); return <div key={match.diseaseRefId} className="rounded-lg border bg-background/70 p-2"><div className="flex flex-wrap items-start justify-between gap-2"><div><div className="text-xs font-semibold">{reference?.disease ?? match.diseaseRefId}</div><div className="mt-0.5 text-[10px] text-muted-foreground">{match.matchReason} · {match.source.dataset} · {match.source.imageCount.toLocaleString()} {t('reference images', 'images de référence', 'صورة مرجعية')}</div></div><a href={match.source.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[10px] font-semibold text-cyan-700 hover:underline dark:text-cyan-300">{t('View source', 'Voir la source', 'عرض المصدر')}<ExternalLink className="h-3 w-3" /></a></div><div className="mt-2 flex flex-wrap gap-1">{match.discriminators.slice(0, 3).map((item) => <Badge key={item} variant="secondary" className="text-[10px]">{item}</Badge>)}</div></div>; })}</div></div>}
+          {result.needsSecondPhoto && <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50/70 p-3 text-xs text-amber-900 dark:border-amber-900 dark:bg-amber-950/20 dark:text-amber-100"><div className="flex flex-wrap items-center justify-between gap-2"><div><div className="font-semibold">{t('Verification photo recommended', 'Photo de vérification recommandée', 'يوصى بصورة تحقق')}</div><div className="mt-1 opacity-85">{t(`Target: ${result.nextPhotoTarget?.replace('_', ' ') ?? 'another plant detail'}. Compare the evidence before any treatment.`, `Cible : ${result.nextPhotoTarget?.replace('_', ' ') ?? 'un autre détail de la plante'}. Comparez les preuves avant tout traitement.`, `الهدف: ${result.nextPhotoTarget?.replace('_', ' ') ?? 'تفصيل آخر للنبات'}. قارن الأدلة قبل أي معالجة.`)}</div></div><input ref={followUpInputRef} type="file" accept="image/*" capture="environment" onChange={handleFollowUpPhoto} className="hidden" /><Button type="button" variant="outline" size="sm" onClick={() => followUpInputRef.current?.click()} className="h-8 gap-1.5 text-[10px]"><Camera className="h-3 w-3" />{t('Add second photo', 'Ajouter une seconde photo', 'إضافة صورة ثانية')}</Button></div>{followUpPhoto && <div className="mt-2 text-[10px] font-medium">{t('Second photo analyzed and stored with this observation.', 'Seconde photo analysée et enregistrée avec cette observation.', 'تم تحليل الصورة الثانية وحفظها مع هذه الملاحظة.')}</div>}</div>}
+          {matchedPhyto.length > 0 && !result.reviewRequired && !result.needsSecondPhoto && <div className="mt-4 rounded-xl border border-emerald-200/80 bg-background/60 p-3 dark:border-emerald-900/60"><div className="flex flex-wrap items-center justify-between gap-2"><div className="text-xs font-bold">{t('Matched Algeria phyto options', 'Options phyto algériennes correspondantes', 'خيارات الوقاية النباتية الجزائرية المطابقة')}</div><Button type="button" variant="outline" size="sm" onClick={() => onOpenFarmTool?.('collapse_ipm_action')} className="h-7 gap-1 text-[10px]"><Sparkles className="h-3 w-3" />{t('Open IPM planner', 'Ouvrir le planificateur IPM', 'فتح مخطط IPM')}</Button></div><div className="mt-2 grid gap-2 sm:grid-cols-2">{matchedPhyto.map((option) => <div key={option.activeMatter.id} className="rounded-lg border bg-background/70 p-2"><div className="text-xs font-semibold">{option.activeMatter.name}</div><div className="mt-0.5 text-[10px] text-muted-foreground">{option.activeMatter.activeSubstance} · {option.activeMatter.applicationRate}</div></div>)}</div></div>}
+          {matchedPhyto.length > 0 && (result.reviewRequired || result.needsSecondPhoto) && <p className="mt-3 text-[10px] font-medium text-amber-800 dark:text-amber-200">{t('Phyto matches are held until the reference evidence is verified.', 'Les correspondances phyto sont bloquées jusqu’à la vérification des preuves.', 'تم تعليق خيارات الوقاية النباتية حتى التحقق من الأدلة المرجعية.')}</p>}
           {result.reviewRequired && <p className="mt-3 text-[10px] font-medium text-muted-foreground">{t('AI output is advisory. Verify symptoms, local label registration, dose, pre-harvest interval, and safety requirements with a qualified agronomist before treatment.', 'La sortie IA est indicative. Vérifiez les symptômes, l’homologation locale, la dose, le délai avant récolte et la sécurité avec un agronome qualifié avant traitement.', 'نتيجة الذكاء الاصطناعي إرشادية. تحقق من الأعراض وتسجيل المنتج محلياً والجرعة وفترة ما قبل الحصاد ومتطلبات السلامة مع مهندس زراعي مؤهل قبل المعالجة.')}</p>}
         </div>}
 

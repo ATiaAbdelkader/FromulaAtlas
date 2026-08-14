@@ -1,4 +1,5 @@
 import { getCropLifecycle, type FertilizationApplication } from '@/lib/crop-lifecycle';
+import { getFertialGuidance, type FertialCropGuidance } from '@/lib/fertial-fertilization';
 
 export type NutrientKey = 'n' | 'p' | 'k';
 export type IncorporationTiming = 'immediate' | 'hours12' | 'days1' | 'days7' | 'none';
@@ -77,6 +78,7 @@ export interface NutrientBudgetPlan {
     time: string[];
     place: string[];
   };
+  fertialGuidance?: FertialCropGuidance;
 }
 
 const zero = (): NutrientAmounts => ({ n: 0, p: 0, k: 0 });
@@ -108,6 +110,7 @@ function scaleNutrient(value: number, scale: number): number {
 export function calculateNutrientBudget(input: NutrientBudgetInput, language: NutrientPlannerLanguage = 'en'): NutrientBudgetPlan | null {
   const crop = getCropLifecycle(input.cropId);
   if (!crop) return null;
+  const fertialGuidance = getFertialGuidance(input.cropId);
   const tr = (english: string, arabic: string) => language === 'ar' ? arabic : english;
 
   const scale = Math.max(0, positive(input.yieldAdjustmentPct)) / 100;
@@ -225,6 +228,11 @@ export function calculateNutrientBudget(input: NutrientBudgetInput, language: Nu
   if (!bufferCompliant && input.manureType !== 'none') {
     warnings.push(tr(`Nearest waterway distance ${input.nearestWaterM.toFixed(0)} m is below the ${minBufferM} m planning buffer for the entered slope.`, `مسافة أقرب مجرى مائي ${input.nearestWaterM.toFixed(0)} م أقل من منطقة العزل التخطيطية ${minBufferM} م للانحدار المُدخل.`));
   }
+  if (fertialGuidance) {
+    source.push(tr(`Fertial manual reference available for ${fertialGuidance.name}; compare its source-backed ranges with the calculated soil-credit plan.`, `يتوفر مرجع دليل Fertial لمحصول ${fertialGuidance.nameAr}؛ قارن نطاقاته الموثقة بخطة ائتمانات التربة المحسوبة.`));
+    time.push(tr('Use the Fertial timing windows as a reference layer; translate them to the selected planting date and verify crop stage in the field.', 'استخدم نوافذ توقيت Fertial كطبقة مرجعية؛ حوّلها إلى تاريخ الزراعة المحدد وتحقق من مرحلة المحصول في الحقل.'));
+    place.push(tr('Keep the Fertial placement method visible beside the product label and local soil/waterway safeguards.', 'أبقِ طريقة وضع Fertial ظاهرة بجانب ملصق المنتج وضوابط التربة والمجاري المائية المحلية.'));
+  }
 
   return {
     cropName: crop.name,
@@ -244,6 +252,7 @@ export function calculateNutrientBudget(input: NutrientBudgetInput, language: Nu
     bufferCompliant,
     warnings,
     guidance: { source, rate, time, place },
+    fertialGuidance,
   };
 }
 

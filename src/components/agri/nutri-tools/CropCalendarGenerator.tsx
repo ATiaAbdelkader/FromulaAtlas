@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import {
   CalendarDays, Sparkles, Download, Edit3, Check, Plus, Trash2,
-  Sprout, Droplets, FlaskConical, Bug, Users, FileText,
+  Sprout, Droplets, FlaskConical, Bug, Users, FileText, BookOpen,
 } from 'lucide-react';
 import { copyFor, useTranslation } from '@/lib/language-store';
 import {
@@ -19,6 +19,11 @@ import {
   generateCropCalendar, getIrrigationSystems,
   type CropCalendarResult, type CalendarEntry,
 } from '@/lib/crop-calendar-generator';
+import {
+  formatFertialAmounts,
+  getFertialCropOptions,
+  getFertialGuidance,
+} from '@/lib/fertial-fertilization';
 
 export function CropCalendarGenerator() {
   const { language } = useTranslation();
@@ -30,6 +35,12 @@ export function CropCalendarGenerator() {
   const [result, setResult] = useState<CropCalendarResult | null>(null);
   const [editingWeek, setEditingWeek] = useState<number | null>(null);
   const [customNotes, setCustomNotes] = useState<Record<number, string>>({});
+  const fertialOptions = useMemo(() => getFertialCropOptions(), []);
+  const [fertialCropId, setFertialCropId] = useState('wheat');
+  const fertialReference = useMemo(() => getFertialGuidance(fertialCropId) ?? null, [fertialCropId]);
+  const fertialDisplayName = fertialReference
+    ? language === 'ar' ? fertialReference.nameAr : language === 'fr' ? fertialReference.nameFr : fertialReference.name
+    : '';
 
   const generate = useCallback(() => {
     const r = generateCropCalendar({
@@ -65,6 +76,7 @@ export function CropCalendarGenerator() {
         ${note ? `<td style="font-size:10px;font-style:italic">${note}</td>` : ''}
       </tr>`;
     }).join('');
+    const fertialReference = result.fertialGuidance ? `<h2>Référence du manuel Fertial</h2><p>${result.fertialGuidance.summary}</p><ul>${result.fertialGuidance.applications.map(application => `<li><strong>${application.timing}</strong> · ${formatFertialAmounts(application.amounts)} · ${application.method}</li>`).join('')}</ul><p class="footer">Source : ${result.fertialGuidance.source.document}, ${result.fertialGuidance.source.pages} — ${result.fertialGuidance.source.url}</p>` : '';
 
     win.document.write(`<!doctype html><html><head><title>Calendrier Cultural — ${result.crop.name}</title>
       <style>
@@ -102,8 +114,9 @@ export function CropCalendarGenerator() {
         </tr></thead>
         <tbody>${weeksHTML}</tbody>
       </table>
+      ${fertialReference}
       <div class="footer">
-        ⚠️ Ce calendrier est une aide à la décision basée sur les données FAO-56, INPV 2017, et NRC 2021.
+        ⚠️ Ce calendrier est une aide à la décision basée on FAO-56, INPV 2017, NRC 2021, and the Fertial manual where a crop profile is available.
         Ajustez selon les conditions locales (climat, sol, pression parasitaire).
         Généré par Formula Atlas — ${new Date().toLocaleString('fr-FR')}
       </div>
@@ -154,6 +167,38 @@ export function CropCalendarGenerator() {
           <Sparkles className="h-3.5 w-3.5" /> {copyFor(language, 'Generate Complete Calendar', 'إنشاء التقويم الكامل')}
         </Button>
 
+        {/* Complete Fertial schedule library: reference-only when no lifecycle exists */}
+        {fertialReference && <section className="rounded-xl border border-lime-200 bg-lime-50/50 p-3 dark:border-lime-900/70 dark:bg-lime-950/15">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <BookOpen className="h-4 w-4 shrink-0 text-lime-700 dark:text-lime-300" />
+                <h3 className="text-xs font-semibold text-lime-950 dark:text-lime-100">{copyFor(language, 'Fertial Manual Schedule Library', 'مكتبة جداول دليل Fertial')}</h3>
+                <Badge variant="outline" className="border-lime-300 bg-background/70 text-[10px] text-lime-800 dark:border-lime-800 dark:text-lime-200">{copyFor(language, 'Source reference', 'مرجع مصدر')}</Badge>
+              </div>
+              <p className="mt-1 text-[11px] leading-relaxed text-lime-950/75 dark:text-lime-100/75">{copyFor(language, 'All 39 extracted Fertial crop schedules are available here. This additive reference does not invent lifecycle, irrigation, labor, or pest data for crops not yet supported by the canonical calendar.', 'تتوفر هنا جداول التسميد التسعة والثلاثون المستخرجة من دليل Fertial. هذا المرجع الإضافي لا يخترع مراحل نمو أو ري أو عمالة أو بيانات آفات للمحاصيل غير المدعومة بعد في التقويم الأساسي.')}</p>
+            </div>
+            <div className="w-full shrink-0 sm:w-64">
+              <Label className="text-[10px] font-medium text-lime-950 dark:text-lime-100">{copyFor(language, 'Select Fertial crop schedule', 'اختر جدول المحصول من Fertial')}</Label>
+              <select aria-label={copyFor(language, 'Select Fertial crop schedule', 'اختر جدول المحصول من Fertial')} value={fertialCropId} onChange={e => setFertialCropId(e.target.value)} className="mt-1 h-10 w-full rounded-md border border-lime-300 bg-background px-3 text-sm dark:border-lime-800">
+                {fertialOptions.map(option => <option key={option.id} value={option.id}>{language === 'ar' ? option.nameAr : language === 'fr' ? option.nameFr : option.name}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="mt-3 rounded-lg border border-lime-200/80 bg-background/70 p-3 dark:border-lime-900/70">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div><div className="text-sm font-semibold">{fertialDisplayName}</div><div className="text-[10px] text-muted-foreground">{fertialReference.category} · {fertialReference.summary}</div></div>
+              <Badge variant="secondary" className="text-[10px]">{fertialReference.applications.length} {copyFor(language, 'applications', 'تطبيقات')}</Badge>
+            </div>
+            <div className="mt-3 grid gap-2 md:grid-cols-2">{fertialReference.applications.map((application, index) => <div key={`${application.phase}-${application.timing}-${index}`} className="rounded-md border bg-muted/20 p-2.5"><div className="text-[10px] font-semibold">{application.timing}</div><div className="mt-1 font-mono text-[11px] font-semibold">{formatFertialAmounts(application.amounts) || copyFor(language, 'Context guidance', 'إرشاد سياقي')}</div><div className="mt-1 text-[10px] text-muted-foreground">{copyFor(language, `Method: ${application.method}`, `الطريقة: ${application.method}`)} · {application.note}</div></div>)}</div>
+            <div className="mt-3 grid gap-3 md:grid-cols-2">
+              <div><div className="text-[10px] font-semibold uppercase text-muted-foreground">{copyFor(language, 'Context', 'السياق')}</div><ul className="mt-1 list-disc space-y-1 pl-4 text-[10px] text-muted-foreground">{fertialReference.context.map((item, index) => <li key={`${item}-${index}`}>{item}</li>)}</ul></div>
+              <div><div className="text-[10px] font-semibold uppercase text-muted-foreground">{copyFor(language, 'Cautions', 'الاحتياطات')}</div><ul className="mt-1 list-disc space-y-1 pl-4 text-[10px] text-muted-foreground">{fertialReference.cautions.map((item, index) => <li key={`${item}-${index}`}>{item}</li>)}</ul></div>
+            </div>
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-lime-200/80 pt-2 text-[10px] text-muted-foreground dark:border-lime-900/70"><span>{copyFor(language, `Source: ${fertialReference.source.document} · pages ${fertialReference.source.pages}`, `المصدر: ${fertialReference.source.document} · الصفحات ${fertialReference.source.pages}`)}</span><a className="font-medium text-lime-800 underline underline-offset-2 dark:text-lime-300" href={fertialReference.source.url} target="_blank" rel="noreferrer">{copyFor(language, 'Open manual source', 'فتح مصدر الدليل')}</a></div>
+          </div>
+        </section>}
+
         {/* Results */}
         {result && (
           <div className="space-y-4">
@@ -179,6 +224,12 @@ export function CropCalendarGenerator() {
               <Sprout className="h-3 w-3 inline mr-1 text-emerald-600" />
               <strong>{copyFor(language, 'Seed rate:', 'معدل البذور:')}</strong> {result.seedRate.kgPerHa.toFixed(0)} kg/ha · {result.seedRate.plantsPerM2.toFixed(0)} plants/m² · {copyFor(language, 'spacing', 'التباعد')} {result.seedRate.plantSpacing.toFixed(1)}cm × {result.seedRate.rowSpacing}cm
             </div>
+
+            {result.fertialGuidance && <section className="rounded-xl border border-lime-200 bg-lime-50/60 p-3 dark:border-lime-900/70 dark:bg-lime-950/20">
+              <div className="flex items-start gap-2"><BookOpen className="mt-0.5 h-4 w-4 shrink-0 text-lime-700 dark:text-lime-300" /><div className="min-w-0"><h3 className="text-xs font-semibold text-lime-950 dark:text-lime-100">{copyFor(language, 'Fertial manual timing reference', 'مرجع توقيت دليل Fertial')}</h3><p className="mt-1 text-xs leading-relaxed text-lime-950/80 dark:text-lime-100/80">{result.fertialGuidance.summary}</p></div></div>
+              <div className="mt-3 grid gap-2 md:grid-cols-2">{result.fertialGuidance.applications.map((application, index) => <div key={`${application.timing}-${index}`} className="rounded-lg border border-lime-200/80 bg-background/70 p-2.5 dark:border-lime-900/70"><div className="text-[10px] font-semibold text-lime-900 dark:text-lime-200">{application.timing}</div><div className="mt-1 font-mono text-[11px] font-semibold">{formatFertialAmounts(application.amounts)}</div><div className="mt-1 text-[10px] text-muted-foreground">{copyFor(language, `Method: ${application.method}`, `الطريقة: ${application.method}`)} · {application.note}</div></div>)}</div>
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-lime-200/80 pt-2 text-[10px] text-muted-foreground dark:border-lime-900/70"><span>{copyFor(language, `Source: ${result.fertialGuidance.source.document} · ${result.fertialGuidance.source.pages}`, `المصدر: ${result.fertialGuidance.source.document} · ${result.fertialGuidance.source.pages}`)}</span><a className="font-medium text-lime-800 underline underline-offset-2 dark:text-lime-300" href={result.fertialGuidance.source.url} target="_blank" rel="noreferrer">{copyFor(language, 'Open manual source', 'فتح مصدر الدليل')}</a></div>
+            </section>}
 
             {/* Calendar table */}
             <div className="max-h-[520px] overflow-auto rounded-xl border bg-background shadow-sm">

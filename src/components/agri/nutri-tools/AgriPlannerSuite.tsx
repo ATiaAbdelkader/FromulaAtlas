@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Microscope, Brain, FlaskConical, Upload, Leaf, Loader2 } from 'lucide-react';
+import { Microscope, Brain, FlaskConical, Upload, Leaf, Loader2, ExternalLink } from 'lucide-react';
 import {
   PLANT_DISEASES,
   recommendCrops,
@@ -74,6 +74,8 @@ interface SymptomResult {
   recommendation: string;
   suggested_active_matters: string[];
   reviewRequired?: boolean;
+  referenceMatches?: { diseaseRefId: string; matchReason: string; source: { dataset: string; url: string; imageCount: number } }[];
+  needsSecondPhoto?: boolean;
 }
 
 function DiseaseTab() {
@@ -106,7 +108,7 @@ function DiseaseTab() {
         const res = await fetch('/api/identify-symptom', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ image: dataUrl }),
+          body: JSON.stringify({ image: dataUrl, crop: cropFilter === 'all' ? undefined : cropFilter }),
         });
         const data = await res.json();
         if (!res.ok || data.error) setError(copyFor(language, data.error || `HTTP ${res.status}`, 'تعذر إكمال تحليل الصورة.'));
@@ -141,8 +143,9 @@ function DiseaseTab() {
               {vlmResponse.symptoms_observed.length > 0 && <div><span className="font-medium">{copyFor(language, 'Observed:', 'الملاحظ:')} </span>{vlmResponse.symptoms_observed.join(' · ')}</div>}
               {vlmResponse.possible_causes.length > 0 && <div><span className="font-medium">{copyFor(language, 'Possible causes:', 'الأسباب المحتملة:')} </span>{vlmResponse.possible_causes.join(' · ')}</div>}
               <div className="rounded bg-muted/40 p-2">{vlmResponse.recommendation}</div>
+              {(vlmResponse.referenceMatches?.length ?? 0) > 0 && <div className="rounded border border-cyan-200 bg-cyan-50/50 p-2 dark:border-cyan-900 dark:bg-cyan-950/20"><div className="font-medium text-cyan-800 dark:text-cyan-200">{copyFor(language, 'Gallery reference evidence', 'أدلة المعرض المرجعية')}</div><div className="mt-1 space-y-1">{vlmResponse.referenceMatches?.slice(0, 3).map((match) => <div key={match.diseaseRefId} className="flex flex-wrap items-center justify-between gap-1 text-[10px]"><span>{match.diseaseRefId} · {match.matchReason} · {match.source.dataset} ({match.source.imageCount})</span><a href={match.source.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-cyan-700 hover:underline dark:text-cyan-300">{copyFor(language, 'Source', 'المصدر')}<ExternalLink className="h-3 w-3" /></a></div>)}</div></div>}
               {vlmResponse.suggested_active_matters.length > 0 && <div className="text-muted-foreground"><span className="font-medium">{copyFor(language, 'Possible active matters:', 'المواد الفعالة المحتملة:')} </span>{vlmResponse.suggested_active_matters.join(' · ')}</div>}
-              {vlmResponse.reviewRequired && <div className="text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-900 rounded p-2">{copyFor(language, 'Review this result with the original symptoms, local product label, and a qualified agronomist before acting. The model is advisory and may be wrong.', 'راجع هذه النتيجة مع الأعراض الأصلية وملصق المنتج المحلي وخبير زراعي مؤهل قبل اتخاذ أي إجراء. النموذج استشاري وقد يخطئ.')}</div>}
+              {(vlmResponse.reviewRequired || vlmResponse.needsSecondPhoto) && <div className="text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-900 rounded p-2">{copyFor(language, 'Review the Gallery evidence, capture another photo if requested, and verify the local product label with a qualified agronomist before acting. The model is advisory and may be wrong.', 'راجع أدلة المعرض، والتقط صورة إضافية إذا طُلبت، وتحقق من ملصق المنتج المحلي مع خبير زراعي مؤهل قبل اتخاذ أي إجراء. النموذج استشاري وقد يخطئ.')}</div>}
             </div>
           )}
           {isUnknown && <div className="text-[10px] text-amber-700 dark:text-amber-300">{copyFor(language, 'The image was not confidently identified. Browse the disease database below and capture a clearer photo with the leaf, stem, and surrounding field context.', 'لم تُحدد الصورة بدرجة ثقة كافية. تصفح قاعدة بيانات الأمراض أدناه والتقط صورة أوضح للورقة والساق وسياق الحقل المحيط.')}</div>}

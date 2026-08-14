@@ -189,13 +189,20 @@ function scoutingRecords(entries: ScoutEntry[]): FieldRecord[] {
     timestamp: entry.timestamp,
     source: 'scouting' as const,
     kind: 'observation' as const,
-    title: `${entry.severity[0].toUpperCase()}${entry.severity.slice(1)} scouting observation`,
+    title: entry.diagnosis?.problemName ? `Photo diagnosis: ${entry.diagnosis.problemName}` : `${entry.severity[0].toUpperCase()}${entry.severity.slice(1)} scouting observation`,
     summary: entry.note || (entry.photo ? 'Photo-based scouting observation' : 'Field scouting observation'),
     severity: entry.severity,
     metadata: {
       status: entry.status ?? 'monitoring',
       ...(entry.location ? { latitude: entry.location.lat, longitude: entry.location.lng } : {}),
       ...(entry.followUpDate ? { followUpDate: new Date(entry.followUpDate).toISOString().slice(0, 10) } : {}),
+      ...(entry.diagnosis ? {
+        diagnosisConfidence: entry.diagnosis.confidence,
+        verificationStatus: entry.diagnosis.verificationStatus,
+        referenceIds: entry.diagnosis.referenceMatches.map((match) => match.diseaseRefId).join(', '),
+        referenceDatasets: entry.diagnosis.referenceMatches.map((match) => match.sourceDataset).filter((value, index, values) => values.indexOf(value) === index).join(', '),
+        secondPhotoRequired: entry.diagnosis.needsSecondPhoto,
+      } : {}),
     },
   }));
 }

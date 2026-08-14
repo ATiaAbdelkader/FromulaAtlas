@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Slider } from '@/components/ui/slider';
 import {
   AlertTriangle, Search, Wand2, ShieldCheck, BookOpen, Sparkles, Check, Thermometer, Droplets, Gauge, Library,
-  Camera, Download, Calendar, Loader2, FileText,
+  Camera, Download, Calendar, Loader2, FileText, ExternalLink,
 } from 'lucide-react';
 import {
   ALGERIA_CROPS, ALGERIAN_ACTIVE_MATTERS, ACTIVE_MATTER_BY_ID, CROP_BY_ID,
@@ -23,6 +23,7 @@ import { EphyIndexBrowser } from './EphyIndexBrowser';
 import {
   fetchPhytoIndex, indexByActive, normPhyto, type PhytoProduct,
 } from '@/lib/phyto-index';
+import { useTranslation } from '@/lib/language-store';
 
 // ---------------------------------------------------------------------------
 // Small helpers
@@ -192,6 +193,7 @@ function ConfidenceRing({ value, size = 58 }: { value: number; size?: number }) 
 // Main component
 // ---------------------------------------------------------------------------
 export function ActiveMatterSelector() {
+  const { language } = useTranslation();
   const [tab, setTab] = useState('decision');
 
   // ----- decision state -----
@@ -321,7 +323,7 @@ export function ActiveMatterSelector() {
           const res = await fetch('/api/identify-symptom', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ image: dataUrl }),
+            body: JSON.stringify({ image: dataUrl, crop: CROP_BY_ID[crop]?.name || undefined }),
           });
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           const data = await res.json();
@@ -514,6 +516,8 @@ export function ActiveMatterSelector() {
                   </div>
                   {photoResult.symptoms_observed?.length > 0 && <div className="text-muted-foreground">Symptômes: {photoResult.symptoms_observed.join(', ')}</div>}
                   {photoResult.recommendation && <div className="text-foreground/80">{photoResult.recommendation}</div>}
+                  {photoResult.referenceMatches?.length > 0 && <div className="rounded-lg border border-cyan-200 bg-cyan-50/50 p-2 dark:border-cyan-900 dark:bg-cyan-950/20"><div className="font-medium text-cyan-800 dark:text-cyan-200">{language === 'ar' ? 'أدلة المعرض المرجعية' : language === 'fr' ? 'Preuves de référence de la galerie' : 'Gallery reference evidence'}</div><div className="mt-1 space-y-1">{photoResult.referenceMatches.slice(0, 3).map((match: { diseaseRefId: string; matchReason: string; source: { dataset: string; url: string; imageCount: number } }) => <div key={match.diseaseRefId} className="flex flex-wrap items-center justify-between gap-1 text-[10px]"><span>{match.diseaseRefId} · {match.matchReason} · {match.source.dataset} ({match.source.imageCount})</span><a href={match.source.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-cyan-700 hover:underline dark:text-cyan-300">{language === 'ar' ? 'المصدر' : language === 'fr' ? 'Source' : 'Source'}<ExternalLink className="h-3 w-3" /></a></div>)}</div></div>}
+                  {photoResult.needsSecondPhoto && <div className="rounded border border-amber-200 bg-amber-50 p-2 text-[10px] text-amber-800 dark:border-amber-900 dark:bg-amber-950/20 dark:text-amber-200">{language === 'ar' ? 'التقط صورة تحقق قبل اتخاذ أي إجراء.' : language === 'fr' ? 'Ajoutez une photo de vérification avant toute action.' : 'Add a verification photo before taking action.'}</div>}
                   {photoResult.suggested_active_matters?.length > 0 && (
                     <div className="flex flex-wrap gap-1 pt-1">
                       <span className="text-muted-foreground">Matières actives suggérées:</span>
