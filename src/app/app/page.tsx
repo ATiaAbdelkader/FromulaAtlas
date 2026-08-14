@@ -107,6 +107,9 @@ import { handbook, allFormulas } from '@/lib/formulas-data';
 import type { Formula } from '@/lib/types';
 import type { Workflow } from '@/lib/workflows';
 import { useTranslation, type Language } from '@/lib/language-store';
+import { useUserLevelStore, getUserLevelTabs, type UserLevel } from '@/lib/user-level';
+import { UserLevelSwitcher } from '@/components/agri/user-level-switcher';
+import { LevelHome } from '@/components/agri/level-home';
 import { cn } from '@/lib/utils';
 import { FormulaExplorer } from '@/components/agri/formula-explorer';
 import { MobileFieldCaptureButton } from '@/components/agri/mobile-field-capture';
@@ -229,12 +232,18 @@ export default function Page() {
   const [activeWorkflow, setActiveWorkflow] = useState<Workflow | null>(null);
   const [workflowOpen, setWorkflowOpen] = useState(false);
   const { t, isRTL, language } = useTranslation();
+  const level = useUserLevelStore(state => state.level);
   const [bookmarks, setBookmarks] = useState<string[]>([]);
   const [installPromptEvent, setInstallPromptEvent] = useState<any>(null);
   const [isInstalled, setIsInstalled] = useState(false);
   const [backupOpen, setBackupOpen] = useState(false);
 
   useEffect(() => { setBookmarks(getBookmarks()); }, []);
+
+  // Keep navigation safe when a user switches to a simpler experience.
+  useEffect(() => {
+    if (!getUserLevelTabs(level).includes(activeTab)) setActiveTab('home');
+  }, [level, activeTab]);
 
   // PWA install prompt listener
   useEffect(() => {
@@ -295,6 +304,8 @@ export default function Page() {
     return null;
   }, [selectedPart, selectedChapter]);
 
+  const visibleTabs = getUserLevelTabs(level);
+
   const sidebarContent = (
     <SidebarNav
       selectedPart={selectedPart}
@@ -332,6 +343,7 @@ export default function Page() {
               </div>
             </div>
             <div className="flex items-center gap-1">
+              <UserLevelSwitcher />
               <TakeTourButton />
               <ApiDocsButton />
               <TelegramConnectButton />
@@ -386,13 +398,13 @@ export default function Page() {
         <div className="border-t border-border bg-muted/30">
           <div className="max-w-[1600px] mx-auto px-4 sm:px-6">
             <div className="flex items-center gap-1 overflow-x-auto">
-              <TabButton active={activeTab === 'home'} onClick={() => setActiveTab('home')} icon={Home} label={t.tabHome} />
-              <TabButton active={activeTab === 'formulas'} onClick={() => setActiveTab('formulas')} icon={BookOpen} label={t.tabFormulas} badge={allFormulas.length} />
-              <TabButton active={activeTab === 'tools'} onClick={() => setActiveTab('tools')} icon={Wrench} label={t.tabTools} />
-              <TabButton active={activeTab === 'farm'} onClick={() => setActiveTab('farm')} icon={Tractor} label={t.tabFarm} />
-              <TabButton active={activeTab === 'simulator'} onClick={() => setActiveTab('simulator')} icon={FlaskConical} label={tr('Simulator', 'المحاكي', language)} />
-              <TabButton active={activeTab === 'insights'} onClick={() => setActiveTab('insights')} icon={Sparkles} label={t.tabInsights} />
-              <TabButton active={activeTab === 'about'} onClick={() => setActiveTab('about')} icon={Users} label={t.tabAbout} />
+              {visibleTabs.includes('home') && <TabButton active={activeTab === 'home'} onClick={() => setActiveTab('home')} icon={Home} label={t.tabHome} />}
+              {visibleTabs.includes('formulas') && <TabButton active={activeTab === 'formulas'} onClick={() => setActiveTab('formulas')} icon={BookOpen} label={t.tabFormulas} badge={allFormulas.length} />}
+              {visibleTabs.includes('tools') && <TabButton active={activeTab === 'tools'} onClick={() => setActiveTab('tools')} icon={Wrench} label={t.tabTools} />}
+              {visibleTabs.includes('farm') && <TabButton active={activeTab === 'farm'} onClick={() => setActiveTab('farm')} icon={Tractor} label={t.tabFarm} />}
+              {visibleTabs.includes('simulator') && <TabButton active={activeTab === 'simulator'} onClick={() => setActiveTab('simulator')} icon={FlaskConical} label={tr('Simulator', 'المحاكي', language)} />}
+              {visibleTabs.includes('insights') && <TabButton active={activeTab === 'insights'} onClick={() => setActiveTab('insights')} icon={Sparkles} label={t.tabInsights} />}
+              {visibleTabs.includes('about') && <TabButton active={activeTab === 'about'} onClick={() => setActiveTab('about')} icon={Users} label={t.tabAbout} />}
             </div>
           </div>
         </div>
@@ -401,26 +413,27 @@ export default function Page() {
       {/* HOME TAB — personalized dashboard */}
       {activeTab === 'home' && (
         <main className="flex-1 max-w-[1200px] mx-auto w-full p-4 sm:p-6 space-y-6 pb-20 sm:pb-6">
-          <HomeDashboard
+          <LevelHome
+            level={level}
             onNavigate={(tab) => setActiveTab(tab)}
             onOpenTool={(tab, storageKey) => openTool(tab, storageKey)}
             onOpenSearch={() => setPaletteOpen(true)}
           />
 
-          <SeasonScheduler />
-
-          <CollapsibleSection
-            title={t.achievements}
-            description={t.achievementsDesc}
-            icon={Trophy}
-            color="#7c3aed"
-            storageKey="collapse_gamification"
-            defaultOpen={false}
-          >
-            <div className="p-4"><GamificationPanel /></div>
-          </CollapsibleSection>
-
-          <UseCasesSection onLaunch={(wf) => { setActiveWorkflow(wf); setWorkflowOpen(true); }} />
+          {level !== 'farmer' && <>
+            <SeasonScheduler />
+            <CollapsibleSection
+              title={t.achievements}
+              description={t.achievementsDesc}
+              icon={Trophy}
+              color="#7c3aed"
+              storageKey="collapse_gamification"
+              defaultOpen={false}
+            >
+              <div className="p-4"><GamificationPanel /></div>
+            </CollapsibleSection>
+            <UseCasesSection onLaunch={(wf) => { setActiveWorkflow(wf); setWorkflowOpen(true); }} />
+          </>}
         </main>
       )}
 
@@ -650,7 +663,7 @@ export default function Page() {
       />
 
       {/* Mobile bottom tab bar — thumb-friendly navigation on phones */}
-      <MobileBottomNav activeTab={activeTab} onTabChange={(tab) => setActiveTab(tab)} onSearch={() => setPaletteOpen(true)} />
+      <MobileBottomNav level={level} activeTab={activeTab} onTabChange={(tab) => setActiveTab(tab)} onSearch={() => setPaletteOpen(true)} />
 
       {/* Onboarding flow — auto-shows on first visit, replayable via header Tour button */}
       <OnboardingFlow />
@@ -682,19 +695,23 @@ function StatBadge({ icon: Icon, label, value }: { icon: typeof Layers; label: s
  * Hidden on sm+ screens (the header tab bar takes over).
  * Includes a center search button (⌘K) for one-thumb access.
  */
-function MobileBottomNav({ activeTab, onTabChange, onSearch }: {
+function MobileBottomNav({ level, activeTab, onTabChange, onSearch }: {
+  level: UserLevel;
   activeTab: TabId;
   onTabChange: (tab: TabId) => void;
   onSearch: () => void;
 }) {
   const { t, language } = useTranslation();
-  const tabs: { id: TabId; icon: typeof Home; label: string }[] = [
-    { id: 'home', icon: Home, label: t.tabHome },
-    { id: 'farm', icon: Tractor, label: t.tabFarm },
-    { id: 'insights', icon: Sparkles, label: t.tabInsights },
-    { id: 'formulas', icon: BookOpen, label: t.tabFormulas },
-    { id: 'simulator', icon: FlaskConical, label: tr('Simulator', 'المحاكي', language) },
-  ];
+  const mobileTabIds: TabId[] = level === 'farmer'
+    ? ['home', 'farm', 'simulator', 'about']
+    : level === 'manager'
+      ? ['home', 'farm', 'insights', 'simulator']
+      : ['home', 'farm', 'insights', 'tools'];
+  const tabs: { id: TabId; icon: typeof Home; label: string }[] = mobileTabIds.map(id => ({
+    id,
+    icon: id === 'home' ? Home : id === 'farm' ? Tractor : id === 'insights' ? Sparkles : id === 'tools' ? Wrench : id === 'formulas' ? BookOpen : id === 'about' ? Users : FlaskConical,
+    label: id === 'home' ? t.tabHome : id === 'farm' ? t.tabFarm : id === 'insights' ? t.tabInsights : id === 'tools' ? t.tabTools : id === 'formulas' ? t.tabFormulas : id === 'about' ? t.tabAbout : tr('Simulator', 'المحاكي', language),
+  }));
   return (
     <nav className="sm:hidden fixed bottom-0 inset-x-0 z-40 border-t bg-background/95 backdrop-blur-md safe-area-pb">
       <div className="grid grid-cols-6 items-center h-14">

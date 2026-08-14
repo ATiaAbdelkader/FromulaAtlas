@@ -12,8 +12,9 @@ import {
 } from '@/lib/onboarding-store';
 import { useTranslation } from '@/lib/language-store';
 import { FREE_TOOL_COUNT } from '@/lib/catalog-stats';
+import { USER_LEVEL_OPTIONS, localizedUserLevelCopy, useUserLevelStore, type UserLevel } from '@/lib/user-level';
 
-type Step = 'welcome' | 'role' | 'crop' | 'features' | 'finish';
+type Step = 'welcome' | 'level' | 'role' | 'crop' | 'features' | 'finish';
 
 const ROLE_LABEL_AR: Record<UserRole, string> = {
   grower: 'مزارع',
@@ -86,7 +87,9 @@ export function OnboardingFlow() {
   const [step, setStep] = useState<Step>('welcome');
   const [role, setRole] = useState<UserRole | null>(null);
   const [crop, setCrop] = useState<string | null>(null);
-  const { isRTL } = useTranslation();
+  const [level, setLevel] = useState<UserLevel>(useUserLevelStore.getState().level);
+  const saveUserLevel = useUserLevelStore(state => state.setLevel);
+  const { isRTL, language } = useTranslation();
 
   // Auto-show on first visit (client-side check)
   useEffect(() => {
@@ -104,14 +107,16 @@ export function OnboardingFlow() {
   }, [close]);
 
   const handleFinish = useCallback(() => {
+    saveUserLevel(level);
     if (role && crop) completeOnboarding(role, crop);
     else skipOnboarding();
     close();
-  }, [role, crop, close]);
+  }, [level, role, crop, close, saveUserLevel]);
 
   const next = useCallback(() => {
     setStep(s => {
-      if (s === 'welcome') return 'role';
+      if (s === 'welcome') return 'level';
+      if (s === 'level') return 'role';
       if (s === 'role') return 'crop';
       if (s === 'crop') return 'features';
       if (s === 'features') return 'finish';
@@ -124,15 +129,16 @@ export function OnboardingFlow() {
       if (s === 'finish') return 'features';
       if (s === 'features') return 'crop';
       if (s === 'crop') return 'role';
-      if (s === 'role') return 'welcome';
+      if (s === 'role') return 'level';
+      if (s === 'level') return 'welcome';
       return s;
     });
   }, []);
 
   if (!visible) return null;
 
-  const stepIndex = ['welcome', 'role', 'crop', 'features', 'finish'].indexOf(step);
-  const stepCount = 5;
+  const stepIndex = ['welcome', 'level', 'role', 'crop', 'features', 'finish'].indexOf(step);
+  const stepCount = 6;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -197,6 +203,34 @@ export function OnboardingFlow() {
                 {isRTL ? 'ابدأ الآن' : 'Get Started'} <ArrowRight className="h-4 w-4" />
               </Button>
               <button onClick={handleSkip} className="text-xs text-muted-foreground hover:text-foreground underline mt-1">{isRTL ? 'تخطّي الجولة' : 'Skip the tour'}</button>
+            </div>
+          )}
+
+          {step === 'level' && (
+            <div className="flex-1 flex flex-col space-y-4" style={{ animation: 'ob-fade-in 0.4s ease-out' }}>
+              <div className="text-center space-y-1">
+                <h2 className="text-xl font-bold text-foreground">{language === 'ar' ? 'كيف ستستخدم Formula Atlas؟' : language === 'fr' ? 'Comment utiliserez-vous Formula Atlas ?' : 'How will you use Formula Atlas?'}</h2>
+                <p className="text-xs text-muted-foreground">{language === 'ar' ? 'سنُظهر لك الأدوات المناسبة أولاً.' : language === 'fr' ? 'Nous afficherons d’abord les outils adaptés à vos besoins.' : 'We will show the tools that fit your work first.'}</p>
+              </div>
+              <div className="grid gap-3 flex-1">
+                {USER_LEVEL_OPTIONS.map(option => {
+                  const selected = level === option.id;
+                  return (
+                    <button key={option.id} type="button" onClick={() => { setLevel(option.id); setTimeout(next, 200); }} className={`flex items-center gap-3 rounded-xl border-2 p-4 text-left transition-all ${selected ? 'border-emerald-500 bg-emerald-50/60 dark:bg-emerald-950/30' : 'border-border hover:border-emerald-300 hover:bg-muted/40'}`}>
+                      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-muted/60 text-xl">{option.id === 'farmer' ? '🌱' : option.id === 'manager' ? '📋' : '🔬'}</div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-semibold text-foreground">{localizedUserLevelCopy(language, option.copy.name)}</div>
+                        <div className="mt-0.5 text-[11px] leading-tight text-muted-foreground">{localizedUserLevelCopy(language, option.copy.description)}</div>
+                      </div>
+                      {selected && <Check className="h-4 w-4 flex-shrink-0 text-emerald-600" />}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="flex justify-between items-center pt-2">
+                <Button variant="ghost" size="sm" onClick={back} className="gap-1.5 text-muted-foreground"><ArrowLeft className="h-3.5 w-3.5" /> {isRTL ? 'رجوع' : language === 'fr' ? 'Retour' : 'Back'}</Button>
+                <Button onClick={next} disabled={!level} size="sm" className="gap-1.5">{isRTL ? 'متابعة' : language === 'fr' ? 'Continuer' : 'Continue'} <ArrowRight className="h-3.5 w-3.5" /></Button>
+              </div>
             </div>
           )}
 
