@@ -112,6 +112,7 @@ import { FieldModeButton } from '@/components/agri/field-mode';
 import { DataExportDialog } from '@/components/agri/data-export-dialog';
 import { WorkspacePanel } from '@/components/agri/workspace-panel';
 import { CropSimulator } from '@/components/agri/simulator/CropSimulator';
+import { FarmDigitalTwin } from '@/components/agri/farm-digital-twin';
 
 type TabId = 'home' | 'formulas' | 'tools' | 'farm' | 'simulator' | 'insights' | 'about';
 
@@ -435,6 +436,11 @@ export default function Page() {
           </div>
 
           <WorkspacePanel />
+
+          <FarmDigitalTwin
+            onOpenFarmTool={(storageKey) => openTool('farm', storageKey)}
+            onOpenSimulator={() => openTool('simulator')}
+          />
 
           {/* Sub-category: Fields & Crops */}
           <div className="space-y-3">
