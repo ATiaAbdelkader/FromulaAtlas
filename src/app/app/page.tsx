@@ -24,6 +24,7 @@ import { FieldWorkbench } from '@/components/agri/nutri-tools/FieldWorkbench';
 import { YieldGapAnalysis } from '@/components/agri/nutri-tools/YieldGapAnalysis';
 import { SustainabilityScorecard } from '@/components/agri/nutri-tools/SustainabilityScorecard';
 import { FieldScoutingLog } from '@/components/agri/nutri-tools/FieldScoutingLog';
+import { AIFieldScout } from '@/components/agri/ai-field-scout';
 import { CollapsibleSection } from '@/components/agri/nutri-tools/CollapsibleSection';
 import { IrrigationProgramGenerator } from '@/components/agri/nutri-tools/IrrigationProgramGenerator';
 import { IrrigationSystemDesigner } from '@/components/agri/nutri-tools/IrrigationSystemDesigner';
@@ -113,6 +114,7 @@ import { DataExportDialog } from '@/components/agri/data-export-dialog';
 import { WorkspacePanel } from '@/components/agri/workspace-panel';
 import { CropSimulator } from '@/components/agri/simulator/CropSimulator';
 import { FarmDigitalTwin } from '@/components/agri/farm-digital-twin';
+import { SatelliteCropHealthMonitor } from '@/components/agri/satellite-crop-health-monitor';
 
 type TabId = 'home' | 'formulas' | 'tools' | 'farm' | 'simulator' | 'insights' | 'about';
 
@@ -442,6 +444,10 @@ export default function Page() {
             onOpenSimulator={() => openTool('simulator')}
           />
 
+          <SatelliteCropHealthMonitor
+            onOpenFarmTool={(storageKey) => openTool('farm', storageKey)}
+          />
+
           {/* Sub-category: Fields & Crops */}
           <div className="space-y-3">
             <SubHeader emoji="🌱" label={t.fieldsAndCrops} />
@@ -470,6 +476,7 @@ export default function Page() {
           {/* Sub-category: Plant Protection */}
           <div className="space-y-3">
             <SubHeader emoji="🛡️" label={t.plantProtection} />
+            <AIFieldScout onOpenFarmTool={(storageKey) => openTool('farm', storageKey)} />
             <CollapsibleSection title={tr('Field Scouting Log', 'سجل الكشف الحقلي', language)} description={tr('Voice + photo field observations with severity tagging', 'ملاحظات حقلية بالصوت والصورة مع وسم درجة الخطورة', language)} icon={Sprout} color="#84cc16" storageKey="collapse_scouting" defaultOpen={false} enableExport><div className="p-4"><FieldScoutingLog /></div></CollapsibleSection>
             <CollapsibleSection title={tr('IPM Action Planner', 'مخطّط عمل الإدارة المتكاملة للآفات', language)} description={tr('Scouting evidence · action thresholds · lower-risk controls · responsible treatment review', 'أدلة الكشف · عتبات التدخل · وسائل المكافحة الأقل خطراً · مراجعة المعالجة المسؤولة', language)} icon={Bug} color="#e11d48" storageKey="collapse_ipm_action" defaultOpen={false} enableExport><div className="p-4"><IpmActionPlanner /></div></CollapsibleSection>
             <CollapsibleSection title={tr('Pest Threshold Calculator', 'حاسبة عتبة الآفات', language)} description={tr('EIL · action threshold · sequential sampling — 5 pest types', 'عتبة الإضرار الاقتصادي · عتبة التدخل · أخذ عينات تسلسلي — 5 أنواع آفات', language)} icon={Bug} color="#dc2626" storageKey="collapse_pest_threshold" defaultOpen={false} enableExport><div className="p-4"><PestThresholdCalculator /></div></CollapsibleSection>

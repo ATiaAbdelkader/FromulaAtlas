@@ -19,6 +19,8 @@ const suites = [
   'scripts/test-machinery-field-optimizer.ts',
   'scripts/test-crop-simulator.ts',
   'scripts/test-farm-digital-twin.ts',
+  'scripts/test-satellite-health.ts',
+  'scripts/test-ai-agent-orchestrator.ts',
 ];
 
 if (!existsSync(tsx)) {

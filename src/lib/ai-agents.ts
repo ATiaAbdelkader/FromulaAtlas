@@ -21,6 +21,8 @@
  *   - category: for grouping in the picker UI
  */
 
+import type { Language } from './language-store';
+
 export type AgentCategory =
   | 'agronomy'      // crop/soil/fertilizer expertise
   | 'operations'    // farm operations, labor, equipment
@@ -44,6 +46,12 @@ export interface AIAgent {
   description_ar?: string;
   /** Optional Arabic vibe line (falls back to `vibe` if undefined). */
   vibe_ar?: string;
+  /** Optional French display name (falls back to `name` if undefined). */
+  name_fr?: string;
+  /** Optional French description (falls back to `description` if undefined). */
+  description_fr?: string;
+  /** Optional French vibe line (falls back to `vibe` if undefined). */
+  vibe_fr?: string;
 }
 
 // ============================================================================
@@ -546,6 +554,37 @@ export function getAgent(id: string): AIAgent | undefined {
 
 export function getAgentsByCategory(cat: AgentCategory): AIAgent[] {
   return AI_AGENTS.filter(a => a.category === cat);
+}
+
+const AGENT_FRENCH_COPY: Record<string, Pick<AIAgent, 'name' | 'description' | 'vibe'>> = {
+  agronomist: { name: 'Agronome', description: 'Diagnostic général des cultures, sols et fertilisants avec recommandations pratiques.', vibe: 'Le généraliste : cultures, sol, fertilisation et irrigation dans un seul esprit.' },
+  'crop-scout': { name: 'Éclaireur cultures', description: 'Identification des ravageurs et maladies avec une démarche de lutte intégrée.', vibe: 'Les yeux du champ : ravageurs, maladies et stress.' },
+  'irrigation-engineer': { name: 'Ingénieur irrigation', description: 'Calendriers, conception des réseaux, ET₀, fertigation et efficacité de l’eau.', vibe: 'Chaque goutte au bon endroit et au bon moment.' },
+  'soil-scientist': { name: 'Pédologue', description: 'Analyse du sol, fertilité, pH, CEC, matière organique et amendements.', vibe: 'Comprendre le sol avant de décider.' },
+  'operations-manager': { name: 'Responsable d’exploitation', description: 'Organisation des travaux, main-d’œuvre, matériel et calendrier cultural.', vibe: 'Transformer le plan de culture en travail réalisable.' },
+  'financial-analyst': { name: 'Analyste financier', description: 'Coûts, marges, seuil de rentabilité, risques et décisions économiques.', vibe: 'Chaque décision agronomique a une conséquence économique.' },
+  'sustainability-officer': { name: 'Responsable durabilité', description: 'Eau, sol, carbone, nutriments et amélioration durable des pratiques.', vibe: 'Produire mieux en protégeant les ressources.' },
+  'grant-writer': { name: 'Conseiller projets agricoles', description: 'Structuration de dossiers, projets, budgets et preuves d’impact.', vibe: 'Transformer les bonnes pratiques en projet finançable.' },
+  'gis-analyst': { name: 'Analyste SIG', description: 'Parcelles, NDVI, cartes, géodonnées et décisions spatiales.', vibe: 'Voir les variations du champ pour agir avec précision.' },
+  'livestock-vet': { name: 'Conseiller élevage', description: 'Alimentation, pâturage, effluents et vigilance sanitaire pour l’élevage.', vibe: 'Bien-être animal et performance du troupeau.' },
+};
+
+export interface LocalizedAgentDisplay {
+  name: string;
+  description: string;
+  vibe: string;
+}
+
+export function getLocalizedAgentDisplay(agent: AIAgent, language: Language): LocalizedAgentDisplay {
+  if (language === 'ar') {
+    return {
+      name: agent.name_ar ?? agent.name,
+      description: agent.description_ar ?? agent.description,
+      vibe: agent.vibe_ar ?? agent.vibe,
+    };
+  }
+  if (language === 'fr') return AGENT_FRENCH_COPY[agent.id] ?? agent;
+  return { name: agent.name, description: agent.description, vibe: agent.vibe };
 }
 
 export const AGENT_CATEGORIES: { id: AgentCategory; label: string; emoji: string }[] = [

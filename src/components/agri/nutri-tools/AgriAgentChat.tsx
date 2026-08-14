@@ -20,10 +20,11 @@ import {
   Sparkles, Send, Loader2, Bot, User, X, MessageCircle, ChevronRight, RotateCcw,
 } from 'lucide-react';
 import {
-  AI_AGENTS, AGENT_CATEGORIES, getAgent,
-  type AIAgent, type AgentCategory,
+  AI_AGENTS, getAgent, getLocalizedAgentDisplay,
 } from '@/lib/ai-agents';
 import { copyFor, useTranslation } from '@/lib/language-store';
+import { useFarmStore } from '@/lib/farm-store';
+import { useWeatherStore, weatherCodeToText } from '@/lib/weather-store';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -44,6 +45,10 @@ export function AgriAgentChat() {
   const [conversations, setConversations] = useState<Record<string, Conversation>>({});
   const [input, setInput] = useState('');
   const { isRTL, language } = useTranslation();
+  const farms = useFarmStore(s => s.farms);
+  const activeFarmId = useFarmStore(s => s.activeFarmId);
+  const weather = useWeatherStore(s => s.weather);
+  const weatherLocation = useWeatherStore(s => s.location);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showAgentPicker, setShowAgentPicker] = useState(false);
@@ -72,6 +77,36 @@ export function AgriAgentChat() {
     [selectedAgentId],
   );
 
+  const selectedAgentDisplay = useMemo(
+    () => getLocalizedAgentDisplay(selectedAgent, language),
+    [selectedAgent, language],
+  );
+  const workspaceContext = useMemo(() => {
+    const activeFarm = farms.find(farm => farm.id === activeFarmId) ?? farms[0];
+    const weatherSummary = weather ? weatherCodeToText(weather.current.weatherCode).text : undefined;
+    return {
+      activeFarm: activeFarm ? {
+        name: activeFarm.name,
+        crop: activeFarm.crop,
+        areaHa: activeFarm.area,
+        soilType: activeFarm.soilType,
+        irrigationType: activeFarm.irrigationType,
+        plantingDate: activeFarm.plantingDate,
+      } : undefined,
+      portfolio: {
+        fieldCount: farms.length,
+        totalAreaHa: farms.reduce((total, farm) => total + (Number.isFinite(farm.area) ? farm.area : 0), 0),
+      },
+      weather: weather && weatherLocation ? {
+        location: weatherLocation.name,
+        temperatureC: weather.current.temperature,
+        rainfallMm: weather.daily.precipitationSum,
+        summary: weatherSummary,
+      } : undefined,
+      requestFocus: 'FormulaAtlas farm decision support',
+    };
+  }, [activeFarmId, farms, weather, weatherLocation]);
+  const contextAvailable = Boolean(workspaceContext.activeFarm || workspaceContext.weather || workspaceContext.portfolio.fieldCount);
   const currentConversation = conversations[selectedAgentId]?.messages ?? [];
 
   // Auto-scroll on new message
@@ -112,6 +147,8 @@ export function AgriAgentChat() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           agentId: selectedAgentId,
+          language,
+          workspaceContext,
           messages: newMessages.map(m => ({ role: m.role, content: m.content })),
         }),
       });
@@ -163,8 +200,9 @@ export function AgriAgentChat() {
         <div className="flex gap-1.5 overflow-x-auto pb-1">
           {AI_AGENTS.map(agent => {
             const active = agent.id === selectedAgentId;
-            const localizedName = isRTL && agent.name_ar ? agent.name_ar : agent.name;
-            const localizedVibe = isRTL && agent.vibe_ar ? agent.vibe_ar : agent.vibe;
+            const localized = getLocalizedAgentDisplay(agent, language);
+            const localizedName = localized.name;
+            const localizedVibe = localized.vibe;
             return (
               <button
                 key={agent.id}
@@ -202,18 +240,19 @@ export function AgriAgentChat() {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 flex-wrap">
             <span className="text-sm font-semibold" style={{ color: selectedAgent.color }}>
-              {isRTL && selectedAgent.name_ar ? selectedAgent.name_ar : selectedAgent.name}
+              {selectedAgentDisplay.name}
             </span>
             <Badge variant="outline" className="text-[9px] uppercase">{selectedAgent.category}</Badge>
+            {contextAvailable && <Badge variant="outline" className="text-[9px] text-emerald-700 dark:text-emerald-300">{copyFor(language, 'farm context', 'سياق المزرعة', 'contexte ferme')}</Badge>}
             {currentConversation.length > 0 && (
-              <Badge variant="outline" className="text-[9px]">{currentConversation.length} {isRTL ? 'رسائل' : 'msgs'}</Badge>
+              <Badge variant="outline" className="text-[9px]">{currentConversation.length} {copyFor(language, 'msgs', 'رسائل', 'messages')}</Badge>
             )}
           </div>
           <div className="text-[11px] text-muted-foreground italic mt-0.5">
-            {isRTL && selectedAgent.vibe_ar ? selectedAgent.vibe_ar : selectedAgent.vibe}
+            {selectedAgentDisplay.vibe}
           </div>
           <div className="text-[11px] text-foreground/80 mt-1">
-            {isRTL && selectedAgent.description_ar ? selectedAgent.description_ar : selectedAgent.description}
+            {selectedAgentDisplay.description}
           </div>
           {selectedAgent.suggestedTools.length > 0 && (
             <div className="text-[10px] text-muted-foreground mt-1.5 flex items-center gap-1 flex-wrap">
@@ -276,9 +315,7 @@ export function AgriAgentChat() {
               <div className="bg-muted/30 rounded-lg px-3 py-2 text-xs flex items-center gap-1.5">
                 <Loader2 className="h-3 w-3 animate-spin" />
                 <span className="text-muted-foreground">
-                  {isRTL
-                    ? `${selectedAgent.name_ar ?? selectedAgent.name} يفكّر…`
-                    : `${selectedAgent.name} is thinking…`}
+                  {copyFor(language, `${selectedAgentDisplay.name} is thinking…`, `${selectedAgentDisplay.name} يفكّر…`, `${selectedAgentDisplay.name} réfléchit…`)}
                 </span>
               </div>
             </div>
@@ -289,12 +326,10 @@ export function AgriAgentChat() {
           <div className="text-center text-xs text-muted-foreground">
             <span className="text-2xl block mb-2">{selectedAgent.emoji}</span>
             <strong className="text-foreground">
-              {isRTL
-                ? `ابدأ محادثة مع ${selectedAgent.name_ar ?? selectedAgent.name}.`
-                : `Start a conversation with ${selectedAgent.name}.`}
+              {copyFor(language, `Start a conversation with ${selectedAgentDisplay.name}.`, `ابدأ محادثة مع ${selectedAgentDisplay.name}.`, `Commencez une conversation avec ${selectedAgentDisplay.name}.`)}
             </strong>
             <div className="text-[10px] mt-1">
-              {copyFor(language, 'Pick a sample question or type your own below.', 'اختر سؤالاً نموذجياً أو اكتب سؤالك أدناه.')}
+              {copyFor(language, 'Ask any agriculture question, choose a starter, or type your own below.', 'اسأل أي سؤال زراعي، أو اختر سؤالًا نموذجيًا، أو اكتب سؤالك أدناه.', 'Posez toute question agricole, choisissez un exemple ou écrivez la vôtre ci-dessous.')}
             </div>
           </div>
           <div className="space-y-1.5">
@@ -328,9 +363,7 @@ export function AgriAgentChat() {
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
-          placeholder={isRTL
-            ? `اسأل ${selectedAgent.name_ar ?? selectedAgent.name}…`
-            : `Ask ${selectedAgent.name}…`}
+          placeholder={copyFor(language, `Ask ${selectedAgentDisplay.name} anything about your farm…`, `اسأل ${selectedAgentDisplay.name} أي سؤال عن مزرعتك…`, `Posez à ${selectedAgentDisplay.name} toute question sur votre exploitation…`)}
           disabled={loading}
           className="flex-1 text-xs"
         />
@@ -341,7 +374,8 @@ export function AgriAgentChat() {
       </div>
 
       <div className="text-[10px] text-muted-foreground bg-muted/20 rounded p-2">
-        {copyFor(language, '💡 Each specialist has its own expertise + conversation history. Switch agents using the bar above. All chats persist in your browser\'s localStorage. The agent\'s persona shapes the LLM\'s responses — try the same question with two different specialists to compare.', '💡 لكل تخصص خبرته الخاصة وسجل محادثة مستقل. بدّل الوكلاء باستخدام الشريط أعلاه. تُحفظ جميع المحادثات في localStorage بمتصفحك. تؤثر شخصية الوكيل في ردود نموذج اللغة؛ جرّب السؤال نفسه مع تخصصين مختلفين للمقارنة.')}
+        {copyFor(language, 'Ask in English, Arabic, or French. The agent uses your active FormulaAtlas language and may use your saved farm and weather context when available. Verify local labels, registrations, and professional advice before acting.', 'اسأل بالإنجليزية أو العربية أو الفرنسية. يستخدم الوكيل لغة FormulaAtlas الحالية ويمكنه الاستفادة من سياق المزرعة والطقس المحفوظ عند توفره. تحقّق من الملصقات والتسجيلات المحلية واستشر المختصين قبل التنفيذ.', 'Posez votre question en anglais, arabe ou français. L’agent utilise la langue active de FormulaAtlas et peut employer le contexte enregistré de votre ferme et de la météo lorsqu’il est disponible. Vérifiez les étiquettes, homologations locales et l’avis d’un professionnel avant d’agir.')}
+
       </div>
     </div>
   );

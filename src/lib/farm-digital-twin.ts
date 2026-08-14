@@ -3,6 +3,7 @@ import { buildFieldWorkbenchSnapshot, type FieldWorkbenchSnapshot, type Workbenc
 import { loadScoutEntries, type ScoutEntry } from '@/lib/scouting-store';
 import { getSoilTests, type SoilTestEntry } from '@/lib/soil-history-store';
 import { getCropLifecycle, stageForDay } from '@/lib/crop-lifecycle';
+import { getSatelliteHealthForField, readSatelliteHealthRecords, type SatelliteHealthRecord } from '@/lib/satellite-health';
 
 export const DIGITAL_TWIN_STORAGE_KEY = 'formula-atlas-digital-twin-v1';
 export const DIGITAL_TWIN_CHANGED_EVENT = 'formula-atlas-digital-twin-changed';
@@ -41,6 +42,7 @@ export interface DigitalTwinFieldSnapshot {
   statusNote: string;
   workbench: FieldWorkbenchSnapshot;
   simulator: SimulatorResult | null;
+  satellite: SatelliteHealthRecord | null;
   healthScore: number;
   priorityCount: number;
   nextAction: DigitalTwinPriority | null;
@@ -68,6 +70,10 @@ export interface DigitalTwinSnapshot {
     lowWaterDemandFields: number;
     mediumWaterDemandFields: number;
     highWaterDemandFields: number;
+    fieldsWithSatellite: number;
+    stressedSatelliteFields: number;
+    criticalSatelliteFields: number;
+    totalSatelliteStressedAreaHa: number;
   };
   priorities: DigitalTwinPriority[];
   nextBestActions: DigitalTwinPriority[];
@@ -280,6 +286,7 @@ export interface DigitalTwinSnapshotOptions {
   scoutEntries?: ScoutEntry[];
   state?: DigitalTwinState;
   simulatorScenario?: SimulatorScenario | null;
+  satelliteRecords?: SatelliteHealthRecord[];
   now?: number;
 }
 
@@ -290,6 +297,7 @@ export function buildFarmDigitalTwinSnapshot(options: DigitalTwinSnapshotOptions
   const scoutEntries = options.scoutEntries ?? (typeof window === 'undefined' ? [] : loadScoutEntries());
   const state = normalizeState(options.state ?? (typeof window === 'undefined' ? createDefaultDigitalTwinState() : loadDigitalTwinState()));
   const simulatorScenario = options.simulatorScenario === undefined ? readSavedSimulatorScenario() : options.simulatorScenario;
+  const satelliteRecords = options.satelliteRecords ?? (typeof window === 'undefined' ? [] : readSatelliteHealthRecords());
 
   const fieldSnapshots = fields.map((field) => {
     const workbenchBase = buildFieldWorkbenchSnapshot(field, soilTests, scoutEntries, now);
@@ -298,6 +306,7 @@ export function buildFarmDigitalTwinSnapshot(options: DigitalTwinSnapshotOptions
       : { ...workbenchBase, irrigation: lifecycleIrrigation(cropIdFromLabel(field.crop), workbenchBase.daysSincePlanting) };
     const savedState = statusForField(field, state, now);
     const simulator = buildFieldSimulatorResult(field, simulatorScenario);
+    const satellite = getSatelliteHealthForField(field.id, satelliteRecords);
     const priorities = workbench.priorities.map((priority) => {
       const copy = priorityCopy(priority);
       return { ...priority, ...copy, fieldId: field.id, fieldName: field.name };
@@ -308,6 +317,7 @@ export function buildFarmDigitalTwinSnapshot(options: DigitalTwinSnapshotOptions
       statusNote: savedState.statusNote,
       workbench,
       simulator,
+      satellite,
       healthScore: healthScore(workbench, savedState.status),
       priorityCount: priorities.length,
       nextAction: priorities[0] ?? null,
@@ -323,6 +333,7 @@ export function buildFarmDigitalTwinSnapshot(options: DigitalTwinSnapshotOptions
   });
 
   const linkedSimulators = fieldSnapshots.flatMap((field) => field.simulator ? [field.simulator] : []);
+  const linkedSatellite = fieldSnapshots.flatMap((field) => field.satellite ? [field.satellite] : []);
   const selectedFieldId = state.selectedFieldId && fields.some((field) => field.id === state.selectedFieldId)
     ? state.selectedFieldId
     : fields[0]?.id ?? null;
@@ -354,6 +365,10 @@ export function buildFarmDigitalTwinSnapshot(options: DigitalTwinSnapshotOptions
       lowWaterDemandFields: waterCounts.low,
       mediumWaterDemandFields: waterCounts.medium,
       highWaterDemandFields: waterCounts.high,
+      fieldsWithSatellite: linkedSatellite.length,
+      stressedSatelliteFields: linkedSatellite.filter((record) => record.level === 'stressed' || record.level === 'critical').length,
+      criticalSatelliteFields: linkedSatellite.filter((record) => record.level === 'critical').length,
+      totalSatelliteStressedAreaHa: linkedSatellite.reduce((sum, record) => sum + record.stressedAreaHa, 0),
     },
     priorities,
     nextBestActions: priorities.slice(0, 6),
