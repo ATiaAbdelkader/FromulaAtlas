@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useMemo, useState, useEffect, useRef } from 'react';
-import { Search, Sprout, Layers, BookOpen, Calculator, X, Leaf, Filter, Home, Wrench, Bug, TrendingUp, Droplets, Settings, Calendar, Satellite, ShoppingCart, Users, DollarSign, RefreshCw, Beef, FlaskConical, CloudRain, FileText, Trophy, Tractor, Sparkles, Download, Database, CheckCircle2, MapPin, Shapes, Compass, Sun, Mountain, FlaskConical as Flask, CalendarDays, Clock, Warehouse, Recycle, Wind, Flame, Snowflake, Gauge, Shield, Moon, Microscope, Activity, Scale } from 'lucide-react';
+import { Search, Sprout, Layers, BookOpen, Calculator, X, Leaf, Filter, Home, Wrench, Bug, TrendingUp, Droplets, Settings, Calendar, Satellite, ShoppingCart, Users, DollarSign, RefreshCw, Beef, FlaskConical, CloudRain, FileText, Trophy, Tractor, Sparkles, Download, Database, CheckCircle2, MapPin, Shapes, Compass, Sun, Mountain, FlaskConical as Flask, CalendarDays, Clock, Warehouse, Recycle, Wind, Flame, Snowflake, Gauge, Shield, Moon, Microscope, Activity, Scale, MessageCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -120,8 +120,10 @@ import { CropSimulator } from '@/components/agri/simulator/CropSimulator';
 import { FarmDigitalTwin } from '@/components/agri/farm-digital-twin';
 import { SatelliteCropHealthMonitor } from '@/components/agri/satellite-crop-health-monitor';
 import { DemoScenarioStudio } from '@/components/agri/demo-scenario-studio';
+import { FarmerField } from '@/components/agri/farmer-field';
+import { FarmerHelp } from '@/components/agri/farmer-help';
 
-type TabId = 'home' | 'formulas' | 'tools' | 'farm' | 'simulator' | 'insights' | 'about';
+type TabId = 'home' | 'formulas' | 'tools' | 'farm' | 'myfield' | 'simulator' | 'insights' | 'about' | 'help';
 
 /** French labels for the app shell's farm and insights tool index. */
 const FRENCH_TOOL_COPY: Record<string, string> = {
@@ -402,8 +404,10 @@ export default function Page() {
               {visibleTabs.includes('formulas') && <TabButton active={activeTab === 'formulas'} onClick={() => setActiveTab('formulas')} icon={BookOpen} label={t.tabFormulas} badge={allFormulas.length} />}
               {visibleTabs.includes('tools') && <TabButton active={activeTab === 'tools'} onClick={() => setActiveTab('tools')} icon={Wrench} label={t.tabTools} />}
               {visibleTabs.includes('farm') && <TabButton active={activeTab === 'farm'} onClick={() => setActiveTab('farm')} icon={Tractor} label={t.tabFarm} />}
+              {visibleTabs.includes('myfield') && <TabButton active={activeTab === 'myfield'} onClick={() => setActiveTab('myfield')} icon={Sprout} label={tr('My Field', 'حقلتي', language)} />}
               {visibleTabs.includes('simulator') && <TabButton active={activeTab === 'simulator'} onClick={() => setActiveTab('simulator')} icon={FlaskConical} label={tr('Simulator', 'المحاكي', language)} />}
               {visibleTabs.includes('insights') && <TabButton active={activeTab === 'insights'} onClick={() => setActiveTab('insights')} icon={Sparkles} label={t.tabInsights} />}
+              {visibleTabs.includes('help') && <TabButton active={activeTab === 'help'} onClick={() => setActiveTab('help')} icon={MessageCircle} label={tr('Help', 'مساعدة', language)} />}
               {visibleTabs.includes('about') && <TabButton active={activeTab === 'about'} onClick={() => setActiveTab('about')} icon={Users} label={t.tabAbout} />}
             </div>
           </div>
@@ -624,6 +628,20 @@ export default function Page() {
         </main>
       )}
 
+      {/* MY FIELD TAB — focused field dashboard for farmer level */}
+      {activeTab === 'myfield' && (
+        <main className="flex-1 max-w-[900px] mx-auto w-full p-4 sm:p-6 space-y-4 pb-20 sm:pb-6">
+          <FarmerField onOpenTool={(tab, storageKey) => openTool(tab, storageKey)} onNavigate={(tab) => setActiveTab(tab)} />
+        </main>
+      )}
+
+      {/* HELP TAB — plain-language Q&A + AI chat for farmer level */}
+      {activeTab === 'help' && (
+        <main className="flex-1 max-w-[800px] mx-auto w-full p-4 sm:p-6 space-y-4 pb-20 sm:pb-6">
+          <FarmerHelp onOpenTool={(tab, storageKey) => openTool(tab, storageKey)} />
+        </main>
+      )}
+
       {/* ABOUT TAB — founder profile + mission */}
       {activeTab === 'about' && (
         <AboutPage />
@@ -703,14 +721,14 @@ function MobileBottomNav({ level, activeTab, onTabChange, onSearch }: {
 }) {
   const { t, language } = useTranslation();
   const mobileTabIds: TabId[] = level === 'farmer'
-    ? ['home', 'farm', 'simulator', 'about']
+    ? ['home', 'myfield', 'simulator', 'help']
     : level === 'manager'
       ? ['home', 'farm', 'insights', 'simulator']
       : ['home', 'farm', 'insights', 'tools'];
   const tabs: { id: TabId; icon: typeof Home; label: string }[] = mobileTabIds.map(id => ({
     id,
-    icon: id === 'home' ? Home : id === 'farm' ? Tractor : id === 'insights' ? Sparkles : id === 'tools' ? Wrench : id === 'formulas' ? BookOpen : id === 'about' ? Users : FlaskConical,
-    label: id === 'home' ? t.tabHome : id === 'farm' ? t.tabFarm : id === 'insights' ? t.tabInsights : id === 'tools' ? t.tabTools : id === 'formulas' ? t.tabFormulas : id === 'about' ? t.tabAbout : tr('Simulator', 'المحاكي', language),
+    icon: id === 'home' ? Home : id === 'farm' ? Tractor : id === 'myfield' ? Sprout : id === 'help' ? MessageCircle : id === 'insights' ? Sparkles : id === 'tools' ? Wrench : id === 'formulas' ? BookOpen : id === 'about' ? Users : FlaskConical,
+    label: id === 'home' ? t.tabHome : id === 'farm' ? t.tabFarm : id === 'myfield' ? tr('My Field', 'حقلتي', language) : id === 'help' ? tr('Help', 'مساعدة', language) : id === 'insights' ? t.tabInsights : id === 'tools' ? t.tabTools : id === 'formulas' ? t.tabFormulas : id === 'about' ? t.tabAbout : tr('Simulator', 'المحاكي', language),
   }));
   return (
     <nav className="sm:hidden fixed bottom-0 inset-x-0 z-40 border-t bg-background/95 backdrop-blur-md safe-area-pb">

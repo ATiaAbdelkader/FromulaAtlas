@@ -95,8 +95,8 @@ export const useUserLevelStore = create<UserLevelState>()(
   ),
 );
 
-export function getUserLevelTabs(level: UserLevel): Array<'home' | 'formulas' | 'tools' | 'farm' | 'simulator' | 'insights' | 'about'> {
-  if (level === 'farmer') return ['home', 'farm', 'simulator', 'about'];
+export function getUserLevelTabs(level: UserLevel): Array<'home' | 'formulas' | 'tools' | 'farm' | 'myfield' | 'simulator' | 'insights' | 'about' | 'help'> {
+  if (level === 'farmer') return ['home', 'myfield', 'simulator', 'help', 'about'];
   if (level === 'manager') return ['home', 'farm', 'simulator', 'insights', 'tools', 'about'];
   return ['home', 'formulas', 'tools', 'farm', 'simulator', 'insights', 'about'];
 }
