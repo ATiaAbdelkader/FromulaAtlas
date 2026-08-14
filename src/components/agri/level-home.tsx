@@ -11,6 +11,7 @@ import {
   Droplets,
   FileText,
   FlaskConical,
+  Leaf,
   Microscope,
   Search,
   Sprout,
@@ -79,13 +80,17 @@ function FarmerHome({ onOpenTool, onOpenSearch }: Pick<LevelHomeProps, 'onOpenTo
   return (
     <div className="space-y-4" dir={isRTL ? 'rtl' : 'ltr'}>
       <LevelBanner level="farmer" />
+      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <ActionCard icon={CheckCircle2} color="#16a34a" title={copy(language, 'What should I do today?', 'Que faire aujourd’hui ?', 'ماذا أفعل اليوم؟')} description={copy(language, 'See irrigation, fertilization, and crop tasks from your farm data.', 'Voir les tâches d’irrigation, fertilisation et culture.', 'اعرض مهام الري والتسميد والمحصول.')} onClick={() => onOpenTool('farm', 'collapse_field_records')} />
+        <ActionCard icon={Droplets} color="#0284c7" title={copy(language, 'Should I irrigate?', 'Dois-je irriguer ?', 'هل أسقي؟')} description={copy(language, 'One number: how much water today, based on weather and crop stage.', 'Un chiffre: combien d’eau aujourd’hui, selon la météo et le stade.', 'رقم واحد: كمية الماء اليوم حسب الطقس ومرحلة المحصول.')} onClick={() => onOpenTool('farm', 'collapse_water_budget')} />
+        <ActionCard icon={FlaskConical} color="#059669" title={copy(language, 'Do I apply fertilizer?', 'Dois-je fertiliser ?', 'هل أُسمد؟')} description={copy(language, 'Which type, how much, and when — based on your crop stage and soil tests.', 'Quel type, combien et quand — selon le stade et les analyses de sol.', 'أي نوع وكم ومتى — حسب مرحلة المحصول وتحاليل التربة.')} onClick={() => onOpenTool('farm', 'collapse_nutrient_budget')} />
+        <ActionCard icon={Search} color="#0891b2" title={copy(language, "What's wrong with my plant?", 'Quel est le problème ?', 'ما مشكلة نباتي؟')} description={copy(language, 'Use a photo or observation to diagnose pests and diseases safely.', 'Utiliser une photo pour diagnostiquer ravageurs et maladies.', 'استخدم صورة لتشخيص الآفات والأمراض.')} onClick={() => onOpenTool('farm', 'collapse_ipm_action')} />
+      </section>
+      {/* Secondary cards — planning and money */}
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        <ActionCard icon={CheckCircle2} color="#16a34a" title={copy(language, 'What should I do today?', 'Que faire aujourd’hui ?', 'ماذا أفعل اليوم؟')} description={copy(language, 'See irrigation and crop tasks generated from your saved farm data.', 'Voir les tâches d’irrigation et de culture selon vos données.', 'اعرض مهام الري والمحصول حسب بيانات مزرعتك.')} onClick={() => onOpenTool('farm', 'collapse_field_records')} />
-        <ActionCard icon={Search} color="#0891b2" title={copy(language, 'Check a field problem', 'Vérifier un problème au champ', 'افحص مشكلة في الحقل')} description={copy(language, 'Use a photo or observation to start a safer scouting workflow.', 'Commencer une prospection guidée avec une photo ou une observation.', 'ابدأ كشفاً موجهاً بصورة أو ملاحظة.')} onClick={() => onOpenTool('farm')} />
-        <ActionCard icon={Droplets} color="#0284c7" title={copy(language, 'Plan irrigation', 'Planifier l’irrigation', 'خطّط للري')} description={copy(language, 'Open the practical irrigation program and water-planning tools.', 'Ouvrir les outils pratiques de programme et de planification.', 'افتح أدوات برنامج الري والتخطيط المائي.')} onClick={() => onOpenTool('farm', 'collapse_irrigation')} />
-        <ActionCard icon={BookOpen} color="#047857" title={copy(language, 'Record an activity', 'Enregistrer une activité', 'سجّل نشاطاً')} description={copy(language, 'Keep one traceable record for inputs, irrigation, scouting, and harvest.', 'Conserver une trace des intrants, du pompage, de la prospection et de la récolte.', 'احتفظ بسجل للمدخلات والري والكشف والحصاد.')} onClick={() => onOpenTool('farm', 'collapse_field_records')} />
-        <ActionCard icon={CalendarDays} color="#7c3aed" title={copy(language, 'Plan one crop', 'Planifier une culture', 'خطّط لمحصول')} description={copy(language, 'Generate a crop calendar with tasks, fertilization, irrigation, and labor.', 'Générer un calendrier avec tâches, fertilisation, irrigation et main-d’œuvre.', 'ولّد تقويماً للمحصول مع المهام والتسميد والري والعمالة.')} onClick={() => onOpenTool('farm', 'crop_calendar_gen')} />
-        <ActionCard icon={FlaskConical} color="#f59e0b" title={copy(language, 'See cost and sale price', 'Voir le coût et le prix de vente', 'اعرف التكلفة وسعر البيع')} description={copy(language, 'Run a real-world crop scenario in DZD with costs, yield, price, and risks.', 'Simuler une culture en DZD avec coûts, rendement, prix et risques.', 'حاكِ محصولاً بالدينار مع التكاليف والإنتاج والسعر والمخاطر.')} onClick={() => onOpenTool('simulator')} />
+        <ActionCard icon={CalendarDays} color="#7c3aed" title={copy(language, 'Plan one crop', 'Planifier une culture', 'خطط لمحصول')} description={copy(language, 'Generate a crop calendar with tasks, fertilization, irrigation, and labor.', 'Générer un calendrier avec tâches, fertilisation, irrigation et main-d’œuvre.', 'ولد تقويماً للمحصول مع المهام والتسميد والري والعمالة.')} onClick={() => onOpenTool('farm', 'crop_calendar_gen')} />
+        <ActionCard icon={DollarSign} color="#f59e0b" title={copy(language, 'Will I make money?', 'Serai-je rentable ?', 'هل سأربح؟')} description={copy(language, 'Run a real-world crop scenario in DZD with costs, yield, price, and risks.', 'Simuler une culture en DZD avec coûts, rendement, prix et risques.', 'حاك محصولاً بالدينار مع التكاليف والإنتاج والسعر والمخاطر.')} onClick={() => onOpenTool('simulator')} />
+        <ActionCard icon={BookOpen} color="#047857" title={copy(language, 'Record an activity', 'Enregistrer une activité', 'سجل نشاطاً')} description={copy(language, 'Keep one traceable record for inputs, irrigation, scouting, and harvest.', 'Conserver une trace des intrants, du pompage, de la prospection et de la récolte.', 'احتفظ بسجل للمدخلات والري والكشف والحصاد.')} onClick={() => onOpenTool('farm', 'collapse_field_records')} />
       </section>
       <div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
         <Card>
