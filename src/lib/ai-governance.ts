@@ -96,9 +96,33 @@ export function clampConfidence(value: unknown): number {
   return Math.max(0, Math.min(1, numeric));
 }
 
-export function publicAiError(error: unknown): string {
+type AiErrorLanguage = 'en' | 'fr' | 'ar';
+
+export function publicAiError(error: unknown, language: AiErrorLanguage = 'en'): string {
+  const errorCode = error instanceof Error && 'code' in error ? error.code : undefined;
+  if (errorCode === 'AI_PROVIDER_NOT_CONFIGURED') {
+    if (language === 'ar') {
+      return 'خدمة الذكاء الاصطناعي غير مهيأة في بيئة النشر. يجب على مالك التطبيق إعداد مزود الذكاء الاصطناعي ثم إعادة المحاولة.';
+    }
+    if (language === 'fr') {
+      return "Le service d'IA n'est pas configuré dans l'environnement de déploiement. Le propriétaire de l'application doit configurer un fournisseur d'IA avant de réessayer.";
+    }
+    return 'The AI service is not configured for this deployment. The app owner must configure an AI provider before trying again.';
+  }
   if (error instanceof Error && /timeout|timed out|abort/i.test(error.message)) {
+    if (language === 'ar') {
+      return 'انتهت مهلة خدمة الذكاء الاصطناعي. حاول مرة أخرى بسؤال أقصر.';
+    }
+    if (language === 'fr') {
+      return "Le service d'IA a dépassé le délai d'attente. Réessayez avec une demande plus courte.";
+    }
     return 'The AI service timed out. Please retry with a shorter request.';
+  }
+  if (language === 'ar') {
+    return 'خدمة الذكاء الاصطناعي غير متاحة مؤقتًا. حاول مرة أخرى بعد قليل.';
+  }
+  if (language === 'fr') {
+    return "Le service d'IA est temporairement indisponible. Veuillez réessayer dans un instant.";
   }
   return 'The AI service is temporarily unavailable. Please retry shortly.';
 }

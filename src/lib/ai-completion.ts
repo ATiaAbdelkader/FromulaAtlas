@@ -1,3 +1,6 @@
+import os from 'node:os';
+import path from 'node:path';
+import { readFileSync } from 'node:fs';
 import ZAI from 'z-ai-web-dev-sdk';
 
 type ChatRole = 'system' | 'user' | 'assistant';
@@ -14,11 +17,60 @@ export interface AiCompletionResult {
   model?: string;
 }
 
+export interface AiProviderAvailability {
+  openAiCompatible: boolean;
+  zai: boolean;
+  configured: boolean;
+}
+
+export class AiProviderNotConfiguredError extends Error {
+  readonly code = 'AI_PROVIDER_NOT_CONFIGURED';
+
+  constructor() {
+    super('No AI provider is configured for this deployment.');
+    this.name = 'AiProviderNotConfiguredError';
+  }
+}
+
 const DEFAULT_MODEL = 'gpt-5-mini';
 const REQUEST_TIMEOUT_MS = 45_000;
+const ZAI_CONFIG_PATHS = [
+  path.join(process.cwd(), '.z-ai-config'),
+  path.join(os.homedir(), '.z-ai-config'),
+  '/etc/.z-ai-config',
+];
 
 function hasOpenAiCompatibleConfig() {
   return Boolean(process.env.OPENAI_API_BASE && process.env.OPENAI_API_KEY);
+}
+
+function hasValidZaiConfig() {
+  return ZAI_CONFIG_PATHS.some(filePath => {
+    try {
+      const raw = readFileSync(filePath, 'utf8');
+      const config = JSON.parse(raw) as { baseUrl?: unknown; apiKey?: unknown };
+      return (
+        typeof config.baseUrl === 'string' && config.baseUrl.length > 0 &&
+        typeof config.apiKey === 'string' && config.apiKey.length > 0
+      );
+    } catch {
+      return false;
+    }
+  });
+}
+
+export function getAiProviderAvailability(): AiProviderAvailability {
+  const openAiCompatible = hasOpenAiCompatibleConfig();
+  const zai = hasValidZaiConfig();
+  return {
+    openAiCompatible,
+    zai,
+    configured: openAiCompatible || zai,
+  };
+}
+
+export function isProviderConfigured() {
+  return getAiProviderAvailability().configured;
 }
 
 function getOpenAiEndpoint() {
@@ -76,14 +128,18 @@ async function completeWithZai(messages: AiChatMessage[]): Promise<AiCompletionR
 }
 
 /**
- * Prefer the platform's OpenAI-compatible server runtime so local and deployed
- * environments do not require a user-home `.z-ai-config` file. ZAI remains a
- * compatibility fallback for existing FormulaAtlas deployments that still
+ * Prefer the deployment's OpenAI-compatible server runtime so local and
+ * deployed environments do not require a user-home `.z-ai-config` file.
+ * ZAI remains a compatibility fallback for FormulaAtlas deployments that
  * provide that configuration.
  */
 export async function createAiCompletion(messages: AiChatMessage[]): Promise<AiCompletionResult> {
-  if (hasOpenAiCompatibleConfig()) {
+  const availability = getAiProviderAvailability();
+  if (availability.openAiCompatible) {
     return completeWithOpenAiCompatible(messages);
   }
-  return completeWithZai(messages);
+  if (availability.zai) {
+    return completeWithZai(messages);
+  }
+  throw new AiProviderNotConfiguredError();
 }

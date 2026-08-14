@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAiCompletion } from '@/lib/ai-completion';
+import {
+  AiProviderNotConfiguredError,
+  createAiCompletion,
+  isProviderConfigured,
+} from '@/lib/ai-completion';
 import { getAgent, AI_AGENTS, getLocalizedAgentDisplay } from '@/lib/ai-agents';
 import {
   buildAgentGovernance,
@@ -28,6 +32,8 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  let language: 'en' | 'fr' | 'ar' = 'en';
+
   try {
     const body = await req.json();
     const governed = parseGovernedChatMessages(body?.messages);
@@ -35,7 +41,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: governed.error }, { status: 400 });
     }
 
-    const language = normalizeAgentLanguage(body?.language);
+    language = normalizeAgentLanguage(body?.language);
     const requestedAgentId = typeof body?.agentId === 'string' ? body.agentId : 'agronomist';
     const agent = getAgent(requestedAgentId) ?? getAgent('agronomist');
     const workspaceContext = sanitizeAgentWorkspaceContext(body?.workspaceContext);
@@ -46,6 +52,17 @@ export async function POST(req: NextRequest) {
       },
       ...governed.messages,
     ];
+
+    if (!isProviderConfigured()) {
+      const configurationError = new AiProviderNotConfiguredError();
+      return NextResponse.json(
+        {
+          error: publicAiError(configurationError, language),
+          code: configurationError.code,
+        },
+        { status: 503 },
+      );
+    }
 
     const completion = await createAiCompletion(fullMessages);
 
@@ -69,7 +86,7 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error('Agronomist chat error:', error instanceof Error ? error.message : 'unknown error');
-    return NextResponse.json({ error: publicAiError(error) }, { status: 503 });
+    return NextResponse.json({ error: publicAiError(error, language) }, { status: 503 });
   }
 }
 
@@ -84,6 +101,7 @@ export async function GET() {
       language: '"en" | "fr" | "ar" (optional; defaults to English)',
       workspaceContext: 'Optional compact active-farm, portfolio, weather, and request-focus context',
     },
+    providerConfigured: isProviderConfigured(),
     governance: {
       maxMessages: AI_MAX_MESSAGES,
       maxMessageCharacters: AI_MAX_MESSAGE_CHARS,
