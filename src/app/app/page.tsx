@@ -635,6 +635,7 @@ export default function Page() {
       {activeTab === 'myfield' && (
         <main className="flex-1 max-w-[900px] mx-auto w-full p-4 sm:p-6 space-y-4 pb-20 sm:pb-6">
           <FarmerField onOpenTool={(tab, storageKey) => openTool(tab, storageKey)} onNavigate={(tab) => setActiveTab(tab)} />
+          <CollapsibleSection title={tr('Algeria Agriculture Calendar', 'التقويم الفلاحي الجزائري', language)} description={tr('19 features: zones (Tell/Hauts Plateaux/Sahara), weather & spray windows, frost alerts, BBCH, PHI countdown, rotation, biofix, trap logger, CNCA subsidies, market prices, multi-field sync, equipment scheduler, offline mode, moon phases, Ramadan, souks, AI task generator, Telegram reminders, print weekly', '19 ميزة: مناطق (التل/الهضاب العليا/الصحراء)، طقس ونوافذ رش، تنبيهات الصقيع، BBCH، عدّاد PHI، دورة المحاصيل، طُّعم، سجل المصائد، دعم CNCA، أسعار السوق، تزامن متعدد الحقول، جدولة المعدات، وضع دون اتصال، أطوار القمر، رمضان، أسواق، مولّد مهام AI، تذكيرات تيليجرام، طباعة أسبوعي', language)} icon={CalendarDays} color="#16a34a" storageKey="collapse_algeria_calendar_myfield" defaultOpen={false} enableExport><div className="p-4"><AlgeriaAgriCalendar /></div></CollapsibleSection>
         </main>
       )}
 

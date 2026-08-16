@@ -43,7 +43,7 @@ interface FarmProfile {
   lng?: string;
 }
 
-type ExperienceTab = 'home' | 'formulas' | 'tools' | 'farm' | 'simulator' | 'insights' | 'about';
+type ExperienceTab = 'home' | 'formulas' | 'tools' | 'farm' | 'simulator' | 'insights' | 'about' | 'myfield' | 'help';
 
 interface FarmerFieldProps {
   onOpenTool: (tab: ExperienceTab, storageKey?: string) => void;
@@ -246,7 +246,7 @@ export function FarmerField({ onOpenTool, onNavigate }: FarmerFieldProps) {
                     💡 {cropStage.stage.description}
                   </div>
                 )}
-                <Button variant="outline" size="sm" className="w-full mt-2 gap-1.5 text-xs" onClick={() => onOpenTool('farm', 'crop_calendar_gen')}>
+                <Button variant="outline" size="sm" className="w-full mt-2 gap-1.5 text-xs" onClick={() => onOpenTool('myfield', 'collapse_algeria_calendar_myfield')}>
                   <Calendar className="h-3 w-3" /> {tr('See full calendar', 'الجدول الكامل', 'Voir le calendrier')}
                 </Button>
               </div>
