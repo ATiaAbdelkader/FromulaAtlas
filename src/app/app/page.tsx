@@ -122,6 +122,7 @@ import { SatelliteCropHealthMonitor } from '@/components/agri/satellite-crop-hea
 import { DemoScenarioStudio } from '@/components/agri/demo-scenario-studio';
 import { FarmerField } from '@/components/agri/farmer-field';
 import { FarmerHelp } from '@/components/agri/farmer-help';
+import { AlgeriaAgriCalendar } from '@/components/agri/algeria-agri-calendar/AlgeriaAgriCalendar';
 
 type TabId = 'home' | 'formulas' | 'tools' | 'farm' | 'myfield' | 'simulator' | 'insights' | 'about' | 'help';
 
@@ -470,6 +471,8 @@ export default function Page() {
           <CollapsibleSection title={tr('Demo Scenario Studio', 'استوديو سيناريوهات العرض', language)} description={tr('Reproducible Algeria-aware synthetic farm data for demos, onboarding, and QA — not for agronomic decisions', 'Données agricoles algériennes synthétiques et reproductibles pour démonstration, accueil et tests — pas pour décisions agronomiques', language)} icon={Sparkles} color="#7c3aed" storageKey="collapse_demo_scenario" defaultOpen={false} enableExport><div className="p-4"><DemoScenarioStudio /></div></CollapsibleSection>
 
           <CollapsibleSection title={tr('Field Record Book', 'دفتر سجل الحقل', language)} description={tr('Traceable timeline for field decisions, scouting, soil tests, satellite checks, inputs, irrigation, and harvest', 'سجل زمني قابل للتتبع لقرارات الحقل والكشف وتحاليل التربة والأقمار الصناعية والمدخلات والري والحصاد', language)} icon={BookOpen} color="#047857" storageKey="collapse_field_records" defaultOpen={true} enableExport><div className="p-4"><FieldRecordBook /></div></CollapsibleSection>
+
+          <CollapsibleSection title={tr('Algeria Agriculture Calendar', 'التقويم الفلاحي الجزائري', language)} description={tr('19-feature calendar: 3 zones (Tell/Hauts Plateaux/Sahara), real-time weather & spray windows, frost alerts, BBCH tracker, PHI countdown, crop rotation, biofix calendar, trap logger, CNCA subsidies, market prices, multi-field sync, worker & equipment scheduler, offline mode, moon phases, Ramadan adjustment, weekly souks, AI task generator, Telegram reminders, print-friendly weekly view', 'تقويم 19 ميزة: 3 مناطق (التل/الهضاب العليا/الصحراء)، طقس لحظي ونوافذ رش، تنبيهات الصقيع، متتبع BBCH، عدّاد PHI، دورة المحاصيل، تقويم الطُّعم، سجل المصائد، دعم CNCA، أسعار السوق، تزامن متعدد الحقول، جدولة العمال والمعدات، وضع دون اتصال، أطوار القمر، تعديل رمضان، أسواق أسبوعية، مولّد مهام AI، تذكيرات تيليجرام، عرض أسبوعي للطباعة', language)} icon={CalendarDays} color="#16a34a" storageKey="collapse_algeria_calendar" defaultOpen={false} enableExport><div className="p-4"><AlgeriaAgriCalendar /></div></CollapsibleSection>
 
           {/* Sub-category: Fields & Crops */}
           <div className="space-y-3">
