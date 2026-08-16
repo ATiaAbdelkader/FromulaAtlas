@@ -1,0 +1,377 @@
+     1→'use client';
+     2→
+     3→import { useState, useMemo, useCallback } from 'react';
+     4→import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+     5→import { Input } from '@/components/ui/input';
+     6→import { Label } from '@/components/ui/label';
+     7→import { Button } from '@/components/ui/button';
+     8→import { Badge } from '@/components/ui/badge';
+     9→import { Textarea } from '@/components/ui/textarea';
+    10→import {
+    11→  CalendarDays, Sparkles, Download, Edit3, Check, Plus, Trash2,
+    12→  Sprout, Droplets, FlaskConical, Bug, Users, FileText, BookOpen,
+    13→} from 'lucide-react';
+    14→import { copyFor, useTranslation } from '@/lib/language-store';
+    15→import {
+    16→  CROP_LIFECYCLES,
+    17→} from '@/lib/crop-lifecycle';
+    18→import {
+    19→  generateCropCalendar, getIrrigationSystems,
+    20→  type CropCalendarResult, type CalendarEntry,
+    21→} from '@/lib/crop-calendar-generator';
+    22→import {
+    23→  formatFertialAmounts,
+    24→  getFertialCropOptions,
+    25→  getFertialGuidance,
+    26→} from '@/lib/fertial-fertilization';
+    27→
+    28→export function CropCalendarGenerator() {
+    29→  const { language } = useTranslation();
+    30→  const [cropId, setCropId] = useState('maize');
+    31→  const [plantingDate, setPlantingDate] = useState(new Date().toISOString().slice(0, 10));
+    32→  const [area, setArea] = useState('1');
+    33→  const [irrigationSystem, setIrrigationSystem] = useState('drip');
+    34→  const [avgET0, setAvgET0] = useState('5');
+    35→  const [result, setResult] = useState<CropCalendarResult | null>(null);
+    36→  const [editingWeek, setEditingWeek] = useState<number | null>(null);
+    37→  const [customNotes, setCustomNotes] = useState<Record<number, string>>({});
+    38→  const fertialOptions = useMemo(() => getFertialCropOptions(), []);
+    39→  const [fertialCropId, setFertialCropId] = useState('wheat');
+    40→  const fertialReference = useMemo(() => getFertialGuidance(fertialCropId) ?? null, [fertialCropId]);
+    41→  const fertialDisplayName = fertialReference
+    42→    ? language === 'ar' ? fertialReference.nameAr : language === 'fr' ? fertialReference.nameFr : fertialReference.name
+    43→    : '';
+    44→
+    45→  const generate = useCallback(() => {
+    46→    const r = generateCropCalendar({
+    47→      cropId,
+    48→      plantingDate,
+    49→      area: parseFloat(area) || 1,
+    50→      irrigationSystem,
+    51→      avgET0: parseFloat(avgET0) || 5,
+    52→    });
+    53→    setResult(r);
+    54→    setEditingWeek(null);
+    55→    setCustomNotes({});
+    56→  }, [cropId, plantingDate, area, irrigationSystem, avgET0]);
+    57→
+    58→  const exportPDF = useCallback(() => {
+    59→    if (!result) return;
+    60→    const win = window.open('', '_blank');
+    61→    if (!win) return;
+    62→
+    63→    const weeksHTML = result.weeks.map(w => {
+    64→      const laborText = w.labor.map(l => `${l.task} (${l.laborDaysPerHa} d/ha, ${l.priority})`).join('<br>');
+    65→      const fertText = w.fertilization.map(f => `${f.stage}: N${f.n} P${f.p} K${f.k} — ${f.sources.map(s => s.material).join(', ')}`).join('<br>');
+    66→      const riskText = w.risks.map(r => `${r.problem.name}: ${r.recommendedActives.map(a => a.name).join(', ')}`).join('<br>');
+    67→      const note = customNotes[w.week] || '';
+    68→      return `<tr>
+    69→        <td style="text-align:center;font-weight:bold">${w.week}</td>
+    70→        <td style="text-align:center;font-size:10px">${w.date || w.dayRange}</td>
+    71→        <td>${w.stageEmoji} ${w.stage}<br><span style="font-size:9px;color:#666">Kc: ${w.kc.toFixed(2)}</span></td>
+    72→        <td style="font-size:10px">${laborText || '—'}</td>
+    73→        <td style="font-size:10px">${fertText || '—'}</td>
+    74→        <td style="text-align:center;font-size:10px">${w.irrigation.etc.toFixed(1)} mm<br><span style="color:#666">${w.irrigation.note}</span></td>
+    75→        <td style="font-size:10px">${riskText || '—'}</td>
+    76→        ${note ? `<td style="font-size:10px;font-style:italic">${note}</td>` : ''}
+    77→      </tr>`;
+    78→    }).join('');
+    79→    const fertialReference = result.fertialGuidance ? `<h2>Référence du manuel Fertial</h2><p>${result.fertialGuidance.summary}</p><ul>${result.fertialGuidance.applications.map(application => `<li><strong>${application.timing}</strong> · ${formatFertialAmounts(application.amounts)} · ${application.method}</li>`).join('')}</ul><p class="footer">Source : ${result.fertialGuidance.source.document}, ${result.fertialGuidance.source.pages} — ${result.fertialGuidance.source.url}</p>` : '';
+    80→
+    81→    win.document.write(`<!doctype html><html><head><title>Calendrier Cultural — ${result.crop.name}</title>
+    82→      <style>
+    83→        body { font-family: -apple-system, sans-serif; margin: 20px; color: #1f2937; }
+    84→        h1 { color: #059669; border-bottom: 3px solid #059669; padding-bottom: 8px; font-size: 20px; }
+    85→        .header { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    86→        .header div { font-size: 11px; }
+    87→        .header strong { color: #059669; }
+    88→        table { width: 100%; border-collapse: collapse; font-size: 11px; }
+    89→        th { background: #ecfdf5; padding: 6px 4px; text-align: left; border: 1px solid #d1d5db; color: #065f46; font-size: 10px; }
+    90→        td { padding: 5px 4px; border: 1px solid #d1d5db; vertical-align: top; }
+    91→        .footer { margin-top: 16px; font-size: 10px; color: #6b7280; border-top: 1px solid #e5e7eb; padding-top: 8px; }
+    92→        .milestone { background: #fef3c7; }
+    93→        @media print { @page { margin: 0.8cm; landscape; } }
+    94→      </style></head><body>
+    95→      <h1>${result.crop.emoji} Calendrier Cultural Complet — ${result.crop.name}</h1>
+    96→      <div class="header">
+    97→        <div>
+    98→          <strong>Date de plantation:</strong> ${result.plantingDate}<br>
+    99→          <strong>Surface:</strong> ${result.area} ha<br>
+   100→          <strong>Système d'irrigation:</strong> ${result.irrigationSystem} (η = ${(result.irrigationEfficiency * 100).toFixed(0)}%)<br>
+   101→          <strong>ET₀ moyen:</strong> ${avgET0} mm/jour
+   102→        </div>
+   103→        <div>
+   104→          <strong>Semence:</strong> ${result.seedRate.kgPerHa.toFixed(0)} kg/ha, ${result.seedRate.plantsPerM2.toFixed(0)} plants/m²<br>
+   105→          <strong>Espacement:</strong> ${result.seedRate.plantSpacing.toFixed(1)} cm × ${result.seedRate.rowSpacing} cm<br>
+   106→          <strong>N total:</strong> ${result.totalSeason.n.toFixed(0)} kg · <strong>P:</strong> ${result.totalSeason.p.toFixed(0)} kg · <strong>K:</strong> ${result.totalSeason.k.toFixed(0)} kg<br>
+   107→          <strong>Irrigation totale:</strong> ${result.totalSeason.irrigationM3.toFixed(0)} m³ · <strong>Main d'œuvre:</strong> ${result.totalSeason.laborDays.toFixed(0)} jours
+   108→        </div>
+   109→      </div>
+   110→      <table>
+   111→        <thead><tr>
+   112→          <th>Sem.</th><th>Date</th><th>Stade</th><th>Travaux</th><th>Fertilisation</th><th>Irrigation</th><th>Sanitaire</th>
+   113→          ${Object.keys(customNotes).length > 0 ? '<th>Notes</th>' : ''}
+   114→        </tr></thead>
+   115→        <tbody>${weeksHTML}</tbody>
+   116→      </table>
+   117→      ${fertialReference}
+   118→      <div class="footer">
+   119→        ⚠️ Ce calendrier est une aide à la décision basée on FAO-56, INPV 2017, NRC 2021, and the Fertial manual where a crop profile is available.
+   120→        Ajustez selon les conditions locales (climat, sol, pression parasitaire).
+   121→        Généré par Formula Atlas — ${new Date().toLocaleString('fr-FR')}
+   122→      </div>
+   123→    </body></html>`);
+   124→    win.document.close();
+   125→    setTimeout(() => win.print(), 400);
+   126→  }, [result, customNotes, avgET0, language]);
+   127→
+   128→  return (
+   129→    <Card className="overflow-hidden border-emerald-200/60 shadow-sm dark:border-emerald-900/60">
+   130→      <CardHeader className="border-b bg-gradient-to-r from-emerald-50 via-background to-teal-50/50 pb-4 dark:from-emerald-950/30 dark:via-background dark:to-teal-950/20">
+   131→        <CardTitle className="text-base flex items-center gap-2">
+   132→          <CalendarDays className="h-4 w-4 text-emerald-600" /> {copyFor(language, 'Crop Calendar Generator', 'مولّد تقويم المحصول')}
+   133→        </CardTitle>
+   134→        <p className="text-xs leading-relaxed text-muted-foreground">{copyFor(language, 'One-click complete farm calendar: planting + fertilization + irrigation + pest control + labor · editable · PDF export', 'تقويم زراعي كامل بنقرة واحدة: الزراعة + التسميد + الري + مكافحة الآفات + العمالة · قابل للتعديل · تصدير PDF')}</p>
+   135→      </CardHeader>
+   136→      <CardContent className="space-y-5 p-4 sm:p-5">
+   137→        {/* Inputs */}
+   138→        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+   139→          <div>
+   140→            <Label className="text-xs font-medium">{copyFor(language, 'Crop', 'المحصول')}</Label>
+   141→            <select aria-label={copyFor(language, 'Crop', 'المحصول')} value={cropId} onChange={e => setCropId(e.target.value)} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
+   142→              {CROP_LIFECYCLES.map(c => <option key={c.id} value={c.id}>{c.emoji} {c.name}</option>)}
+   143→            </select>
+   144→          </div>
+   145→          <div>
+   146→            <Label className="text-xs font-medium">{copyFor(language, 'Planting date', 'تاريخ الزراعة')}</Label>
+   147→            <Input aria-label={copyFor(language, 'Planting date', 'تاريخ الزراعة')} type="date" value={plantingDate} onChange={e => setPlantingDate(e.target.value)} className="mt-1 h-10 text-sm" />
+   148→          </div>
+   149→        </div>
+   150→        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+   151→          <div>
+   152→            <Label className="text-xs font-medium">{copyFor(language, 'Area (ha)', 'المساحة (هكتار)')}</Label>
+   153→            <Input aria-label={copyFor(language, 'Field area in hectares', 'مساحة الحقل بالهكتار')} value={area} onChange={e => setArea(e.target.value)} type="number" step="0.1" className="mt-1 h-10 text-sm" />
+   154→          </div>
+   155→          <div>
+   156→            <Label className="text-xs font-medium">{copyFor(language, 'Irrigation system', 'نظام الري')}</Label>
+   157→            <select aria-label={copyFor(language, 'Irrigation system', 'نظام الري')} value={irrigationSystem} onChange={e => setIrrigationSystem(e.target.value)} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
+   158→              {getIrrigationSystems().map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
+   159→            </select>
+   160→          </div>
+   161→          <div>
+   162→            <Label className="text-xs font-medium">{copyFor(language, 'Avg ET₀ (mm/day)', 'متوسط ET₀ (مم/يوم)')}</Label>
+   163→            <Input aria-label={copyFor(language, 'Average reference evapotranspiration', 'متوسط البخر-نتح المرجعي')} value={avgET0} onChange={e => setAvgET0(e.target.value)} type="number" step="0.5" className="mt-1 h-10 text-sm" />
+   164→          </div>
+   165→        </div>
+   166→        <Button size="sm" onClick={generate} className="h-11 w-full gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700">
+   167→          <Sparkles className="h-3.5 w-3.5" /> {copyFor(language, 'Generate Complete Calendar', 'إنشاء التقويم الكامل')}
+   168→        </Button>
+   169→
+   170→        {/* Complete Fertial schedule library: reference-only when no lifecycle exists */}
+   171→        {fertialReference && <section className="rounded-xl border border-lime-200 bg-lime-50/50 p-3 dark:border-lime-900/70 dark:bg-lime-950/15">
+   172→          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+   173→            <div className="min-w-0">
+   174→              <div className="flex flex-wrap items-center gap-2">
+   175→                <BookOpen className="h-4 w-4 shrink-0 text-lime-700 dark:text-lime-300" />
+   176→                <h3 className="text-xs font-semibold text-lime-950 dark:text-lime-100">{copyFor(language, 'Fertial Manual Schedule Library', 'مكتبة جداول دليل Fertial')}</h3>
+   177→                <Badge variant="outline" className="border-lime-300 bg-background/70 text-[10px] text-lime-800 dark:border-lime-800 dark:text-lime-200">{copyFor(language, 'Source reference', 'مرجع مصدر')}</Badge>
+   178→              </div>
+   179→              <p className="mt-1 text-[11px] leading-relaxed text-lime-950/75 dark:text-lime-100/75">{copyFor(language, 'All 39 extracted Fertial crop schedules are available here. This additive reference does not invent lifecycle, irrigation, labor, or pest data for crops not yet supported by the canonical calendar.', 'تتوفر هنا جداول التسميد التسعة والثلاثون المستخرجة من دليل Fertial. هذا المرجع الإضافي لا يخترع مراحل نمو أو ري أو عمالة أو بيانات آفات للمحاصيل غير المدعومة بعد في التقويم الأساسي.')}</p>
+   180→            </div>
+   181→            <div className="w-full shrink-0 sm:w-64">
+   182→              <Label className="text-[10px] font-medium text-lime-950 dark:text-lime-100">{copyFor(language, 'Select Fertial crop schedule', 'اختر جدول المحصول من Fertial')}</Label>
+   183→              <select aria-label={copyFor(language, 'Select Fertial crop schedule', 'اختر جدول المحصول من Fertial')} value={fertialCropId} onChange={e => setFertialCropId(e.target.value)} className="mt-1 h-10 w-full rounded-md border border-lime-300 bg-background px-3 text-sm dark:border-lime-800">
+   184→                {fertialOptions.map(option => <option key={option.id} value={option.id}>{language === 'ar' ? option.nameAr : language === 'fr' ? option.nameFr : option.name}</option>)}
+   185→              </select>
+   186→            </div>
+   187→          </div>
+   188→          <div className="mt-3 rounded-lg border border-lime-200/80 bg-background/70 p-3 dark:border-lime-900/70">
+   189→            <div className="flex flex-wrap items-center justify-between gap-2">
+   190→              <div><div className="text-sm font-semibold">{fertialDisplayName}</div><div className="text-[10px] text-muted-foreground">{fertialReference.category} · {fertialReference.summary}</div></div>
+   191→              <Badge variant="secondary" className="text-[10px]">{fertialReference.applications.length} {copyFor(language, 'applications', 'تطبيقات')}</Badge>
+   192→            </div>
+   193→            <div className="mt-3 grid gap-2 md:grid-cols-2">{fertialReference.applications.map((application, index) => <div key={`${application.phase}-${application.timing}-${index}`} className="rounded-md border bg-muted/20 p-2.5"><div className="text-[10px] font-semibold">{application.timing}</div><div className="mt-1 font-mono text-[11px] font-semibold">{formatFertialAmounts(application.amounts) || copyFor(language, 'Context guidance', 'إرشاد سياقي')}</div><div className="mt-1 text-[10px] text-muted-foreground">{copyFor(language, `Method: ${application.method}`, `الطريقة: ${application.method}`)} · {application.note}</div></div>)}</div>
+   194→            <div className="mt-3 grid gap-3 md:grid-cols-2">
+   195→              <div><div className="text-[10px] font-semibold uppercase text-muted-foreground">{copyFor(language, 'Context', 'السياق')}</div><ul className="mt-1 list-disc space-y-1 pl-4 text-[10px] text-muted-foreground">{fertialReference.context.map((item, index) => <li key={`${item}-${index}`}>{item}</li>)}</ul></div>
+   196→              <div><div className="text-[10px] font-semibold uppercase text-muted-foreground">{copyFor(language, 'Cautions', 'الاحتياطات')}</div><ul className="mt-1 list-disc space-y-1 pl-4 text-[10px] text-muted-foreground">{fertialReference.cautions.map((item, index) => <li key={`${item}-${index}`}>{item}</li>)}</ul></div>
+   197→            </div>
+   198→            <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-lime-200/80 pt-2 text-[10px] text-muted-foreground dark:border-lime-900/70"><span>{copyFor(language, `Source: ${fertialReference.source.document} · pages ${fertialReference.source.pages}`, `المصدر: ${fertialReference.source.document} · الصفحات ${fertialReference.source.pages}`)}</span><a className="font-medium text-lime-800 underline underline-offset-2 dark:text-lime-300" href={fertialReference.source.url} target="_blank" rel="noreferrer">{copyFor(language, 'Open manual source', 'فتح مصدر الدليل')}</a></div>
+   199→          </div>
+   200→        </section>}
+   201→
+   202→        {/* Results */}
+   203→        {result && (
+   204→          <div className="space-y-4">
+   205→            {/* Summary header */}
+   206→            <div className="rounded-xl bg-gradient-to-r from-emerald-700 to-teal-800 p-4 text-white shadow-sm">
+   207→              <div className="mb-3 flex items-center gap-3">
+   208→                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white/15 text-2xl">{result.crop.emoji}</span>
+   209→                <div>
+   210→                  <div className="text-sm font-bold">{result.crop.name}</div>
+   211→                  <div className="text-[10px] text-emerald-100">{result.weeks.length} {copyFor(language, 'weeks', 'أسابيع')} · {result.crop.seasonLength} {copyFor(language, 'days', 'أيام')}</div>
+   212→                </div>
+   213→              </div>
+   214→              <div className="grid grid-cols-2 gap-2 text-center text-xs sm:grid-cols-4">
+   215→                <div><div className="text-[9px] text-emerald-200 uppercase">{copyFor(language, 'Seed', 'البذور')}</div><div className="font-mono font-bold">{result.seedRate.kgPerHa.toFixed(0)} kg/ha</div></div>
+   216→                <div><div className="text-[9px] text-emerald-200 uppercase">N-P-K</div><div className="font-mono font-bold">{result.totalSeason.n.toFixed(0)}-{result.totalSeason.p.toFixed(0)}-{result.totalSeason.k.toFixed(0)}</div></div>
+   217→                <div><div className="text-[9px] text-emerald-200 uppercase">{copyFor(language, 'Irrigation', 'الري')}</div><div className="font-mono font-bold">{result.totalSeason.irrigationM3.toFixed(0)} m³</div></div>
+   218→                <div><div className="text-[9px] text-emerald-200 uppercase">{copyFor(language, 'Labor', 'العمالة')}</div><div className="font-mono font-bold">{result.totalSeason.laborDays.toFixed(0)} days</div></div>
+   219→              </div>
+   220→            </div>
+   221→
+   222→            {/* Seed rate info */}
+   223→            <div className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-3 text-sm dark:border-emerald-900 dark:bg-emerald-950/10">
+   224→              <Sprout className="h-3 w-3 inline mr-1 text-emerald-600" />
+   225→              <strong>{copyFor(language, 'Seed rate:', 'معدل البذور:')}</strong> {result.seedRate.kgPerHa.toFixed(0)} kg/ha · {result.seedRate.plantsPerM2.toFixed(0)} plants/m² · {copyFor(language, 'spacing', 'التباعد')} {result.seedRate.plantSpacing.toFixed(1)}cm × {result.seedRate.rowSpacing}cm
+   226→            </div>
+   227→
+   228→            {result.fertialGuidance && <section className="rounded-xl border border-lime-200 bg-lime-50/60 p-3 dark:border-lime-900/70 dark:bg-lime-950/20">
+   229→              <div className="flex items-start gap-2"><BookOpen className="mt-0.5 h-4 w-4 shrink-0 text-lime-700 dark:text-lime-300" /><div className="min-w-0"><h3 className="text-xs font-semibold text-lime-950 dark:text-lime-100">{copyFor(language, 'Fertial manual timing reference', 'مرجع توقيت دليل Fertial')}</h3><p className="mt-1 text-xs leading-relaxed text-lime-950/80 dark:text-lime-100/80">{result.fertialGuidance.summary}</p></div></div>
+   230→              <div className="mt-3 grid gap-2 md:grid-cols-2">{result.fertialGuidance.applications.map((application, index) => <div key={`${application.timing}-${index}`} className="rounded-lg border border-lime-200/80 bg-background/70 p-2.5 dark:border-lime-900/70"><div className="text-[10px] font-semibold text-lime-900 dark:text-lime-200">{application.timing}</div><div className="mt-1 font-mono text-[11px] font-semibold">{formatFertialAmounts(application.amounts)}</div><div className="mt-1 text-[10px] text-muted-foreground">{copyFor(language, `Method: ${application.method}`, `الطريقة: ${application.method}`)} · {application.note}</div></div>)}</div>
+   231→              <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-lime-200/80 pt-2 text-[10px] text-muted-foreground dark:border-lime-900/70"><span>{copyFor(language, `Source: ${result.fertialGuidance.source.document} · ${result.fertialGuidance.source.pages}`, `المصدر: ${result.fertialGuidance.source.document} · ${result.fertialGuidance.source.pages}`)}</span><a className="font-medium text-lime-800 underline underline-offset-2 dark:text-lime-300" href={result.fertialGuidance.source.url} target="_blank" rel="noreferrer">{copyFor(language, 'Open manual source', 'فتح مصدر الدليل')}</a></div>
+   232→            </section>}
+   233→
+   234→            {/* Calendar table */}
+   235→            <div className="max-h-[520px] overflow-auto rounded-xl border bg-background shadow-sm">
+   236→              <table className="w-full min-w-[980px] text-xs">
+   237→                <thead className="sticky top-0 bg-muted/80 backdrop-blur z-10">
+   238→                  <tr className="text-left text-[9px] text-muted-foreground uppercase">
+   239→                    <th className="px-3 py-2">{copyFor(language, 'Wk', 'أسبوع')}</th>
+   240→                    <th className="px-3 py-2">{copyFor(language, 'Date', 'التاريخ')}</th>
+   241→                    <th className="px-3 py-2">{copyFor(language, 'Stage', 'المرحلة')}</th>
+   242→                    <th className="px-3 py-2">{copyFor(language, 'Travaux / Labor', 'الأعمال / العمالة')}</th>
+   243→                    <th className="px-3 py-2">{copyFor(language, 'Fertilisation', 'التسميد')}</th>
+   244→                    <th className="px-3 py-2">{copyFor(language, 'Irrigation', 'الري')}</th>
+   245→                    <th className="px-3 py-2">{copyFor(language, 'Sanitaire / Risks', 'الحماية / المخاطر')}</th>
+   246→                    <th className="px-3 py-2">{copyFor(language, 'Notes', 'ملاحظات')}</th>
+   247→                  </tr>
+   248→                </thead>
+   249→                <tbody>
+   250→                  {result.weeks.map((w) => (
+   251→                    <CalendarRow
+   252→                      key={w.week}
+   253→                      entry={w}
+   254→                      area={parseFloat(area) || 1}
+   255→                      note={customNotes[w.week] || ''}
+   256→                      isEditing={editingWeek === w.week}
+   257→                      onEdit={() => setEditingWeek(w.week)}
+   258→                      onSave={(note) => { setCustomNotes(prev => ({ ...prev, [w.week]: note })); setEditingWeek(null); }}
+   259→                    />
+   260→                  ))}
+   261→                </tbody>
+   262→              </table>
+   263→            </div>
+   264→
+   265→            {/* Export */}
+   266→            <Button size="sm" onClick={exportPDF} className="h-11 w-full gap-2">
+   267→              <FileText className="h-3.5 w-3.5" /> {copyFor(language, 'Export Complete Calendar (PDF)', 'تصدير التقويم الكامل (PDF)')}
+   268→            </Button>
+   269→
+   270→            <div className="rounded-xl border bg-muted/20 p-3 text-xs leading-relaxed text-muted-foreground">
+   271→              💡 {copyFor(language, 'Click ✏️ on any row to add custom notes. The calendar combines FAO-56 crop coefficients, INPV 2017 pest control data, NRC 2021 feed standards, and crop lifecycle phenology. Edit notes before exporting to PDF.', 'اضغط على ✏️ في أي صف لإضافة ملاحظات مخصصة. يجمع التقويم معاملات المحصول من FAO-56 وبيانات مكافحة الآفات من INPV 2017 ومعايير الأعلاف من NRC 2021 ومراحل نمو المحصول. عدّل الملاحظات قبل التصدير إلى PDF.')}
+   272→            </div>
+   273→          </div>
+   274→        )}
+   275→      </CardContent>
+   276→    </Card>
+   277→  );
+   278→}
+   279→
+   280→// ============================================================================
+   281→// Calendar Row (editable)
+   282→// ============================================================================
+   283→
+   284→function CalendarRow({ entry, area, note, isEditing, onEdit, onSave }: {
+   285→  entry: CalendarEntry;
+   286→  area: number;
+   287→  note: string;
+   288→  isEditing: boolean;
+   289→  onEdit: () => void;
+   290→  onSave: (note: string) => void;
+   291→}) {
+   292→  const { language } = useTranslation();
+   293→  const [noteDraft, setNoteDraft] = useState(note);
+   294→
+   295→  const laborText = entry.labor.length > 0
+   296→    ? entry.labor.map(l => `${l.task}`).join('; ')
+   297→    : '—';
+   298→  const fertText = entry.fertilization.length > 0
+   299→    ? entry.fertilization.map(f => `N${f.n} P${f.p} K${f.k} (${f.method})`).join('; ')
+   300→    : '—';
+   301→  const riskText = entry.risks.length > 0
+   302→    ? entry.risks.slice(0, 2).map(r => `${r.problem.name}: ${r.recommendedActives.slice(0, 2).map(a => a.name).join(', ')}`).join('; ')
+   303→    : '—';
+   304→  const irrM3 = entry.irrigation.etc * 10 * area / 1; // approx m³
+   305→
+   306→  const hasMilestone = Boolean(entry.milestone);
+   307→  const hasContent = entry.labor.length > 0 || entry.fertilization.length > 0 || entry.risks.length > 0 || hasMilestone;
+   308→
+   309→  return (
+   310→    <tr className={`border-t hover:bg-muted/20 ${hasMilestone ? 'bg-amber-50/40 dark:bg-amber-950/10' : ''} ${!hasContent ? 'opacity-50' : ''}`}>
+   311→      <td className="px-2 py-1.5 font-mono font-bold text-center">{entry.week}</td>
+   312→      <td className="px-2 py-1.5 text-[10px] text-muted-foreground">{entry.date?.slice(5) || entry.dayRange}</td>
+   313→      <td className="px-2 py-1.5">
+   314→        <span>{entry.stageEmoji}</span>{' '}
+   315→        <span className="text-[10px]">{entry.stage}</span>
+   316→        <span className="text-[9px] text-muted-foreground block">Kc {entry.kc.toFixed(2)}</span>
+   317→        {entry.milestone && <span className="text-[9px] text-amber-700 dark:text-amber-400 block font-medium">{entry.milestone}</span>}
+   318→      </td>
+   319→      <td className="px-2 py-1.5 text-[10px] max-w-[180px]">
+   320→        {entry.labor.length > 0 ? entry.labor.map((l, i) => (
+   321→          <div key={i} className="flex items-start gap-1">
+   322→            <span className={`text-[8px] mt-0.5 ${l.priority === 'critical' ? 'text-rose-600' : l.priority === 'recommended' ? 'text-amber-600' : 'text-muted-foreground'}`}>●</span>
+   323→            <span>{l.task} <span className="text-muted-foreground">({l.laborDaysPerHa}d/ha)</span></span>
+   324→          </div>
+   325→        )) : <span className="text-muted-foreground">—</span>}
+   326→      </td>
+   327→      <td className="px-2 py-1.5 text-[10px] max-w-[150px]">
+   328→        {entry.fertilization.length > 0 ? entry.fertilization.map((f, i) => (
+   329→          <div key={i}>
+   330→            <span className="font-mono">N{f.n} P{f.p} K{f.k}</span>
+   331→            {f.ca ? <span className="text-muted-foreground"> Ca{f.ca}</span> : null}
+   332→            <br />
+   333→            <span className="text-[9px] text-muted-foreground">{f.sources.map(s => s.material).join(', ')}</span>
+   334→          </div>
+   335→        )) : <span className="text-muted-foreground">—</span>}
+   336→      </td>
+   337→      <td className="px-2 py-1.5 text-[10px] text-center">
+   338→        <div className="font-mono">{entry.irrigation.etc.toFixed(1)} mm</div>
+   339→        <div className="text-[9px] text-cyan-600">{irrM3.toFixed(0)} m³</div>
+   340→      </td>
+   341→      <td className="px-2 py-1.5 text-[10px] max-w-[150px]">
+   342→        {entry.risks.length > 0 ? entry.risks.slice(0, 2).map((r, i) => (
+   343→          <div key={i}>
+   344→            <span className={r.type === 'disease' ? 'text-rose-600' : r.type === 'pest' ? 'text-amber-600' : 'text-lime-600'}>
+   345→              {r.type === 'disease' ? '🦠' : r.type === 'pest' ? '🐛' : '🌿'}
+   346→            </span>{' '}
+   347→            <span className="font-medium">{r.problem.name}</span>
+   348→            <br />
+   349→            <span className="text-[9px] text-muted-foreground">→ {r.recommendedActives.slice(0, 2).map(a => a.name).join(', ')}</span>
+   350→          </div>
+   351→        )) : <span className="text-muted-foreground">—</span>}
+   352→        {entry.risks.length > 2 && <span className="text-[9px] text-muted-foreground">+{entry.risks.length - 2} more</span>}
+   353→      </td>
+   354→      <td className="px-2 py-1.5 text-[10px]">
+   355→        {isEditing ? (
+   356→          <div className="flex gap-1">
+   357→            <Textarea
+   358→              aria-label={`${copyFor(language, 'Note for week', 'ملاحظة للأسبوع')} ${entry.week}`}
+   359→              value={noteDraft}
+   360→              onChange={e => setNoteDraft(e.target.value)}
+   361→              className="min-h-[44px] h-11 text-xs"
+   362→              placeholder={copyFor(language, 'Add note…', 'أضف ملاحظة…')}
+   363→              autoFocus
+   364→            />
+   365→              <Button size="sm" variant="ghost" aria-label={`${copyFor(language, 'Save note for week', 'حفظ ملاحظة الأسبوع')} ${entry.week}`} onClick={() => onSave(noteDraft)} className="h-9 w-9 shrink-0 p-0"><Check className="h-4 w-4 text-emerald-600" /></Button>
+   366→          </div>
+   367→        ) : (
+   368→          <div className="flex items-center gap-1">
+   369→            <span className="text-[10px] italic text-muted-foreground truncate max-w-[80px]">{note || ''}</span>
+   370→            <button type="button" aria-label={`${copyFor(language, 'Edit note for week', 'تعديل ملاحظة الأسبوع')} ${entry.week}`} onClick={() => { setNoteDraft(note); onEdit(); }} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"><Edit3 className="h-3.5 w-3.5" /></button>
+   371→          </div>
+   372→        )}
+   373→      </td>
+   374→    </tr>
+   375→  );
+   376→}
+   377→
