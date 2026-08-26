@@ -1,0 +1,47 @@
+{
+  "name": "Formula Atlas — Your AI-powered agronomy platform",
+  "short_name": "Formula Atlas",
+  "description": "332 agronomic formulas, 218 interactive calculators, AI agronomist, satellite NDVI maps, irrigation programs, marketplace, community, and predictive alerts.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#059669",
+  "categories": [
+    "education",
+    "productivity",
+    "utilities",
+    "agriculture"
+  ],
+  "lang": "en",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Browse formulas",
+      "short_name": "Formulas",
+      "description": "Open the formula library",
+      "url": "/?tab=formulas"
+    },
+    {
+      "name": "Tools",
+      "short_name": "Tools",
+      "description": "Open guided workflows and tools",
+      "url": "/?tab=tools"
+    }
+  ]
+}

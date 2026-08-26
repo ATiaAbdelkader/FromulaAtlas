@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Atlas of Agri-Formulas & Metrics">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="55%" stop-color="#059669" />
+      <stop offset="100%" stop-color="#064e3b" />
+    </linearGradient>
+    <linearGradient id="sprout" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0%" stop-color="#ecfdf5" />
+      <stop offset="100%" stop-color="#a7f3d0" />
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.42" r="0.55">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.25" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+    </radialGradient>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" />
+    </filter>
+  </defs>
+
+  <!-- Rounded tile background -->
+  <rect x="0" y="0" width="512" height="512" rx="96" ry="96" fill="url(#bg)" />
+  <rect x="0" y="0" width="512" height="512" rx="96" ry="96" fill="url(#glow)" />
+
+  <!-- Soil mound at the base -->
+  <path
+    d="M 96 360
+       Q 256 290, 416 360
+       L 416 416
+       Q 256 360, 96 416
+       Z"
+    fill="#064e3b"
+    opacity="0.55"
+  />
+
+  <!-- Sprout stem -->
+  <path
+    d="M 256 380
+       C 256 320, 256 260, 256 210"
+    stroke="url(#sprout)"
+    stroke-width="14"
+    stroke-linecap="round"
+    fill="none"
+  />
+
+  <!-- Left leaf -->
+  <path
+    d="M 256 270
+       C 210 270, 168 240, 158 190
+       C 200 188, 240 210, 256 250
+       Z"
+    fill="url(#sprout)"
+  />
+  <!-- Right leaf -->
+  <path
+    d="M 256 230
+       C 296 222, 332 196, 348 156
+       C 312 154, 278 174, 256 210
+       Z"
+    fill="url(#sprout)"
+  />
+
+  <!-- Small bud / grain head on top -->
+  <circle cx="256" cy="196" r="14" fill="#d1fae5" />
+  <circle cx="244" cy="186" r="9" fill="#a7f3d0" />
+  <circle cx="268" cy="186" r="9" fill="#a7f3d0" />
+
+  <!-- Subtle watermark grid -->
+  <g opacity="0.06" stroke="#ffffff" stroke-width="2">
+    <line x1="96" y1="120" x2="416" y2="120" />
+    <line x1="96" y1="180" x2="416" y2="180" />
+    <line x1="96" y1="240" x2="416" y2="240" />
+    <line x1="160" y1="80" x2="160" y2="300" />
+    <line x1="256" y1="80" x2="256" y2="300" />
+    <line x1="352" y1="80" x2="352" y2="300" />
+  </g>
+</svg>

@@ -1,0 +1,8 @@
+# Minimal .vercelignore — only exclude truly unnecessary files
+scripts/
+skills/
+examples/
+upload/
+tool-results/
+*.log
+.DS_Store

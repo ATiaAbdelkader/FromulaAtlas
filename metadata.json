@@ -1,0 +1,6 @@
+{
+  "name": "SaharaSprout & Agrodz",
+  "description": "Comprehensive agricultural, pedological, climate and fertilization intelligence platform for Algeria across 58 wilayas",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

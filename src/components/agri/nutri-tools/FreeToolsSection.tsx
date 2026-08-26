@@ -1,0 +1,1449 @@
+'use client';
+
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Search, X, Sparkles, ArrowRight, Info, BookOpen, Lightbulb, HelpCircle,
+  Calculator, FlaskConical, Ruler, Droplets, Waves, Thermometer,
+  Tractor, Package, Atom, BarChart3, Grid3x3, Beaker, Globe2,
+  Sprout, Mountain, CloudRain, TableProperties, Network,
+  Star, Clock, Columns2, Check, ShieldCheck, ShieldAlert, FileSpreadsheet, FileText, MapPin,
+} from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
+
+import { ConversionCalculator } from './ConversionCalculator';
+import { NutrientUnitsConverter } from './NutrientUnitsConverter';
+import { MeasureUnitsConverter } from './MeasureUnitsConverter';
+import { HydroSolutionDesigner } from './HydroSolutionDesigner';
+import { WaterHardnessDiagnostic } from './WaterHardnessDiagnostic';
+import { VpdEstimator } from './VpdEstimator';
+import { AmendmentBalanceCec } from './AmendmentBalanceCec';
+import { GranularMixFormulation } from './GranularMixFormulation';
+import { FertilizerComposition } from './FertilizerComposition';
+import { NutrientDistributionByStage } from './NutrientDistributionByStage';
+import { PeriodicTableNutrients } from './PeriodicTableNutrients';
+import { FertilizerCompatibility } from './FertilizerCompatibility';
+import { NutrientInteractions } from './NutrientInteractions';
+import { PlantDeficiencyVisualizer } from './PlantDeficiencyVisualizer';
+import { TomatoDiseaseVisualizer } from './TomatoDiseaseVisualizer';
+import { MineralizableNEstimator } from './MineralizableNEstimator';
+import { SoilWaterTexture } from './SoilWaterTexture';
+import { IrrigationBalance } from './IrrigationBalance';
+import { SolubilitySaltIndex } from './SolubilitySaltIndex';
+import { FertilizerCarbonFootprint } from './FertilizerCarbonFootprint';
+import { SoilPhNutrientMaster } from './SoilPhNutrientMaster';
+import { SoilLabCsvAnalyzer } from './SoilLabCsvAnalyzer';
+import { FertigationTankMixer } from './FertigationTankMixer';
+import { WaterLabAnalyzer } from './WaterLabAnalyzer';
+import { AgronomicWorkOrderGenerator } from './AgronomicWorkOrderGenerator';
+import { VraPrescriptionZoneMapper } from './VraPrescriptionZoneMapper';
+import { WhyItMattersPanel } from './WhyItMattersPanel';
+import { getWhyItMatters } from '@/lib/why-it-matters-data';
+import { ToolExportBar, EXPORT_COPY_EVENT } from './ToolExportBar';
+import { KeyboardShortcutsHelp } from './KeyboardShortcutsHelp';
+import { CompareDialog } from './CompareDialog';
+import { SeasonPlanGenerator } from './SeasonPlanGenerator';
+import { ActiveMatterSelector } from '../active-matter-selector/ActiveMatterSelector';
+import { useTranslation, type Language } from '@/lib/language-store';
+
+type ToolCategory = 'Converters' | 'Solution & Water' | 'Fertilizers' | 'Soil & Irrigation' | 'Reference';
+
+export interface ToolMeta {
+  id: string;
+  name: string;
+  description: string;
+  /** Short one-line benefit the user gains from this tool. */
+  benefit: string;
+  /** 2-3 short steps describing how to use the tool. */
+  howToUse: string[];
+  category: ToolCategory;
+  icon: React.ComponentType<{ className?: string }>;
+  Component: React.ComponentType;
+  /** Optional translations for the discovery surface. */
+  name_ar?: string;
+  description_ar?: string;
+  benefit_ar?: string;
+  howToUse_ar?: string[];
+  name_fr?: string;
+  description_fr?: string;
+  benefit_fr?: string;
+  howToUse_fr?: string[];
+}
+
+/** French labels for the free-tools discovery catalog. */
+const FRENCH_TOOL_FIELDS: Record<string, Partial<Record<'name' | 'description' | 'benefit' | 'howToUse', string | string[]>>> = {
+  'oxide-conversion': { name: 'Convertisseur oxyde ↔ élément' },
+  'nutrient-units': { name: 'Convertisseur d’unités nutritives' },
+  'measure-units': { name: 'Convertisseur d’unités physiques' },
+  'hydro-solution': { name: 'Concepteur de solutions hydroponiques' },
+  'water-hardness': { name: 'Diagnostic de la dureté de l’eau' },
+  'vpd': { name: 'Estimateur de VPD' },
+  'amendment-balance': { name: 'Équilibre des amendements par CEC' },
+  'granular-mix': { name: 'Formulation de mélange granulaire' },
+  'fertilizer-composition': { name: 'Composition des engrais (%)' },
+  'nutrient-distribution': { name: 'Répartition des éléments par stade' },
+  'fertilizer-compatibility': { name: 'Matrice de compatibilité des engrais' },
+  'solubility-salt-index': { name: 'Solubilité et indice de salinité' },
+  'fertilizer-carbon': { name: 'Empreinte carbone des engrais' },
+  'n-mineralizable': { name: 'Estimation de l’azote minéralisable' },
+  'soil-water-texture': { name: 'Eau et texture du sol (USDA)' },
+  'irrigation-balance': { name: 'Bilan hydrique et feuille d’irrigation' },
+  'periodic-table': { name: 'Tableau périodique des éléments nutritifs' },
+  'nutrient-interactions': { name: 'Interactions et mobilité des éléments' },
+  'plant-deficiency-guide': { name: 'Guide interactif des carences par organe' },
+  'tomato-disease-map': { name: 'Atlas pathologique et maladies de la tomate' },
+  'active-matter-selector': { name: 'Sélecteur de matières actives — Algérie' },
+  'soil-ph-nutrients': { name: 'Maître du pH du sol et disponibilité des nutriments' },
+  'soil-lab-analyzer': { name: 'Analyseur CSV de laboratoire de sol et moteur de formules' },
+};
+
+/** Picks Arabic or French metadata and safely falls back to English. */
+function localizeToolField<T extends 'name' | 'description' | 'benefit' | 'howToUse'>(tool: ToolMeta, field: T, language: Language): ToolMeta[T] {
+  if (language === 'ar') return (tool[`${field}_ar` as keyof ToolMeta] ?? tool[field]) as ToolMeta[T];
+  if (language === 'fr') return (tool[`${field}_fr` as keyof ToolMeta] ?? FRENCH_TOOL_FIELDS[tool.id]?.[field] ?? tool[field]) as ToolMeta[T];
+  return tool[field];
+}
+
+function copy(en: string, ar: string, fr: string, language: Language): string {
+  return language === 'ar' ? ar : language === 'fr' ? fr : en;
+}
+
+const TOOLS: ToolMeta[] = [
+  // Converters
+  {
+    id: 'oxide-conversion',
+    name: 'Oxide ↔ Elemental Converter',
+    description: 'Bidirectional CaO↔Ca, K₂O↔K, P₂O₅↔P, etc. (30+ pairs).',
+    benefit: 'Avoids lab-vs-label confusion when comparing soil tests (oxide form) with fertilizer guarantees (elemental form).',
+    howToUse: [
+      'Type a value into either the oxide or elemental field.',
+      'The opposite field updates instantly with the converted value.',
+      'Use "Clear all" to reset every row at once.',
+    ],
+    name_ar: 'محوّل الأكاسيد ↔ العناصر',
+    description_ar: 'تحويل ثنائي CaO↔Ca، K₂O↔K، P₂O₅↔P وغيرها (أكثر من 30 زوجاً).',
+    benefit_ar: 'يتفادى اللبس بين المختبر والملصق عند مقارنة تحاليل التربة (صيغة الأكسيد) مع ضمانات السماد (الصيغة العنصرية).',
+    howToUse_ar: [
+      'اكتب قيمة في حقل الأكسيد أو العنصر.',
+      'يتحدّث الحقل المقابل فوراً بالقيمة المحوّلة.',
+      'استخدم «مسح الكل» لإعادة ضبط كل الصفوف دفعة واحدة.',
+    ],
+    category: 'Converters', icon: Calculator, Component: ConversionCalculator,
+  },
+  {
+    id: 'nutrient-units',
+    name: 'Nutrient Units Converter',
+    description: 'ppm ↔ mmol ↔ meq/L for 22 nutrients and ions.',
+    benefit: 'Reconciles hydroponic recipes (meq/L) with lab reports (ppm) and scientific literature (mmol/L) in one click.',
+    howToUse: [
+      'Pick any nutrient row.',
+      'Type into ppm, mmol (or µmol for micros), or meq/L — the other two update live.',
+      'Equivalent weights and valences are pre-loaded, so conversions are exact.',
+    ],
+    name_ar: 'محوّل وحدات العناصر الغذائية',
+    description_ar: 'ppm ↔ mmol ↔ meq/L لـ 22 عنصراً وأيون.',
+    benefit_ar: 'يوافق بين وصفات الزراعة المائية (meq/L) وتقارير المختبر (ppm) والأدبيات العلمية (mmol/L) بنقرة واحدة.',
+    howToUse_ar: [
+      'اختر أي صف عنصر غذائي.',
+      'اكتب في ppm أو mmol (أو µmol للعناصر الصغرى) أو meq/L — يتحدّث الآخران مباشرة.',
+      'الأوزان المعادلة والتكافؤات محمّلة مسبقاً، فالتحويلات دقيقة.',
+    ],
+    category: 'Converters', icon: FlaskConical, Component: NutrientUnitsConverter,
+  },
+  {
+    id: 'measure-units',
+    name: 'Physical Units Converter',
+    description: 'Length, area, volume, mass, temperature, pressure, concentration, ionic.',
+    benefit: 'A single converter for the eight physical magnitudes agronomists juggle daily — no more tab-hopping between unit sites.',
+    howToUse: [
+      'Choose a category (length, area, temperature, ionic, etc.).',
+      'Enter the value, pick the source and target units.',
+      'Result appears instantly; soil↔solution ionic mismatches are flagged.',
+    ],
+    name_ar: 'محوّل الوحدات الفيزيائية',
+    description_ar: 'الطول، المساحة، الحجم، الكتلة، الحرارة، الضغط، التركيز، الأيونات.',
+    benefit_ar: 'محوّل واحد للمقادير الفيزيائية الثمانية التي يتنقّل بينها المهندس الزراعي يومياً — بلا تبديل بين مواقع الوحدات.',
+    howToUse_ar: [
+      'اختر فئة (طول، مساحة، حرارة، أيوني، إلخ).',
+      'أدخل القيمة، اختر الوحدتين المصدر والهدف.',
+      'تظهر النتيجة فوراً؛ عدم تطابق الأيونات بين التربة والمحلول يُعلام عنه.',
+    ],
+    category: 'Converters', icon: Ruler, Component: MeasureUnitsConverter,
+  },
+
+  // Solution & Water
+  {
+    id: 'hydro-solution',
+    name: 'Hydroponic Solution Designer',
+    description: 'Design a nutrient solution via meq/L, ppm, CE, and an anion ternary diagram.',
+    benefit: 'Visualises the ionic balance of a hydroponic formula against the Steiner equilibrium zone — spot K/Ca/Mg imbalance before mixing.',
+    howToUse: [
+      'Edit meq/L for the 8 ions (or use a preset like Steiner / Hoagland).',
+      'CE and ppm update automatically; the ternary diagram shows your anion split.',
+      'Compare your % distribution against the green equilibrium polygon.',
+    ],
+    name_ar: 'مصمّم محلول الزراعة المائية',
+    description_ar: 'صمّم محلولاً غذائياً عبر meq/L، ppm، CE، ومخطط ثلاثي للأنيونات.',
+    benefit_ar: 'يصوّر التوازن الأيوني لوصفة الزراعة المائية مقابل منطقة توازن شتاينر — اكشف اختلال K/Ca/Mg قبل الخلط.',
+    howToUse_ar: [
+      'حرّر meq/L للأيونات الثمانية (أو استخدم إعداداً مسبقاً مثل شتاينر / هوغلاند).',
+      'يتحدّث CE و ppm تلقائياً؛ المخطط الثلاثي يعرض توزيع الأنيون.',
+      'قارن نسبتك المئوية مع مضلّع التوازن الأخضر.',
+    ],
+    category: 'Solution & Water', icon: Droplets, Component: HydroSolutionDesigner,
+  },
+  {
+    id: 'water-hardness',
+    name: 'Water Hardness Diagnostic',
+    description: 'Hardness units, Ca+Mg hardness, and acid dose for HCO₃⁻/CO₃²⁻ neutralization.',
+    benefit: 'Tells you exactly how much nitric/sulfuric/phosphoric acid to add per m³ to drop HCO₃⁻ to a safe residual — protecting drip emitters and pH stability.',
+    howToUse: [
+      'Section 1: type any hardness unit; all 5 units + classification update.',
+      'Section 2: enter lab Ca and Mg to compute total hardness as CaCO₃.',
+      'Section 3: enter HCO₃⁻/CO₃²⁻, residual target, water volume, and acid choice — dose appears.',
+    ],
+    name_ar: 'تشخيص صالبة المياه',
+    description_ar: 'وحدات الصالبة، صالبة Ca+Mg، وجرعة حمض لمعادلة HCO₃⁻/CO₃²⁻.',
+    benefit_ar: 'يخبرك بالضبط بكمية حمض النيتريك/الكبريتيك/الفوسفوريك لكل م³ لخفض HCO₃⁻ إلى بقايا آمنة — حماية لرؤوس الريب واستقرار pH.',
+    howToUse_ar: [
+      'القسم 1: اكتب أي وحدة صالبة؛ كل الوحدات الخمس + التصنيف تتحدّث.',
+      'القسم 2: أدخل Ca و Mg من المختبر لحساب الصالبة الكلية كـ CaCO₃.',
+      'القسم 3: أدخل HCO₃⁻/CO₃²⁻، الهدف المتبقي، حجم الماء، واختيار الحمض — تظهر الجرعة.',
+    ],
+    category: 'Solution & Water', icon: Waves, Component: WaterHardnessDiagnostic,
+  },
+  {
+    id: 'vpd',
+    name: 'VPD Estimator',
+    description: 'Vapor Pressure Deficit (kPa) and Humidity Deficit (g/m³) from temperature & humidity.',
+    benefit: 'Quantifies the real "thirst" of the air — the number that drives transpiration, Ca transport, and stress in greenhouses.',
+    howToUse: [
+      'Enter air temperature and relative humidity.',
+      'Pick leaf-temperature mode (you measured it) or solar-radiation mode (estimated).',
+      'Read VPD (kPa) + humidity deficit (g/m³) + status (Low / Optimal / High).',
+    ],
+    name_ar: 'مقدّر عجز ضغط البخار (VPD)',
+    description_ar: 'عجز ضغط البخار (kPa) وعجز الرطوبة (g/m³) من الحرارة والرطوبة.',
+    benefit_ar: 'يقدّر «عطش الهواء» الحقيقي — الرقم الذي يقود النتح، نقل Ca، والإجهاد في البيوت المحمية.',
+    howToUse_ar: [
+      'أدخل حرارة الهواء والرطوبة النسبية.',
+      'اختر وضع حرارة الورقة (قسته) أو وضع الإشعاع الشمسي (مقدّر).',
+      'اقرأ VPD (kPa) + عجز الرطوبة (g/m³) + الحالة (منخفض / مثالي / مرتفع).',
+    ],
+    category: 'Solution & Water', icon: Thermometer, Component: VpdEstimator,
+  },
+  {
+    id: 'tank-mix-engine',
+    name: 'Fertigation Tank Mix & Compatibility Engine',
+    description: 'Dual A/B tank separation, jar test precipitates, solubility limits & acid dosing solver.',
+    benefit: 'Prevents chemical precipitation in stock tanks (CaSO₄, CaHPO₄) by enforcing strict Tank A vs Tank B segregation and solubility caps.',
+    howToUse: [
+      'Select stock tank volume and concentration factor (e.g. 1:100).',
+      'Add chemical fertilizer inputs to Tank A or Tank B.',
+      'Check live compatibility alerts, solubility headroom, and acid dosing volume.',
+    ],
+    name_ar: 'محرك خلط خزانات التسميد والتوافق الكيميائي',
+    description_ar: 'فصل الخزانين A و B، فحص الترسيب، حدود الذوبانية، وجرعات الأحماض.',
+    benefit_ar: 'يمنع ترسبات الجبس وفوسفات الكالسيوم القاتلة للشبكة عبر الفصل التام لحقن الكالسيوم عن الفوسفات والكبريتات.',
+    howToUse_ar: [
+      'حدد سعة خزان المحلول المركز ومعامل التخفيف (مثلاً 1:100).',
+      'أضف الأسمدة الذائبة إلى الخزان A أو الخزان B.',
+      'عاين فحص التوافق اللحظي، حد الذوبانية، وجرعة حمض النيتريك أو الفوسفوريك.',
+    ],
+    name_fr: 'Moteur de Compatibilité & Bacs de Fertigation',
+    description_fr: 'Séparation des bacs A et B, limites de solubilité et dosage des acides.',
+    benefit_fr: 'Évite les précipités insolubles et le colmatage des goutteurs par séparation stricte.',
+    howToUse_fr: [
+      'Choisissez le volume du bac et le taux de concentration.',
+      'Ajoutez les engrais dans le Bac A ou le Bac B.',
+      'Consultez les alertes de compatibilité et les limites de solubilité.',
+    ],
+    category: 'Solution & Water', icon: Droplets, Component: FertigationTankMixer,
+  },
+  {
+    id: 'water-lab-analyzer',
+    name: 'Irrigation Water Lab & Blending Analyzer',
+    description: 'USSL C-S diagram, SAR infiltration risk, bicarbonate neutralization & dual water blending.',
+    benefit: 'Diagnoses irrigation salinity and sodium hazards and calculates optimal blending proportions between saline well water and fresh canal or RO water.',
+    howToUse: [
+      'Enter laboratory electrical conductivity (ECw), SAR, and cation/anion analysis.',
+      'Inspect the USSL C-S salinity classification grid and infiltration risk.',
+      'Adjust the dual-source water blending slider to reach your target EC threshold.',
+    ],
+    name_ar: 'محلل مياه الري المخبري وخلط المصادر المائية',
+    description_ar: 'مخطط USSL للملوحة والصودية، مخاطر نفاذية التربة (SAR)، وخوارزمية خلط مياه الآبار.',
+    benefit_ar: 'يشخص مخاطر الملوحة والصودية على التربة ويحسب النسبة الدقيقة لخلط مياه الآبار المالحة مع مياه التحلية أو القنوات.',
+    howToUse_ar: [
+      'أدخل نتائج تحليل مياه الري المخبرية (ECw، SAR، الكاتيونات والأنيونات).',
+      'عاين تصنيف USSL وخطر تدهور نفاذية التربة.',
+      'حرك مؤشر خلط المياه للوصول إلى الملوحة المستهدفة للري بأقل تكلفة.',
+    ],
+    name_fr: 'Analyseur d’Eau d’Irrigation & Mélange Multi-Sources',
+    description_fr: 'Diagramme USSL C-S, risque d’infiltration SAR et calculateur de mélange.',
+    benefit_fr: 'Évalue la salinité et le pouvoir sodisant, optimise le mélange eau de puits / eau douce.',
+    howToUse_fr: [
+      'Saisissez les résultats de laboratoire (CE, SAR, ions).',
+      'Visualisez la classe USSL et le risque pour la structure du sol.',
+      'Ajustez le curseur de mélange pour atteindre la salinité cible.',
+    ],
+    category: 'Solution & Water', icon: Droplets, Component: WaterLabAnalyzer,
+  },
+
+  // Fertilizers
+  {
+    id: 'amendment-balance',
+    name: 'Amendment Balance by CEC',
+    description: 'Soil cation analysis → amendment doses (gypsum, lime, dolomite, SOP, MgSO₄).',
+    benefit: 'Translates a soil-test cation profile into kg/ha of gypsum/lime/dolomite/SOP — closes the gap between lab report and field application.',
+    howToUse: [
+      'Enter the 6 exchangeable cations (K, Ca, Mg, H, Na, Al) in meq/100g.',
+      'Set bulk density, depth, pH, and root-reach %.',
+      'Read the recommended amendment strategy with doses already adjusted by root-reach factor.',
+    ],
+    name_ar: 'توازن المعدلات حسب CEC',
+    description_ar: 'تحليل كاتيونات التربة → جرعات معدّلات (جبس، جير، دولوميت، SOP، MgSO₄).',
+    benefit_ar: 'يحوّل مخطط كاتيونات تحليل التربة إلى kg/ha من الجبس/الجير/الدولوميت/SOP — يسد الفجوة بين تقرير المختبر والتطبيق الحقلي.',
+    howToUse_ar: [
+      'أدخل الكاتيونات المتبادلة الستة (K، Ca، Mg، H، Na، Al) بـ meq/100g.',
+      'حدد الكثافة الظاهرية، العمق، pH، ونسبة وصول الجذور.',
+      'اقرأ استراتيجية المعدّلات الموصى بها بجرعات معدّلة بعامل وصول الجذور.',
+    ],
+    category: 'Fertilizers', icon: Tractor, Component: AmendmentBalanceCec,
+  },
+  {
+    id: 'granular-mix',
+    name: 'Granular Mix Formulation',
+    description: 'Build a granular blend from 24 fertilizers → NPK analysis and kg/ha.',
+    benefit: 'Previews the NPK + secondary + micro analysis of a custom blend before you commit tonnes — and computes kg/ha of every nutrient at your application rate.',
+    howToUse: [
+      'Add fertilizers from the 24-product library and enter each one\'s % by tonne.',
+      'Set the blend dose (kg/ha).',
+      'Read the live blend analysis, NPK ratio, and per-nutrient kg/ha.',
+    ],
+    name_ar: 'صياغة الخلطة الحبيبية',
+    description_ar: 'ابنِ خلطة حبيبية من 24 سماداً → تحليل NPK و kg/ha.',
+    benefit_ar: 'يعاين تحليل NPK + العناصر الثانوية والصغرى لخلطة مخصّصة قبل توريد الأطنان — ويحسب kg/ha لكل عنصر عند معدل تطبيقك.',
+    howToUse_ar: [
+      'أضف أسمدة من مكتبة الـ24 منتجاً وأدخل % لكل منها بالطن.',
+      'حدد جرعة الخلطة (kg/ha).',
+      'اقرأ تحليل الخلطة الحي، نسبة NPK، و kg/ha لكل عنصر.',
+    ],
+    category: 'Fertilizers', icon: Package, Component: GranularMixFormulation,
+  },
+  {
+    id: 'fertilizer-composition',
+    name: 'Fertilizer Composition (%)',
+    description: 'Parse a chemical formula → elemental %, oxide equivalents, MW, N partition.',
+    benefit: 'Type any chemical formula (e.g. Ca(NO₃)₂·4H₂O) and instantly see elemental %, oxide equivalents, N-NO₃/N-NH₄ split, and molecular weight — no lookup tables.',
+    howToUse: [
+      'Type a formula (supports hydrates ·, double salts +, parentheses, unicode subscripts).',
+      'Click Calculate (or press Enter).',
+      'Read elemental %, oxide %, NPK tag, and MW; click any example chip to try one.',
+    ],
+    name_ar: 'تركيب السماد (%)',
+    description_ar: 'حلّ صيغة كيميائية → % عنصرية، مكافئات الأكسيد، الوزن الجزيئي، تقسيم N.',
+    benefit_ar: 'اكتب أي صيغة كيميائية (مثل Ca(NO₃)₂·4H₂O) لترى فوراً % العناصر، مكافئات الأكسيد، تقسيم N-NO₃/N-NH₄، والوزن الجزيئي — بلا جداول بحث.',
+    howToUse_ar: [
+      'اكتب صيغة (يدعم المميهات ·، الأملاح المزدوجة +، الأقواس، الحروف السفلية اليونيكود).',
+      'اضغط احسب (أو Enter).',
+      'اقرأ % العنصري، % الأكسيد، علامة NPK، والوزن الجزيئي؛ اضغط أي مثال للتجربة.',
+    ],
+    category: 'Fertilizers', icon: Atom, Component: FertilizerComposition,
+  },
+  {
+    id: 'nutrient-distribution',
+    name: 'Nutrient Distribution by Stage',
+    description: 'Distribute nutrient extraction (kg/ha) across phenological stages with chart.',
+    benefit: 'Matches supply to crop demand week-by-week — prevents both mid-cycle deficiency and end-of-season luxury consumption.',
+    howToUse: [
+      'Set total seasonal extraction (kg/ha) per nutrient.',
+      'Adjust the % split across phenological stages (or use defaults).',
+      'Read kg/ha per stage per nutrient on the chart and table.',
+    ],
+    name_ar: 'توزيع العناصر حسب المرحلة',
+    description_ar: 'وزّع استخلاص العناصر (kg/ha) عبر مراحل فينولوجية مع رسم بياني.',
+    benefit_ar: 'يوافق العرض مع طلب المحصول أسبوعياً — يمنع كل من نقص منتصف الدورة واستهلاك الفاخر نهاية الموسم.',
+    howToUse_ar: [
+      'حدد الاستخلاص الموسمي الكلي (kg/ha) لكل عنصر.',
+      'اضبط النسبة المئوية عبر المراحل الفينولوجية (أو استخدم الافتراضية).',
+      'اقرأ kg/ha لكل مرحلة لكل عنصر على الرسم والجدول.',
+    ],
+    category: 'Fertilizers', icon: BarChart3, Component: NutrientDistributionByStage,
+  },
+  {
+    id: 'fertilizer-compatibility',
+    name: 'Fertilizer Compatibility Matrix',
+    description: '32×32 lower-triangular matrix of compatibility (C/R/I) for fertigation.',
+    benefit: 'Prevents the #1 fertigation mistake — co-dissolving Ca²⁺ with sulfates or phosphates — by showing exactly which pairs precipitate before you mix the tank.',
+    howToUse: [
+      'Filter the matrix by fertilizer name if needed.',
+      'Click any cell to see the chemistry explanation and recommended action.',
+      'Green C = compatible · Yellow R = caution · Red I = never in the same stock tank.',
+    ],
+    name_ar: 'مصفوفة توافق الأسمدة',
+    description_ar: 'مصفوفة 32×32 مثلثية سفلية للتوافق (C/R/I) للتسميد بالري.',
+    benefit_ar: 'يمنع خطأ التسميد بالري رقم 1 — إذابة Ca²⁺ مع الكبريتات أو الفوسفات — بعرض الأزواج التي تترسّب قبل خلط الخزّان.',
+    howToUse_ar: [
+      'صفِّ المصفوفة باسم السماد إن لزم.',
+      'اضغط أي خلية لرؤية شرح الكيمياء والإجراء الموصى به.',
+      'C أخضر = متوافق · R أصفر = حذر · I أحمر = لا تجمع في خزّان المخزون نفسه أبداً.',
+    ],
+    category: 'Fertilizers', icon: Grid3x3, Component: FertilizerCompatibility,
+  },
+  {
+    id: 'solubility-salt-index',
+    name: 'Solubility & Salt Index',
+    description: 'Sortable, filterable table of solubility (g/L) and salt index (NaNO₃=100).',
+    benefit: 'Tells you which fertilizers will dissolve in cold stock tanks and which will burn roots — solubility for tank design, salt index for placement safety.',
+    howToUse: [
+      'Use the search box to filter by name or formula.',
+      'Click any column header to sort (default: salt index descending).',
+      'Coloured dots classify solubility as High / Medium / Low at a glance.',
+    ],
+    name_ar: 'الذوبانية ومؤشر الملح',
+    description_ar: 'جدول قابل للفرز والتصفية للذوبانية (g/L) ومؤشر الملح (NaNO₃=100).',
+    benefit_ar: 'يخبرك أي الأسمدة ستذوب في خزّانات باردة وأيها سيحرق الجذور — الذوبانية لتصميم الخزّان، مؤشر الملح لسلامة الموضع.',
+    howToUse_ar: [
+      'استخدم مربع البحث للتصفية بالاسم أو الصيغة.',
+      'اضغط رأس أي عمود للفرز (الافتراضي: مؤشر الملح تنازلي).',
+      'نقاط ملوّنة تصنّف الذوبانية كـ عالية / متوسطة / منخفضة بنظرة.',
+    ],
+    category: 'Fertilizers', icon: Beaker, Component: SolubilitySaltIndex,
+  },
+  {
+    id: 'fertilizer-carbon',
+    name: 'Fertilizer Carbon Footprint',
+    description: 'Compare two fertilization programs by manufacturing + transport + N₂O emissions.',
+    benefit: 'Quantifies the kg CO₂e/ha difference between Program A and Program B — turns "sustainable" from a slogan into a number you can defend.',
+    howToUse: [
+      'In each scenario, add up to 5 fertilizers with rate (kg/ha) and transport legs.',
+      'Read per-row emissions split into manufacturing, transport, and field N₂O.',
+      'Compare totals — the bar shows which program is lower and by how many kg CO₂e/ha.',
+    ],
+    name_ar: 'الأثر الكربوني للسماد',
+    description_ar: 'قارن برنامجَي تسميد حسب التصنيع + النقل + انبعاثات N₂O.',
+    benefit_ar: 'يقدّر فرق kg CO₂e/ha بين البرنامج أ والبرنامج ب — يحوّل «مستدام» من شعار إلى رقم قابل للدفاع.',
+    howToUse_ar: [
+      'في كل سيناريو، أضف حتى 5 أسمدة بمعدل (kg/ha) ومراحل نقل.',
+      'اقرأ انبعاثات كل صف مقسّمة إلى تصنيع، نقل، و N₂O حقلي.',
+      'قارن المجاميع — يعرض الشريط أي برنامج أقل وبكم kg CO₂e/ha.',
+    ],
+    category: 'Fertilizers', icon: Globe2, Component: FertilizerCarbonFootprint,
+  },
+  {
+    id: 'work-order-generator',
+    name: 'Agronomic Field Work Order & Prescription Generator',
+    description: 'Formal printable field orders with total batch weights, tank assignments, PPE & REI checklists.',
+    benefit: 'Turns complex agronomic programs into executable, error-free instructions for tractor drivers and fertigation operators.',
+    howToUse: [
+      'Enter parcel details, area (ha), crop phenology, and target delivered EC/pH.',
+      'Adjust application rates per ha — total batch weights calculate automatically.',
+      'Print or export formal PDF work orders complete with PPE requirements and signature blocks.',
+    ],
+    name_ar: 'منشئ أوامر العمل الحقلي والوصفات السمادية الرسمية',
+    description_ar: 'أوامر تنفيذية مطبوعة لفرق العمل متضمنة الكميات الإجمالية، الخزانات، ومعدات السلامة.',
+    benefit_ar: 'يحول التوصيات المعقدة إلى تعليمات تشغيل واضحة وخالية من الأخطاء لفنيي الري وسائقي الجرارات.',
+    howToUse_ar: [
+      'أدخل بيانات القطعة والمساحة والمحصول والـ EC/pH المستهدف.',
+      'عدل الجرعات لكل هكتار لحساب أوزان الخلطة الإجمالية آلياً.',
+      'اطبع أمر العمل الرسمي المجهز بتوقيعات الاعتماد وفترة الأمان (REI).',
+    ],
+    name_fr: 'Générateur d’Ordre de Travail & Prescription Agronomique',
+    description_fr: 'Édition d’ordres de mission terrain, dosages totaux et fiches d’émargement.',
+    benefit_fr: 'Traduit les programmes en fiches d’exécution claires pour les opérateurs.',
+    howToUse_fr: [
+      'Renseignez la parcelle, surface, stade végétatif et cibles CE/pH.',
+      'Ajustez les doses/ha pour obtenir les pesées totales.',
+      'Imprimez les ordres de mission avec consignes EPI et signatures.',
+    ],
+    category: 'Fertilizers', icon: FileText, Component: AgronomicWorkOrderGenerator,
+  },
+
+  // Soil & Irrigation
+  {
+    id: 'n-mineralizable',
+    name: 'Mineralizable N Estimation',
+    description: 'Annual N release (kg N/ha/yr) from soil organic matter with T_min presets.',
+    benefit: 'Estimates how much "free" nitrogen your soil will release this season — so you can subtract it from the fertilizer budget and avoid over-application.',
+    howToUse: [
+      'Enter organic matter %, bulk density, depth, and root-reach %.',
+      'Pick a mineralization rate T_min preset (1 % conservative · 2 % medium · 3 % high).',
+      'Read annual mineralizable N in kg/ha/yr — orientative, validate in field.',
+    ],
+    name_ar: 'تقدير النيتروجين المعدّني',
+    description_ar: 'إطلاق نيتروجين سنوي (kg N/ha/yr) من المادة العضوية للتربة مع إعدادات T_min.',
+    benefit_ar: 'يقدّر كم نيتروجين «مجاني» ستطلقه تربتك هذا الموسم — لتطرحه من ميزانية السماد وتتفادى الإفراط.',
+    howToUse_ar: [
+      'أدخل % المادة العضوية، الكثافة الظاهرية، العمق، ونسبة وصول الجذور.',
+      'اختر إعداد معدل التمعدن T_min (1 % محافظ · 2 % متوسط · 3 % مرتفع).',
+      'اقرأ النيتروجين المعدّني السنوي بـ kg/ha/yr — توجيهي، تحقّق في الحقل.',
+    ],
+    category: 'Soil & Irrigation', icon: Sprout, Component: MineralizableNEstimator,
+  },
+  {
+    id: 'soil-water-texture',
+    name: 'Soil Water & Texture (USDA)',
+    description: 'USDA texture triangle + available water and irrigation-to-CC calculator.',
+    benefit: 'Classifies your soil texture from clay/silt/sand % and computes how much water is available between permanent wilting point and field capacity.',
+    howToUse: [
+      'Enter any two of clay / silt / sand % — the third auto-balances.',
+      'The USDA triangle highlights your texture class.',
+      'Set CC, PMP, depth, bulk density, area, and root efficiency to get available water (m³) and irrigation sheet to CC (mm).',
+    ],
+    name_ar: 'ماء التربة والنسجة (USDA)',
+    description_ar: 'مثلث نسجة USDA + الماء المتاح وحاسبة الري إلى السعة الحقلية.',
+    benefit_ar: 'يصنّف نسجة تربتك من % طين/طين/رمل ويحسب كمية الماء المتاح بين نقطة الذبول الدائم والسعة الحقلية.',
+    howToUse_ar: [
+      'أدخل أي اثنين من % طين / طين / رمل — الثالث يوازن تلقائياً.',
+      'يبرز مثلث USDA فئة نسجتك.',
+      'حدد CC، PMP، العمق، الكثافة الظاهرية، المساحة، وكفاءة الجذور للحصول على الماء المتاح (م³) وجدول الري إلى CC (مم).',
+    ],
+    category: 'Soil & Irrigation', icon: Mountain, Component: SoilWaterTexture,
+  },
+  {
+    id: 'irrigation-balance',
+    name: 'Irrigation Sheet & Water Balance',
+    description: 'FAO-56 ETc = Kc × ETo, deficit/surplus, m³ conversions for 1 or 7 day periods.',
+    benefit: 'Replaces guesswork with FAO-56 — knows exactly how much water your crop used (ETc) and whether your irrigation + rain covered it.',
+    howToUse: [
+      'Enter ETo (mm) and Kc for your crop and stage; toggle 1-day or 7-day period.',
+      'Enter rain (mm) and applied irrigation (m³) on the irrigated area.',
+      'Read ETc, irrigation mm, balance (deficit/surplus), and total volume needed (m³).',
+    ],
+    name_ar: 'جدول الري وميزان المياه',
+    description_ar: 'FAO-56 ETc = Kc × ETo، عجز/فائض، تحويلات م³ لفترات 1 أو 7 أيام.',
+    benefit_ar: 'يستبدل التخمين بـ FAO-56 — يعرف بالضبط كم استهلك محصولك (ETc) وما إذا كان ريّك + المطر غطّاه.',
+    howToUse_ar: [
+      'أدخل ETo (مم) و Kc لمحصولك ومرحلته؛ بدّل فترة 1-يوم أو 7-أيام.',
+      'أدخل المطر (مم) والري المطبّق (م³) على المساحة المروية.',
+      'اقرأ ETc، ريّ مم، الميزان (عجز/فائض)، والحجم الكلي المطلوب (م³).',
+    ],
+    category: 'Soil & Irrigation', icon: CloudRain, Component: IrrigationBalance,
+  },
+  {
+    id: 'soil-ph-nutrients',
+    name: 'Soil pH & Nutrient Availability Master',
+    description: 'Interactive Troug solubility curves, crop pH tolerance & smart amendment solver (sulfur, lime, manure, acids).',
+    benefit: 'Visualizes exact nutrient lockout at any soil pH, evaluates crop suitability, and calculates precise mineral & organic amendment doses.',
+    howToUse: [
+      'Adjust the live pH slider (3.5 - 10.0) or pick a field preset.',
+      'Inspect nutrient availability curves, chemical species, and fixation mechanisms in the Spectrum tab.',
+      'Check crop yield suitability and tolerance in the Crop tab, or compute exact sulfur/lime & manure rates in the Amendment tab.',
+    ],
+    name_ar: 'منظومة حموضة التربة وتوافر وتعديل العناصر',
+    description_ar: 'منحنيات تروغ التفاعلية للذوبانية، وتحمل المحاصيل، وحاسبة تعديل ومعالجة قلوية وحامضية التربة بالأسمدة والمادة العضوية.',
+    benefit_ar: 'يعرض نسب تثبيت وذوبان كافة العناصر بدقة، ويقيم ملاءمة المحاصيل، ويحسب جرعات الكبريت والجير والأسمدة العضوية بالتفصيل.',
+    howToUse_ar: [
+      'حرك مؤشر قياس الحموضة (3.5 - 10.0) أو اختر نموذجاً حقلياً جاهزاً.',
+      'عاين منحنيات ذوبانية العناصر والصور الكيميائية المتاحة في تبويب توافر العناصر.',
+      'اطّلع على ملاءمة المحصول للـ pH، أو احسب جرعات الكبريت الزراعي والجير والمادة العضوية في تبويب التعديل.',
+    ],
+    name_fr: 'Maître du pH du sol et disponibilité des nutriments',
+    description_fr: 'Courbes de Troug interactives, tolérance des cultures et calculateur d’amendements (soufre, chaux, fumiers).',
+    benefit_fr: 'Visualise le blocage des éléments nutritifs, évalue l’adaptation des cultures et calcule les doses exactes d’amendements.',
+    howToUse_fr: [
+      'Ajustez le curseur de pH (3.5 à 10.0) ou choisissez un préréglage.',
+      'Consultez les courbes de solubilité et mécanismes de blocage dans l’onglet Disponibilité.',
+      'Vérifiez la tolérance de vos cultures et calculez les apports de soufre/chaux dans l’onglet Amendements.',
+    ],
+    category: 'Soil & Irrigation', icon: FlaskConical, Component: SoilPhNutrientMaster,
+  },
+  {
+    id: 'soil-lab-analyzer',
+    name: 'Soil Lab CSV Analyzer',
+    description: 'Import lab soil test CSVs and automatically map results to nutrient & amendment recommendations based on the Formula Atlas.',
+    benefit: 'Turns raw lab test spreadsheets into instant cation balance diagnostics, pH/lime/gypsum/sulfur requirements, and commercial fertilizer order sheets with step-by-step formula proofs.',
+    howToUse: [
+      'Upload any lab soil test CSV file or paste raw CSV text directly.',
+      'Review the auto-detected column bindings (pH, CEC, Base Saturation, P, K, EC, NO₃) and select your target crop.',
+      'Explore sample diagnoses, Base Saturation & SAR ratios, step-by-step Formula Atlas proofs (SH.4, 49.2, 7.10, 4.1), and export the commercial order sheet.',
+    ],
+    name_ar: 'محلل تقارير التربة المخبرية (CSV)',
+    description_ar: 'استيراد ملفات CSV لتحاليل التربة المخبرية ومطابقة النتائج آلياً مع التوصيات السمادية ومعادلات أطلس التسميد.',
+    benefit_ar: 'يحول جداول التحاليل المخبرية إلى تشخيص فوري لتوازن الكاتيونات، واحتياجات الجير والجبس والكبريت، وبرامج التسميد التجاري مع إثباتات المعادلات الرياضية.',
+    howToUse_ar: [
+      'ارفع ملف CSV من أي مختبر زراعي أو الصق نص الجدول مباشرة.',
+      'عاين مطابقة الأعمدة الآلية (pH، CEC، الكاتيونات، الفوسفور، البوتاسيوم، الملوحة) وحدد المحصول والإنتاجية المستهدفة.',
+      'استعرض تشخيص العينات وتوازن الكاتيونات، وإثباتات معادلات أطلس التسميد (SH.4، 49.2، 7.10، 4.1)، وحمّل جدول التسميد التجاري النهائي.',
+    ],
+    name_fr: 'Analyseur CSV de laboratoire de sol',
+    description_fr: 'Importez des analyses de sol CSV et calculez automatiquement les recommandations d’amendements et d’engrais.',
+    benefit_fr: 'Transforme les feuilles d’analyses de sol en diagnostics complets, calculs de chaux/gypse/soufre et plans de fumure avec traçabilité mathématique.',
+    howToUse_fr: [
+      'Importez un fichier CSV ou collez le texte brut de votre rapport de sol.',
+      'Vérifiez la correspondance automatique des colonnes et sélectionnez votre culture cible.',
+      'Consultez les diagnostics, les équilibres cationiques, les preuves de calculs et exportez la commande d’engrais.',
+    ],
+    category: 'Soil & Irrigation', icon: FileSpreadsheet, Component: SoilLabCsvAnalyzer,
+  },
+  {
+    id: 'vra-zone-mapper',
+    name: 'Variable Rate Application (VRA) Prescription & Zone Mapper',
+    description: 'Segment parcels into NDVI vigor and soil texture zones, calculate variable N-P-K doses, and quantify ROI vs uniform application.',
+    benefit: 'Saves 15-25% on nitrogen over-application by tailoring nutrient doses to intra-field soil variability and crop vigor.',
+    howToUse: [
+      'Define total parcel area and baseline uniform N-P-K rate.',
+      'Adjust management zones (NDVI, soil OM%, CEC, target yield).',
+      'Review cost savings and CO₂e reductions, and export ISO-XML compatible prescription CSV.',
+    ],
+    name_ar: 'خريطة التسميد المتغير حسب المناطق (VRA Prescription Mapper)',
+    description_ar: 'تقسيم الحقل لمناطق تجانس وحساب الجرعات المتغيرة لـ N-P-K وتوفير التكاليف.',
+    benefit_ar: 'يوفر 15-25% من هدر الأسمدة النيتروجينية بتكييف الجرعات حسب خصوبة كل جزء في الحقل.',
+    howToUse_ar: [
+      'حدد المساحة الكلية ومعدل التسميد الثابت للمقارنة.',
+      'عدل مناطق التجانس (مؤشر NDVI، المادة العضوية، السعة التبادلية، الإنتاجية المستهدفة).',
+      'عاين الوفر المالي وخفض البصمة الكربونية، وحمّل ملف الوصفة المتوافق مع الجرارات (CSV).',
+    ],
+    name_fr: 'Cartographie & Prescription à Taux Variable (VRA)',
+    description_fr: 'Zonage intra-parcellaire, modulation de dose N-P-K et calcul du retour sur investissement.',
+    benefit_fr: 'Économise 15-25% d’azote en adaptant la fertilisation à la variabilité du sol.',
+    howToUse_fr: [
+      'Renseignez la surface totale et la dose uniforme de référence.',
+      'Ajustez les zones de gestion (NDVI, matière organique, CEC, rendement visé).',
+      'Consultez le gain économique et exportez le fichier de prescription (CSV).',
+    ],
+    category: 'Soil & Irrigation', icon: MapPin, Component: VraPrescriptionZoneMapper,
+  },
+
+  // Reference
+  {
+    id: 'periodic-table',
+    name: 'Periodic Table of Plant Nutrients',
+    description: 'Interactive 118-element table with agronomic roles + molecular weight calc.',
+    benefit: 'One screen for "which elements are essential / beneficial / structural" plus a molecular-weight calculator — useful for teaching and for quick MW lookups.',
+    howToUse: [
+      'Click any element to see atomic weight, valence, electronegativity, and agronomic role.',
+      'Switch to the Mol-weight tab and type a formula (e.g. KNO₃) to compute MW and elemental %.',
+      'Use the "Use in molecular calculator" button to push an element into the formula.',
+    ],
+    name_ar: 'الجدول الدوري للعناصر النباتية',
+    description_ar: 'جدول 118 عنصراً تفاعلي مع أدوار زراعية + حاسبة الوزن الجزيئي.',
+    benefit_ar: 'شاشة واحدة لـ «أي العناصر أساسية / مفيدة / بنيوية» بالإضافة إلى حاسبة الوزن الجزيئي — مفيدة للتدريس وللبحث السريع.',
+    howToUse_ar: [
+      'اضغط أي عنصر لرؤية وزنه الذري، تكافؤه، كهروسالبيته، ودوره الزراعي.',
+      'بدّل إلى تبويب الوزن الجزيئي واكتب صيغة (مثل KNO₃) لحساب MW و % العنصري.',
+      'استخدم زر «استخدم في الحاسبة الجزيئية» لدفع عنصر إلى الصيغة.',
+    ],
+    category: 'Reference', icon: TableProperties, Component: PeriodicTableNutrients,
+  },
+  {
+    id: 'nutrient-interactions',
+    name: 'Nutrient Interactions & Mobility',
+    description: 'Mulder diagram, root-arrival mechanisms, mobility, and pH availability curves.',
+    benefit: 'A 4-in-1 reference that explains why high P locks up Zn, why K⁺ competes with Mg²⁺, and how pH moves each nutrient\'s availability — supports diagnosis, not just data.',
+    howToUse: [
+      'Mulder tab: click any ion to highlight its antagonists (red) and synergists (blue).',
+      'Root-arrival tab: click a row to see how each nutrient reaches the root.',
+      'Mobility tab: click an element pill for symptom location + functions + tip.',
+      'pH tab: click any nutrient to read why availability changes with pH.',
+    ],
+    name_ar: 'تفاعلات العناصر وحيودها',
+    description_ar: 'مخطط مولدر، آليات وصول الجذور، الحيودة، ومنحنيات التوافر حسب pH.',
+    benefit_ar: 'مرجع 4-في-1 يشرح لماذا يثبّت P العالي Zn، ولماذا ينافس K⁺ أيون Mg²⁺، وكيف يحرّك pH توافر كل عنصر — يدعم التشخيص وليس مجرد بيانات.',
+    howToUse_ar: [
+      'تبويب مولدر: اضغط أي أيون لإبراز خصومه (أحمر) وأ增效اته (أزرق).',
+      'تبويب وصول الجذور: اضغط صفًا لرؤية كيف يصل كل عنصر إلى الجذر.',
+      'تبويب الحيودة: اضغط بطاقة عنصر لموقع الأعراض + الوظائف + نصيحة.',
+      'تبويب pH: اضغط أي عنصر لقراءة لماذا يتغيّر التوافر مع pH.',
+    ],
+    category: 'Reference', icon: Network, Component: NutrientInteractions,
+  },
+  {
+    id: 'plant-deficiency-guide',
+    name: 'Plant Deficiency & Recovery Guide',
+    description: 'Interactive plant anatomy (roots, stem, leaves, flower, fruit) with deficiency diagnosis & foliar recipes.',
+    benefit: 'Visual organ-by-organ diagnosis of mobile and immobile nutrient deficiencies with emergency foliar doses and soil fertigation protocols.',
+    howToUse: [
+      'Click any plant organ on the botanical diagram (roots, stem, lower/upper leaves, tip, flowers, fruits).',
+      'Select a nutrient deficiency to inspect visual signs, cellular roles, and lookalike risks.',
+      'Follow the emergency foliar recipe (dosage, timing, tank-mix warnings) and long-term soil conditioning.',
+    ],
+    name_ar: 'دليل نقص العناصر وعلاجها في النبات',
+    description_ar: 'تشريح تفاعلي لأعضاء النبات (جذور، ساق، أوراق، أزهار، ثمار) لتشخيص نقص العناصر ووصفات العلاج.',
+    benefit_ar: 'تشخيص بصري دقيق لنقص العناصر المتحركة وغير المتحركة حسب كل عضو مع الجرعات الورقية وبرامج التسميد.',
+    howToUse_ar: [
+      'اضغط على أي جزء في رسم النبات التفاعلي (الجذور، الساق، الأوراق، القمة، الأزهار، الثمار).',
+      'اختر العنصر لمعاينة علامات النقص والدور الحيوي والأعراض المشابهة.',
+      'اتبع وصفة الرش الورقي الإسعافية (الجرعة، التوقيت، تحذيرات الخلط) والبرنامج الأرضي.',
+    ],
+    category: 'Reference', icon: Sprout, Component: PlantDeficiencyVisualizer,
+  },
+  {
+    id: 'tomato-disease-map',
+    name: 'Tomato Pathology & Disease Location Map',
+    description: 'Interactive tomato disease atlas mapped onto plant organs with IPM, FRAC codes & resistance genes.',
+    benefit: 'Pinpoint fungal, bacterial, viral, and nematode diseases on tomato anatomy with field diagnostic keys and IPM spray programs.',
+    howToUse: [
+      'Click a tomato plant organ (roots/crown, stem, foliage, flower cluster, fruit).',
+      'Filter by pathogen type (Fungal, Bacterial, Viral, Nematode) or search by disease name.',
+      'Review epidemiology, visual diagnostic criteria, FRAC mode-of-action codes, and resistant genes.',
+    ],
+    name_ar: 'أطلس أمراض الطماطم ومواقع الإصابة',
+    description_ar: 'خريطة تفاعلية لأمراض الطماطم موزعة على أعضاء النبات مع برامج المكافحة وأكواد FRAC وجينات المقاومة.',
+    benefit_ar: 'تحديد دقيق لأمراض الطماطم الفطرية والبكتيرية والفيروسية والنيماتودية مع مفاتيح الفحص الحقلي والمكافحة المتكاملة.',
+    howToUse_ar: [
+      'اضغط على عضو نبات الطماطم (الجذور والتاج، الساق، الأوراق، الأزهار، الثمار).',
+      'صفِّ حسب نوع الممرض (فطري، بكتيري، فيروسي، نيماتودا) أو ابحث بالاسم.',
+      'اطّلع على ظروف العدوى، العلامات التشخيصية، أكواد FRAC لكسر المقاومة، وجينات الهجن المقاومة.',
+    ],
+    category: 'Reference', icon: ShieldAlert, Component: TomatoDiseaseVisualizer,
+  },
+  {
+    id: 'active-matter-selector',
+    name: 'Active Matter Selector — Algérie',
+    description: 'Décision aid: rank active ingredients against diseases, pests and weeds (crop-based, INPV 2017 + E-Phy data).',
+    benefit: 'From crop + observed symptoms to a ranked shortlist of registered active matters with doses, DAR, safety and restrictions — no more guesswork at the sprayer.',
+    howToUse: [
+      'Pick your crop, then the problem (disease / pest / weed) — or type symptoms like “taches brunes”.',
+      'Optionally set temperature, humidity and pressure to refine the ranking.',
+      'Read the ranked cards: confidence, dose, DAR, restrictions and alternatives; browse the full catalogue in the second tab.',
+    ],
+    name_ar: 'منتقي المادة الفعالة — الجزائر',
+    description_ar: 'مساعد قرار: رتّب المواد الفعالة ضد الأمراض والآفات والأعشاب (حسب المحصول، بيانات INPV 2017 + E-Phy).',
+    benefit_ar: 'من المحصول + الأعراض الملاحظة إلى قائمة مرتّبة من المواد الفعالة المسجّلة بجرعات وDAR وسلامة وقيود — بلا تخمين عند الرشّاشة.',
+    howToUse_ar: [
+      'اختر محصولك، ثم المشكلة (مرض / آفة / عشبة) — أو اكتب أعراضاً مثل «بقع بنية».',
+      'اختيارياً حدد الحرارة والرطوبة والضغط لتحسين الترتيب.',
+      'اقرأ البطاقات المرتّبة: الثقة، الجرعة، DAR، القيود والبدائل؛ تصفّح الفهرس الكامل في التبويب الثاني.',
+    ],
+    category: 'Reference', icon: ShieldCheck, Component: ActiveMatterSelector,
+  },
+];
+
+const CATEGORIES: ToolCategory[] = ['Converters', 'Solution & Water', 'Fertilizers', 'Soil & Irrigation', 'Reference'];
+
+/** Arabic display labels for each category. The underlying `ToolCategory`
+ * type stays in English (it's used as a key), but the user-facing chip
+ * and count badge render through this map when the language is Arabic. */
+const CATEGORY_LABEL_AR: Record<ToolCategory, string> = {
+  'Converters':         'المحوّلات',
+  'Solution & Water':   'المحاليل والمياه',
+  'Fertilizers':        'الأسمدة',
+  'Soil & Irrigation':  'التربة والري',
+  'Reference':          'مراجع',
+};
+
+const CATEGORY_LABEL_FR: Record<ToolCategory, string> = {
+  'Converters': 'Convertisseurs',
+  'Solution & Water': 'Solutions et eau',
+  'Fertilizers': 'Engrais',
+  'Soil & Irrigation': 'Sol et irrigation',
+  'Reference': 'Références',
+};
+
+/** Returns the localized display label for a category. */
+export function categoryLabel(c: ToolCategory, language: Language): string {
+  return language === 'ar' ? CATEGORY_LABEL_AR[c] : language === 'fr' ? CATEGORY_LABEL_FR[c] : c;
+}
+
+export const CATEGORY_COLORS: Record<ToolCategory, string> = {
+  'Converters':         'bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-900',
+  'Solution & Water':   'bg-cyan-100 dark:bg-cyan-950/40 text-cyan-700 dark:text-cyan-300 border-cyan-300 dark:border-cyan-900',
+  'Fertilizers':        'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-900',
+  'Soil & Irrigation':  'bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-900',
+  'Reference':          'bg-violet-100 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 border-violet-300 dark:border-violet-900',
+};
+
+export const CATEGORY_DOT_COLORS: Record<ToolCategory, string> = {
+  'Converters':         '#3b82f6',
+  'Solution & Water':   '#0891b2',
+  'Fertilizers':        '#16a34a',
+  'Soil & Irrigation':  '#d97706',
+  'Reference':          '#7c3aed',
+};
+
+export function FreeToolsSection() {
+  const [search, setSearch] = useState('');
+  const [activeCategory, setActiveCategory] = useState<ToolCategory | 'All'>('All');
+  const [openTool, setOpenTool] = useState<ToolMeta | null>(null);
+  const [showHints, setShowHints] = useState(false);
+  const [seasonPlanOpen, setSeasonPlanOpen] = useState(false);
+  const { language } = useTranslation();
+
+  // Comparison tray — holds up to 2 tool IDs for side-by-side comparison.
+  // Persists across tool-dialog opens/closes but not across page reloads (v1).
+  const [compareTray, setCompareTray] = useState<string[]>([]);
+  const [compareOpen, setCompareOpen] = useState(false);
+
+  // Ref to the search input — focused by the Ctrl+K / Cmd+K shortcut.
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Favorites + Recently used (localStorage-persisted)
+  const FAV_KEY = 'nutriplant_tools_favorites_v1';
+  const REC_KEY = 'nutriplant_tools_recent_v1';
+  const [favorites, setFavorites] = useState<string[]>([]);
+  const [recent, setRecent] = useState<string[]>([]);
+
+  // Load persisted favorites + recent on mount; also handle #tool=<id> hash for shareable URLs
+  useEffect(() => {
+    try {
+      const fav = JSON.parse(localStorage.getItem(FAV_KEY) || '[]');
+      const rec = JSON.parse(localStorage.getItem(REC_KEY) || '[]');
+      if (Array.isArray(fav)) setFavorites(fav);
+      if (Array.isArray(rec)) setRecent(rec);
+    } catch { /* corrupt localStorage — ignore */ }
+    // Open tool from URL hash (#tool=<id>) on initial load and on hash change — supports shared URLs and bridge navigation
+    const handleHash = () => {
+      if (typeof window === 'undefined') return;
+      const m = window.location.hash.match(/#tool=([\w-]+)/);
+      if (m) {
+        const t = TOOLS.find(x => x.id === m[1]);
+        if (t) {
+          setOpenTool(t);
+          setRecent(prev => [t.id, ...prev.filter(id => id !== t.id)].slice(0, 5));
+        }
+      }
+    };
+
+    handleHash();
+    window.addEventListener('hashchange', handleHash);
+    return () => window.removeEventListener('hashchange', handleHash);
+  }, []);
+
+  // Persist favorites
+  useEffect(() => {
+    try { localStorage.setItem(FAV_KEY, JSON.stringify(favorites)); } catch { /* storage full or blocked */ }
+  }, [favorites]);
+
+  // Persist recent
+  useEffect(() => {
+    try { localStorage.setItem(REC_KEY, JSON.stringify(recent)); } catch { /* storage full or blocked */ }
+  }, [recent]);
+
+  const toggleFavorite = useCallback((id: string) => {
+    setFavorites(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  }, []);
+
+  const addRecent = useCallback((id: string) => {
+    setRecent(prev => [id, ...prev.filter(x => x !== id)].slice(0, 5));
+  }, []);
+
+  const openToolById = useCallback((id: string) => {
+    const t = TOOLS.find(x => x.id === id);
+    if (!t) return;
+    setOpenTool(t);
+    addRecent(id);
+  }, [addRecent]);
+
+  // Toggle a tool in/out of the comparison tray (max 2). When the tray is full
+  // and the tool isn't already in it, show a toast and bail.
+  const toggleCompare = useCallback((id: string) => {
+    setCompareTray(prev => {
+      if (prev.includes(id)) {
+        return prev.filter(x => x !== id);
+      }
+      if (prev.length >= 2) {
+        toast({
+          title: 'Comparison tray is full (max 2)',
+          description: 'Clear it first to add a different tool.',
+        });
+        return prev;
+      }
+      return [...prev, id];
+    });
+  }, []);
+
+  const clearCompareTray = useCallback(() => {
+    setCompareTray([]);
+    setCompareOpen(false);
+  }, []);
+
+  // Resolve the two tools currently in the tray (in tray order, not TOOLS order).
+  const compareTools = useMemo(
+    () => compareTray.map(id => TOOLS.find(t => t.id === id)).filter(Boolean) as ToolMeta[],
+    [compareTray],
+  );
+
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase().trim();
+    return TOOLS.filter(t => {
+      if (activeCategory !== 'All' && t.category !== activeCategory) return false;
+      if (!q) return true;
+      const localizedName = localizeToolField(t, 'name', language);
+      const localizedDescription = localizeToolField(t, 'description', language);
+      const localizedBenefit = localizeToolField(t, 'benefit', language);
+      return (t.name + ' ' + t.description + ' ' + t.benefit + ' ' + localizedName + ' ' + localizedDescription + ' ' + localizedBenefit + ' ' + t.category).toLowerCase().includes(q);
+    });
+  }, [search, activeCategory, language]);
+
+  // Group filtered tools by category for the landscape grid
+  const grouped = useMemo(() => {
+    return CATEGORIES.map(c => ({
+      category: c,
+      tools: filtered.filter(t => t.category === c),
+    })).filter(g => g.tools.length > 0);
+  }, [filtered]);
+
+  // Global keyboard shortcuts — registered on window. See KeyboardShortcutsHelp
+  // for the user-facing list. The handler is re-bound whenever any of its
+  // dependencies change so the closures always see fresh state.
+  useEffect(() => {
+    const isTypingTarget = (el: Element | null) => {
+      if (!el) return false;
+      if (el instanceof HTMLInputElement) return true;
+      if (el instanceof HTMLTextAreaElement) return true;
+      if ((el as HTMLElement).isContentEditable) return true;
+      return false;
+    };
+
+    const handler = (e: KeyboardEvent) => {
+      const mod = e.ctrlKey || e.metaKey;
+
+      // Ctrl+K / Cmd+K — focus the search input (always, even while typing elsewhere)
+      if (mod && (e.key === 'k' || e.key === 'K')) {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+        searchInputRef.current?.select();
+        return;
+      }
+
+      // Esc — if a dialog is open, let Radix handle it; otherwise clear search.
+      if (e.key === 'Escape') {
+        if (openTool || compareOpen) return; // Radix closes the dialog
+        if (search) {
+          setSearch('');
+          searchInputRef.current?.focus();
+        }
+        return;
+      }
+
+      // From here on, don't trigger when the user is typing in an input/textarea.
+      if (isTypingTarget(document.activeElement)) return;
+
+      // Ctrl+S / Cmd+S — save-preset placeholder toast (only if a tool dialog is open)
+      if (mod && (e.key === 's' || e.key === 'S')) {
+        if (openTool) {
+          e.preventDefault();
+          toast({
+            title: 'Save preset',
+            description: "Copy this tool's inputs to your notes (full preset persistence coming soon).",
+          });
+        }
+        return;
+      }
+
+      // Ctrl+E / Cmd+E — trigger the export bar's Copy action (only if a tool dialog is open)
+      if (mod && (e.key === 'e' || e.key === 'E')) {
+        if (openTool) {
+          e.preventDefault();
+          window.dispatchEvent(new CustomEvent(EXPORT_COPY_EVENT));
+          toast({ title: 'Results copied to clipboard' });
+        }
+        return;
+      }
+
+      // Number keys 1-9 — open the Nth visible tool (no dialog open, search not focused)
+      if (!openTool && !compareOpen && /^[1-9]$/.test(e.key)) {
+        const idx = parseInt(e.key, 10) - 1;
+        const t = filtered[idx];
+        if (t) {
+          e.preventDefault();
+          setOpenTool(t);
+          addRecent(t.id);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [openTool, compareOpen, search, filtered, addRecent]);
+
+  return (
+    <section className="space-y-5">
+      {/* Hero header */}
+      <div className="rounded-xl p-5 sm:p-6 bg-gradient-to-br from-emerald-700 via-green-700 to-teal-800 text-white">
+        <div className="flex items-center gap-2 mb-2 text-emerald-100 text-xs font-medium uppercase tracking-wide">
+          <Sparkles className="h-3.5 w-3.5" /> {copy('19 Free Agronomic Tools', '19 أداة زراعية مجانية', '19 outils agronomiques gratuits', language)}
+        </div>
+        <h2 className="text-xl sm:text-2xl font-bold leading-tight mb-1">
+          {copy('FormulaAtlas Free Tools', 'أدوات FormulaAtlas المجانية', 'Outils gratuits FormulaAtlas', language)}
+        </h2>
+        <p className="text-sm text-emerald-100/90 max-w-2xl">
+          {copy('A native reimplementation of NutriPlant PRO\'s public free-tools collection — converters, solution & water diagnostics, fertilizer calculators, soil & irrigation tools, and quick-reference matrices. All calculations run client-side; nothing is sent to a server.', 'إعادة تنفيذ أصيلة لمجموعة الأدوات المجانية العامة من NutriPlant PRO — محوّلات، تشخيص محاليل ومياه، حاسبات أسمدة، أدوات تربة وري، ومصفوفات مرجعية. كل الحسابات تعمل في المتصفح، لا شيء يُرسل إلى خادم.', 'Une réimplémentation native de la collection publique d’outils gratuits de NutriPlant PRO — conversions, diagnostics des solutions et de l’eau, calculateurs d’engrais, outils sol et irrigation, et tableaux de référence. Tous les calculs s’exécutent dans le navigateur ; rien n’est envoyé à un serveur.', language)}
+        </p>
+        <div className="flex flex-wrap gap-3 mt-3 text-xs">
+          {CATEGORIES.map(c => {
+            const count = TOOLS.filter(t => t.category === c).length;
+            return (
+              <div key={c} className="bg-white/10 backdrop-blur rounded px-2 py-1 border border-white/20 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full" style={{ background: CATEGORY_DOT_COLORS[c] }} />
+                <span className="text-emerald-100">{categoryLabel(c, language)}</span> <span className="font-bold ml-0.5">{count}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Introduction panel — What / How / Why */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <IntroCard
+          icon={Info}
+          color="#0891b2"
+          title={copy('What these tools are', 'ما هذه الأدوات', 'À propos de ces outils', language)}
+          body={copy('A curated set of 19 calculators and reference tables covering the day-to-day workflow of agronomists, growers, and consultants: unit conversions, water & nutrient solution diagnostics, fertilizer formulation, soil & irrigation planning, crop-nutrition reference data, and an Algeria-focused active-matter selector.', 'مجموعة منتقاة من 19 حاسبة وجدول مرجعي تغطي العمل اليومي للمهندسين الزراعيين والمزارعين والاستشاريين: تحويل الوحدات، تشخيص المياه والمحاليل الغذائية، صياغة الأسمدة، تخطيط التربة والري، بيانات تغذية المحاصيل المرجعية، ومنتقي المادة الفعالة للجزائر.', 'Une sélection de 19 calculateurs et tableaux de référence pour le travail quotidien des agronomes, producteurs et consultants : conversions, diagnostics de l’eau et des solutions nutritives, formulation des engrais, planification du sol et de l’irrigation, données de nutrition des cultures et sélection de matières actives pour l’Algérie.', language)}
+        />
+        <IntroCard
+          icon={BookOpen}
+          color="#16a34a"
+          title={copy('How to use them', 'كيف تستخدمها', 'Comment les utiliser', language)}
+          body={copy('Browse the cards below, filter by category, or search by name. Click any card to open the tool in a dialog — enter your inputs and the result updates live. Each tool\'s dialog also shows a short benefit and step-by-step usage hint.', 'تصفّح البطاقات أدناه، صفِّ حسب الفئة، أو ابحث بالاسم. اضغط أي بطاقة لفتح الأداة في نافذة — أدخل قيمك والنتيجة تتحدّث مباشرة. تعرض نافذة كل أداة فائدة قصيرة وخطوات استخدام.', 'Parcourez les cartes, filtrez par catégorie ou recherchez par nom. Cliquez sur une carte pour ouvrir l’outil dans une fenêtre ; saisissez vos valeurs et le résultat se met à jour en direct. Chaque fenêtre présente aussi un bénéfice et des étapes d’utilisation.', language)}
+        />
+        <IntroCard
+          icon={Lightbulb}
+          color="#d97706"
+          title={copy('Why use them', 'لماذا تستخدمها', 'Pourquoi les utiliser', language)}
+          body={copy('They replace guesswork with calculation: precise acid doses, exact NPK blends, FAO-56 irrigation sheets, CEC-based amendment plans, and fertilization carbon footprints — turning lab reports and field observations into defensible decisions.', 'تستبدل التخمين بالحساب: جرعات حمض دقيقة، خلطات NPK مضبوطة، جداول ري وفق FAO-56، خطط تعديل قائمة على CEC، وأثر كربوني للتسميد — تحوّل تقارير المختبر والملاحظات الحقلية إلى قرارات قابلة للدفاع.', 'Ils remplacent les approximations par des calculs : doses d’acide précises, mélanges NPK exacts, fiches d’irrigation FAO-56, plans d’amendement fondés sur la CEC et empreinte carbone de la fertilisation — pour transformer les analyses et observations en décisions défendables.', language)}
+        />
+      </div>
+
+      {/* Search & filter */}
+      <div className="sticky top-[120px] z-20 bg-background/95 backdrop-blur rounded-lg border border-border p-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Input
+              ref={searchInputRef}
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder={copy('Search tools by name, description, or benefit... (Ctrl+K)', 'ابحث عن أداة بالاسم أو الوصف أو الفائدة... (Ctrl+K)', 'Rechercher un outil par nom, description ou bénéfice… (Ctrl+K)', language)}
+              className="pl-9 pr-8 h-10"
+            />
+            {search && (
+              <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-1">
+            <CategoryChip active={activeCategory === 'All'} onClick={() => setActiveCategory('All')} label={copy('All', 'الكل', 'Tous', language)} count={TOOLS.length} />
+            {CATEGORIES.map(c => (
+              <CategoryChip
+                key={c}
+                active={activeCategory === c}
+                onClick={() => setActiveCategory(c)}
+                label={categoryLabel(c, language)}
+                count={TOOLS.filter(t => t.category === c).length}
+              />
+            ))}
+          </div>
+          <KeyboardShortcutsHelp />
+        </div>
+      </div>
+
+      {/* Favorites + Recently used (auto-hide when empty) */}
+      {(favorites.length > 0 || recent.length > 0) && (
+        <div className="space-y-3">
+          {favorites.length > 0 && (
+            <ToolRow
+              label={copy('Favorites', 'المفضّلة', 'Favoris', language)}
+              icon={<Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />}
+              ids={favorites}
+              onOpen={openToolById}
+              language={language}
+            />
+          )}
+          {recent.length > 0 && (
+            <ToolRow
+              label={copy('Recently used', 'المستخدمة مؤخراً', 'Récemment utilisés', language)}
+              icon={<Clock className="h-3.5 w-3.5 text-emerald-600" />}
+              ids={recent}
+              onOpen={openToolById}
+              language={language}
+            />
+          )}
+        </div>
+      )}
+
+      {/* Season Plan Generator — highlighted Pro feature card (above the tools grid) */}
+      <button
+        type="button"
+        onClick={() => setSeasonPlanOpen(true)}
+        className="group relative w-full text-left rounded-xl p-5 bg-gradient-to-br from-emerald-600 via-green-600 to-teal-700 text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+      >
+        <div className="absolute top-3 right-3">
+                  <Badge className="bg-amber-400/90 text-amber-950 hover:bg-amber-400 text-[10px] font-bold">{copy('Pro feature', 'ميزة احترافية', 'Fonctionnalité Pro', language)}</Badge>
+        </div>
+        <div className="flex items-start gap-4 pr-24">
+          <div className="flex-shrink-0 flex items-center justify-center h-14 w-14 rounded-lg bg-white/20 backdrop-blur">
+            <Sparkles className="h-7 w-7" />
+          </div>
+          <div className="flex-1 min-w-0 space-y-1">
+            <h3 className="text-lg font-bold leading-tight">{copy('Season Plan Generator', 'مولّد خطة الموسم', 'Générateur de plan de saison', language)}</h3>
+            <p className="text-sm text-emerald-50/90 leading-relaxed">
+              {copy('Generate a 52-week PDF agronomic plan for your crop — NPK demand, irrigation, fertigation recipes, and management notes per week, tailored to your soil & water test.', 'أنشئ خطة زراعية بصيغة PDF لمدة 52 أسبوعاً لمحصولك — احتياجات NPK والري ووصفات التسميد وملاحظات الإدارة أسبوعياً، وفق تحليل التربة والمياه.', 'Générez un plan agronomique PDF de 52 semaines — besoins NPK, irrigation, recettes de fertigation et notes de gestion adaptés à vos analyses de sol et d’eau.', language)}
+            </p>
+            <div className="flex items-center gap-1.5 text-xs text-emerald-50/80 mt-1">
+              <span>{copy('Powered by AI · covers establishment → vegetative → flowering → filling → maturation', 'مدعوم بالذكاء الاصطناعي · من الإنبات إلى النضج', 'Propulsé par l’IA · de l’implantation à la maturation', language)}</span>
+            </div>
+          </div>
+          <div className="hidden sm:flex flex-shrink-0 self-center items-center justify-center h-8 w-8 rounded-full border border-white/30 group-hover:bg-white/20 transition-all">
+            <ArrowRight className="h-4 w-4" />
+          </div>
+        </div>
+      </button>
+
+      {/* Tools grouped by category — landscape cards */}
+      <div className="space-y-6">
+        {grouped.map(group => (
+          <div key={group.category} className="space-y-3">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-6 rounded-sm" style={{ background: CATEGORY_DOT_COLORS[group.category] }} />
+              <h3 className="text-base font-bold tracking-tight">{categoryLabel(group.category, language)}</h3>
+              <Badge variant="secondary" className="text-[10px] font-mono">{group.tools.length}</Badge>
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+              {group.tools.map(tool => (
+                <LandscapeToolCard
+                  key={tool.id}
+                  tool={tool}
+                  onOpen={() => { setOpenTool(tool); addRecent(tool.id); }}
+                  isFavorite={favorites.includes(tool.id)}
+                  onToggleFavorite={() => toggleFavorite(tool.id)}
+                  isInCompareTray={compareTray.includes(tool.id)}
+                  compareTrayFull={compareTray.length >= 2}
+                  onToggleCompare={() => toggleCompare(tool.id)}
+                  language={language}
+                />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {filtered.length === 0 && (
+        <div className="text-center py-12">
+          <div className="rounded-full bg-muted p-4 inline-flex mb-3">
+            <Search className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <h3 className="text-base font-semibold mb-1">{copy('No tools match', 'لا توجد أدوات مطابقة', 'Aucun outil ne correspond', language)}</h3>
+          <p className="text-sm text-muted-foreground">{copy('Try a different search or category.', 'جرّب بحثاً أو فئة مختلفة.', 'Essayez une autre recherche ou catégorie.', language)}</p>
+        </div>
+      )}
+
+      {/* Tool dialog — near-fullscreen like NutriPlant PRO: header + full-height tool area */}
+      <Dialog open={!!openTool} onOpenChange={open => !open && setOpenTool(null)}>
+        <DialogContent className="!max-w-[1600px] w-[98vw] !max-h-[96vh] h-[96vh] overflow-hidden p-0 gap-0 flex flex-col">
+          {/* Compact header bar — title + collapsible hints toggle */}
+          <DialogHeader className="px-5 py-3 border-b border-border flex-shrink-0">
+            <div className="flex items-center justify-between gap-3">
+              <DialogTitle className="flex items-center gap-2 text-base">
+                {openTool && (
+                  <span
+                    className="flex items-center justify-center h-8 w-8 rounded-lg"
+                    style={{ background: `${CATEGORY_DOT_COLORS[openTool.category]}20`, color: CATEGORY_DOT_COLORS[openTool.category] }}
+                  >
+                    <openTool.icon className="h-4 w-4" />
+                  </span>
+                )}
+                {openTool ? localizeToolField(openTool, 'name', language) : null}
+                {openTool && (
+                  <Badge variant="outline" className={`text-[10px] ml-1 ${CATEGORY_COLORS[openTool.category]}`}>
+                    {categoryLabel(openTool.category, language)}
+                  </Badge>
+                )}
+              </DialogTitle>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 gap-1.5 text-xs"
+                  onClick={() => setShowHints(v => !v)}
+                >
+                  <HelpCircle className="h-3.5 w-3.5" />
+                  {showHints ? copy('Hide guide', 'إخفاء الدليل', 'Masquer le guide', language) : copy('Show guide', 'إظهار الدليل', 'Afficher le guide', language)}
+                </Button>
+              </div>
+            </div>
+            <DialogDescription className="text-xs mt-1">
+              {openTool ? localizeToolField(openTool, 'description', language) : null}
+            </DialogDescription>
+
+            {/* Collapsible benefit + how-to bar — inline, doesn't steal horizontal space from the tool */}
+            {openTool && showHints && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
+                <div className="rounded-md px-3 py-2 border border-emerald-200 dark:border-emerald-900 bg-emerald-50/60 dark:bg-emerald-950/20">
+                  <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-emerald-700 dark:text-emerald-300 font-semibold mb-0.5">
+                    <Lightbulb className="h-3 w-3" /> {copy('Benefit', 'الفائدة', 'Bénéfice', language)}
+                  </div>
+                  <p className="text-xs leading-snug text-foreground">
+                    {localizeToolField(openTool, 'benefit', language)}
+                  </p>
+                </div>
+                <div className="rounded-md px-3 py-2 border border-blue-200 dark:border-blue-900 bg-blue-50/60 dark:bg-blue-950/20">
+                  <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-blue-700 dark:text-blue-300 font-semibold mb-0.5">
+                    <HelpCircle className="h-3 w-3" /> {copy('How to use', 'كيفية الاستخدام', 'Comment utiliser', language)}
+                  </div>
+                  <ol className="text-xs leading-snug text-foreground list-decimal pl-4 space-y-0.5">
+                    {localizeToolField(openTool, 'howToUse', language).map((step, i) => <li key={i}>{step}</li>)}
+                  </ol>
+                </div>
+              </div>
+            )}
+          </DialogHeader>
+
+          {/* Full-height tool area — gets 100% of remaining viewport height */}
+          <div className="flex-1 min-h-0 overflow-y-auto p-5">
+            {openTool && <ToolExportBar tool={openTool} />}
+            <div className={openTool ? 'mt-3' : ''}>
+              {openTool && <openTool.Component />}
+            </div>
+            {/* Why this matters — collapsible educational panel (always shown, stub if no dedicated entry) */}
+            {openTool && (
+              <div className="mt-4">
+                <WhyItMattersPanel content={getWhyItMatters(openTool.id, openTool.name, openTool.description)} />
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Comparison tray — sticky bottom bar (visible when ≥1 tool selected) */}
+      {compareTray.length > 0 && (
+        <CompareTrayBar
+          tools={compareTools}
+          onClear={clearCompareTray}
+          onOpenCompare={() => setCompareOpen(true)}
+          language={language}
+        />
+      )}
+
+      {/* Side-by-side comparison dialog */}
+      {compareTools.length === 2 && (
+        <CompareDialog
+          tools={[compareTools[0], compareTools[1]]}
+          open={compareOpen}
+          onOpenChange={setCompareOpen}
+        />
+      )}
+
+      {/* Season Plan Generator — Pro feature dialog */}
+      <SeasonPlanGenerator open={seasonPlanOpen} onOpenChange={setSeasonPlanOpen} />
+    </section>
+  );
+}
+
+/** Sticky bottom bar that shows the current comparison tray state. */
+function CompareTrayBar({
+  tools, onClear, onOpenCompare, language,
+}: {
+  tools: ToolMeta[];
+  onClear: () => void;
+  onOpenCompare: () => void;
+  language: Language;
+}) {
+  const hasTwo = tools.length >= 2;
+  return (
+    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-1.5rem)] max-w-3xl">
+      <div className="flex items-center gap-3 rounded-xl border border-emerald-300 dark:border-emerald-800 bg-emerald-50/95 dark:bg-emerald-950/90 backdrop-blur px-3 py-2 shadow-lg">
+        <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300 flex-shrink-0">
+          <Columns2 className="h-4 w-4" />
+          <span className="text-xs font-semibold uppercase tracking-wide hidden sm:inline">{copy('Compare', 'مقارنة', 'Comparer', language)}</span>
+        </div>
+        <div className="flex-1 min-w-0">
+          {hasTwo ? (
+            <div className="flex items-center gap-2 text-sm min-w-0">
+              <span className="font-semibold truncate">{localizeToolField(tools[0], 'name', language)}</span>
+              <span className="text-muted-foreground text-xs flex-shrink-0">{copy('vs', 'مقابل', 'vs', language)}</span>
+              <span className="font-semibold truncate">{localizeToolField(tools[1], 'name', language)}</span>
+            </div>
+          ) : (
+            <div className="text-xs text-emerald-800 dark:text-emerald-200">
+              {copy('Select one more tool to compare', 'اختر أداة أخرى للمقارنة', 'Sélectionnez un autre outil à comparer', language)} <span className="font-mono opacity-70">(1/2)</span>
+            </div>
+          )}
+        </div>
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          {hasTwo && (
+            <Button
+              size="sm"
+              className="h-8 gap-1.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
+              onClick={onOpenCompare}
+            >
+              <Columns2 className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">{copy('Open side-by-side', 'افتح جنباً إلى جنب', 'Ouvrir côte à côte', language)}</span>
+              <span className="sm:hidden">{copy('Compare', 'قارن', 'Comparer', language)}</span>
+            </Button>
+          )}
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-8 gap-1.5 text-xs text-emerald-800 dark:text-emerald-200 hover:bg-emerald-100 dark:hover:bg-emerald-900/50"
+            onClick={onClear}
+          >
+            <X className="h-3.5 w-3.5" />
+            {copy('Clear', 'مسح', 'Effacer', language)}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Landscape (horizontal) tool card — icon on the left, content on the right, action arrow on the far right. */
+function LandscapeToolCard({
+  tool, onOpen, isFavorite, onToggleFavorite, isInCompareTray, compareTrayFull, onToggleCompare, language,
+}: {
+  tool: ToolMeta;
+  onOpen: () => void;
+  isFavorite: boolean;
+  onToggleFavorite: () => void;
+  isInCompareTray: boolean;
+  compareTrayFull: boolean;
+  onToggleCompare: () => void;
+  language: Language;
+}) {
+  const localizedName = localizeToolField(tool, 'name', language);
+  const localizedDescription = localizeToolField(tool, 'description', language);
+  const localizedBenefit = localizeToolField(tool, 'benefit', language);
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onOpen}
+      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(); } }}
+      className="group relative text-left rounded-xl border border-border bg-card p-4 sm:p-5 hover:border-emerald-400 hover:shadow-md transition-all flex gap-4 items-start cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+    >
+      {/* Compare toggle — top-right, just left of the star */}
+      <button
+        type="button"
+        onClick={e => { e.stopPropagation(); onToggleCompare(); }}
+        aria-label={isInCompareTray ? `Remove ${localizedName} from comparison` : `Add ${localizedName} to comparison`}
+        aria-pressed={isInCompareTray}
+        title={compareTrayFull && !isInCompareTray ? copy('Comparison tray is full (max 2)', 'صينية المقارنة ممتلئة (حد 2)', 'La barre de comparaison est pleine (2 max.)', language) : (isInCompareTray ? copy('Remove from comparison', 'إزالة من المقارنة', 'Retirer de la comparaison', language) : copy('Add to comparison', 'أضف إلى المقارنة', 'Ajouter à la comparaison', language))}
+        className={`absolute top-3 right-11 z-10 inline-flex items-center justify-center h-7 w-7 rounded-full border transition-all ${
+          isInCompareTray
+            ? 'bg-emerald-600 border-emerald-600 text-white hover:bg-emerald-700 hover:border-emerald-700'
+            : 'bg-background/80 backdrop-blur border-border text-muted-foreground hover:text-emerald-600 hover:border-emerald-300 opacity-0 group-hover:opacity-100 focus-visible:opacity-100'
+        }`}
+      >
+        <Columns2 className="h-3.5 w-3.5" />
+        {isInCompareTray && (
+          <span className="absolute -top-1.5 -right-1.5 inline-flex items-center justify-center h-3.5 w-3.5 rounded-full bg-emerald-700 text-white text-[8px] font-bold border border-background">
+            <Check className="h-2.5 w-2.5" />
+          </span>
+        )}
+      </button>
+
+      {/* Star toggle — top-right corner; always visible when favorited, otherwise on hover */}
+      <button
+        type="button"
+        onClick={e => { e.stopPropagation(); onToggleFavorite(); }}
+        aria-label={isFavorite ? `Remove ${localizedName} from favorites` : `Add ${localizedName} to favorites`}
+        aria-pressed={isFavorite}
+        className={`absolute top-3 right-3 z-10 inline-flex items-center justify-center h-7 w-7 rounded-full border transition-all ${
+          isFavorite
+            ? 'bg-amber-400 border-amber-400 text-white hover:bg-amber-500 hover:border-amber-500'
+            : 'bg-background/80 backdrop-blur border-border text-muted-foreground hover:text-amber-500 hover:border-amber-300 opacity-0 group-hover:opacity-100 focus-visible:opacity-100'
+        }`}
+      >
+        <Star className={`h-3.5 w-3.5 ${isFavorite ? 'fill-current' : ''}`} />
+      </button>
+
+      {/* Icon block — colored by category */}
+      <div
+        className="flex-shrink-0 flex items-center justify-center h-14 w-14 rounded-lg transition-all group-hover:scale-105"
+        style={{ background: `${CATEGORY_DOT_COLORS[tool.category]}20`, color: CATEGORY_DOT_COLORS[tool.category] }}
+      >
+        <tool.icon className="h-7 w-7" />
+      </div>
+
+      {/* Content — pr-16 on mobile reserves room for both star + compare buttons; sm+ relies on the arrow column */}
+      <div className="flex-1 min-w-0 space-y-1.5 pr-16 sm:pr-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <h4 className="text-base font-semibold leading-tight group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
+            {localizedName}
+          </h4>
+          <Badge variant="outline" className={`text-[10px] ${CATEGORY_COLORS[tool.category]}`}>
+            {categoryLabel(tool.category, language)}
+          </Badge>
+        </div>
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          {localizedDescription}
+        </p>
+        <p className="text-xs text-foreground/80 leading-relaxed flex gap-1.5">
+          <Lightbulb className="h-3.5 w-3.5 text-amber-500 flex-shrink-0 mt-0.5" />
+          <span><span className="font-medium text-amber-700 dark:text-amber-400">{copy('Benefit:', 'الفائدة:', 'Bénéfice :', language)}</span> {localizedBenefit}</span>
+        </p>
+      </div>
+
+      {/* Action arrow */}
+      <div className="flex-shrink-0 self-center hidden sm:flex items-center justify-center h-8 w-8 rounded-full border border-border text-muted-foreground group-hover:border-emerald-500 group-hover:bg-emerald-500 group-hover:text-white transition-all">
+        <ArrowRight className="h-4 w-4" />
+      </div>
+    </div>
+  );
+}
+
+function IntroCard({ icon: Icon, color, title, body }: { icon: typeof Info; color: string; title: string; body: string }) {
+  return (
+    <div className="rounded-lg border border-border bg-card p-4">
+      <div className="flex items-center gap-2 mb-2">
+        <div className="flex items-center justify-center h-8 w-8 rounded-lg" style={{ background: color + '20', color }}>
+          <Icon className="h-4 w-4" />
+        </div>
+        <h3 className="text-sm font-semibold" style={{ color }}>{title}</h3>
+      </div>
+      <p className="text-xs text-muted-foreground leading-relaxed">{body}</p>
+    </div>
+  );
+}
+
+function CategoryChip({ active, onClick, label, count }: { active: boolean; onClick: () => void; label: string; count: number }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`text-xs px-3 py-1.5 rounded-md border transition-all ${active ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-background border-border text-muted-foreground hover:border-emerald-300 hover:text-foreground'}`}
+    >
+      {label} <span className="ml-1 opacity-70 font-mono">({count})</span>
+    </button>
+  );
+}
+
+/** Horizontal chip row for Favorites / Recently used — auto-hides when no tools match. */
+function ToolRow({
+  label, icon, ids, onOpen, language,
+}: {
+  label: string;
+  icon: React.ReactNode;
+  ids: string[];
+  onOpen: (id: string) => void;
+  language: Language;
+}) {
+  const tools = ids.map(id => TOOLS.find(t => t.id === id)).filter(Boolean) as ToolMeta[];
+  if (tools.length === 0) return null;
+  return (
+    <div className="rounded-lg border border-border bg-card p-3">
+      <div className="flex items-center gap-1.5 mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+        {icon}
+        <span>{label}</span>
+        <span className="font-mono opacity-70">{tools.length}</span>
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {tools.map(t => {
+          const Icon = t.icon;
+          return (
+            <button
+              key={t.id}
+              onClick={() => onOpen(t.id)}
+              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-2.5 py-1 text-xs hover:border-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
+            >
+              <span style={{ color: CATEGORY_DOT_COLORS[t.category] }}>
+                <Icon className="h-3.5 w-3.5" />
+              </span>
+              <span className="font-medium">{localizeToolField(t, 'name', language)}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}

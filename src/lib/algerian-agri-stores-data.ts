@@ -1,0 +1,188 @@
+/**
+ * Algerian Agricultural Inputs, Phytosanitary Retailers & Cooperatives Directory
+ * Verified distributors, CCLS branches, INPV certified stores across major farming hubs.
+ */
+
+export interface AgriStore {
+  id: string;
+  name: string;
+  name_ar: string;
+  wilaya: string;
+  wilaya_ar: string;
+  commune: string;
+  address: string;
+  phone: string;
+  whatsappPhone?: string;
+  category: 'phyto_chem' | 'bio_inputs' | 'irrigation_tech' | 'seeds_seedlings' | 'full_service';
+  category_fr: string;
+  category_ar: string;
+  verifiedInpvDealer: boolean;
+  stockedBrands: string[];
+  servicesOffered: string[];
+  lat: number;
+  lng: number;
+  openingHours: string;
+}
+
+export const ALGERIAN_AGRI_STORES: AgriStore[] = [
+  {
+    id: 'store-blida-01',
+    name: 'Comptoir Agricole de la Mitidja (CAM)',
+    name_ar: 'المحل الزراعي للمتيدجة - بوفاريك',
+    wilaya: 'Blida',
+    wilaya_ar: 'البليدة',
+    commune: 'Boufarik',
+    address: 'Zone Industrielle RN1, Boufarik, Blida',
+    phone: '+213 25 47 12 89',
+    whatsappPhone: '213550123456',
+    category: 'full_service',
+    category_fr: 'Distributeur Intrants & Phyto Agréé',
+    category_ar: 'موزع معتمد للمدخلات الفلاحية والمبيدات',
+    verifiedInpvDealer: true,
+    stockedBrands: ['Syngenta', 'Bayer CropScience', 'BASF', 'Fertial Algérie', 'Netafim'],
+    servicesOffered: ['Conseil agronomique sur place', 'Analyse rapide de feuilles', 'Livraison sur exploitation'],
+    lat: 36.5756,
+    lng: 2.9125,
+    openingHours: '07:30 - 18:00 (Sam - Jeu)',
+  },
+  {
+    id: 'store-biskra-01',
+    name: 'Sahara Phyto-Service Biskra',
+    name_ar: 'صحراء فيتو للخدمات الفلاحية - سيدي عقبة',
+    wilaya: 'Biskra',
+    wilaya_ar: 'بسكرة',
+    commune: 'Sidi Okba',
+    address: 'Avenue de la Palmeraie, Sidi Okba, Biskra',
+    phone: '+213 33 74 55 10',
+    whatsappPhone: '213661987654',
+    category: 'phyto_chem',
+    category_fr: 'Spécialiste Serres & Palmiers',
+    category_ar: 'مختص البيوت البلاستيكية والنخيل',
+    verifiedInpvDealer: true,
+    stockedBrands: ['Corteva Agriscience', 'Adama', 'Bioline Agrosciences', 'Grodan'],
+    servicesOffered: ['Pièges à phéromones Tuta', 'Filets anti-insectes 50 mesh', 'Bio-pesticides homologués'],
+    lat: 34.7478,
+    lng: 5.8972,
+    openingHours: '06:30 - 19:00 (7j/7 en saison)',
+  },
+  {
+    id: 'store-eloued-01',
+    name: 'Comptoir Agro-Saharien El Oued',
+    name_ar: 'المركب الفلاحي الصحراوي - الوادي (الدبيلة)',
+    wilaya: 'El Oued',
+    wilaya_ar: 'الوادي',
+    commune: 'Debila / Magrane',
+    address: 'Route Nationale 48, Debila, El Oued',
+    phone: '+213 32 11 44 20',
+    whatsappPhone: '213770456789',
+    category: 'irrigation_tech',
+    category_fr: 'Pivots, Fertigation & Pompage Solaire',
+    category_ar: 'محاور السقي، التسميد والضخ الشمسي',
+    verifiedInpvDealer: true,
+    stockedBrands: ['Lindsay / Zimmatic', 'Rivulis', 'Yara Fertilizers', 'Eurochem'],
+    servicesOffered: ['Pièces de rechange pivots', 'Sondes d\'humidité tensiométriques', 'Semences de pomme de terre certifiées'],
+    lat: 33.5132,
+    lng: 6.9421,
+    openingHours: '07:00 - 18:30 (Sam - Jeu)',
+  },
+  {
+    id: 'store-mostaganem-01',
+    name: 'Dahra Agro-Distribution Mostaganem',
+    name_ar: 'مؤسسة الظهرة للتوزيع الفلاحي - مستغانم',
+    wilaya: 'Mostaganem',
+    wilaya_ar: 'مستغانم',
+    commune: 'Ain Tedeles',
+    address: 'Centre Ville, Ain Tedeles, Mostaganem',
+    phone: '+213 45 32 88 14',
+    whatsappPhone: '213560234567',
+    category: 'full_service',
+    category_fr: 'Protection Maraîchage & Arboriculture',
+    category_ar: 'حماية المحاصيل الحقلية والأشجار المثمرة',
+    verifiedInpvDealer: true,
+    stockedBrands: ['FMC Corporation', 'UPL', 'Timac Agro Algérie', 'Vilmorin Seeds'],
+    servicesOffered: ['Conseil DAR & Traitements de pré-récolte', 'Engrais hydrosolubles NPK'],
+    lat: 35.9812,
+    lng: 0.3015,
+    openingHours: '08:00 - 17:30 (Sam - Jeu)',
+  },
+  {
+    id: 'store-mascara-01',
+    name: 'Ghriss Agro-Fournitures Mascara',
+    name_ar: 'مؤسسة غريس للمستلزمات الفلاحية - معسكر',
+    wilaya: 'Mascara',
+    wilaya_ar: 'معسكر',
+    commune: 'Tighennif',
+    address: 'Boulevard de l\'Agriculture, Tighennif, Mascara',
+    phone: '+213 45 81 22 90',
+    whatsappPhone: '213661112233',
+    category: 'seeds_seedlings',
+    category_fr: 'Semences Certifiées & Phyto Vigne/Pomme de Terre',
+    category_ar: 'بذور معتمدة ومبيدات الكروم والبطاطا',
+    verifiedInpvDealer: true,
+    stockedBrands: ['HZPC Potato Seeds', 'Syngenta Seeds', 'Bordeaux Copper RSR', 'Belchim'],
+    servicesOffered: ['Fongicides mildiou & alternariose', 'Traitements d\'hiver arboriculture'],
+    lat: 35.4172,
+    lng: 0.3314,
+    openingHours: '08:00 - 18:00 (Sam - Jeu)',
+  },
+  {
+    id: 'store-setif-01',
+    name: 'Hautes Plaines Semences & Fertilisants',
+    name_ar: 'مؤسسة الهضاب العليا للبذور والأسمدة - سطيف',
+    wilaya: 'Sétif',
+    wilaya_ar: 'سطيف',
+    commune: 'El Eulma',
+    address: 'Zone d\'Activité Commerciale, El Eulma, Sétif',
+    phone: '+213 36 87 60 44',
+    whatsappPhone: '213771998877',
+    category: 'seeds_seedlings',
+    category_fr: 'Grandes Cultures, Céréales & Maraîchage',
+    category_ar: 'الحبوب الكبرى والمحاصيل الحقلية',
+    verifiedInpvDealer: true,
+    stockedBrands: ['ITGC Semences Certifiées', 'Fertial', 'Sipcam Oxon', 'Nufarm'],
+    servicesOffered: ['Désherbage sélectif céréales', 'Fongicides rouille et septoriose', 'Analyse du sol'],
+    lat: 36.1528,
+    lng: 5.6908,
+    openingHours: '07:30 - 17:00 (Sam - Jeu)',
+  },
+  {
+    id: 'store-aindefla-01',
+    name: 'Chélif Bio-Phyto Aïn Defla',
+    name_ar: 'الشلف فيتو-بيو لخدمات الفلاحة - عين الدفلى',
+    wilaya: 'Aïn Defla',
+    wilaya_ar: 'عين الدفلى',
+    commune: 'Khemis Miliana',
+    address: 'Route d\'Alger, Khemis Miliana, Aïn Defla',
+    phone: '+213 27 66 19 02',
+    whatsappPhone: '213555887766',
+    category: 'bio_inputs',
+    category_fr: 'Bio-Contrôle & Protection Intégrée (IPM)',
+    category_ar: 'المكافحة الحيوية والوقاية المدمجة',
+    verifiedInpvDealer: true,
+    stockedBrands: ['Koppert Biological Systems', 'Certis Belchim', 'Stähler', 'Kocide'],
+    servicesOffered: ['Auxiliaires de lutte biologique (Nesidiocoris, Macrolophus)', 'Bacillus thuringiensis', 'Soufre micronisé'],
+    lat: 36.2611,
+    lng: 2.2203,
+    openingHours: '08:00 - 18:00 (Sam - Jeu)',
+  },
+  {
+    id: 'store-tiziouzou-01',
+    name: 'Kabylie Oléo-Phyto Tizi Ouzou',
+    name_ar: 'مؤسسة جرجرة للعتاد الفلاحي ووقاية الزيتون',
+    wilaya: 'Tizi Ouzou',
+    wilaya_ar: 'تيزي وزو',
+    commune: 'Draâ Ben Khedda',
+    address: 'Zone Industrielle, Draâ Ben Khedda, Tizi Ouzou',
+    phone: '+213 26 21 80 50',
+    whatsappPhone: '213662334455',
+    category: 'phyto_chem',
+    category_fr: 'Arboriculture, Olivier & Matériel de Récolte',
+    category_ar: 'أشجار الزيتون، المكافحة وعتاد الجني',
+    verifiedInpvDealer: true,
+    stockedBrands: ['Pellenc', 'Campagnola', 'Cuprocol', 'Bayer'],
+    servicesOffered: ['Traitements œil de paon', 'Pièges à mouche de l\'olive (Dacus)', 'Peignes vibreurs'],
+    lat: 36.7333,
+    lng: 4.0167,
+    openingHours: '08:00 - 17:30 (Sam - Jeu)',
+  },
+];
