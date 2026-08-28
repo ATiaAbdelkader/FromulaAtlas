@@ -322,21 +322,282 @@ export const FORMULA_PROVENANCE_TEXT = {
 };
 
 // ============================================================================
+// P1-2: Separate official price from market price
+// ============================================================================
+
+export const PRICE_TYPE_DISCLAIMER = {
+  en: 'Prices shown are official regulatory reference prices (e.g., OAIC purchase price), not live wholesale market prices. Actual market prices vary daily by region, season, and supply/demand. Verify current local prices at your nearest Marché de Gros.',
+  fr: 'Les prix affichés sont des prix de référence réglementaires officiels (ex. prix d\'achat OAIC), et non des prix de marché de gros en direct. Les prix réels varient quotidiennement selon la région, la saison et l\'offre/demande. Vérifiez les prix locaux actuels au Marché de Gros le plus proche.',
+  ar: 'الأسعار المعروضة هي أسعار مرجعية تنظيمية رسمية (مثل سعر شراء OAIC)، وليست أسعار سوق الجملة الحية. تختلف الأسعار الفعلية يومياً حسب المنطقة والموسم والعرض/الطلب. تحقّق من الأسعار المحلية الحالية في أقرب سوق جملة.',
+};
+
+export interface PriceInfo {
+  /** The displayed price value. */
+  value: number;
+  /** Currency unit (e.g., 'DZD/Qx', 'DZD/kg'). */
+  unit: string;
+  /** What type of price this is. */
+  type: 'official_reference' | 'market_estimate' | 'historical_average' | 'user_input';
+  /** Source of the price. */
+  source: string;
+  /** Date the price was last verified. */
+  lastVerified?: string;
+}
+
+export function formatPriceWithProvenance(info: PriceInfo, language: 'en' | 'fr' | 'ar'): string {
+  const typeLabels = {
+    official_reference: { en: 'Official ref.', fr: 'Réf. officiel', ar: 'مرجعي رسمي' },
+    market_estimate: { en: 'Market est.', fr: 'Est. marché', ar: 'تقدير سوق' },
+    historical_average: { en: 'Historical avg.', fr: 'Moy. historique', ar: 'متوسط تاريخي' },
+    user_input: { en: 'Your input', fr: 'Votre saisie', ar: 'إدخالك' },
+  };
+  const label = typeLabels[info.type][language];
+  return `${info.value.toLocaleString()} ${info.unit} (${label})`;
+}
+
+// ============================================================================
 // P1-3: Version Governance
 // ============================================================================
 
 export const VERSION_INFO = {
-  productVersion: '0.2.0',
+  productVersion: '0.2.0 (Prototype)',
   agronomicEngineVersion: '1.0',
   knowledgeBaseRelease: '2026.08',
-  inpvDatasetVersion: '2017 (INPV official index)',
+  inpvDatasetVersion: '2017 (INPV official index — may be outdated)',
   aiModelVersion: 'gpt-5-mini (via ZAI SDK)',
   formulaCatalogVersion: '3.5 (500 formulas)',
 };
 
 // ============================================================================
-// P2: Safety by Design — global disclaimers
+// P1-4: Feature status — LIVE / BETA / ROADMAP
 // ============================================================================
+
+export type FeatureStatus = 'LIVE' | 'BETA' | 'ROADMAP';
+
+export interface FeatureStatusInfo {
+  status: FeatureStatus;
+  label: { en: string; fr: string; ar: string };
+  color: string;
+  bgColor: string;
+}
+
+export const FEATURE_STATUS: Record<FeatureStatus, FeatureStatusInfo> = {
+  LIVE: {
+    status: 'LIVE',
+    label: { en: 'Live', fr: 'En direct', ar: 'مباشر' },
+    color: '#16a34a', bgColor: '#dcfce7',
+  },
+  BETA: {
+    status: 'BETA',
+    label: { en: 'Beta', fr: 'Bêta', ar: 'تجريبي' },
+    color: '#f59e0b', bgColor: '#fef3c7',
+  },
+  ROADMAP: {
+    status: 'ROADMAP',
+    label: { en: 'Roadmap', fr: 'Feuille de route', ar: 'قيد التطوير' },
+    color: '#6366f1', bgColor: '#e0e7ff',
+  },
+};
+
+/** Feature status registry — fixes NDVI contradiction (was marketed as available but roadmap says In Progress). */
+export const FEATURE_REGISTRY: Record<string, FeatureStatus> = {
+  'ndvi_satellite': 'BETA',        // Works but limited coverage in Algeria
+  'weather_live': 'LIVE',          // Open-Meteo real-time, no key needed
+  'et0_tracker': 'LIVE',
+  'irrigation_scheduler': 'LIVE',
+  'crop_simulator': 'LIVE',
+  'ai_agronomist': 'LIVE',
+  'inpv_product_finder': 'LIVE',   // Based on 2017 data (may be outdated)
+  'disease_encyclopedia': 'LIVE',
+  'climate_simulator': 'LIVE',
+  'soil_sensor_dashboard': 'BETA', // Simulated readings (no real Modbus sensors)
+  'crop_recommender': 'LIVE',
+  'satellite_crop_health': 'BETA',  // Sentinel-2 works but limited Algerian coverage
+  'farm_digital_twin': 'BETA',
+  'marketplace': 'ROADMAP',
+  'farmer_community': 'ROADMAP',
+  'carbon_credit': 'BETA',
+};
+
+// ============================================================================
+// P1-6: VPD crop-specific interpretation
+// ============================================================================
+
+export interface VPDCropRange {
+  crop: string;
+  cropAr: string;
+  /** Optimal VPD range for this crop (kPa). */
+  optimalMin: number;
+  optimalMax: number;
+  /** VPD above which stress occurs. */
+  stressThreshold: number;
+  /** Environment: greenhouse or open field. */
+  environment: 'greenhouse' | 'open_field' | 'both';
+}
+
+export const VPD_CROP_RANGES: VPDCropRange[] = [
+  { crop: 'Tomato', cropAr: 'الطماطم', optimalMin: 0.8, optimalMax: 1.2, stressThreshold: 1.5, environment: 'greenhouse' },
+  { crop: 'Tomato', cropAr: 'الطماطم', optimalMin: 1.0, optimalMax: 2.0, stressThreshold: 2.5, environment: 'open_field' },
+  { crop: 'Cucumber', cropAr: 'الخيار', optimalMin: 0.8, optimalMax: 1.0, stressThreshold: 1.3, environment: 'greenhouse' },
+  { crop: 'Pepper', cropAr: 'الفلفل', optimalMin: 0.7, optimalMax: 1.1, stressThreshold: 1.4, environment: 'greenhouse' },
+  { crop: 'Strawberry', cropAr: 'الفراولة', optimalMin: 0.4, optimalMax: 0.8, stressThreshold: 1.0, environment: 'both' },
+  { crop: 'Lettuce', cropAr: 'الخس', optimalMin: 0.6, optimalMax: 1.0, stressThreshold: 1.2, environment: 'greenhouse' },
+  { crop: 'Citrus', cropAr: 'الحمضيات', optimalMin: 1.0, optimalMax: 2.5, stressThreshold: 3.5, environment: 'open_field' },
+  { crop: 'Wheat', cropAr: 'القمح', optimalMin: 1.0, optimalMax: 2.5, stressThreshold: 3.0, environment: 'open_field' },
+  { crop: 'Potato', cropAr: 'البطاطا', optimalMin: 0.8, optimalMax: 1.8, stressThreshold: 2.5, environment: 'open_field' },
+  { crop: 'Vine', cropAr: 'الكروم', optimalMin: 1.2, optimalMax: 2.5, stressThreshold: 3.5, environment: 'open_field' },
+  { crop: 'Olive', cropAr: 'الزيتون', optimalMin: 1.5, optimalMax: 3.0, stressThreshold: 4.0, environment: 'open_field' },
+  { crop: 'Date Palm', cropAr: 'نخيل التمر', optimalMin: 2.0, optimalMax: 4.0, stressThreshold: 5.0, environment: 'open_field' },
+];
+
+/**
+ * Interpret VPD for a specific crop + environment.
+ * The audit correctly noted that VPD interpretation should not be universal.
+ */
+export function interpretVPD(vpdKPa: number, crop?: string, environment?: 'greenhouse' | 'open_field'): {
+  status: 'optimal' | 'moderate' | 'stress' | 'unknown';
+  message: { en: string; fr: string; ar: string };
+} {
+  if (!crop) {
+    // No crop specified — use generic interpretation with disclaimer
+    return {
+      status: vpdKPa < 1.5 ? 'optimal' : vpdKPa < 2.5 ? 'moderate' : 'stress',
+      message: {
+        en: `VPD ${vpdKPa.toFixed(2)} kPa. Interpretation is crop-specific — select a crop for accurate assessment.`,
+        fr: `VPD ${vpdKPa.toFixed(2)} kPa. L'interprétation dépend de la culture — sélectionnez une culture pour une évaluation précise.`,
+        ar: `VPD ${vpdKPa.toFixed(2)} كيلوباسكال. التفسير يعتمد على المحصول — اختر محصولاً لتقييم دقيق.`,
+      },
+    };
+  }
+
+  const ranges = VPD_CROP_RANGES.filter(r =>
+    r.crop.toLowerCase() === crop.toLowerCase() &&
+    (!environment || r.environment === environment || r.environment === 'both')
+  );
+
+  if (ranges.length === 0) {
+    return {
+      status: 'unknown',
+      message: {
+        en: `VPD ${vpdKPa.toFixed(2)} kPa. No crop-specific range available for ${crop}. Using general reference.`,
+        fr: `VPD ${vpdKPa.toFixed(2)} kPa. Pas de plage spécifique pour ${crop}. Utilisation d'une référence générale.`,
+        ar: `VPD ${vpdKPa.toFixed(2)} كيلوباسكال. لا يوجد نطاق محدد لـ ${crop}. استخدام مرجع عام.`,
+      },
+    };
+  }
+
+  const range = ranges[0];
+  if (vpdKPa < range.optimalMin) {
+    return {
+      status: 'moderate',
+      message: {
+        en: `VPD ${vpdKPa.toFixed(2)} kPa is below optimal for ${crop} (${range.optimalMin}-${range.optimalMax} kPa). Low transpiration — risk of fungal diseases.`,
+        fr: `VPD ${vpdKPa.toFixed(2)} kPa sous l'optimal pour ${crop} (${range.optimalMin}-${range.optimalMax} kPa). Transpiration faible — risque de maladies fongiques.`,
+        ar: `VPD ${vpdKPa.toFixed(2)} كيلوباسكال أقل من المثالي لـ ${crop} (${range.optimalMin}-${range.optimalMax}). تبخّر منخفض — خطر الإصابة بالأمراض الفطرية.`,
+      },
+    };
+  } else if (vpdKPa > range.stressThreshold) {
+    return {
+      status: 'stress',
+      message: {
+        en: `VPD ${vpdKPa.toFixed(2)} kPa exceeds stress threshold for ${crop} (>${range.stressThreshold} kPa). High transpiration — stomata may close, reducing photosynthesis.`,
+        fr: `VPD ${vpdKPa.toFixed(2)} kPa dépasse le seuil de stress pour ${crop} (>${range.stressThreshold} kPa). Transpiration élevée — fermeture stomatique possible.`,
+        ar: `VPD ${vpdKPa.toFixed(2)} كيلوباسكال يتجاوز عتبة الإجهاد لـ ${crop} (>${range.stressThreshold}). تبخّر مرتفع — قد تُغلق الثغور وتنخفض البناء الضوئي.`,
+      },
+    };
+  } else if (vpdKPa > range.optimalMax) {
+    return {
+      status: 'moderate',
+      message: {
+        en: `VPD ${vpdKPa.toFixed(2)} kPa is above optimal for ${crop} (${range.optimalMin}-${range.optimalMax} kPa). Monitor for early stress signs.`,
+        fr: `VPD ${vpdKPa.toFixed(2)} kPa au-dessus de l'optimal pour ${crop}. Surveillez les signes de stress.`,
+        ar: `VPD ${vpdKPa.toFixed(2)} كيلوباسكال فوق المثالي لـ ${crop}. راقب علامات الإجهاد المبكرة.`,
+      },
+    };
+  }
+
+  return {
+    status: 'optimal',
+    message: {
+      en: `VPD ${vpdKPa.toFixed(2)} kPa is optimal for ${crop} (${range.optimalMin}-${range.optimalMax} kPa).`,
+      fr: `VPD ${vpdKPa.toFixed(2)} kPa optimal pour ${crop} (${range.optimalMin}-${range.optimalMax} kPa).`,
+      ar: `VPD ${vpdKPa.toFixed(2)} كيلوباسكال مثالي لـ ${crop} (${range.optimalMin}-${range.optimalMax}).`,
+    },
+  };
+}
+
+// ============================================================================
+// P1-7: Separate Required dose from Purchase quantity
+// ============================================================================
+
+export interface NutrientPurchaseResult {
+  /** Required nutrient amount (kg/ha). */
+  requiredNutrientKgPerHa: number;
+  /** Product concentration (% nutrient). */
+  productConcentrationPct: number;
+  /** Required product amount (kg/ha). */
+  requiredProductKgPerHa: number;
+  /** Bag size (kg). */
+  bagSizeKg: number;
+  /** Number of bags needed (exact). */
+  bagsExact: number;
+  /** Number of bags to purchase (rounded up). */
+  bagsToPurchase: number;
+  /** Total product purchased (kg). */
+  totalProductPurchasedKg: number;
+  /** Surplus product beyond requirement (kg). */
+  surplusKg: number;
+  /** Surplus as % of requirement. */
+  surplusPct: number;
+  /** Area (ha). */
+  areaHa: number;
+  /** Actual nutrient applied if all purchased product is used (kg/ha). */
+  actualNutrientAppliedKgPerHa: number;
+  /** Warning if surplus > 5% (risk of over-application). */
+  warning?: { en: string; fr: string; ar: string };
+}
+
+export function computeNutrientPurchase(params: {
+  requiredNutrientKgPerHa: number;
+  productConcentrationPct: number; // e.g., 46 for urea (46% N)
+  bagSizeKg: number;               // typically 50 kg
+  areaHa: number;
+}): NutrientPurchaseResult {
+  const { requiredNutrientKgPerHa, productConcentrationPct, bagSizeKg, areaHa } = params;
+
+  const requiredProductKgPerHa = requiredNutrientKgPerHa / (productConcentrationPct / 100);
+  const totalRequiredKg = requiredProductKgPerHa * areaHa;
+  const bagsExact = totalRequiredKg / bagSizeKg;
+  const bagsToPurchase = Math.ceil(bagsExact);
+  const totalProductPurchasedKg = bagsToPurchase * bagSizeKg;
+  const surplusKg = totalProductPurchasedKg - totalRequiredKg;
+  const surplusPct = totalRequiredKg > 0 ? (surplusKg / totalRequiredKg) * 100 : 0;
+  const actualNutrientAppliedKgPerHa = (totalProductPurchasedKg / areaHa) * (productConcentrationPct / 100);
+
+  let warning: { en: string; fr: string; ar: string } | undefined;
+  if (surplusPct > 5) {
+    warning = {
+      en: `Purchasing ${bagsToPurchase} bags gives ${surplusKg.toFixed(0)} kg surplus (${surplusPct.toFixed(1)}%). Applying all bags raises the dose to ${actualNutrientAppliedKgPerHa.toFixed(1)} kg/ha (target: ${requiredNutrientKgPerHa} kg/ha). Consider partial bag application or adjust area.`,
+      fr: `L'achat de ${bagsToPurchase} sacs donne un surplus de ${surplusKg.toFixed(0)} kg (${surplusPct.toFixed(1)}%). L'application totale porte la dose à ${actualNutrientAppliedKgPerHa.toFixed(1)} kg/ha (cible: ${requiredNutrientKgPerHa} kg/ha).`,
+      ar: `شراء ${bagsToPurchase} كيس يعطي فائضاً ${surplusKg.toFixed(0)} كغ (${surplusPct.toFixed(1)}%). التطبيق الكامل يرفع الجرعة إلى ${actualNutrientAppliedKgPerHa.toFixed(1)} كغ/هكتار (الهدف: ${requiredNutrientKgPerHa} كغ/هكتار).`,
+    };
+  }
+
+  return {
+    requiredNutrientKgPerHa,
+    productConcentrationPct,
+    requiredProductKgPerHa,
+    bagSizeKg,
+    bagsExact,
+    bagsToPurchase,
+    totalProductPurchasedKg,
+    surplusKg,
+    surplusPct,
+    areaHa,
+    actualNutrientAppliedKgPerHa,
+    warning,
+  };
+}
 
 export const GLOBAL_SAFETY_DISCLAIMER = {
   en: 'Formula Atlas is an advisory tool. All recommendations must be verified against product labels, local regulations, and field conditions before implementation. The final decision is the responsibility of the farmer or agronomist.',
