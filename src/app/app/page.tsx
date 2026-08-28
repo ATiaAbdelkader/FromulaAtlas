@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useMemo, useState, useEffect, useRef } from 'react';
-import { Search, Sprout, Layers, BookOpen, Calculator, X, Leaf, Filter, Home, Wrench, Bug, TrendingUp, Droplets, Settings, Calendar, Satellite, ShoppingCart, Users, DollarSign, RefreshCw, Beef, FlaskConical, CloudRain, FileText, Trophy, Tractor, Sparkles, Download, Database, CheckCircle2, MapPin, Shapes, Compass, Sun, Mountain, FlaskConical as Flask, CalendarDays, Clock, Warehouse, Recycle, Wind, Flame, Snowflake, Gauge, Shield, Moon, Microscope, Activity, Scale, MessageCircle, Grid3X3, FileSpreadsheet, HeartPulse, Bot } from 'lucide-react';
+import { Search, Sprout, Layers, BookOpen, X, Leaf, Home, Wrench, Bug, TrendingUp, Droplets, Settings, Calendar, Satellite, ShoppingCart, Users, DollarSign, RefreshCw, Beef, FlaskConical, CloudRain, Cloud, Compass, FileText, Trophy, Tractor, Sparkles, Download, Database, CheckCircle2, MapPin, Shapes, Sun, Mountain, FlaskConical as Flask, CalendarDays, Clock, Warehouse, Recycle, Wind, Flame, Snowflake, Gauge, Shield, Moon, Microscope, Activity, Scale, MessageCircle, Info } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -38,7 +38,6 @@ import { GrossMarginPlanner } from '@/components/agri/nutri-tools/GrossMarginPla
 import { HarvestForecastPlanner } from '@/components/agri/nutri-tools/HarvestForecastPlanner';
 import { CropRotationPlanner } from '@/components/agri/nutri-tools/CropRotationPlanner';
 import { SoilHealthPlanner } from '@/components/agri/nutri-tools/SoilHealthPlanner';
-import { SoilNutrientHeatmap } from '@/components/agri/nutri-tools/SoilNutrientHeatmap';
 import { LivestockIntegration } from '@/components/agri/nutri-tools/LivestockIntegration';
 import { SoilTestHistoryTracker } from '@/components/agri/nutri-tools/SoilTestHistoryTracker';
 import { WeatherRadar } from '@/components/agri/nutri-tools/WeatherRadar';
@@ -93,8 +92,6 @@ import { SoilColorIdentifier } from '@/components/agri/nutri-tools/SoilColorIden
 import { LivestockGrowthBenchmark } from '@/components/agri/nutri-tools/LivestockGrowthBenchmark';
 import { CropCalendarGenerator } from '@/components/agri/nutri-tools/CropCalendarGenerator';
 import { SoilTextureTriangle } from '@/components/agri/nutri-tools/SoilTextureTriangle';
-import { SoilPhNutrientMaster } from '@/components/agri/nutri-tools/SoilPhNutrientMaster';
-import { SoilLabCsvAnalyzer } from '@/components/agri/nutri-tools/SoilLabCsvAnalyzer';
 import { BookmarkedFormulas } from '@/components/agri/bookmarked-formulas';
 import { getBookmarks, toggleBookmark } from '@/lib/formula-bookmarks';
 import { OnboardingFlow } from '@/components/onboarding/OnboardingFlow';
@@ -105,11 +102,10 @@ import { ApiDocsButton } from '@/components/agri/nutri-tools/ApiDocsButton';
 import { WorkflowRunner } from '@/components/agri/workflow-runner';
 import { SeasonScheduler } from '@/components/agri/season-scheduler';
 import { LanguageToggle } from '@/components/language-toggle';
-import { ThemeToggle } from '@/components/theme-toggle';
 import { ActiveMatterSelector } from '@/components/agri/active-matter-selector/ActiveMatterSelector';
 import { handbook, allFormulas } from '@/lib/formulas-data';
 import type { Formula } from '@/lib/types';
-import type { Workflow } from '@/lib/workflows';
+import { workflows, type Workflow } from '@/lib/workflows';
 import { useTranslation, type Language } from '@/lib/language-store';
 import { useUserLevelStore, getUserLevelTabs, type TabId, type UserLevel } from '@/lib/user-level';
 import { UserLevelSwitcher } from '@/components/agri/user-level-switcher';
@@ -123,19 +119,19 @@ import { WorkspacePanel } from '@/components/agri/workspace-panel';
 import { CropSimulator } from '@/components/agri/simulator/CropSimulator';
 import { FarmDigitalTwin } from '@/components/agri/farm-digital-twin';
 import { SatelliteCropHealthMonitor } from '@/components/agri/satellite-crop-health-monitor';
-import NasaHarvestCropCycleDetector from '@/components/agri/satellite/NasaHarvestCropCycleDetector';
 import { DemoScenarioStudio } from '@/components/agri/demo-scenario-studio';
 import { FarmerField } from '@/components/agri/farmer-field';
 import { FarmerHelp } from '@/components/agri/farmer-help';
 import { AlgeriaCropCalendar } from '@/components/agri/algeria-crop-calendar';
+import { ProfessionalToolsHub } from '@/components/agri/professional-tools-hub';
+import { CropMissionPlanner } from '@/components/agri/crop-mission-planner';
 import { FarmerProductFinder } from '@/components/agri/farmer-product-finder';
-import { AutonomousCalibrationHub } from '@/components/agri/AutonomousCalibrationHub';
-import { AlgeriaSoilZones } from '@/components/agri/soil/AlgeriaSoilZones';
-import AlgeriaAgriMap from '@/components/agri/nutri-tools/AlgeriaAgriMap';
-import ChemicalHealthTracker from '@/components/agri/agroai/ChemicalHealthTracker';
-import CropSuitabilityForecaster from '@/components/agri/agroai/CropSuitabilityForecaster';
-import AutonomousRemediationPlanner from '@/components/agri/agroai/AutonomousRemediationPlanner';
-import { AgroAIHub } from '@/components/agri/agroai/AgroAIHub';
+import { FarmTabToolbar } from '@/components/agri/farm-tab-toolbar';
+import { DiseaseEncyclopedia } from '@/components/agri/disease-encyclopedia';
+import { CropRecommendationEngine } from '@/components/agri/crop-recommendation-ui';
+import { SoilSensorDashboard } from '@/components/agri/soil-sensor-dashboard';
+import { ClimateScenarioSimulator } from '@/components/agri/climate-scenario-simulator';
+import { YourGuide } from '@/components/agri/your-guide';
 
 
 /** French labels for the app shell's farm and insights tool index. */
@@ -380,9 +376,9 @@ export default function Page() {
               <TelegramConnectButton />
               <FieldModeButton />
               <MobileFieldCaptureButton />
-              <Button variant="outline" size="sm" onClick={() => setBackupOpen(true)} className="gap-1.5 h-9" title="Backup & Restore">
+              <Button variant="outline" size="sm" onClick={() => setBackupOpen(true)} className="gap-1.5 h-9" title={tr('Backup & Restore', 'النسخ الاحتياطي والاستعادة', language)}>
                 <Database className="h-3.5 w-3.5" />
-                <span className="hidden lg:inline">Backup</span>
+                <span className="hidden lg:inline">{tr('Backup', 'نسخ احتياطي', language)}</span>
               </Button>
               {installPromptEvent && !isInstalled && (
                 <Button size="sm" onClick={handleInstall} className="gap-1.5 text-xs h-9 bg-emerald-600 hover:bg-emerald-700" title={t.installApp}>
@@ -397,7 +393,6 @@ export default function Page() {
                 </span>
               )}
               <LanguageToggle />
-              <ThemeToggle />
               {activeTab === 'formulas' && (
                 <div className="lg:hidden">
                   <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
@@ -419,15 +414,15 @@ export default function Page() {
           {/* Search bar — only on formulas tab */}
           {activeTab === 'formulas' && (
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-              <Input type="search" placeholder={t.searchPlaceholder} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 pr-10 h-10 text-sm" />
-              {searchQuery && <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>}
+              <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              <Input type="search" placeholder={t.searchPlaceholder} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="ps-9 pe-10 h-10 text-sm" />
+              {searchQuery && <button onClick={() => setSearchQuery('')} className="absolute end-3 top-1/2 -translate-y-1/2 h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>}
             </div>
           )}
         </div>
 
-        {/* Tab bar */}
-        <div className="border-t border-border bg-muted/30">
+        {/* Tab bar — hidden on mobile (use bottom nav) */}
+        <div className="hidden sm:block border-t border-border bg-muted/30">
           <div className="max-w-[1600px] mx-auto px-4 sm:px-6">
             <div className="flex items-center gap-1 overflow-x-auto">
               {visibleTabs.includes('home') && <TabButton active={activeTab === 'home'} onClick={() => setActiveTab('home')} icon={Home} label={t.tabHome} />}
@@ -439,7 +434,8 @@ export default function Page() {
               {visibleTabs.includes('simulator') && <TabButton active={activeTab === 'simulator'} onClick={() => setActiveTab('simulator')} icon={FlaskConical} label={tr('Simulator', 'المحاكي', language)} />}
               {visibleTabs.includes('insights') && <TabButton active={activeTab === 'insights'} onClick={() => setActiveTab('insights')} icon={Sparkles} label={t.tabInsights} />}
               {visibleTabs.includes('help') && <TabButton active={activeTab === 'help'} onClick={() => setActiveTab('help')} icon={MessageCircle} label={tr('Help', 'مساعدة', language)} />}
-              {visibleTabs.includes('about') && <TabButton active={activeTab === 'about'} onClick={() => setActiveTab('about')} icon={Users} label={t.tabAbout} />}
+              {visibleTabs.includes('guide') && <TabButton active={activeTab === 'guide'} onClick={() => setActiveTab('guide')} icon={Compass} label={tr('Guide', 'دليل', language)} />}
+              {visibleTabs.includes('about') && <TabButton active={activeTab === 'about'} onClick={() => setActiveTab('about')} icon={Info} label={t.tabAbout} />}
             </div>
           </div>
         </div>
@@ -456,7 +452,10 @@ export default function Page() {
           />
 
           {level !== 'farmer' && <>
-            <SeasonScheduler />
+            <SeasonScheduler onLaunchWorkflow={(workflowId) => {
+              const wf = workflows.find(w => w.id === workflowId);
+              if (wf) { setActiveWorkflow(wf); setWorkflowOpen(true); }
+            }} />
             <CollapsibleSection
               title={t.achievements}
               description={t.achievementsDesc}
@@ -482,25 +481,29 @@ export default function Page() {
       {/* CALENDAR TAB — source-traceable Algeria crop operations */}
       {activeTab === 'calendar' && (
         <main className="flex-1 max-w-[1400px] mx-auto w-full p-4 sm:p-6 pb-20 sm:pb-6">
-          <AlgeriaCropCalendar />
+          <AlgeriaCropCalendar onSetupFarm={() => openTool('home')} />
         </main>
       )}
 
       {/* FARM TAB — fields, crops, soil, livestock, irrigation */}
       {activeTab === 'farm' && (
-        <main className="flex-1 max-w-[1200px] mx-auto w-full p-4 sm:p-6 space-y-6">
+        <main className="flex-1 max-w-[1200px] mx-auto w-full p-4 sm:p-6 space-y-6 pb-20 sm:pb-6">
           <div className="rounded-xl p-4 bg-gradient-to-r from-emerald-600 to-green-700 text-white">
             <div className="flex items-center gap-2"><Tractor className="h-5 w-5" /><h2 className="text-lg font-bold">{t.farmManagement}</h2></div>
             <p className="text-xs text-emerald-100 mt-1">{t.farmManagementSubtitle}</p>
           </div>
 
-          <CollapsibleSection title={tr('Workspace & Access', 'مساحة العمل والوصول', language)} description={tr('Manage your workspace, data backup, field mode, and app settings', 'أدر مساحة عملك ونسخ احتياطي للبيانات ووضع الحقل وإعدادات التطبيق', language)} icon={Settings} color="#64748b" storageKey="collapse_workspace" defaultOpen={false} enableExport><div className="p-4"><WorkspacePanel /></div></CollapsibleSection>
+          <FarmTabToolbar />
+
+          <CollapsibleSection title={tr('Workspace & Access', 'مساحة العمل والوصول', language)} description={tr('Manage your workspace, data backup, field mode, and app settings', 'أدر مساحة عملك ونسخ احتياطي للبيانات ووضع الحقل وإعدادات التطبيق', language)} icon={Settings} color="#64748b" storageKey="collapse_workspace" defaultOpen={false} enableExport group="overview"><div className="p-4"><WorkspacePanel /></div></CollapsibleSection>
+
+          {level === 'professional' && (
+            <CollapsibleSection title={tr('Professional Decision Workspaces', 'مساحات القرار الاحترافية', language)} description={tr('Six connected tools for water, compliance, scenarios, soil evidence, and field execution', 'ست أدوات مترابطة للمياه والامتثال والسيناريوهات وأدلة التربة والتنفيذ الحقلي', language)} icon={Tractor} color="#059669" storageKey="professional_tools_hub" defaultOpen={true} enableExport><div className="p-4"><ProfessionalToolsHub onOpenTool={openTool} /></div></CollapsibleSection>
+          )}
 
           <CollapsibleSection title={tr('Farm Digital Twin', 'التوأم الرقمي للمزرعة', language)} description={tr('Command center: field status, priorities, alerts, and cross-tool recommendations', 'مركز القيادة: حالة الحقل والأولويات والتنبيهات والتوصيات عبر الأدوات', language)} icon={Activity} color="#0f766e" storageKey="collapse_digital_twin" defaultOpen={false} enableExport><div className="p-4"><FarmDigitalTwin onOpenFarmTool={(storageKey) => openTool('farm', storageKey)} onOpenSimulator={() => openTool('simulator')} /></div></CollapsibleSection>
 
           <CollapsibleSection title={tr('Satellite Crop Health', 'صحة المحصول بالأقمار الصناعية', language)} description={tr('NDVI field maps, vegetation health heatmap, stress zones, and AI recommendations', 'خرائط NDVI للحقول، خريطة حرارية لصحة الغطاء النباتي، مناطق الإجهاد، وتوصيات بالذكاء', language)} icon={Satellite} color="#6366f1" storageKey="collapse_satellite_health" defaultOpen={false} enableExport><div className="p-4"><SatelliteCropHealthMonitor onOpenFarmTool={(storageKey) => openTool('farm', storageKey)} /></div></CollapsibleSection>
-
-          <CollapsibleSection title={tr('NASA Harvest Crop Cycle & Phenology Detector', 'كاشف الدورات المحصولية والظواهر الفينولوجية (NASA Harvest)', language)} description={tr('Detect cropping intensity (single, double, triple cropping, fallow), SOS green-up, POS peak & EOS harvest dates with Whittaker smoothing', 'كشف شدة الزراعة (أحادية، مزدوجة، ثلاثية، بور) ومواعيد بداية ونهاية الموسم والقمة الفينولوجية عبر خوارزمية ناسا', language)} icon={Satellite} color="#059669" storageKey="collapse_nasa_crop_cycles" defaultOpen={false} enableExport><div className="p-4"><NasaHarvestCropCycleDetector /></div></CollapsibleSection>
 
           {level !== 'farmer' && (
           <CollapsibleSection title={tr('Demo Scenario Studio', 'استوديو سيناريوهات العرض', language)} description={tr('Reproducible Algeria-aware synthetic farm data for demos, onboarding, and QA — not for agronomic decisions', 'Données agricoles algériennes synthétiques et reproductibles pour démonstration, accueil et tests — pas pour décisions agronomiques', language)} icon={Sparkles} color="#7c3aed" storageKey="collapse_demo_scenario" defaultOpen={false} enableExport><div className="p-4"><DemoScenarioStudio /></div></CollapsibleSection>
@@ -508,11 +511,19 @@ export default function Page() {
 
           <CollapsibleSection title={tr('Field Record Book', 'دفتر سجل الحقل', language)} description={tr('Traceable timeline for field decisions, scouting, soil tests, satellite checks, inputs, irrigation, and harvest', 'سجل زمني قابل للتتبع لقرارات الحقل والكشف وتحاليل التربة والأقمار الصناعية والمدخلات والري والحصاد', language)} icon={BookOpen} color="#047857" storageKey="collapse_field_records" defaultOpen={true} enableExport><div className="p-4"><FieldRecordBook /></div></CollapsibleSection>
 
-          <CollapsibleSection title={tr('Product Finder (INPV 2017)', 'الباحث عن المنتجات (INPV 2017)', language)} description={tr('1264 official Algerian phytosanitary products — pick your crop + problem and see matching options with doses, harvest-wait times, and bee/aquatic toxicity warnings', '1264 منتجات جزائرية مرخّصة — اختر محصولك ومشكلتك لرؤية الخيارات المطابقة مع الجرعات وفترات الانتظار وتحذيرات سمّية النحل والكائنات المائية', language)} icon={Search} color="#16a34a" storageKey="collapse_product_finder" defaultOpen={false} enableExport><div className="p-4"><FarmerProductFinder /></div></CollapsibleSection>
+          <CollapsibleSection title={tr('Disease Encyclopedia', 'موسوعة الأمراض', language)} description={tr('Browse 20+ diseases by crop or search by symptom — chemical + organic treatments, precautions, and INPV-registered active substances', 'تصفّح 20+ مرضاً حسب المحصول أو ابحث بالعَرَض — علاجات كيميائية وعضوية، احتياطات، ومواد فعالة مسجلة INPV', language)} icon={Bug} color="#dc2626" storageKey="collapse_disease_encyclopedia" defaultOpen={false} enableExport group="protection"><div className="p-4"><DiseaseEncyclopedia /></div></CollapsibleSection>
+
+          <CollapsibleSection title={tr('Crop Recommendation Engine', 'محرّك توصية المحاصيل', language)} description={tr('Enter your soil test results — get top-3 crop recommendations with confidence scores. Also: Can I grow X here? feasibility check', 'أدخل نتائج تحليل التربة — احصل على أفضل 3 محاصيل مع درجات الثقة. أيضاً: هل يمكنني زراعة X هنا؟', language)} icon={Sparkles} color="#7c3aed" storageKey="collapse_crop_recommender" defaultOpen={false} enableExport group="crops"><div className="p-4"><CropRecommendationEngine /></div></CollapsibleSection>
+
+          <CollapsibleSection title={tr('Soil Sensor Dashboard', 'لوحة مستشعر التربة', language)} description={tr('Real-time or simulated soil N/P/K/pH/EC/moisture/temperature readings with alert thresholds — ready for Modbus sensor integration', 'قراءات لحظية أو محاكاة للنيتروجين والفوسفور والبوتاسيوم والـpH والتوصيل والرطوبة والحرارة — جاهز لتكامل مستشعرات Modbus', language)} icon={Activity} color="#0891b2" storageKey="collapse_soil_sensor" defaultOpen={false} enableExport group="soil"><div className="p-4"><SoilSensorDashboard /></div></CollapsibleSection>
+
+          <CollapsibleSection title={tr('Climate Scenario Simulator', 'محاكي سيناريو المناخ', language)} description={tr('Drag sliders for climate-smart practices → see your farm CO2 emissions, carbon sequestration, water savings, soil health, and net DZD impact — 10-year trajectory chart', 'اسحب مؤشرات الممارسات الذكية مناخياً → انظر تأثيرها على انبعاثات المزرعة وعزل الكربون وتوفير الماء وصحة التربة والمال', language)} icon={Cloud} color="#0ea5e9" storageKey="collapse_climate_simulator" defaultOpen={false} enableExport group="soil"><div className="p-4"><ClimateScenarioSimulator /></div></CollapsibleSection>
+
+          <CollapsibleSection title={tr('Crop Mission Planner', 'مخطط مهمة المحصول', language)} description={tr('Turn one crop, planting date, field area, and water system into role-aware field actions', 'حوّل محصولاً واحداً وتاريخ الزراعة ومساحة الحقل ونظام المياه إلى إجراءات ميدانية حسب الدور', language)} icon={Sprout} color="#0f766e" storageKey="crop_mission_planner" defaultOpen={true} enableExport><div className="p-4"><CropMissionPlanner level={level} onOpenTool={openTool} /></div></CollapsibleSection>
 
           {/* Sub-category: Fields & Crops */}
           <div className="space-y-3">
-            <SubHeader emoji="🌱" label={t.fieldsAndCrops} />
+            <SubHeader emoji="🌱" label={t.fieldsAndCrops} groupId="crops" />
             {level !== 'farmer' && (
             <CollapsibleSection title={tr('Multi-Field Dashboard', 'لوحة الحقول المتعددة', language)} description={tr('Track every field, crop stage and irrigation demand in one place', 'تابع كل حقل ومرحلة محصول وطلب ري في مكان واحد', language)} icon={Layers} color="#16a34a" storageKey="collapse_multifield" defaultOpen={false} enableExport><div className="p-4"><MultiFieldDashboard /></div></CollapsibleSection>
             )}
@@ -534,8 +545,6 @@ export default function Page() {
             {level !== 'farmer' && (
             <CollapsibleSection title={tr('Soil Health & Erosion Scenario Planner', 'مخطّط صحة التربة وسيناريوهات التعرية', language)} description={tr('Compare current practice with a practical conservation scenario using rotation, organic matter, slope, and support practices.', 'قارن الممارسة الحالية بسيناريو حفظ عملي باستخدام الدورة والمادة العضوية والانحدار والممارسات الداعمة.', language)} icon={Mountain} color="#15803d" storageKey="collapse_soil_health" defaultOpen={false} enableExport><div className="p-4"><SoilHealthPlanner /></div></CollapsibleSection>
             )}
-            <CollapsibleSection title={tr('Interactive Algeria Agricultural & Soil GIS Map', 'الخريطة التفاعلية الفلاحية والبيدولوجية للجزائر', language)} description={tr('Explore 58 wilayas pedological profiles, bioclimates, rainfall, water sources and crop suitability simulator.', 'استكشف الخصائص البيدولوجية والمناخية، مصادر المياه، والمحاصيل الاستراتيجية عبر الـ 58 ولاية.', language)} icon={Compass} color="#059669" storageKey="collapse_algeria_agri_map" defaultOpen={true} enableExport><div className="p-4"><AlgeriaAgriMap /></div></CollapsibleSection>
-            <CollapsibleSection title={tr('Algeria Soil Zones & Yield Calibrator', 'مناطق تربة الجزائر ومعاير الإنتاجية', language)} description={tr('Explore provincial soil types (Vertisols, Calcisols, Arenosols, Fluvisols) with pedological profiles & soil-calibrated yield engine.', 'استكشف أنواع التربة الولائية (فيرتيسول بمتيجة، كالسيسول بالهضاب، أرينوسول بالصحراء) مع معاير المردود الدقيق.', language)} icon={Mountain} color="#059669" storageKey="collapse_algeria_soil_zones" defaultOpen={false} enableExport><div className="p-4"><AlgeriaSoilZones /></div></CollapsibleSection>
             {level !== 'farmer' && (
             <CollapsibleSection title={tr('Season Plan Generator', 'مولّد خطة الموسم', language)} description={tr('AI-powered week-by-week crop plan · Kc + NPK + irrigation + fertigation + warnings', 'خطة محصول أسبوعية بالذكاء الاصطناعي · Kc + NPK + ري + تسميد بالري + تحذيرات', language)} icon={Sparkles} color="#7c3aed" storageKey="collapse_season_plan" defaultOpen={false} enableExport><div className="p-4"><SeasonPlanGeneratorWrapper /></div></CollapsibleSection>
             )}
@@ -558,22 +567,12 @@ export default function Page() {
             {level !== 'farmer' && (
             <CollapsibleSection title={tr('GDD Tracker (Growing Degree Days)', 'متعقّب درجات النمو الحرارية (GDD)', language)} description={tr('Accumulates thermal time from Open-Meteo · predicts growth stages · 5 crops', 'يجمع الوقت الحراري من Open-Meteo · يتنبأ بمراحل النمو · 5 محاصيل', language)} icon={Sun} color="#f59e0b" storageKey="collapse_gdd" defaultOpen={false} enableExport><div className="p-4"><GDDTracker /></div></CollapsibleSection>
             )}
-            <CollapsibleSection title={tr('Crop Calendar Generator', 'مولّد تقويم المحصول', language)} description={tr('One-click complete farm calendar: planting + fertilization + irrigation + pest control + labor · 20 crops · editable · PDF export', 'تقويم مزرعة كامل بنقرة واحدة: زراعة + تسميد + ري + مكافحة آفات + عمالة · 20 محصول · قابل للتعديل · تصدير PDF', language)} icon={CalendarDays} color="#16a34a" storageKey="crop_calendar_gen" defaultOpen={false} enableExport><div className="p-4"><CropCalendarGenerator /></div></CollapsibleSection>
+            <CollapsibleSection title={tr('Crop Calendar Generator', 'مولّد تقويم المحصول', language)} description={tr('One-click complete farm calendar: planting + fertilization + irrigation + pest control + labor · 20 crops · editable · PDF export', 'تقويم مزرعة كامل بنقرة واحدة: زراعة + تسميد + ري + مكافحة آفات + عمالة · 20 محصول · قابل للتعديل · تصدير PDF', language)} icon={CalendarDays} color="#16a34a" storageKey="collapse_crop_calendar_gen" defaultOpen={false} enableExport group="crops"><div className="p-4"><CropCalendarGenerator /></div></CollapsibleSection>
           </div>
 
-          {/* Sub-category: Plant Protection & AgroAI */}
+          {/* Sub-category: Plant Protection */}
           <div className="space-y-3">
-            <SubHeader emoji="🛡️" label={tr('Plant Protection & AgroAI Intelligence', 'وقاية النبات ومنظومة AgroAI الذكية', language)} />
-            
-            {/* AgroAI Hub Unified Suite */}
-            <CollapsibleSection title={tr('AgroAI Precision Agronomy & Operator Protection Suite', 'منظومة AgroAI للزراعة الدقيقة وسلامة المزارع والمحاصيل', language)} description={tr('Integrated WHO toxicity tracker, PPE matrix, Maas-Hoffman salinity curves, and autonomous multi-agent IPM remediation planning', 'تتبع سمية منظمة الصحة، مصفوفة معدات الوقاية، منحنيات ماس-هوفمان للملوحة، ومخطط العلاج الذكي متعدد الوكلاء', language)} icon={Sparkles} color="#059669" storageKey="collapse_agroai_hub" defaultOpen={true} enableExport><div className="p-4"><AgroAIHub /></div></CollapsibleSection>
-
-            <CollapsibleSection title={tr('Chemical Usage & Human Health Impact Tracker', 'متتبع استخدام المواد الكيميائية والتأثير على صحة الإنسان', language)} description={tr('WHO toxicity classes (Ia/Ib/II/III), PPE compliance matrix, safe re-entry (REI) & harvest (PHI) timers, ecotoxicity & spray weather auditor', 'تصنيفات سمية WHO، مصفوفة معدات الوقاية الفردية، حاسبة مهلة الدخول والجني، والمؤشرات البيئية للرش', language)} icon={HeartPulse} color="#e11d48" storageKey="collapse_agroai_chemical_health" defaultOpen={false} enableExport><div className="p-4"><ChemicalHealthTracker /></div></CollapsibleSection>
-
-            <CollapsibleSection title={tr('Multi-Factor Bio-Climatic & Edaphic Crop Suitability Forecaster', 'المتنبئ متعدد العوامل لملاءمة المحاصيل للمناخ والتربة', language)} description={tr('Maas-Hoffman salinity threshold (ECe), thermal GDD, active CaCO₃, texture, and regional Algerian presets with yield projection', 'نموذج ماس-هوفمان لتحمل الملوحة، الاحتياج الحراري GDD، الكلس الفعال، وقوام التربة مع التنبؤ بالمردود', language)} icon={Compass} color="#0d9488" storageKey="collapse_agroai_crop_suitability" defaultOpen={false} enableExport><div className="p-4"><CropSuitabilityForecaster /></div></CollapsibleSection>
-
-            <CollapsibleSection title={tr('Autonomous Multi-Agent Remediation Planner', 'المخطط الذكي متعدد الوكلاء لعلاج وحماية المحاصيل', language)} description={tr('4 specialized AI agents: diagnosis, bio-control recipes, chemical prescription with IRAC/FRAC rotation, and safety/cost audit', '4 وكلاء ذكاء اصطناعي: التشخيص، الوصفات البيولوجية، الوصفة الكيميائية الدقيقة، ومراجعة التكلفة والسلامة', language)} icon={Bot} color="#6366f1" storageKey="collapse_agroai_remediation_planner" defaultOpen={false} enableExport><div className="p-4"><AutonomousRemediationPlanner /></div></CollapsibleSection>
-
+            <SubHeader emoji="🛡️" label={t.plantProtection} groupId="protection" />
             <CollapsibleSection title={tr('AI Field Scout', 'كشاف الحقل بالذكاء الاصطناعي', language)} description={tr('Photo and observation-based crop scouting with evidence cards, verification prompts, and safety gates', 'Prospection des cultures par photo et observation avec preuves, vérification et garde-fous de sécurité', language)} icon={Sparkles} color="#0f766e" storageKey="collapse_ai_scout" defaultOpen={false} enableExport><div className="p-4"><AIFieldScout onOpenFarmTool={(storageKey) => openTool('farm', storageKey)} /></div></CollapsibleSection>
             <CollapsibleSection title={tr('Field Scouting Log', 'سجل الكشف الحقلي', language)} description={tr('Voice + photo field observations with severity tagging', 'ملاحظات حقلية بالصوت والصورة مع وسم درجة الخطورة', language)} icon={Sprout} color="#84cc16" storageKey="collapse_scouting" defaultOpen={false} enableExport><div className="p-4"><FieldScoutingLog /></div></CollapsibleSection>
             <CollapsibleSection title={tr('IPM Action Planner', 'مخطّط عمل الإدارة المتكاملة للآفات', language)} description={tr('Scouting evidence · action thresholds · lower-risk controls · responsible treatment review', 'أدلة الكشف · عتبات التدخل · وسائل المكافحة الأقل خطراً · مراجعة المعالجة المسؤولة', language)} icon={Bug} color="#e11d48" storageKey="collapse_ipm_action" defaultOpen={false} enableExport><div className="p-4"><IpmActionPlanner /></div></CollapsibleSection>
@@ -608,10 +607,7 @@ export default function Page() {
 
           {/* Sub-category: Soil & Livestock */}
           <div className="space-y-3">
-            <SubHeader emoji="🧪" label={t.soilAndLivestock} />
-            <CollapsibleSection title={tr('Soil Nutrient Heatmap (D3.js Spatial)', 'خريطة المغذيات المكانية للتربة (D3.js)', language)} description={tr('Interactive 2D spatial heatmap · Inverse Distance Weighting (IDW) · Contour isolines · N-P-K-pH-OM-EC gradient · Variable rate fertilizer prescription', 'خريطة حرارية مكانية ثنائية الأبعاد · استيفاء مكاني IDW · خطوط كنتورية للمغذيات · تدرجات N-P-K-pH · توصيات التسميد المتغير', language)} icon={Grid3X3} color="#059669" storageKey="collapse_soil_nutrient_heatmap" defaultOpen={false} enableExport><div className="p-4"><SoilNutrientHeatmap /></div></CollapsibleSection>
-            <CollapsibleSection title={tr('Soil pH & Nutrient Availability Master', 'منظومة حموضة التربة وتوافر وتعديل العناصر', language)} description={tr('Interactive Troug solubility curves · Crop pH tolerance · Elemental sulfur, lime, manure & acid fertigation solver', 'منحنيات تروغ التفاعلية للذوبانية · تحمل المحاصيل · حاسبة الكبريت الزراعي والجير والمادة العضوية والأحماض', language)} icon={FlaskConical} color="#0d9488" storageKey="collapse_soil_ph_nutrients" defaultOpen={false} enableExport><div className="p-4"><SoilPhNutrientMaster /></div></CollapsibleSection>
-            <CollapsibleSection title={tr('Soil Lab CSV Analyzer', 'محلل تقارير التربة المخبرية (CSV)', language)} description={tr('Import lab soil test CSVs · Auto-map headers · Cation balance & SAR · Full Formula Atlas prescription engine', 'استيراد ملفات CSV لتحاليل التربة · مطابقة آلية للأعمدة · توازن الكاتيونات و SAR · توصيات تسميدية كاملة بمعادلات الأطلس', language)} icon={FileSpreadsheet} color="#059669" storageKey="collapse_soil_lab_analyzer" defaultOpen={false} enableExport><div className="p-4"><SoilLabCsvAnalyzer /></div></CollapsibleSection>
+            <SubHeader emoji="🧪" label={t.soilAndLivestock} groupId="soil" />
             <CollapsibleSection title={tr('Soil Test History Tracker', 'متعقّب سجل تحاليل التربة', language)} description={tr('Multi-year soil test tracking · Trend charts · Amendment recommendations · PDF export', 'تتبع تحاليل التربة لسنوات متعددة · رسوم بيانية للاتجاه · توصيات التعديل · تصدير PDF', language)} icon={FlaskConical} color="#8b5cf6" storageKey="collapse_soil_history" defaultOpen={false} enableExport><div className="p-4"><SoilTestHistoryTracker /></div></CollapsibleSection>
             {level !== 'farmer' && (
             <CollapsibleSection title={tr('Soil Color Identifier', 'معرّف لون التربة', language)} description={tr('Munsell color → mineral + drainage + iron status · US state soils · 13 minerals · 50 states', 'لون مونسيل → المعادن + الصرف + حالة الحديد · تربة الولايات المتحدة · 13 معدناً · 50 ولاية', language)} icon={Mountain} color="#78716c" storageKey="collapse_soil_color" defaultOpen={false} enableExport><div className="p-4"><SoilColorIdentifier /></div></CollapsibleSection>
@@ -671,13 +667,13 @@ export default function Page() {
 
           {/* Sub-category: Irrigation */}
           <div className="space-y-3">
-            <SubHeader emoji="💧" label={t.irrigation} />
+            <SubHeader emoji="💧" label={t.irrigation} groupId="irrigation" />
             <CollapsibleSection title={tr('Irrigation Program Generator', 'مولّد برنامج الري', language)} description={tr('Decadal (10-day) irrigation schedule from the BRL/COM memento', 'جدول ري عشري (10 أيام) من مذكرة BRL/COM', language)} icon={Droplets} color="#0ea5e9" storageKey="collapse_irrigation" defaultOpen={false} enableExport><div className="p-4"><IrrigationProgramGenerator /></div></CollapsibleSection>
             {level !== 'farmer' && (
             <CollapsibleSection title={tr('Irrigation System Designer', 'مصمّم نظام الري', language)} description={tr('Multi-zone sprinkler / drip / bubbler designer with pump sizing', 'مصمّم متعدد المناطق للرش / التنقيط / الفقّاعات مع تحديد المضخة', language)} icon={Settings} color="#6366f1" storageKey="collapse_system_design" defaultOpen={false} enableExport><div className="p-4"><IrrigationSystemDesigner /></div></CollapsibleSection>
             )}
             {level !== 'farmer' && (
-            <CollapsibleSection title={tr('Seasonal Irrigation Planner', 'مخطّط الري الموسمي', language)} description={tr('Season-by-season irrigation focus, risks and recommendations', 'تركيز ري حسب كل موسم، مخاطر وتوصيات', language)} icon={Calendar} color="#f59e0b" storageKey="collapse_seasonal" defaultOpen={false} enableExport><div className="p-4"><SeasonScheduler /></div></CollapsibleSection>
+            <CollapsibleSection title={tr('Seasonal Irrigation Planner', 'مخطّط الري الموسمي', language)} description={tr('Season-by-season irrigation focus, risks and recommendations', 'تركيز ري حسب كل موسم، مخاطر وتوصيات', language)} icon={Calendar} color="#f59e0b" storageKey="collapse_seasonal" defaultOpen={false} enableExport><div className="p-4"><SeasonScheduler onLaunchWorkflow={(workflowId) => { const wf = workflows.find(w => w.id === workflowId); if (wf) { setActiveWorkflow(wf); setWorkflowOpen(true); } }} /></div></CollapsibleSection>
             )}
             <CollapsibleSection title={tr('Evapotranspiration Tracker', 'متعقّب التبخّر النتحي', language)} description={tr('Live ET₀ (Open-Meteo) · FAO-56 Kc × ETc · 7-day irrigation plan · ERA5 history — no API key needed', 'ET₀ مباشر (Open-Meteo) · FAO-56 Kc × ETc · خطة ري 7 أيام · سجل ERA5 — بدون مفتاح API', language)} icon={Sun} color="#0891b2" storageKey="collapse_et_tracker" defaultOpen={false} enableExport><div className="p-4"><EvapotranspirationTracker /></div></CollapsibleSection>
             {level !== 'farmer' && (
@@ -689,7 +685,7 @@ export default function Page() {
 
       {/* INSIGHTS TAB — intelligence, business, community */}
       {activeTab === 'insights' && (
-        <main className="flex-1 max-w-[1200px] mx-auto w-full p-4 sm:p-6 space-y-6">
+        <main className="flex-1 max-w-[1200px] mx-auto w-full p-4 sm:p-6 space-y-6 pb-20 sm:pb-6">
           <div className="rounded-xl p-4 bg-gradient-to-r from-indigo-600 to-violet-700 text-white">
             <div className="flex items-center gap-2"><Sparkles className="h-5 w-5" /><h2 className="text-lg font-bold">{t.intelligenceAndInsights}</h2></div>
             <p className="text-xs text-indigo-100 mt-1">{t.intelligenceAndInsightsSubtitle}</p>
@@ -697,7 +693,7 @@ export default function Page() {
 
           {/* Sub-category: Intelligence */}
           <div className="space-y-3">
-            <SubHeader emoji="🛰️" label={t.intelligenceAndAI} />
+            <SubHeader emoji="🛰️" label={t.intelligenceAndAI} groupId="intelligence" />
             {level !== 'farmer' && (
             <CollapsibleSection title={tr('NDVI Satellite Field Maps', 'خرائط الحقول بالأقمار الصناعية NDVI', language)} description={tr('Vegetation health heatmap · Stress zone detection · AI recommendations · PDF export', 'خريطة حرارية لصحة الغطاء النباتي · كشف مناطق الإجهاد · توصيات بالذكاء الاصطناعي · تصدير PDF', language)} icon={Satellite} color="#6366f1" storageKey="collapse_ndvi" defaultOpen={false} enableExport><div className="p-4"><NdviFieldMaps /></div></CollapsibleSection>
             )}
@@ -708,16 +704,13 @@ export default function Page() {
             <CollapsibleSection title={tr('Smart Agriculture Suite', 'مجموعة الزراعة الذكية', language)} description={tr('Disease detection · crop recommendation · fertilizer guidance', 'كشف الأمراض · توصية المحاصيل · إرشاد التسميد', language)} icon={Bug} color="#65a30d" storageKey="collapse_agriplanner" defaultOpen={false} enableExport><div className="p-4"><AgriPlannerSuite /></div></CollapsibleSection>
             )}
             {level !== 'farmer' && (
-            <CollapsibleSection title={tr('Autonomous Learning & Calibration Hub', 'المحرك الذاتي للتعلم والمعايرة المستمرة للنماذج', language)} description={tr('Self-training crop models, Bayesian Kc tuning, harvest ground-truth logger & AI RLHF rules', 'معايرة النماذج وتدريبها تلقائياً بالنتائج الحقلية الحقيقية وتحديث معاملات Kc والذكاء الاصطناعي', language)} icon={Sparkles} color="#10b981" storageKey="collapse_calibration_hub" defaultOpen={false} enableExport><div className="p-4"><AutonomousCalibrationHub /></div></CollapsibleSection>
-            )}
-            {level !== 'farmer' && (
             <CollapsibleSection title={tr('AI Specialists (Multi-Agent Chat)', 'وكلاء الذكاء الاصطناعي (دردشة متعددة الوكلاء)', language)} description={tr('10 specialized AI agents — Agronomist · Crop Scout · Irrigation Engineer · Soil Scientist · Operations Manager · Financial Analyst · Sustainability Officer · Grant Writer · GIS Analyst · Livestock Vet', '10 وكلاء ذكاء تخصصيون — مهندس زراعي · كشّاف المحاصيل · مهندس الري · عالم التربة · مدير العمليات · محلل مالي · مسؤول الاستدامة · كاتب المنح · محلل GIS · طبيب بيطري', language)} icon={Sparkles} color="#6366f1" storageKey="collapse_agent_chat" defaultOpen={false} enableExport><div className="p-4"><AgriAgentChat /></div></CollapsibleSection>
             )}
           </div>
 
           {/* Sub-category: Business */}
           <div className="space-y-3">
-            <SubHeader emoji="💰" label={t.businessAndMarketplace} />
+            <SubHeader emoji="💰" label={t.businessAndMarketplace} groupId="business" />
             {level !== 'farmer' && (
             <CollapsibleSection title={tr('Financial Dashboard', 'لوحة المالية', language)} description={tr('Costs · Revenue · Gross margin · Break-even · ROI · What-if scenario analysis', 'التكاليف · الإيرادات · الهامش الإجمالي · نقطة التعادل · العائد على الاستثمار · تحليل سيناريوهات ماذا لو', language)} icon={DollarSign} color="#f59e0b" storageKey="collapse_financial" defaultOpen={false} enableExport><div className="p-4"><FinancialDashboard /></div></CollapsibleSection>
             )}
@@ -745,7 +738,7 @@ export default function Page() {
 
           {/* Sub-category: Community & Reports */}
           <div className="space-y-3">
-            <SubHeader emoji="👥" label={t.communityAndReports} />
+            <SubHeader emoji="👥" label={t.communityAndReports} groupId="community" />
             {level !== 'farmer' && (
             <CollapsibleSection title={tr('Farmer Community & Knowledge Exchange', 'مجتمع المزارعين وتبادل المعرفة', language)} description={tr('Share experiences · Ask questions · Benchmark your farm · Success stories', 'شارك الخبرات · اطرح الأسئلة · قارن مزرعتك · قصص نجاح', language)} icon={Users} color="#3b82f6" storageKey="collapse_community" defaultOpen={false} enableExport><div className="p-4"><FarmerCommunity /></div></CollapsibleSection>
             )}
@@ -756,7 +749,7 @@ export default function Page() {
 
           {/* Sub-category: Settings & Integrations */}
           <div className="space-y-3">
-            <SubHeader emoji="🔌" label={t.settingsAndIntegrations} />
+            <SubHeader emoji="🔌" label={t.settingsAndIntegrations} groupId="settings" />
             {level !== 'farmer' && (
             <CollapsibleSection title={tr('Service Integrations', 'تكاملات الخدمات', language)} description={tr('Plug in free-tier services — Clerk auth, Neon Postgres, OneSignal push, MapTiler maps, Gemini AI', 'أضف خدمات مجانية — Clerk للمصادقة، Neon Postgres، OneSignal للتنبيهات، MapTiler للخرائط، Gemini AI', language)} icon={Settings} color="#64748b" storageKey="collapse_integrations" defaultOpen={false} enableExport><div className="p-4"><ServiceIntegrations /></div></CollapsibleSection>
             )}
@@ -766,7 +759,7 @@ export default function Page() {
 
       {/* FORMULAS TAB — new FormulaExplorer with view toggle */}
       {activeTab === 'formulas' && (
-        <main className="flex-1 max-w-[1600px] mx-auto w-full p-4 sm:p-6">
+        <main className="flex-1 max-w-[1600px] mx-auto w-full p-4 sm:p-6 pb-20 sm:pb-6">
           <FormulaExplorer
             classicSidebar={sidebarContent}
             searchQuery={searchQuery}
@@ -780,7 +773,7 @@ export default function Page() {
 
       {/* TOOLS TAB */}
       {activeTab === 'tools' && (
-        <main className="flex-1 max-w-[1400px] mx-auto w-full p-4 sm:p-6 space-y-6">
+        <main className="flex-1 max-w-[1400px] mx-auto w-full p-4 sm:p-6 space-y-6 pb-20 sm:pb-6">
           <FreeToolsSection />
           <div className="rounded-xl border-2 border-dashed border-border bg-card/50 p-8 text-center">
             <div className="flex items-center justify-center h-12 w-12 rounded-full bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 mx-auto mb-3">
@@ -805,16 +798,28 @@ export default function Page() {
         </main>
       )}
 
-      {/* HELP TAB — plain-language Q&A + AI chat for farmer level */}
+      {/* HELP TAB — comprehensive help center for all user levels */}
       {activeTab === 'help' && (
-        <main className="flex-1 max-w-[800px] mx-auto w-full p-4 sm:p-6 space-y-4 pb-20 sm:pb-6">
-          <FarmerHelp onOpenTool={(tab, storageKey) => openTool(tab, storageKey)} />
+        <main className="flex-1 max-w-[900px] mx-auto w-full p-4 sm:p-6 space-y-4 pb-20 sm:pb-6">
+          <FarmerHelp
+            onOpenTool={(tab, storageKey) => openTool(tab, storageKey)}
+            onNavigate={(tab) => setActiveTab(tab)}
+          />
         </main>
       )}
 
       {/* ABOUT TAB — founder profile + mission */}
       {activeTab === 'about' && (
-        <AboutPage />
+        <main className="flex-1 max-w-[1000px] mx-auto w-full p-4 sm:p-6 pb-20 sm:pb-6">
+          <AboutPage />
+        </main>
+      )}
+
+      {/* GUIDE TAB — professional guide to every feature */}
+      {activeTab === 'guide' && (
+        <main className="flex-1 max-w-[1200px] mx-auto w-full p-4 sm:p-6 pb-20 sm:pb-6">
+          <YourGuide onNavigate={(tab, storageKey) => openTool(tab, storageKey)} />
+        </main>
       )}
 
       {/* Footer */}
@@ -894,8 +899,8 @@ function MobileBottomNav({ level, activeTab, onTabChange, onSearch }: {
   const mobileTabIds = getUserLevelTabs(level);
   const tabs: { id: TabId; icon: typeof Home; label: string }[] = mobileTabIds.map(id => ({
     id,
-    icon: id === 'home' ? Home : id === 'farm' ? Tractor : id === 'myfield' ? Sprout : id === 'help' ? MessageCircle : id === 'insights' ? Sparkles : id === 'tools' ? Wrench : id === 'formulas' ? BookOpen : id === 'about' ? Users : id === 'calendar' ? CalendarDays : id === 'simulator' ? FlaskConical : Layers,
-    label: id === 'home' ? t.tabHome : id === 'farm' ? t.tabFarm : id === 'myfield' ? tr('My Field', 'حقلتي', language) : id === 'help' ? tr('Help', 'مساعدة', language) : id === 'insights' ? t.tabInsights : id === 'tools' ? t.tabTools : id === 'formulas' ? t.tabFormulas : id === 'about' ? t.tabAbout : id === 'calendar' ? tr('Calendar', 'التقويم', language) : id === 'simulator' ? tr('Simulator', 'المحاكي', language) : tr('Tools', 'الأدوات', language),
+    icon: id === 'home' ? Home : id === 'farm' ? Tractor : id === 'myfield' ? Sprout : id === 'help' ? MessageCircle : id === 'insights' ? Sparkles : id === 'tools' ? Wrench : id === 'formulas' ? BookOpen : id === 'about' ? Info : id === 'calendar' ? CalendarDays : id === 'guide' ? Compass : id === 'simulator' ? FlaskConical : Layers,
+    label: id === 'home' ? t.tabHome : id === 'farm' ? t.tabFarm : id === 'myfield' ? tr('My Field', 'حقلتي', language) : id === 'help' ? tr('Help', 'مساعدة', language) : id === 'insights' ? t.tabInsights : id === 'tools' ? t.tabTools : id === 'formulas' ? t.tabFormulas : id === 'about' ? t.tabAbout : id === 'calendar' ? tr('Calendar', 'التقويم', language) : id === 'guide' ? tr('Guide', 'دليل', language) : id === 'simulator' ? tr('Simulator', 'المحاكي', language) : tr('Tools', 'الأدوات', language),
   }));
   return (
     <nav aria-label={tr('Mobile navigation', 'التنقل على الهاتف', language)} dir={language === 'ar' ? 'rtl' : 'ltr'} className="sm:hidden fixed bottom-0 inset-x-0 z-40 border-t bg-background/95 backdrop-blur-md safe-area-pb">
@@ -957,7 +962,7 @@ function QuickNav({ icon: Icon, label, desc, color, onClick }: { icon: typeof Ho
  */
 function SeasonPlanGeneratorWrapper() {
   const [open, setOpen] = useState(false);
-  const { t, isRTL } = useTranslation();
+  const { t, isRTL, language } = useTranslation();
   return (
     <div className="space-y-3">
       <div className="rounded-lg border-2 border-emerald-200 dark:border-emerald-900 bg-gradient-to-br from-emerald-50/60 to-green-50/40 dark:from-emerald-950/20 dark:to-green-950/10 p-4">
@@ -967,16 +972,18 @@ function SeasonPlanGeneratorWrapper() {
           </div>
           <div className="flex-1">
             <h4 className="text-sm font-semibold text-emerald-900 dark:text-emerald-100">
-              {isRTL ? 'مولّد خطة الموسم بالذكاء الاصطناعي' : 'AI Season Plan Generator'}
+              {language === 'ar' ? 'مولّد خطة الموسم بالذكاء الاصطناعي' : language === 'fr' ? 'Générateur de Plan de Saison IA' : 'AI Season Plan Generator'}
             </h4>
             <p className="text-[11px] text-emerald-700 dark:text-emerald-300 mt-0.5">
-              {isRTL
+              {language === 'ar'
                 ? 'يولّد خطة محصول أسبوعية كاملة من مدخلاتك — منحنى Kc، جرعة NPK أسبوعياً، جدول الري، وصفة التسميد بالري، ملاحظات مراحل النمو، والتحذيرات (صقيع/حرارة/إجهاد مائي). مدعوم بنموذج اللغة عبر مسار /api/season-plan.'
-                : 'Generates a complete week-by-week crop plan from your inputs — Kc curve, NPK dose per week, irrigation schedule, fertigation recipe, growth-stage notes, and warnings (frost/heat/water stress). Powered by the LLM via the /api/season-plan route.'}
+                : language === 'fr'
+                  ? 'Génère un plan cultural hebdomadaire complet — courbe Kc, dose NPK par semaine, programme d\'irrigation, recette de fertigation, notes de stades et alertes (gel/chaleur/stress hydrique). Propulsé par LLM via /api/season-plan.'
+                  : 'Generates a complete week-by-week crop plan from your inputs — Kc curve, NPK dose per week, irrigation schedule, fertigation recipe, growth-stage notes, and warnings (frost/heat/water stress). Powered by the LLM via the /api/season-plan route.'}
             </p>
             <Button size="sm" onClick={() => setOpen(true)} className="mt-2 gap-1.5">
               <Sparkles className="h-3.5 w-3.5" />
-              {isRTL ? 'افتح مولّد خطة الموسم' : 'Open Season Plan Generator'}
+              {language === 'ar' ? 'افتح مولّد خطة الموسم' : language === 'fr' ? 'Ouvrir le générateur' : 'Open Season Plan Generator'}
             </Button>
           </div>
         </div>
@@ -986,12 +993,41 @@ function SeasonPlanGeneratorWrapper() {
   );
 }
 
-function SubHeader({ emoji, label }: { emoji: string; label: string }) {
+function SubHeader({ emoji, label, groupId }: { emoji: string; label: string; groupId?: string }) {
+  const [collapsed, setCollapsed] = useState(false);
+
+  const toggleGroup = () => {
+    if (!groupId) return;
+    const next = !collapsed;
+    setCollapsed(next);
+    // Find all CollapsibleSections in this group and set their localStorage
+    const sections = Array.from(document.querySelectorAll(`[data-group="${groupId}"]`)) as HTMLElement[];
+    for (const section of sections) {
+      const storageKey = section.getAttribute('data-storage-key');
+      if (storageKey) {
+        try { localStorage.setItem(storageKey, String(!next)); } catch { /* ignore */ }
+      }
+      // Toggle visibility
+      section.style.display = next ? 'none' : '';
+    }
+  };
+
   return (
-    <div className="flex items-center gap-2 pt-2">
+    <button
+      type="button"
+      data-subheader-group={groupId}
+      onClick={toggleGroup}
+      className="flex items-center gap-2 pt-2 w-full text-left hover:bg-muted/30 rounded-lg p-1 transition-colors"
+      aria-expanded={!collapsed}
+    >
       <span className="text-lg">{emoji}</span>
       <span className="text-sm font-bold text-muted-foreground uppercase tracking-wide">{label}</span>
       <div className="flex-1 h-px bg-border" />
-    </div>
+      {groupId && (
+        <span className="text-[10px] text-muted-foreground shrink-0 pe-1">
+          {collapsed ? '▶' : '▼'}
+        </span>
+      )}
+    </button>
   );
 }
