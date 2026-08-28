@@ -1,0 +1,514 @@
+     1→'use client';
+     2→
+     3→import { useMemo, useState, useEffect } from 'react';
+     4→import {
+     5→  BookOpen,
+     6→  CalendarDays,
+     7→  Check,
+     8→  ChevronDown,
+     9→  ChevronLeft,
+    10→  ChevronRight,
+    11→  Filter,
+    12→  Info,
+    13→  Layers,
+    14→  MapPin,
+    15→  Search,
+    16→  Sprout,
+    17→  X,
+    18→  Calendar as CalendarIcon,
+    19→  CalendarRange,
+    20→  Share2,
+    21→} from 'lucide-react';
+    22→import { Badge } from '@/components/ui/badge';
+    23→import { Button } from '@/components/ui/button';
+    24→import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+    25→import { Input } from '@/components/ui/input';
+    26→import { Label } from '@/components/ui/label';
+    27→import { Separator } from '@/components/ui/separator';
+    28→import { copyFor, useTranslation, type Language } from '@/lib/language-store';
+    29→import {
+    30→  ALGERIA_CALENDAR_MONTHS,
+    31→  CALENDAR_ACTION_LABELS,
+    32→  CALENDAR_CROP_LABELS,
+    33→  CALENDAR_SECTION_LABELS,
+    34→  getCalendarCropKeys,
+    35→  getCalendarCropLabel,
+    36→  type AlgeriaCalendarEntry,
+    37→  type CalendarActionType,
+    38→} from '@/lib/algeria-crop-calendar';
+    39→import { ThisWeekView } from '@/components/agri/this-week-view';
+    40→import {
+    41→  fetchEnrichedPhytoIndex, type EnrichedPhytoProduct,
+    42→} from '@/lib/phyto-enriched';
+    43→import { enrichEntrySync, type EnrichedEntry } from '@/lib/calendar-enrichment';
+    44→import { EntryCardV2 } from '@/components/agri/entry-card-v2';
+    45→import { useCalendarTaskStore } from '@/lib/calendar-task-store';
+    46→
+    47→const MONTH_ACCENTS = [
+    48→  '#0f766e', '#0f766e', '#15803d', '#16a34a', '#65a30d', '#ca8a04',
+    49→  '#d97706', '#ea580c', '#c2410c', '#9f1239', '#7c3aed', '#4f46e5',
+    50→];
+    51→
+    52→const ACTION_ORDER: CalendarActionType[] = [
+    53→  'sowing',
+    54→  'harvest',
+    55→  'irrigation',
+    56→  'fertilization',
+    57→  'soil',
+    58→  'weedManagement',
+    59→  'maintenance',
+    60→  'cropProtection',
+    61→  'observation',
+    62→];
+    63→
+    64→type ActionFilter = 'all' | CalendarActionType;
+    65→
+    66→function localizedCopy(language: Language, copy: { en: string; fr: string; ar: string }): string {
+    67→  return copy[language];
+    68→}
+    69→
+    70→function actionIcon(action: CalendarActionType) {
+    71→  if (action === 'sowing') return '↗';
+    72→  if (action === 'harvest') return '✦';
+    73→  if (action === 'irrigation') return '≈';
+    74→  if (action === 'fertilization') return '＋';
+    75→  if (action === 'soil') return '⌁';
+    76→  if (action === 'weedManagement') return '✂';
+    77→  if (action === 'maintenance') return '⚙';
+    78→  if (action === 'cropProtection') return '⊙';
+    79→  if (action === 'observation') return '👁';
+    80→  return '•';
+    81→}
+    82→
+    83→function entryMatches(entry: AlgeriaCalendarEntry, selectedCrops: string[], actionFilter: ActionFilter): boolean {
+    84→  const cropMatches = selectedCrops.length === 0 || entry.cropKeys.some(key => selectedCrops.includes(key));
+    85→  const actionMatches = actionFilter === 'all' || entry.actionTypes.includes(actionFilter);
+    86→  return cropMatches && actionMatches;
+    87→}
+    88→
+    89→function EntryCard({ entry, language }: { entry: AlgeriaCalendarEntry; language: Language }) {
+    90→  const sectionCopy = CALENDAR_SECTION_LABELS[entry.section];
+    91→  return (
+    92→    <article className="rounded-xl border border-border bg-card p-3 shadow-sm transition-colors hover:border-emerald-300 dark:hover:border-emerald-800">
+    93→      <div className="flex flex-wrap items-start justify-between gap-2">
+    94→        <div className="min-w-0">
+    95→          <div className="flex flex-wrap items-center gap-1.5">
+    96→            <h4 className="text-sm font-semibold text-foreground">{entry.cropContext}</h4>
+    97→            <Badge variant="outline" className="text-[10px]">{localizedCopy(language, sectionCopy)}</Badge>
+    98→          </div>
+    99→          <div className="mt-1 flex flex-wrap gap-1">
+   100→            {entry.actionTypes.map(action => (
+   101→              <Badge key={action} variant="secondary" className="gap-1 text-[10px] font-normal">
+   102→                <span aria-hidden="true">{actionIcon(action)}</span>
+   103→                {localizedCopy(language, CALENDAR_ACTION_LABELS[action])}
+   104→              </Badge>
+   105→            ))}
+   106→          </div>
+   107→        </div>
+   108→        <div className="shrink-0 text-right text-[10px] text-muted-foreground">
+   109→          <div>{entry.source.file}</div>
+   110→          <div>{entry.source.printedPages}</div>
+   111→        </div>
+   112→      </div>
+   113→      <ul className="mt-3 space-y-1.5 text-xs leading-relaxed text-muted-foreground">
+   114→        {entry.operations.map((operation, index) => <li key={`${entry.id}-${index}`} className="flex gap-2"><span className="mt-0.5 text-emerald-600">•</span><span>{operation}</span></li>)}
+   115→      </ul>
+   116→      <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border/70 pt-2 text-[10px] text-muted-foreground">
+   117→        <BookOpen className="h-3 w-3 text-emerald-600" />
+   118→        <span>{copyFor(language, 'Source trace', 'مرجع المصدر', 'Référence source')}</span>
+   119→        <span>·</span>
+   120→        <span>{entry.source.printedPages}</span>
+   121→      </div>
+   122→    </article>
+   123→  );
+   124→}
+   125→
+   126→export function AlgeriaCropCalendar() {
+   127→  const { language, isRTL } = useTranslation();
+   128→  const [view, setView] = useState<'week' | 'month' | 'annual'>('week');
+   129→  const [selectedMonth, setSelectedMonth] = useState(() => new Date().getMonth() + 1);
+   130→  const [selectedCrops, setSelectedCrops] = useState<string[]>([]);
+   131→  const [cropSearch, setCropSearch] = useState('');
+   132→  const [actionFilter, setActionFilter] = useState<ActionFilter>('all');
+   133→  const [showCropPicker, setShowCropPicker] = useState(false);
+   134→  const [showAnnualView, setShowAnnualView] = useState(false);
+   135→
+   136→  const allCropKeys = useMemo(() => getCalendarCropKeys(), []);
+   137→  const filteredCropKeys = useMemo(() => {
+   138→    const query = cropSearch.trim().toLowerCase();
+   139→    if (!query) return allCropKeys;
+   140→    return allCropKeys.filter(key => {
+   141→      const label = getCalendarCropLabel(key, language).toLowerCase();
+   142→      const english = CALENDAR_CROP_LABELS[key]?.en.toLowerCase() ?? key;
+   143→      return label.includes(query) || english.includes(query) || key.includes(query);
+   144→    });
+   145→  }, [allCropKeys, cropSearch, language]);
+   146→
+   147→  const month = ALGERIA_CALENDAR_MONTHS[selectedMonth - 1] ?? ALGERIA_CALENDAR_MONTHS[0];
+   148→  const visibleEntries = useMemo(
+   149→    () => month.entries.filter(entry => entryMatches(entry, selectedCrops, actionFilter)),
+   150→    [month.entries, selectedCrops, actionFilter],
+   151→  );
+   152→  const allVisibleEntries = useMemo(
+   153→    () => ALGERIA_CALENDAR_MONTHS.flatMap(item => item.entries.filter(entry => entryMatches(entry, selectedCrops, actionFilter))),
+   154→    [selectedCrops, actionFilter],
+   155→  );
+   156→  const visibleSections = useMemo(() => Array.from(new Set(visibleEntries.map(entry => entry.section))), [visibleEntries]);
+   157→  const filteredMonthCounts = useMemo(() => ALGERIA_CALENDAR_MONTHS.map(item => item.entries.filter(entry => entryMatches(entry, selectedCrops, actionFilter)).length), [selectedCrops, actionFilter]);
+   158→  const selectedCropLabels = selectedCrops.map(key => getCalendarCropLabel(key, language));
+   159→
+   160→  const toggleCrop = (cropKey: string) => {
+   161→    setSelectedCrops(current => current.includes(cropKey) ? current.filter(key => key !== cropKey) : [...current, cropKey]);
+   162→  };
+   163→
+   164→  const clearFilters = () => {
+   165→    setSelectedCrops([]);
+   166→    setCropSearch('');
+   167→    setActionFilter('all');
+   168→  };
+   169→
+   170→  const moveMonth = (offset: number) => {
+   171→    setSelectedMonth(current => ((current - 1 + offset + ALGERIA_CALENDAR_MONTHS.length) % ALGERIA_CALENDAR_MONTHS.length) + 1);
+   172→  };
+   173→
+   174→  return (
+   175→    <div className="space-y-5" dir={isRTL ? 'rtl' : 'ltr'}>
+   176→      <Card className="overflow-hidden border-emerald-200/70 shadow-sm dark:border-emerald-900/70">
+   177→        <CardHeader className="border-b bg-gradient-to-r from-emerald-50 via-background to-teal-50/60 pb-4 dark:from-emerald-950/30 dark:via-background dark:to-teal-950/20">
+   178→          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+   179→            <div>
+   180→              <CardTitle className="flex items-center gap-2 text-base">
+   181→                <CalendarDays className="h-4 w-4 text-emerald-600" />
+   182→                {copyFor(language, 'Algeria Agriculture Calendar', 'التقويم الزراعي الجزائري', 'Calendrier agricole algérien')}
+   183→              </CardTitle>
+   184→              <p className="mt-1 max-w-3xl text-xs leading-relaxed text-muted-foreground">
+   185→                {copyFor(language, 'Explore 12 source-backed months, select one crop or several, and compare activities that overlap in the same month. This is an operations calendar, not a companion-planting recommendation.', 'استكشف 12 شهراً موثقاً بالمصادر، واختر محصولاً واحداً أو عدة محاصيل، وقارن الأنشطة المتزامنة في الشهر نفسه. هذا تقويم عمليات وليس توصية بالزراعة المرافقة.', 'Explorez 12 mois documentés, sélectionnez une ou plusieurs cultures et comparez les activités qui se chevauchent le même mois. Il s’agit d’un calendrier d’opérations, pas d’une recommandation d’associations culturales.')}
+   186→              </p>
+   187→            </div>
+   188→            <div className="flex flex-wrap items-center gap-2 text-[10px]">
+   189→              <Badge variant="outline" className="gap-1 border-emerald-300 bg-background/70 text-emerald-800 dark:border-emerald-800 dark:text-emerald-200"><BookOpen className="h-3 w-3" />{copyFor(language, '12 PDF sources', '12 مصدر PDF', '12 sources PDF')}</Badge>
+   190→              <Badge variant="secondary" className="gap-1"><MapPin className="h-3 w-3" />{copyFor(language, 'Algeria', 'الجزائر', 'Algérie')}</Badge>
+   191→            </div>
+   192→          </div>
+   193→        </CardHeader>
+   194→        <CardContent className="space-y-4 p-4 sm:p-5">
+   195→          {/* View switcher — 3 modes */}
+   196→          <div className="grid grid-cols-3 gap-1 rounded-lg bg-muted/40 p-1">
+   197→            <button
+   198→              type="button"
+   199→              onClick={() => setView('week')}
+   200→              className={`flex items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-[11px] font-medium transition-all ${
+   201→                view === 'week'
+   202→                  ? 'bg-background shadow-sm text-emerald-700 dark:text-emerald-400'
+   203→                  : 'text-muted-foreground hover:text-foreground'
+   204→              }`}
+   205→            >
+   206→              <CalendarDays className="h-3 w-3" />
+   207→              {copyFor(language, 'This Week', 'Cette semaine', 'هذا الأسبوع')}
+   208→            </button>
+   209→            <button
+   210→              type="button"
+   211→              onClick={() => setView('month')}
+   212→              className={`flex items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-[11px] font-medium transition-all ${
+   213→                view === 'month'
+   214→                  ? 'bg-background shadow-sm text-emerald-700 dark:text-emerald-400'
+   215→                  : 'text-muted-foreground hover:text-foreground'
+   216→              }`}
+   217→            >
+   218→              <CalendarIcon className="h-3 w-3" />
+   219→              {copyFor(language, 'Browse Month', 'Parcourir le mois', 'تصفّح الشهر')}
+   220→            </button>
+   221→            <button
+   222→              type="button"
+   223→              onClick={() => setView('annual')}
+   224→              className={`flex items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-[11px] font-medium transition-all ${
+   225→                view === 'annual'
+   226→                  ? 'bg-background shadow-sm text-emerald-700 dark:text-emerald-400'
+   227→                  : 'text-muted-foreground hover:text-foreground'
+   228→              }`}
+   229→            >
+   230→              <CalendarRange className="h-3 w-3" />
+   231→              {copyFor(language, 'Annual Timeline', 'Chronologie annuelle', 'الخط الزمني السنوي')}
+   232→            </button>
+   233→          </div>
+   234→
+   235→          {/* === THIS WEEK view (default — personalized) === */}
+   236→          {view === 'week' && (
+   237→            <ThisWeekView
+   238→              onBrowseMonth={() => setView('month')}
+   239→              onShareEntry={(entryId) => {
+   240→                const url = `${window.location.origin}/app?entry=${entryId}`;
+   241→                navigator.clipboard?.writeText(url);
+   242→              }}
+   243→            />
+   244→          )}
+   245→
+   246→          {/* === ANNUAL TIMELINE view (12-month Gantt per crop) === */}
+   247→          {view === 'annual' && (
+   248→            <AnnualTimelineView
+   249→              selectedCrops={selectedCrops}
+   250→              onPickCrop={(cropKey) => {
+   251→                if (!selectedCrops.includes(cropKey)) setSelectedCrops([...selectedCrops, cropKey]);
+   252→              }}
+   253→              onJumpToMonth={(monthIdx) => {
+   254→                setSelectedMonth(monthIdx);
+   255→                setView('month');
+   256→              }}
+   257→            />
+   258→          )}
+   259→        </CardContent>
+   260→      </Card>
+   261→
+   262→      {/* === BROWSE MONTH view (the original month-grid + filter UI) === */}
+   263→      {view === 'month' && (
+   264→        <>
+   265→          <Card className="overflow-hidden border-emerald-200/70 shadow-sm dark:border-emerald-900/70">
+   266→            <CardContent className="space-y-4 p-4 sm:p-5">
+   267→          <div className="grid gap-3 lg:grid-cols-[1.2fr_0.8fr]">
+   268→            <div>
+   269→              <Label className="text-xs font-semibold">{copyFor(language, 'Crop selection', 'اختيار المحاصيل', 'Sélection des cultures')}</Label>
+   270→              <div className="mt-1 flex flex-wrap items-center gap-2">
+   271→                <Button type="button" variant="outline" size="sm" className="h-9 gap-2" onClick={() => setShowCropPicker(current => !current)} aria-expanded={showCropPicker}>
+   272→                  <Sprout className="h-3.5 w-3.5 text-emerald-600" />
+   273→                  {selectedCrops.length === 0 ? copyFor(language, 'All crops', 'كل المحاصيل', 'Toutes les cultures') : `${selectedCrops.length} ${copyFor(language, 'selected', 'مختارة', 'sélectionnées')}`}
+   274→                  <ChevronDown className="h-3.5 w-3.5" />
+   275→                </Button>
+   276→                {selectedCrops.length > 0 && <Button type="button" variant="ghost" size="sm" className="h-9 text-xs" onClick={() => setSelectedCrops([])}>{copyFor(language, 'Clear crops', 'مسح المحاصيل', 'Effacer les cultures')}</Button>}
+   277→                {selectedCropLabels.slice(0, 5).map((label, index) => <Badge key={selectedCrops[index]} variant="secondary" className="gap-1 text-[10px]">{label}<button type="button" aria-label={`${copyFor(language, 'Remove', 'إزالة', 'Retirer')} ${label}`} onClick={() => toggleCrop(selectedCrops[index])}><X className="h-3 w-3" /></button></Badge>)}
+   278→                {selectedCropLabels.length > 5 && <Badge variant="outline" className="text-[10px]">+{selectedCropLabels.length - 5}</Badge>}
+   279→              </div>
+   280→              {showCropPicker && (
+   281→                <div className="mt-2 rounded-xl border border-border bg-background p-3 shadow-sm">
+   282→                  <div className="relative">
+   283→                    <Search className="pointer-events-none absolute start-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+   284→                    <Input value={cropSearch} onChange={event => setCropSearch(event.target.value)} placeholder={copyFor(language, 'Search crops', 'ابحث عن محصول', 'Rechercher une culture')} className="h-9 ps-9 text-xs" />
+   285→                  </div>
+   286→                  <div className="mt-3 grid max-h-52 gap-1 overflow-y-auto sm:grid-cols-2 xl:grid-cols-3">
+   287→                    {filteredCropKeys.map(cropKey => {
+   288→                      const checked = selectedCrops.includes(cropKey);
+   289→                      return <button key={cropKey} type="button" onClick={() => toggleCrop(cropKey)} className="flex items-center gap-2 rounded-md px-2 py-2 text-left text-xs hover:bg-muted" aria-pressed={checked}>
+   290→                        <span className={`flex h-4 w-4 items-center justify-center rounded border ${checked ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-input'}`}>{checked && <Check className="h-3 w-3" />}</span>
+   291→                        <span>{getCalendarCropLabel(cropKey, language)}</span>
+   292→                      </button>;
+   293→                    })}
+   294→                  </div>
+   295→                  <div className="mt-2 flex items-center justify-between border-t border-border pt-2 text-[10px] text-muted-foreground">
+   296→                    <span>{copyFor(language, 'Select multiple crops to compare same-month activity overlap.', 'اختر عدة محاصيل لمقارنة الأنشطة المتزامنة في الشهر نفسه.', 'Sélectionnez plusieurs cultures pour comparer les activités du même mois.')}</span>
+   297→                    <Button type="button" variant="ghost" size="sm" className="h-7 text-[10px]" onClick={() => setShowCropPicker(false)}>{copyFor(language, 'Done', 'تم', 'Terminé')}</Button>
+   298→                  </div>
+   299→                </div>
+   300→              )}
+   301→            </div>
+   302→            <div>
+   303→              <Label className="flex items-center gap-1 text-xs font-semibold"><Filter className="h-3.5 w-3.5" />{copyFor(language, 'Activity filter', 'تصفية النشاط', 'Filtre d’activité')}</Label>
+   304→              <select aria-label={copyFor(language, 'Activity filter', 'تصفية النشاط', 'Filtre d’activité')} value={actionFilter} onChange={event => setActionFilter(event.target.value as ActionFilter)} className="mt-1 h-9 w-full rounded-md border border-input bg-background px-3 text-xs">
+   305→                <option value="all">{copyFor(language, 'All activities', 'كل الأنشطة', 'Toutes les activités')}</option>
+   306→                {ACTION_ORDER.map(action => <option key={action} value={action}>{localizedCopy(language, CALENDAR_ACTION_LABELS[action])}</option>)}
+   307→              </select>
+   308→            </div>
+   309→          </div>
+   310→
+   311→          <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-dashed border-emerald-300 bg-emerald-50/60 px-3 py-2 text-[11px] dark:border-emerald-800 dark:bg-emerald-950/15">
+   312→            <div className="flex items-center gap-2 text-emerald-900 dark:text-emerald-100"><Info className="h-3.5 w-3.5" /><span>{copyFor(language, 'Source language: French PDFs · normalized entries shown with their source wording and page trace.', 'لغة المصدر: ملفات PDF بالفرنسية · تظهر الإدخالات المنظّمة مع صياغة المصدر ورقم الصفحة.', 'Langue source : PDF français · entrées normalisées avec formulation et page de source.')}</span></div>
+   313→            {(selectedCrops.length > 0 || actionFilter !== 'all') && <Button type="button" variant="ghost" size="sm" className="h-7 text-[10px]" onClick={clearFilters}>{copyFor(language, 'Reset filters', 'إعادة ضبط المرشحات', 'Réinitialiser les filtres')}</Button>}
+   314→          </div>
+   315→            </CardContent>
+   316→          </Card>
+   317→
+   318→      <section className="space-y-3">
+   319→        <div className="flex flex-wrap items-center justify-between gap-2">
+   320→          <div>
+   321→            <h3 className="text-sm font-semibold">{copyFor(language, 'Choose a month', 'اختر شهراً', 'Choisir un mois')}</h3>
+   322→            <p className="text-[11px] text-muted-foreground">{copyFor(language, 'Month counts reflect the active crop and activity filters.', 'تعكس أعداد الأشهر مرشحات المحاصيل والأنشطة الحالية.', 'Les nombres par mois reflètent les filtres actifs.')}</p>
+   323→          </div>
+   324→          <Button type="button" variant={showAnnualView ? 'default' : 'outline'} size="sm" className="h-8 gap-1.5 text-xs" onClick={() => setShowAnnualView(current => !current)}><Layers className="h-3.5 w-3.5" />{showAnnualView ? copyFor(language, 'Hide annual overlap', 'إخفاء التداخل السنوي', 'Masquer le chevauchement annuel') : copyFor(language, 'Show annual overlap', 'إظهار التداخل السنوي', 'Afficher le chevauchement annuel')}</Button>
+   325→        </div>
+   326→        <div className="flex items-center justify-between gap-2 rounded-lg border border-border bg-muted/20 p-2 sm:hidden">
+   327→          <Button type="button" variant="outline" size="icon" className="h-9 w-9 shrink-0" onClick={() => moveMonth(-1)} aria-label={copyFor(language, 'Previous month', 'الشهر السابق', 'Mois précédent')}>
+   328→            {isRTL ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+   329→          </Button>
+   330→          <div className="min-w-0 text-center" aria-live="polite">
+   331→            <div className="truncate text-xs font-semibold">{month.name[language]}</div>
+   332→            <div className="text-[10px] text-muted-foreground">{visibleEntries.length} {copyFor(language, 'entries', 'إدخالات', 'entrées')}</div>
+   333→          </div>
+   334→          <Button type="button" variant="outline" size="icon" className="h-9 w-9 shrink-0" onClick={() => moveMonth(1)} aria-label={copyFor(language, 'Next month', 'الشهر التالي', 'Mois suivant')}>
+   335→            {isRTL ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+   336→          </Button>
+   337→        </div>
+   338→        <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-4 sm:gap-2 md:grid-cols-6 lg:grid-cols-12">
+   339→          {ALGERIA_CALENDAR_MONTHS.map((item, index) => {
+   340→            const active = item.number === selectedMonth;
+   341→            return <button key={item.number} type="button" onClick={() => setSelectedMonth(item.number)} className={`rounded-lg border p-1.5 text-center transition-all sm:rounded-xl sm:p-2 ${active ? 'border-emerald-500 bg-emerald-50 shadow-sm dark:bg-emerald-950/30' : 'border-border bg-card hover:border-emerald-300'}`} aria-label={`${item.name[language]} — ${filteredMonthCounts[index]} ${copyFor(language, 'entries', 'إدخالات', 'entrées')}`} aria-pressed={active}>
+   342→              <span className="mx-auto flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold text-white sm:h-7 sm:w-7 sm:text-xs" style={{ backgroundColor: MONTH_ACCENTS[index] }}>{item.number}</span>
+   343→              <span className="mt-1 block truncate text-[9px] font-semibold sm:text-[10px]">{item.name[language]}</span>
+   344→              <span className="mt-0.5 block text-[9px] text-muted-foreground sm:text-[10px]">{filteredMonthCounts[index]}</span>
+   345→            </button>;
+   346→          })}
+   347→        </div>
+   348→      </section>
+   349→
+   350→      {showAnnualView && (
+   351→        <Card className="overflow-hidden border-indigo-200/70 dark:border-indigo-900/70">
+   352→          <CardHeader className="border-b bg-indigo-50/60 pb-3 dark:bg-indigo-950/20"><CardTitle className="flex items-center gap-2 text-sm"><Layers className="h-4 w-4 text-indigo-600" />{copyFor(language, 'Annual same-month activity overlap', 'تداخل الأنشطة المتزامنة على مدار السنة', 'Chevauchement annuel des activités du même mois')}</CardTitle><p className="text-[11px] leading-relaxed text-muted-foreground">{copyFor(language, 'A filled cell means the selected crop has at least one source entry in that month. It does not mean the crops are biologically compatible as companions.', 'تعني الخلية المملوءة وجود إدخال مصدر واحد على الأقل للمحصول المختار في ذلك الشهر. ولا تعني أن المحاصيل متوافقة بيولوجياً كزراعة مرافقة.', 'Une cellule remplie signifie qu’une culture sélectionnée possède au moins une entrée source ce mois-là. Cela ne signifie pas que les cultures sont biologiquement compatibles en association.')}</p></CardHeader>
+   353→          <CardContent className="overflow-x-auto p-2 sm:p-4">
+   354→            {selectedCrops.length === 0 ? <p className="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground">{copyFor(language, 'Select one or more crops above to see the annual overlap matrix.', 'اختر محصولاً واحداً أو أكثر لرؤية مصفوفة التداخل السنوية.', 'Sélectionnez une ou plusieurs cultures pour voir la matrice annuelle.')}</p> : <table aria-label={copyFor(language, 'Annual crop overlap matrix', 'مصفوفة التداخل السنوي للمحاصيل', 'Matrice annuelle de chevauchement des cultures')} className="min-w-[760px] w-full border-collapse text-[10px]"><thead><tr><th className="sticky start-0 bg-background p-2 text-start font-semibold">
+   355→{copyFor(language, 'Crop', 'المحصول', 'Culture')}</th>{ALGERIA_CALENDAR_MONTHS.map(item => <th key={item.number} className="p-2 text-center font-semibold">{item.name[language].slice(0, 3)}</th>)}</tr></thead><tbody>{selectedCrops.map(cropKey => <tr key={cropKey} className="border-t border-border"><th className="sticky start-0 bg-background p-2 text-start font-medium">
+   356→{getCalendarCropLabel(cropKey, language)}</th>{ALGERIA_CALENDAR_MONTHS.map(item => { const count = item.entries.filter(entry => entry.cropKeys.includes(cropKey) && entryMatches(entry, selectedCrops, actionFilter)).length; return <td key={item.number} className="p-1 text-center"><button type="button" disabled={count === 0} onClick={() => { setSelectedMonth(item.number); setShowAnnualView(false); }} className={`mx-auto flex h-7 min-w-7 items-center justify-center rounded-md ${count > 0 ? 'bg-emerald-100 font-bold text-emerald-800 hover:bg-emerald-200 dark:bg-emerald-900/50 dark:text-emerald-200' : 'text-muted-foreground/40'}`}>{count || '—'}</button></td>; })}</tr>)}</tbody></table>}
+   357→          </CardContent>
+   358→        </Card>
+   359→      )}
+   360→
+   361→      <section className="space-y-3">
+   362→        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+   363→          <div>
+   364→            <h3 className="text-sm font-semibold">{month.name[language]} <span className="font-normal text-muted-foreground">· {copyFor(language, `${visibleEntries.length} source entries`, `${visibleEntries.length} إدخالاً من المصدر`, `${visibleEntries.length} entrées source`)}</span></h3>
+   365→            <p className="text-[11px] text-muted-foreground">{month.source.file} · {month.source.printedPages} · {month.source.pdfLength}</p>
+   366→          </div>
+   367→          <Badge variant="outline" className="gap-1 text-[10px]"><BookOpen className="h-3 w-3" />{copyFor(language, 'Source-traceable', 'موثق بالمصدر', 'Traçable par source')}</Badge>
+   368→        </div>
+   369→        {visibleEntries.length === 0 ? <Card><CardContent className="p-8 text-center text-xs text-muted-foreground">{copyFor(language, 'No source entries match the current filters. Try another crop or activity.', 'لا توجد إدخالات مصدر تطابق المرشحات الحالية. جرّب محصولاً أو نشاطاً آخر.', 'Aucune entrée source ne correspond aux filtres actuels. Essayez une autre culture ou activité.')}</CardContent></Card> : <div className="space-y-4">{visibleSections.map(section => { const entries = visibleEntries.filter(entry => entry.section === section); return <div key={section} className="space-y-2"><div className="flex items-center gap-2"><Separator className="flex-1" /><span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{localizedCopy(language, CALENDAR_SECTION_LABELS[section])}</span><Separator className="flex-1" /></div><div className="grid gap-3 lg:grid-cols-2">{entries.map(entry => <EntryCard key={entry.id} entry={entry} language={language} />)}</div></div>; })}</div>}
+   370→      </section>
+   371→
+   372→      <Card className="border-amber-200/80 dark:border-amber-900/70">
+   373→        <CardHeader className="pb-3"><CardTitle className="flex items-center gap-2 text-sm"><Info className="h-4 w-4 text-amber-600" />{copyFor(language, 'Month source notes and boundaries', 'ملاحظات المصدر وحدوده لهذا الشهر', 'Notes et limites de la source du mois')}</CardTitle></CardHeader>
+   374→        <CardContent className="grid gap-4 p-4 pt-0 lg:grid-cols-3">
+   375→          <div><h4 className="text-[11px] font-semibold">{copyFor(language, 'Source note', 'ملاحظة المصدر', 'Note de source')}</h4><ul className="mt-1 space-y-1 text-[11px] leading-relaxed text-muted-foreground">{(month.sourceNote.length ? month.sourceNote : [copyFor(language, 'No separate month-specific note was printed in the normalized record.', 'لا توجد ملاحظة شهرية منفصلة في السجل المنظم.', 'Aucune note mensuelle distincte dans le relevé normalisé.')]).map((note, index) => <li key={index}>• {note}</li>)}</ul></div>
+   376→          <div><h4 className="text-[11px] font-semibold">{copyFor(language, 'Regional / production context', 'السياق الإقليمي والإنتاجي', 'Contexte régional / de production')}</h4><ul className="mt-1 space-y-1 text-[11px] leading-relaxed text-muted-foreground">{(month.regionalQualifiers.length ? month.regionalQualifiers : [copyFor(language, 'Regional qualifiers are attached to individual source entries where printed.', 'تظهر المؤهلات الإقليمية مع إدخالات المصدر حيث وردت مطبوعة.', 'Les qualificatifs régionaux sont attachés aux entrées source lorsqu’ils sont imprimés.')]).map((note, index) => <li key={index}>• {note}</li>)}</ul></div>
+   377→          <div><h4 className="text-[11px] font-semibold">{copyFor(language, 'Uncertainty and companion-planting boundary', 'حدود عدم اليقين والزراعة المرافقة', 'Limites d’incertitude et d’association')}</h4><ul className="mt-1 space-y-1 text-[11px] leading-relaxed text-muted-foreground">{(month.uncertaintyNotes.length ? month.uncertaintyNotes : [copyFor(language, 'The source is a monthly operations guide; it does not establish companion-planting compatibility.', 'المصدر دليل عمليات شهرية؛ ولا يثبت توافق الزراعة المرافقة.', 'La source est un guide mensuel d’opérations ; elle ne prouve pas la compatibilité des associations.')]).map((note, index) => <li key={index}>• {note}</li>)}{month.companionNote.slice(0, 1).map((note, index) => <li key={`companion-${index}`}>• {note}</li>)}</ul></div>
+   378→        </CardContent>
+   379→      </Card>
+   380→
+   381→      <Card className="border-sky-200/80 dark:border-sky-900/70">
+   382→        <CardHeader className="pb-3"><CardTitle className="flex items-center gap-2 text-sm"><BookOpen className="h-4 w-4 text-sky-600" />{copyFor(language, 'Source provenance', 'مصدر البيانات', 'Provenance de la source')}</CardTitle><p className="text-[11px] leading-relaxed text-muted-foreground">{copyFor(language, 'Original institution, document title, source language, and extraction method for this month’s data.', 'الجهة الأصلية وعنوان الوثيقة ولغة المصدر وطريقة استخراج بيانات هذا الشهر.', 'Institution d’origine, titre du document, langue source et méthode d’extraction pour les données de ce mois.')}</p></CardHeader>
+   383→        <CardContent className="grid gap-4 p-4 pt-0 lg:grid-cols-2">
+   384→          <div><h4 className="text-[11px] font-semibold">{copyFor(language, 'Institution', 'الجهة', 'Institution')}</h4><p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">{month.source.institution}</p></div>
+   385→          <div><h4 className="text-[11px] font-semibold">{copyFor(language, 'Document title', 'عنوان الوثيقة', 'Titre du document')}</h4><p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">{month.source.documentTitle}</p><div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px]"><Badge variant="outline" className="gap-1 border-sky-300 bg-sky-50/70 text-sky-800 dark:border-sky-800 dark:bg-sky-950/30 dark:text-sky-300"><MapPin className="h-2.5 w-2.5" />{month.source.language}</Badge><Badge variant="outline" className="gap-1 text-[10px]">{month.source.pdfLength}</Badge><Badge variant="outline" className="gap-1 text-[10px]">{month.source.printedPages}</Badge></div></div>
+   386→          <div><h4 className="text-[11px] font-semibold">{copyFor(language, 'Extraction status', 'حالة الاستخراج', 'Statut d’extraction')}</h4><p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">{month.source.extractionStatus}</p></div>
+   387→          <div><h4 className="text-[11px] font-semibold">{copyFor(language, 'Interpretation rule', 'قاعدة التفسير', 'Règle d’interprétation')}</h4><p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">{month.source.interpretationRule}</p></div>
+   388→        </CardContent>
+   389→      </Card>
+   390→
+   391→      <div className="flex items-start gap-2 rounded-xl border border-border bg-muted/20 p-3 text-[10px] leading-relaxed text-muted-foreground"><Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" /><p>{copyFor(language, 'Safety boundary: phytosanitary entries point to the source annex or leaflet when no product, active ingredient, or dose is printed. Use the INPV-aware safety tools for product decisions; this calendar does not invent treatments.', 'حد السلامة: تشير إدخالات وقاية النبات إلى الملحق أو النشرة المصدرية عندما لا يطبع المصدر منتجاً أو مادة فعالة أو جرعة. استخدم أدوات السلامة المرتبطة بفهرس INPV لقرارات المنتجات؛ هذا التقويم لا يخترع علاجات.', 'Limite de sécurité : les entrées phytosanitaires renvoient à l’annexe ou à la fiche source lorsque produit, matière active ou dose ne sont pas imprimés. Utilisez les outils de sécurité liés à l’INPV ; ce calendrier n’invente pas de traitements.')}</p></div>
+   392→
+   393→      <div className="sr-only" aria-live="polite">{allVisibleEntries.length} {copyFor(language, 'matching source entries across the year', 'إدخالات مصدر مطابقة على مدار السنة', 'entrées source correspondantes sur l’année')}</div>
+   394→        </>
+   395→      )}
+   396→    </div>
+   397→  );
+   398→}
+   399→
+   400→// ============================================================================
+   401→// Annual Timeline View — 12-month Gantt per crop
+   402→// ============================================================================
+   403→
+   404→function AnnualTimelineView({ selectedCrops, onPickCrop, onJumpToMonth }: {
+   405→  selectedCrops: string[];
+   406→  onPickCrop: (crop: string) => void;
+   407→  onJumpToMonth: (monthIdx: number) => void;
+   408→}) {
+   409→  const { language } = useTranslation();
+   410→  const [search, setSearch] = useState('');
+   411→
+   412→  const allCrops = useMemo(() => getCalendarCropKeys(), []);
+   413→  const filteredCrops = useMemo(() => {
+   414→    if (!search.trim()) return allCrops.slice(0, 20); // first 20 if no search
+   415→    const q = search.toLowerCase();
+   416→    return allCrops.filter((k) => getCalendarCropLabel(k, language).toLowerCase().includes(q));
+   417→  }, [allCrops, search, language]);
+   418→
+   419→  const cropsToShow = selectedCrops.length > 0 ? selectedCrops : filteredCrops;
+   420→
+   421→  return (
+   422→    <div className="space-y-3">
+   423→      <div className="rounded-lg bg-emerald-50/40 dark:bg-emerald-950/15 p-3 border border-emerald-200/60 dark:border-emerald-900/60">
+   424→        <div className="text-[11px] text-muted-foreground mb-1.5">
+   425→          {copyFor(language,
+   426→            'Each cell shows the number of source entries for that crop in that month. Tap a cell to jump to the month view.',
+   427→            'Chaque cellule indique le nombre d\'entrées source pour cette culture dans ce mois. Touchez une cellule pour sauter au mois.',
+   428→            'تُظهر كل خلية عدد إدخالات المصدر لذلك المحصول في ذلك الشهر. انقر على خلية للانتقال إلى عرض الشهر.',
+   429→          )}
+   430→        </div>
+   431→        <div className="relative">
+   432→          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+   433→          <Input
+   434→            value={search}
+   435→            onChange={(e) => setSearch(e.target.value)}
+   436→            placeholder={copyFor(language, 'Search crops to add to timeline…', 'ابحث عن محاصيل للإضافة إلى الخط الزمني…', 'ابحث عن محاصيل للإضافة إلى الخط الزمني…')}
+   437→            className="h-9 pl-9 text-xs"
+   438→          />
+   439→        </div>
+   440→      </div>
+   441→
+   442→      <div className="overflow-x-auto -mx-2 px-2">
+   443→        <table className="w-full border-collapse text-[10px] min-w-[600px]">
+   444→          <thead>
+   445→            <tr>
+   446→              <th className="sticky left-0 bg-background p-2 text-start font-semibold text-xs">
+   447→                {copyFor(language, 'Crop', 'المحصول', 'المحصول')}
+   448→              </th>
+   449→              {ALGERIA_CALENDAR_MONTHS.map((m) => (
+   450→                <th key={m.number} className="p-1.5 text-center font-semibold">
+   451→                  <div className="text-[10px]">{m.name[language].slice(0, 3)}</div>
+   452→                </th>
+   453→              ))}
+   454→            </tr>
+   455→          </thead>
+   456→          <tbody>
+   457→            {cropsToShow.map((cropKey) => {
+   458→              const monthCounts = ALGERIA_CALENDAR_MONTHS.map((m) =>
+   459→                m.entries.filter((e) => e.cropKeys.includes(cropKey)).length,
+   460→              );
+   461→              const maxCount = Math.max(...monthCounts, 1);
+   462→              return (
+   463→                <tr key={cropKey} className="border-t border-border">
+   464→                  <th className="sticky left-0 bg-background p-2 text-start font-medium text-xs">
+   465→                    <button
+   466→                      type="button"
+   467→                      onClick={() => onPickCrop(cropKey)}
+   468→                      className="hover:text-emerald-700 dark:hover:text-emerald-400 text-left"
+   469→                    >
+   470→                      {getCalendarCropLabel(cropKey, language)}
+   471→                    </button>
+   472→                  </th>
+   473→                  {monthCounts.map((count, idx) => {
+   474→                    const intensity = count === 0 ? 0 : Math.max(0.2, count / maxCount);
+   475→                    return (
+   476→                      <td key={idx} className="p-1 text-center">
+   477→                        <button
+   478→                          type="button"
+   479→                          disabled={count === 0}
+   480→                          onClick={() => onJumpToMonth(idx + 1)}
+   481→                          className="mx-auto flex h-7 min-w-7 items-center justify-center rounded-md text-[9px] font-bold transition-all"
+   482→                          style={{
+   483→                            backgroundColor: count > 0
+   484→                              ? `rgba(16, 185, 129, ${0.2 + intensity * 0.6})`
+   485→                              : 'transparent',
+   486→                            color: count > 0 ? (intensity > 0.6 ? 'white' : '#065f46') : 'transparent',
+   487→                          }}
+   488→                          title={`${getCalendarCropLabel(cropKey, language)} — ${ALGERIA_CALENDAR_MONTHS[idx].name[language]} (${count} entries)`}
+   489→                        >
+   490→                          {count || ''}
+   491→                        </button>
+   492→                      </td>
+   493→                    );
+   494→                  })}
+   495→                </tr>
+   496→              );
+   497→            })}
+   498→          </tbody>
+   499→        </table>
+   500→      </div>
+   501→
+   502→      {selectedCrops.length === 0 && (
+   503→        <p className="text-[11px] text-muted-foreground text-center pt-2">
+   504→          {copyFor(language,
+   505→            'Search and tap a crop to pin it to the timeline. The first 20 crops are shown by default.',
+   506→            'ابحث وانقر على محصول لتثبيته في الخط الزمني. تُعرض أول 20 محصولاً افتراضياً.',
+   507→            'ابحث وانقر على محصول لتثبيته في الخط الزمني. تُعرض أول 20 محصولاً افتراضياً.',
+   508→          )}
+   509→        </p>
+   510→      )}
+   511→    </div>
+   512→  );
+   513→}
+   514→

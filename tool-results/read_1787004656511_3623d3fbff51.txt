@@ -1,0 +1,883 @@
+     1→'use client';
+     2→
+     3→/**
+     4→ * Home Dashboard — personalized landing page replacing the "list of tools" Home tab.
+     5→ *
+     6→ * Widgets:
+     7→ *   1. Welcome header with farm name (from localStorage)
+     8→ *   2. Weather + ET₀ widget (Open-Meteo, no key, auto-fetch by saved location)
+     9→ *   3. Quick actions (4 big buttons)
+    10→ *   4. Recent tools (from tool-registry's localStorage)
+    11→ *   5. Quick navigation cards (the original 4 tab cards, preserved)
+    12→ *
+    13→ * All data is localStorage-backed — no auth required.
+    14→ */
+    15→
+    16→import { useState, useEffect, useCallback, useMemo } from 'react';
+    17→import { Button } from '@/components/ui/button';
+    18→import { Badge } from '@/components/ui/badge';
+    19→import { Skeleton } from '@/components/ui/skeleton';
+    20→import {
+    21→  Cloud, Sun, Droplets, MapPin, RefreshCw, AlertTriangle, CheckCircle2,
+    22→  Sprout, Clock, Sparkles, Tractor, BookOpen, Wrench, Pin,
+    23→  ArrowRight, Zap, Calendar,
+    24→} from 'lucide-react';
+    25→import { CROP_LIFECYCLES } from '@/lib/crop-lifecycle';
+    26→import {
+    27→  getForecast, wmoDescription, type ForecastResult,
+    28→} from '@/lib/open-meteo';
+    29→import {
+    30→  getRecentTools, getPinnedTools, recordToolUse,
+    31→  TOOL_PINS_CHANGED_EVENT,
+    32→  type ToolEntry,
+    33→} from '@/lib/tool-registry';
+    34→import { WeatherAlertBanner } from '@/components/agri/weather-alert-banner';
+    35→import { FarmStats } from '@/components/agri/farm-stats';
+    36→import { TodayTasks } from '@/components/agri/today-tasks';
+    37→import { FarmProfileWizard, needsFarmProfileSetup } from '@/components/agri/farm-profile-wizard';
+    38→import { useTranslation, type Language } from '@/lib/language-store';
+    39→import { type TabId, type UserLevel } from '@/lib/user-level';
+    40→import { FREE_TOOL_COUNT, FORMULA_COUNT } from '@/lib/catalog-stats';
+    41→import { localizeToolEntry } from '@/lib/tool-registry';
+    42→import { formatWeatherDate, localizedWeatherLabel } from '@/lib/weather-localization';
+    43→import { localizedCropName } from '@/lib/crop-localization';
+    44→
+    45→const FARM_PROFILE_KEY = 'farm_profile_v1';
+    46→const LAST_LOC_KEY = 'et_tracker_last_loc_v1';
+    47→
+    48→function copyFor(language: Language, en: string, fr: string, ar: string) {
+    49→  return language === 'ar' ? ar : language === 'fr' ? fr : en;
+    50→}
+    51→
+    52→type RoleCopy = { en: string; fr: string; ar: string };
+    53→
+    54→function copyForLevel(language: Language, level: UserLevel, farmer: RoleCopy, manager: RoleCopy, professional: RoleCopy) {
+    55→  const selected = level === 'farmer' ? farmer : level === 'manager' ? manager : professional;
+    56→  return copyFor(language, selected.en, selected.fr, selected.ar);
+    57→}
+    58→
+    59→interface FarmProfile {
+    60→  name?: string;
+    61→  area?: number;
+    62→  mainCrops?: string;
+    63→  crop?: string;
+    64→  plantingDate?: string;
+    65→  lat?: string;
+    66→  lng?: string;
+    67→  setupCompleted?: boolean;
+    68→}
+    69→
+    70→interface HomeDashboardProps {
+    71→  /** Active experience; recent and pinned tools are filtered to this level. */
+    72→  level: UserLevel;
+    73→  /** Navigate to a tab. */
+    74→  onNavigate: (tab: TabId) => void;
+    75→  /** Open a specific tool by storageKey. */
+    76→  onOpenTool: (tab: TabId, storageKey?: string) => void;
+    77→  /** Open the command palette. */
+    78→  onOpenSearch: () => void;
+    79→}
+    80→
+    81→export function HomeDashboard({ level, onNavigate, onOpenTool, onOpenSearch }: HomeDashboardProps) {
+    82→  const [profile, setProfile] = useState<FarmProfile>({});
+    83→  const [forecast, setForecast] = useState<ForecastResult | null>(null);
+    84→  const [weatherLoading, setWeatherLoading] = useState(false);
+    85→  const [weatherError, setWeatherError] = useState<string | null>(null);
+    86→  const [recent, setRecent] = useState<ToolEntry[]>([]);
+    87→  const [pinned, setPinned] = useState<ToolEntry[]>([]);
+    88→  const [wizardOpen, setWizardOpen] = useState(false);
+    89→  const [refreshToken, setRefreshToken] = useState(0);
+    90→  const { t, language } = useTranslation();
+    91→
+    92→  // Load farm profile + recent tools from localStorage on mount
+    93→  useEffect(() => {
+    94→    try {
+    95→      const saved = localStorage.getItem(FARM_PROFILE_KEY);
+    96→      if (saved) setProfile(JSON.parse(saved));
+    97→    } catch { /* ignore */ }
+    98→    setRecent(getRecentTools(level));
+    99→    setPinned(getPinnedTools(level));
+   100→    const syncPinned = () => setPinned(getPinnedTools(level));
+   101→    window.addEventListener(TOOL_PINS_CHANGED_EVENT, syncPinned);
+   102→    // Auto-open the wizard on first visit (when no profile exists)
+   103→    if (needsFarmProfileSetup()) {
+   104→      setTimeout(() => setWizardOpen(true), 1500);  // slight delay so the dashboard renders first
+   105→    }
+   106→    return () => window.removeEventListener(TOOL_PINS_CHANGED_EVENT, syncPinned);
+   107→  }, [level]);
+   108→
+   109→  // Fetch weather using saved location from ET Tracker
+   110→  const fetchWeather = useCallback(async () => {
+   111→    setWeatherLoading(true);
+   112→    setWeatherError(null);
+   113→    try {
+   114→      let lat: number | undefined;
+   115→      let lng: number | undefined;
+   116→
+   117→      // Prefer the farm profile location, then fall back to the ET Tracker
+   118→      // location for existing users who have not completed the profile wizard.
+   119→      for (const key of [FARM_PROFILE_KEY, LAST_LOC_KEY]) {
+   120→        if (lat !== undefined && lng !== undefined) break;
+   121→        try {
+   122→          const saved = localStorage.getItem(key);
+   123→          if (!saved) continue;
+   124→          const obj = JSON.parse(saved);
+   125→          const la = parseFloat(obj.lat), ln = parseFloat(obj.lng);
+   126→          if (Number.isFinite(la) && Number.isFinite(ln)) {
+   127→            lat = la;
+   128→            lng = ln;
+   129→          }
+   130→        } catch { /* try the next stored location */ }
+   131→      }
+   132→
+   133→      if (lat === undefined || lng === undefined) {
+   134→        setForecast(null);
+   135→        return;
+   136→      }
+   137→
+   138→      const f = await getForecast(lat, lng, { days: 4 });
+   139→      setForecast(f);
+   140→    } catch (e: any) {
+   141→      setWeatherError(e?.message || 'Weather unavailable');
+   142→    } finally {
+   143→      setWeatherLoading(false);
+   144→    }
+   145→  }, []);
+   146→
+   147→  useEffect(() => { fetchWeather(); }, [fetchWeather]);
+   148→
+   149→  useEffect(() => {
+   150→    const syncAfterRestore = () => {
+   151→      try {
+   152→        const saved = localStorage.getItem(FARM_PROFILE_KEY);
+   153→        setProfile(saved ? JSON.parse(saved) : {});
+   154→      } catch {
+   155→        setProfile({});
+   156→      }
+   157→      setRecent(getRecentTools(level));
+   158→      setPinned(getPinnedTools(level));
+   159→      setRefreshToken(token => token + 1);
+   160→      void fetchWeather();
+   161→    };
+   162→    window.addEventListener('formula-atlas-backup-restored', syncAfterRestore);
+   163→    return () => window.removeEventListener('formula-atlas-backup-restored', syncAfterRestore);
+   164→  }, [fetchWeather]);
+   165→
+   166→  const today = forecast?.daily[0];
+   167→  const current = forecast?.current;
+   168→
+   169→  return (
+   170→    <div className="space-y-4">
+   171→      {/* =================================================================== */}
+   172→      {/* Welcome header */}
+   173→      {/* =================================================================== */}
+   174→      <section className="bg-gradient-to-br from-emerald-700 via-green-700 to-teal-800 text-white rounded-xl p-5 sm:p-6">
+   175→        <div className="flex items-center justify-between flex-wrap gap-3">
+   176→          <div>
+   177→            <div className="flex items-center gap-2 mb-1 text-emerald-100 text-xs font-medium uppercase tracking-wide">
+   178→              <Sprout className="h-3.5 w-3.5" /> {profile.name ? `${profile.name}` : t.appSubtitle}
+   179→            </div>
+   180→            <h2 className="text-xl sm:text-2xl font-bold leading-tight">
+   181→              {greeting(language)}, {copyForLevel(language, level, { en: 'farmer', fr: 'agriculteur', ar: 'أيها المزارع' }, { en: 'farm manager', fr: 'responsable de ferme', ar: 'مدير المزرعة' }, { en: 'agronomist', fr: 'agronome', ar: 'المهندس الزراعي' })} 👋
+   182→            </h2>
+   183→            <p className="text-emerald-100 text-xs mt-1">
+   184→              {today
+   185→                ? copyFor(language, `Today's ET₀ is ${today.et0.toFixed(1)} mm · ${localizedWeatherLabel(today.weatherCode, language).toLowerCase()}`, `L’ET₀ du jour est de ${today.et0.toFixed(1)} mm · ${localizedWeatherLabel(today.weatherCode, language).toLowerCase()}`, `ET₀ اليوم هو ${today.et0.toFixed(1)} مم · ${localizedWeatherLabel(today.weatherCode, language)}`)
+   186→                : copyFor(language, 'Loading today\'s conditions…', 'Chargement des conditions du jour…', 'جارٍ تحميل ظروف اليوم…')}
+   187→            </p>
+   188→          </div>
+   189→          <Button
+   190→            size="sm"
+   191→            variant="secondary"
+   192→            onClick={onOpenSearch}
+   193→            className="gap-1.5 bg-white/15 hover:bg-white/25 text-white border-0"
+   194→          >
+   195→            <Sparkles className="h-3.5 w-3.5" /> {copyFor(language, 'Search tools (⌘K)', 'Rechercher des outils (⌘K)', 'بحث في الأدوات (⌘K)')}
+   196→          </Button>
+   197→        </div>
+   198→      </section>
+   199→
+   200→      {/* Weather alert banner — proactive warnings */}
+   201→      <WeatherAlertBanner forecast={forecast} />
+   202→
+   203→      {/* Next best action — converts setup and weather data into a clear plan */}
+   204→      <TodayFocusPanel
+   205→        level={level}
+   206→        profile={profile}
+   207→        forecast={forecast}
+   208→        weatherLoading={weatherLoading}
+   209→        weatherError={weatherError}
+   210→        onSetup={() => setWizardOpen(true)}
+   211→        onOpenTool={onOpenTool}
+   212→        onRefresh={fetchWeather}
+   213→      />
+   214→
+   215→      {/* Farm stats — aggregate counts */}
+   216→      <section>
+   217→        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{copyForLevel(language, level, { en: 'Your Farm at a Glance', fr: 'Votre ferme en un coup d’œil', ar: 'مزرعتك في لمحة' }, { en: 'Operations at a Glance', fr: 'Les opérations en un coup d’œil', ar: 'العمليات في لمحة' }, { en: 'Evidence at a Glance', fr: 'Les données probantes en un coup d’œil', ar: 'الأدلة في لمحة' })}</div>
+   218→        <FarmStats />
+   219→      </section>
+   220→
+   221→      {/* =================================================================== */}
+   222→      {/* Weather + ET₀ widget */}
+   223→      {/* =================================================================== */}
+   224→      <section className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+   225→        {/* Current weather — spans 2 cols on lg */}
+   226→        <div className="lg:col-span-2 rounded-xl border bg-card p-4">
+   227→          <div className="flex items-center justify-between mb-3">
+   228→            <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+   229→              <MapPin className="h-3 w-3" /> {copyFor(language, 'Current Weather', 'Météo actuelle', 'الطقس الحالي')}
+   230→            </div>
+   231→            <Button size="sm" variant="ghost" onClick={fetchWeather} disabled={weatherLoading} className="h-6 w-6 p-0">
+   232→              <RefreshCw className={`h-3 w-3 ${weatherLoading ? 'animate-spin' : ''}`} />
+   233→            </Button>
+   234→          </div>
+   235→
+   236→          {weatherLoading && <WeatherSkeleton />}
+   237→
+   238→          {!weatherLoading && weatherError && (
+   239→            <div className="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-400 py-4">
+   240→              <AlertTriangle className="h-4 w-4 shrink-0" />
+   241→              <span>{copyFor(language, `Weather unavailable: ${weatherError}. ET Tracker still works — open it to set your location.`, `Météo indisponible : ${weatherError}. Le suivi de l’ET₀ reste disponible — ouvrez-le pour définir votre localisation.`, `الطقس غير متاح: ${weatherError}. متعقّب التبدّر لا يزال يعمل — افتحه لتحديد موقعك.`)}</span>
+   242→            </div>
+   243→          )}
+   244→
+   245→          {!weatherLoading && !weatherError && (!current || !today) && (
+   246→            <div className="flex flex-col items-center justify-center gap-2 py-5 text-center">
+   247→              <MapPin className="h-6 w-6 text-muted-foreground/50" />
+   248→              <p className="text-xs text-muted-foreground">
+   249→                {copyForLevel(language, level, { en: 'Complete your farm profile to see local weather.', fr: 'Complétez le profil de votre ferme pour voir la météo locale.', ar: 'أكمل ملف مزرعتك لرؤية الطقس المحلي.' }, { en: 'Complete the operating profile to see local weather.', fr: 'Complétez le profil opérationnel pour voir la météo locale.', ar: 'أكمل ملف التشغيل لرؤية الطقس المحلي.' }, { en: 'Complete the site context to see local weather.', fr: 'Complétez le contexte du site pour voir la météo locale.', ar: 'أكمل سياق الموقع لرؤية الطقس المحلي.' })}
+   250→              </p>
+   251→              <Button size="sm" variant="outline" onClick={() => setWizardOpen(true)} className="h-7 text-[10px] gap-1">
+   252→                {copyForLevel(language, level, { en: 'Set up location', fr: 'Configurer la localisation', ar: 'إعداد الموقع' }, { en: 'Set operating location', fr: 'Configurer la localisation opérationnelle', ar: 'إعداد موقع التشغيل' }, { en: 'Set site location', fr: 'Configurer la localisation du site', ar: 'إعداد موقع الحقل' })} <ArrowRight className="h-3 w-3" />
+   253→              </Button>
+   254→            </div>
+   255→          )}
+   256→
+   257→          {!weatherLoading && !weatherError && current && today && (
+   258→            <div className="space-y-3">
+   259→              {/* Current conditions row */}
+   260→              <div className="flex items-center gap-4">
+   261→                <div className="text-4xl">{wmoDescription(current.weatherCode).icon}</div>
+   262→                <div className="flex-1">
+   263→                  <div className="text-2xl font-bold">{current.temperature.toFixed(1)}°C</div>
+   264→                  <div className="text-xs text-muted-foreground">{localizedWeatherLabel(current.weatherCode, language)}</div>
+   265→                </div>
+   266→                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+   267→                  <div><span className="text-muted-foreground">{copyFor(language, 'RH', 'HR', 'الرطوبة')}</span> <strong className="font-mono">{current.relativeHumidity}%</strong></div>
+   268→                  <div><span className="text-muted-foreground">{copyFor(language, 'Wind', 'Vent', 'الرياح')}</span> <strong className="font-mono">{current.windSpeed10m.toFixed(1)} km/h</strong></div>
+   269→                  <div><span className="text-muted-foreground">{copyFor(language, 'Hi/Lo', 'Max/Min', 'ع/من')}</span> <strong className="font-mono">{today.tempMax.toFixed(0)}°/{today.tempMin.toFixed(0)}°</strong></div>
+   270→                  <div><span className="text-muted-foreground">{copyFor(language, 'Rain', 'Pluie', 'المطر')}</span> <strong className="font-mono">{today.precipitationSum.toFixed(1)} mm</strong></div>
+   271→                </div>
+   272→              </div>
+   273→
+   274→              {/* 3-day forecast row */}
+   275→              {forecast && (
+   276→                <div className="grid grid-cols-3 gap-2 pt-2 border-t">
+   277→                  {forecast.daily.slice(1, 4).map((d, i) => (
+   278→                    <div key={i} className="text-center">
+   279→                      <div className="text-[10px] text-muted-foreground uppercase">
+   280→                        {formatWeatherDate(d.date, language, { weekday: 'short' })}
+   281→                      </div>
+   282→                      <div className="text-xl my-0.5">{wmoDescription(d.weatherCode).icon}</div>
+   283→                      <div className="text-[10px] font-mono">
+   284→                        <span className="font-semibold">{d.tempMax.toFixed(0)}°</span>
+   285→                        <span className="text-muted-foreground">/{d.tempMin.toFixed(0)}°</span>
+   286→                      </div>
+   287→                      <div className="text-[9px] text-cyan-600 dark:text-cyan-400 font-mono">
+   288→                        {d.precipitationProbability}% · {d.et0.toFixed(1)}mm ET₀
+   289→                      </div>
+   290→                    </div>
+   291→                  ))}
+   292→                </div>
+   293→              )}
+   294→            </div>
+   295→          )}
+   296→        </div>
+   297→
+   298→        {/* ET₀ today — 1 col */}
+   299→        <div className="rounded-xl border bg-gradient-to-br from-cyan-50/60 to-sky-50/40 dark:from-cyan-950/20 dark:to-sky-950/10 p-4 flex flex-col">
+   300→          <div className="flex items-center gap-1.5 text-xs font-semibold text-cyan-700 dark:text-cyan-300 uppercase tracking-wide mb-2">
+   301→            <Droplets className="h-3 w-3" /> {copyForLevel(language, level, { en: 'Today\'s Water Need', fr: 'Besoin en eau du jour', ar: 'احتياج المياه اليوم' }, { en: 'Today\'s Water Demand', fr: 'Demande en eau du jour', ar: 'الطلب المائي اليوم' }, { en: 'Today\'s ET₀ Signal', fr: 'Signal ET₀ du jour', ar: 'مؤشر ET₀ اليوم' })}
+   302→          </div>
+   303→          {today ? (
+   304→            <>
+   305→              <div className="text-4xl font-bold text-cyan-700 dark:text-cyan-300 leading-tight">
+   306→                {today.et0.toFixed(1)}
+   307→                <span className="text-sm font-normal text-muted-foreground ml-1">mm</span>
+   308→              </div>
+   309→              <div className="text-[10px] text-muted-foreground mt-1">{copyFor(language, 'Reference ET₀ (FAO-56)', 'ET₀ de référence (FAO-56)', 'التبخّر المرجعي ET₀ (FAO-56)')}</div>
+   310→              <div className="mt-auto pt-3 space-y-1">
+   311→                <div className="flex items-center justify-between text-[10px]">
+   312→                  <span className="text-muted-foreground">{copyFor(language, 'Rain today', 'Pluie aujourd’hui', 'المطر اليوم')}</span>
+   313→                  <span className="font-mono font-semibold">{today.precipitationSum.toFixed(1)} mm</span>
+   314→                </div>
+   315→                <div className="flex items-center justify-between text-[10px]">
+   316→                  <span className="text-muted-foreground">{copyForLevel(language, level, { en: 'Net irrigation', fr: 'Irrigation nette', ar: 'الري الصافي' }, { en: 'Net water demand', fr: 'Demande nette en eau', ar: 'الطلب المائي الصافي' }, { en: 'Net irrigation signal', fr: 'Signal d’irrigation nette', ar: 'مؤشر الري الصافي' })}</span>
+   317→                  <span className={`font-mono font-semibold ${Math.max(0, today.et0 - today.precipitationSum * 0.8) > 1 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+   318→                    {Math.max(0, today.et0 - today.precipitationSum * 0.8).toFixed(1)} mm
+   319→                  </span>
+   320→                </div>
+   321→                <Button
+   322→                  size="sm"
+   323→                  variant="outline"
+   324→                  onClick={() => onOpenTool('farm', 'collapse_et_tracker')}
+   325→                  className="w-full text-[10px] h-7 mt-2 gap-1"
+   326→                >
+   327→                  {copyForLevel(language, level, { en: 'Open ET Tracker', fr: 'Ouvrir le suivi de l’ET₀', ar: 'افتح متعقّب التبدّر' }, { en: 'Open water operations', fr: 'Ouvrir les opérations hydriques', ar: 'افتح عمليات المياه' }, { en: 'Inspect ET₀ signal', fr: 'Inspecter le signal ET₀', ar: 'افحص مؤشر ET₀' })} <ArrowRight className="h-3 w-3" />
+   328→                </Button>
+   329→              </div>
+   330→            </>
+   331→          ) : (
+   332→            <Skeleton className="h-20 w-full" />
+   333→          )}
+   334→        </div>
+   335→      </section>
+   336→
+   337→      {/* =================================================================== */}
+   338→      {/* Quick actions */}
+   339→      {/* =================================================================== */}
+   340→      <section>
+   341→        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{copyForLevel(language, level, { en: 'Quick Actions', fr: 'Actions rapides', ar: 'إجراءات سريعة' }, { en: 'Operations Shortcuts', fr: 'Raccourcis opérationnels', ar: 'اختصارات العمليات' }, { en: 'Analysis Actions', fr: 'Actions d’analyse', ar: 'إجراءات التحليل' })}</div>
+   342→        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+   343→          <QuickAction
+   344→            icon={Sprout}
+   345→            color="#16a34a"
+   346→            label={copyFor(language, 'Fertilization plan', 'Plan de fertilisation', 'خطة التسميد')}
+   347→            desc={copyFor(language, '20 crops · NPK schedule', '20 cultures · programme NPK', '20 محصول · جدول NPK')}
+   348→            onClick={() => { recordToolUse('fertilization'); onOpenTool('farm', 'collapse_fertilization'); }}
+   349→          />
+   350→          <QuickAction
+   351→            icon={Clock}
+   352→            color="#0ea5e9"
+   353→            label={copyFor(language, 'Irrigation schedule', 'Programme d’irrigation', 'جدول الري')}
+   354→            desc={copyFor(language, 'Controllers · YAML export', 'Contrôleurs · export YAML', 'متحكّمات · تصدير YAML')}
+   355→            onClick={() => { recordToolUse('irrigation-scheduler'); onOpenTool('farm', 'collapse_irr_sched'); }}
+   356→          />
+   357→          <QuickAction
+   358→            icon={Sparkles}
+   359→            color="#6366f1"
+   360→            label={copyFor(language, 'Ask AI specialist', 'Demander à un spécialiste IA', 'اسأل وكيل ذكاء')}
+   361→            desc={copyFor(language, '10 agents · Crop Scout, etc.', '10 agents · prospection des cultures, etc.', '10 وكلاء · كشف المحاصيل...')}
+   362→            onClick={() => { recordToolUse('ai-specialists'); onOpenTool('insights', 'collapse_agent_chat'); }}
+   363→          />
+   364→          <QuickAction
+   365→            icon={MapPin}
+   366→            color="#10b981"
+   367→            label={copyFor(language, 'Import field', 'Importer une parcelle', 'استيراد حقل')}
+   368→            desc={copyFor(language, 'GeoJSON · KML · CSV', 'GeoJSON · KML · CSV', 'GeoJSON · KML · CSV')}
+   369→            onClick={() => { recordToolUse('field-boundary'); onOpenTool('farm', 'collapse_boundary'); }}
+   370→          />
+   371→        </div>
+   372→      </section>
+   373→
+   374→      {/* =================================================================== */}
+   375→      {/* Today's Tasks + Weather details side-by-side on large screens */}
+   376→      {/* =================================================================== */}
+   377→      <section className={`grid grid-cols-1 gap-3 ${profile.setupCompleted ? 'lg:grid-cols-2' : ''}`}>
+   378→        <TodayTasks level={level} onOpenTool={onOpenTool} refreshToken={refreshToken} />
+   379→
+   380→        {profile.setupCompleted && (
+   381→          /* Farm profile summary / edit */
+   382→          <div className="rounded-xl border bg-card p-4">
+   383→          <div className="flex items-center justify-between mb-3">
+   384→            <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+   385→              <Sprout className="h-3 w-3" /> {copyForLevel(language, level, { en: 'Farm Profile', fr: 'Profil de la ferme', ar: 'ملف المزرعة' }, { en: 'Operating Profile', fr: 'Profil opérationnel', ar: 'ملف التشغيل' }, { en: 'Site Context', fr: 'Contexte du site', ar: 'سياق الموقع' })}
+   386→            </div>
+   387→            <Button
+   388→              size="sm"
+   389→              variant="ghost"
+   390→              onClick={() => setWizardOpen(true)}
+   391→              className="text-[10px] h-6 gap-1"
+   392→            >
+   393→              {profile.name ? copyFor(language, 'Edit', 'Modifier', 'تعديل') : copyFor(language, 'Set up', 'Configurer', 'إعداد')}
+   394→            </Button>
+   395→          </div>
+   396→          {profile.name || profile.crop ? (
+   397→            <div className="space-y-1.5 text-xs">
+   398→              {profile.name && (
+   399→                <div className="flex items-center gap-2">
+   400→                  <span className="text-muted-foreground w-16">{copyForLevel(language, level, { en: 'Farm:', fr: 'Ferme :', ar: 'المزرعة:' }, { en: 'Farm:', fr: 'Ferme :', ar: 'المزرعة:' }, { en: 'Site:', fr: 'Site :', ar: 'الموقع:' })}</span>
+   401→                  <strong>{profile.name}</strong>
+   402→                </div>
+   403→              )}
+   404→              {profile.crop && (
+   405→                <div className="flex items-center gap-2">
+   406→                  <span className="text-muted-foreground w-16">{copyForLevel(language, level, { en: 'Crop:', fr: 'Culture :', ar: 'المحصول:' }, { en: 'Crop:', fr: 'Culture :', ar: 'المحصول:' }, { en: 'Crop:', fr: 'Culture :', ar: 'المحصول:' })}</span>
+   407→                  <strong>{CROP_LIFECYCLES.find(c => c.id === profile.crop)?.emoji} {localizedCropName(language, profile.crop, CROP_LIFECYCLES.find(c => c.id === profile.crop)?.name ?? profile.crop)}</strong>
+   408→                </div>
+   409→              )}
+   410→              {profile.plantingDate && (
+   411→                <div className="flex items-center gap-2">
+   412→                  <span className="text-muted-foreground w-16">{copyForLevel(language, level, { en: 'Planted:', fr: 'Planté :', ar: 'الزراعة:' }, { en: 'Season:', fr: 'Campagne :', ar: 'الموسم:' }, { en: 'Season:', fr: 'Campagne :', ar: 'الموسم:' })}</span>
+   413→                  <strong className="font-mono">{profile.plantingDate}</strong>
+   414→                </div>
+   415→              )}
+   416→              {profile.area !== undefined && (
+   417→                <div className="flex items-center gap-2">
+   418→                  <span className="text-muted-foreground w-16">{copyFor(language, 'Area:', 'Surface :', 'المساحة:')}</span>
+   419→                  <strong>{profile.area} ha</strong>
+   420→                </div>
+   421→              )}
+   422→              {profile.lat && profile.lng && (
+   423→                <div className="flex items-center gap-2">
+   424→                  <span className="text-muted-foreground w-16">{copyFor(language, 'Location:', 'Localisation :', 'الموقع:')}</span>
+   425→                  <strong className="font-mono text-[10px]">{profile.lat}, {profile.lng}</strong>
+   426→                </div>
+   427→              )}
+   428→            </div>
+   429→          ) : (
+   430→            <div className="text-center py-4">
+   431→              <Sprout className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
+   432→              <p className="text-xs text-muted-foreground mb-2">{copyForLevel(language, level, { en: 'No farm profile yet.', fr: 'Aucun profil de ferme pour le moment.', ar: 'لا يوجد ملف مزرعة بعد.' }, { en: 'No operating profile yet.', fr: 'Aucun profil opérationnel pour le moment.', ar: 'لا يوجد ملف تشغيل بعد.' }, { en: 'No site context yet.', fr: 'Aucun contexte de site pour le moment.', ar: 'لا يوجد سياق للموقع بعد.' })}</p>
+   433→              <Button size="sm" onClick={() => setWizardOpen(true)} className="gap-1.5 text-xs">
+   434→                <Sparkles className="h-3.5 w-3.5" /> {copyForLevel(language, level, { en: 'Set up your farm', fr: 'Configurer votre ferme', ar: 'أعدّ مزرعتك' }, { en: 'Set up operations', fr: 'Configurer les opérations', ar: 'أعدّ العمليات' }, { en: 'Set up site context', fr: 'Configurer le contexte du site', ar: 'أعدّ سياق الموقع' })}
+   435→              </Button>
+   436→            </div>
+   437→          )}
+   438→          </div>
+   439→        )}
+   440→      </section>
+   441→
+   442→      {/* =================================================================== */}
+   443→      {/* Recent tools */}
+   444→      {/* =================================================================== */}
+   445→      {recent.length > 0 && (
+   446→        <section>
+   447→          <div className="flex items-center justify-between mb-2">
+   448→            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+   449→              <Clock className="h-3 w-3" /> {copyFor(language, 'Recently Used', 'Utilisés récemment', 'المستخدمة مؤخراً')}
+   450→            </div>
+   451→            <Button size="sm" variant="ghost" onClick={onOpenSearch} className="text-[10px] h-6 gap-1">
+   452→              <Sparkles className="h-3 w-3" /> {copyFor(language, 'Browse all (⌘K)', 'Tout parcourir (⌘K)', 'تصفّح الكل (⌘K)')}
+   453→            </Button>
+   454→          </div>
+   455→          <div className="flex gap-2 overflow-x-auto pb-1">
+   456→            {recent.map(tool => {
+   457→              const Icon = tool.icon;
+   458→              const localizedTool = localizeToolEntry(tool, language);
+   459→              return (
+   460→                <button
+   461→                  key={tool.id}
+   462→                  onClick={() => { recordToolUse(tool.id); onOpenTool(tool.tab, tool.storageKey); }}
+   463→                  className="shrink-0 flex items-center gap-2 px-3 py-2 rounded-lg border bg-card hover:bg-muted/50 transition-colors text-left"
+   464→                  style={{ borderLeftWidth: 3, borderLeftColor: tool.color }}
+   465→                >
+   466→                  <div
+   467→                    className="w-7 h-7 rounded-md flex items-center justify-center shrink-0"
+   468→                    style={{ backgroundColor: tool.color + '20' }}
+   469→                  >
+   470→                    <Icon className="h-3.5 w-3.5" style={{ color: tool.color }} />
+   471→                  </div>
+   472→                  <div className="min-w-0">
+   473→                    <div className="text-xs font-medium leading-tight truncate max-w-[140px]">{localizedTool.title}</div>
+   474→                    <div className="text-[10px] text-muted-foreground truncate max-w-[140px]">{localizedTool.description}</div>
+   475→                  </div>
+   476→                </button>
+   477→              );
+   478→            })}
+   479→          </div>
+   480→        </section>
+   481→      )}
+   482→
+   483→      {/* Pinned tools — shared with the global command palette */}
+   484→      {pinned.length > 0 && (
+   485→        <section>
+   486→          <div className="mb-2 flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+   487→            <Pin className="h-3 w-3 fill-amber-400 text-amber-500" />
+   488→            {copyFor(language, 'My pinned tools', 'Mes outils épinglés', 'أدواتي المثبّتة')}
+   489→          </div>
+   490→          <div className="flex gap-2 overflow-x-auto pb-1">
+   491→            {pinned.map(tool => {
+   492→              const Icon = tool.icon;
+   493→              const localizedTool = localizeToolEntry(tool, language);
+   494→              return (
+   495→                <button
+   496→                  key={tool.id}
+   497→                  onClick={() => { recordToolUse(tool.id); onOpenTool(tool.tab, tool.storageKey); }}
+   498→                  className="flex shrink-0 items-center gap-2 rounded-lg border bg-card px-3 py-2 text-left transition-colors hover:bg-muted/50"
+   499→                  style={{ borderLeftWidth: 3, borderLeftColor: tool.color }}
+   500→                >
+   501→                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md" style={{ backgroundColor: tool.color + '20' }}>
+   502→                    <Icon className="h-3.5 w-3.5" style={{ color: tool.color }} />
+   503→                  </div>
+   504→                  <div className="min-w-0">
+   505→                    <div className="max-w-[160px] truncate text-xs font-medium leading-tight">{localizedTool.title}</div>
+   506→                    <div className="max-w-[160px] truncate text-[10px] text-muted-foreground">{localizedTool.description}</div>
+   507→                  </div>
+   508→                </button>
+   509→              );
+   510→            })}
+   511→          </div>
+   512→        </section>
+   513→      )}
+   514→
+   515→      {/* =================================================================== */}
+   516→      {/* Quick navigation cards (original, preserved) */}
+   517→      {/* =================================================================== */}
+   518→      <section>
+   519→        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{copyFor(language, 'Browse by Category', 'Parcourir par catégorie', 'تصفّح حسب الفئة')}</div>
+   520→        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+   521→          <NavCard icon={Tractor} label={t.tabFarm} desc={copyFor(language, 'Fields, crops, soil, livestock, irrigation', 'Parcelles, cultures, sols, élevage, irrigation', 'الحقول، المحاصيل، التربة، الماشية، الري')} color="#16a34a" onClick={() => onNavigate('farm')} />
+   522→          <NavCard icon={Sparkles} label={t.tabInsights} desc={copyFor(language, 'NDVI, weather, AI, financial, community', 'NDVI, météo, IA, finances, communauté', 'NDVI، الطقس، الذكاء، المالية، المجتمع')} color="#6366f1" onClick={() => onNavigate('insights')} />
+   523→          <NavCard icon={Wrench} label={t.tabTools} desc={copyFor(language, `${FREE_TOOL_COUNT} free agronomic calculators`, `${FREE_TOOL_COUNT} calculateurs agronomiques gratuits`, `${FREE_TOOL_COUNT} حاسبات زراعية مجانية`)} color="#0891b2" onClick={() => onNavigate('tools')} />
+   524→          <NavCard icon={BookOpen} label={t.tabFormulas} desc={copyFor(language, `${FORMULA_COUNT} formulas with calculators`, `${FORMULA_COUNT} formules avec calculateurs`, `${FORMULA_COUNT} معادلة بحاسبات`)} color="#f59e0b" onClick={() => onNavigate('formulas')} />
+   525→        </div>
+   526→      </section>
+   527→
+   528→      {/* Farm Profile Wizard — auto-opens on first visit, re-openable via Edit button */}
+   529→      <FarmProfileWizard
+   530→        open={wizardOpen}
+   531→        onOpenChange={setWizardOpen}
+   532→        onSaved={() => {
+   533→          // Reload the profile from localStorage
+   534→          try {
+   535→            const saved = localStorage.getItem(FARM_PROFILE_KEY);
+   536→            if (saved) setProfile(JSON.parse(saved));
+   537→          } catch { /* ignore */ }
+   538→          setRefreshToken(value => value + 1);
+   539→          void fetchWeather();
+   540→        }}
+   541→      />
+   542→    </div>
+   543→  );
+   544→}
+   545→
+   546→// ============================================================================
+   547→// Sub-components
+   548→// ============================================================================
+   549→
+   550→function WeatherSkeleton() {
+   551→  return (
+   552→    <div className="space-y-3">
+   553→      <div className="flex items-center gap-4">
+   554→        <Skeleton className="h-12 w-12 rounded-full" />
+   555→        <div className="flex-1 space-y-1.5">
+   556→          <Skeleton className="h-6 w-20" />
+   557→          <Skeleton className="h-3 w-32" />
+   558→        </div>
+   559→        <Skeleton className="h-10 w-32" />
+   560→      </div>
+   561→      <div className="grid grid-cols-3 gap-2 pt-2">
+   562→        <Skeleton className="h-12 w-full" />
+   563→        <Skeleton className="h-12 w-full" />
+   564→        <Skeleton className="h-12 w-full" />
+   565→      </div>
+   566→    </div>
+   567→  );
+   568→}
+   569→
+   570→function TodayFocusPanel({
+   571→  level,
+   572→  profile,
+   573→  forecast,
+   574→  weatherLoading,
+   575→  weatherError,
+   576→  onSetup,
+   577→  onOpenTool,
+   578→  onRefresh,
+   579→}: {
+   580→  level: UserLevel;
+   581→  profile: FarmProfile;
+   582→  forecast: ForecastResult | null;
+   583→  weatherLoading: boolean;
+   584→  weatherError: string | null;
+   585→  onSetup: () => void;
+   586→  onOpenTool: HomeDashboardProps['onOpenTool'];
+   587→  onRefresh: () => void;
+   588→}) {
+   589→  const { language } = useTranslation();
+   590→  const today = forecast?.daily[0];
+   591→  const current = forecast?.current;
+   592→  const setupChecks = [profile.name, profile.lat && profile.lng, profile.crop, profile.plantingDate];
+   593→  const completedSteps = setupChecks.filter(Boolean).length;
+   594→
+   595→  if (completedSteps < setupChecks.length) {
+   596→    return (
+   597→      <section className="rounded-xl border border-emerald-200 bg-gradient-to-br from-emerald-50/80 to-white p-4 dark:border-emerald-900/60 dark:from-emerald-950/30 dark:to-card">
+   598→        <div className="flex items-start gap-3">
+   599→          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white">
+   600→            <Sprout className="h-5 w-5" />
+   601→          </div>
+   602→          <div className="min-w-0 flex-1">
+   603→            <div className="flex flex-wrap items-center gap-2">
+   604→              <span className="text-[10px] font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
+   605→                {copyFor(language, 'Your next best action', 'Votre prochaine action', 'خطوتك التالية')}
+   606→              </span>
+   607→              <Badge variant="outline" className="text-[9px]">{completedSteps}/4</Badge>
+   608→            </div>
+   609→            <h3 className="mt-1 text-sm font-semibold">{copyForLevel(language, level,
+   610→              { en: 'Finish your farm profile', fr: 'Terminez le profil de votre ferme', ar: 'أكمل ملف مزرعتك' },
+   611→              { en: 'Complete your operating profile', fr: 'Complétez votre profil opérationnel', ar: 'أكمل ملف التشغيل' },
+   612→              { en: 'Complete your analysis context', fr: 'Complétez votre contexte d’analyse', ar: 'أكمل سياق التحليل' },
+   613→            )}</h3>
+   614→            <p className="mt-1 max-w-2xl text-xs text-muted-foreground">
+   615→              {copyForLevel(language, level,
+   616→                { en: 'Add your location, crop, and planting date so Formula Atlas can turn weather and calculations into a daily plan.', fr: 'Ajoutez votre localisation, votre culture et votre date de plantation pour transformer la météo et les calculs en plan quotidien.', ar: 'أضف موقعك ومحصولك وتاريخ الزراعة لنحوّل الطقس والحسابات إلى خطة يومية قابلة للتنفيذ.' },
+   617→                { en: 'Add the farm location, primary crop, and season date so the operating dashboard can prioritize field work.', fr: 'Ajoutez la localisation, la culture principale et la date de campagne pour prioriser les travaux de l’exploitation.', ar: 'أضف موقع المزرعة والمحصول الرئيسي وتاريخ الموسم ليحدد لوحة التشغيل أولويات العمل الميداني.' },
+   618→                { en: 'Add the site location, crop context, and season date so evidence and recommendations are interpreted correctly.', fr: 'Ajoutez la localisation, le contexte cultural et la date de campagne pour interpréter correctement les données et recommandations.', ar: 'أضف موقع الحقل وسياق المحصول وتاريخ الموسم لتفسير الأدلة والتوصيات بشكل صحيح.' },
+   619→              )}
+   620→            </p>
+   621→          </div>
+   622→        </div>
+   623→        <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+   624→          {[
+   625→            { label: copyForLevel(language, level, { en: 'Farm name', fr: 'Nom de la ferme', ar: 'اسم المزرعة' }, { en: 'Farm identity', fr: 'Identité de la ferme', ar: 'هوية المزرعة' }, { en: 'Site identity', fr: 'Identité du site', ar: 'هوية الموقع' }), done: Boolean(profile.name) },
+   626→            { label: copyForLevel(language, level, { en: 'Location', fr: 'Localisation', ar: 'الموقع' }, { en: 'Operating location', fr: 'Localisation opérationnelle', ar: 'موقع التشغيل' }, { en: 'Site location', fr: 'Localisation du site', ar: 'موقع الحقل' }), done: Boolean(profile.lat && profile.lng) },
+   627→            { label: copyForLevel(language, level, { en: 'Main crop', fr: 'Culture principale', ar: 'المحصول' }, { en: 'Primary crop', fr: 'Culture principale', ar: 'المحصول الرئيسي' }, { en: 'Crop context', fr: 'Contexte cultural', ar: 'سياق المحصول' }), done: Boolean(profile.crop) },
+   628→            { label: copyForLevel(language, level, { en: 'Planting date', fr: 'Date de plantation', ar: 'تاريخ الزراعة' }, { en: 'Season date', fr: 'Date de campagne', ar: 'تاريخ الموسم' }, { en: 'Season date', fr: 'Date de campagne', ar: 'تاريخ الموسم' }), done: Boolean(profile.plantingDate) },
+   629→          ].map(step => (
+   630→            <div key={step.label} className="flex items-center gap-1.5 rounded-md border bg-background/70 px-2 py-1.5 text-[10px]">
+   631→              <CheckCircle2 className={`h-3.5 w-3.5 shrink-0 ${step.done ? 'text-emerald-600' : 'text-muted-foreground/30'}`} />
+   632→              <span className={step.done ? 'text-foreground' : 'text-muted-foreground'}>{step.label}</span>
+   633→            </div>
+   634→          ))}
+   635→        </div>
+   636→        <div className="mt-3 flex flex-wrap gap-2">
+   637→          <Button size="sm" onClick={onSetup} className="h-8 gap-1.5 bg-emerald-600 text-xs hover:bg-emerald-700">
+   638→            <Sprout className="h-3.5 w-3.5" /> {copyForLevel(language, level, { en: 'Continue setup', fr: 'Continuer la configuration', ar: 'إكمال الإعداد' }, { en: 'Complete setup', fr: 'Terminer la configuration', ar: 'أكمل الإعداد' }, { en: 'Complete context', fr: 'Compléter le contexte', ar: 'أكمل السياق' })}
+   639→          </Button>
+   640→          <Button size="sm" variant="ghost" onClick={() => onOpenTool('tools')} className="h-8 text-xs">
+   641→            {copyFor(language, 'Explore tools', 'Explorer les outils', 'استكشف الأدوات')}
+   642→          </Button>
+   643→        </div>
+   644→      </section>
+   645→    );
+   646→  }
+   647→
+   648→  if (weatherLoading) {
+   649→    return (
+   650→      <section className="rounded-xl border bg-card p-4">
+   651→        <div className="flex items-center gap-3">
+   652→          <Skeleton className="h-10 w-10 rounded-lg" />
+   653→          <div className="flex-1 space-y-2">
+   654→            <Skeleton className="h-3 w-28" />
+   655→            <Skeleton className="h-4 w-64 max-w-full" />
+   656→            <Skeleton className="h-3 w-80 max-w-full" />
+   657→          </div>
+   658→        </div>
+   659→      </section>
+   660→    );
+   661→  }
+   662→
+   663→  if (weatherError || !today || !current) {
+   664→    return (
+   665→      <section className="rounded-xl border border-amber-200 bg-amber-50/60 p-4 dark:border-amber-900/60 dark:bg-amber-950/20">
+   666→        <div className="flex items-start gap-3">
+   667→          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+   668→            <MapPin className="h-5 w-5" />
+   669→          </div>
+   670→          <div className="flex-1">
+   671→            <span className="text-[10px] font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-300">
+   672→              {copyFor(language, 'Your next best action', 'Votre prochaine action', 'خطوتك التالية')}
+   673→            </span>
+   674→            <h3 className="mt-1 text-sm font-semibold">{copyForLevel(language, level,
+   675→              { en: 'Update your local conditions', fr: 'Mettez à jour vos conditions locales', ar: 'حدّث ظروف الطقس المحلية' },
+   676→              { en: 'Update operating conditions', fr: 'Mettez à jour les conditions opérationnelles', ar: 'حدّث ظروف التشغيل' },
+   677→              { en: 'Update site conditions', fr: 'Mettez à jour les conditions du site', ar: 'حدّث ظروف الموقع' },
+   678→            )}</h3>
+   679→            <p className="mt-1 text-xs text-muted-foreground">
+   680→              {weatherError
+   681→                ? copyFor(language, 'Weather could not be loaded right now. Retry or continue using the tools.', 'La météo ne peut pas être chargée pour le moment. Réessayez ou continuez à utiliser les outils.', 'تعذر تحميل الطقس الآن. يمكنك إعادة المحاولة أو متابعة استخدام الأدوات.')
+   682→                : copyForLevel(language, level,
+   683→                  { en: 'We use your farm location to show ET₀, alerts, and daily recommendations.', fr: 'Nous utilisons la localisation de votre ferme pour afficher l’ET₀, les alertes et les recommandations quotidiennes.', ar: 'سنستخدم موقع مزرعتك لإظهار ET₀ والتنبيهات والتوصيات اليومية.' },
+   684→                  { en: 'Set an operating location to connect weather, ET₀, and field priorities to the farm plan.', fr: 'Définissez une localisation opérationnelle pour relier météo, ET₀ et priorités de parcelle au plan de ferme.', ar: 'حدد موقع التشغيل لربط الطقس وET₀ وأولويات الحقول بخطة المزرعة.' },
+   685→                  { en: 'Set a site location to interpret weather, ET₀, alerts, and evidence in the right field context.', fr: 'Définissez la localisation du site pour interpréter météo, ET₀, alertes et données dans le bon contexte.', ar: 'حدد موقع الحقل لتفسير الطقس وET₀ والتنبيهات والأدلة في سياق الحقل الصحيح.' },
+   686→                )}
+   687→            </p>
+   688→          </div>
+   689→          <Button size="sm" variant="outline" onClick={onRefresh} className="h-8 shrink-0 text-xs">
+   690→            {copyFor(language, 'Retry', 'Réessayer', 'إعادة المحاولة')}
+   691→          </Button>
+   692→        </div>
+   693→      </section>
+   694→    );
+   695→  }
+   696→
+   697→  let title = copyForLevel(language, level,
+   698→    { en: 'Review today\'s crop plan', fr: 'Vérifiez le plan de culture du jour', ar: 'راجع خطة محصولك اليوم' },
+   699→    { en: 'Review today\'s operating plan', fr: 'Vérifiez le plan opérationnel du jour', ar: 'راجع خطة التشغيل اليوم' },
+   700→    { en: 'Review today\'s field signals', fr: 'Vérifiez les signaux de parcelle du jour', ar: 'راجع مؤشرات الحقل اليوم' },
+   701→  );
+   702→  let description = copyForLevel(language, level,
+   703→    { en: 'Conditions look manageable. Review scheduled tasks and start with the most important field operation.', fr: 'Les conditions semblent maîtrisables. Consultez les tâches prévues et commencez par l’opération la plus importante.', ar: 'الظروف مستقرة. راجع المهام المجدولة وابدأ بأهم عملية ميدانية.' },
+   704→    { en: 'Conditions look manageable. Review the operating schedule and start with the highest-priority field action.', fr: 'Les conditions semblent maîtrisables. Consultez le programme opérationnel et commencez par l’action prioritaire.', ar: 'الظروف مستقرة. راجع برنامج التشغيل وابدأ بأعلى إجراء ميداني أولوية.' },
+   705→    { en: 'Conditions look manageable. Review the evidence rail and focus the team on the highest-priority signal.', fr: 'Les conditions semblent maîtrisables. Consultez les données et concentrez l’équipe sur le signal prioritaire.', ar: 'الظروف مستقرة. راجع شريط الأدلة ووجّه الفريق إلى أعلى مؤشر أولوية.' },
+   706→  );
+   707→  let actionLabel = copyForLevel(language, level,
+   708→    { en: 'Open labor calendar', fr: 'Ouvrir le calendrier de main-d’œuvre', ar: 'افتح تقويم العمالة' },
+   709→    { en: 'Open labor calendar', fr: 'Ouvrir le calendrier de main-d’œuvre', ar: 'افتح تقويم العمالة' },
+   710→    { en: 'Open labor calendar', fr: 'Ouvrir le calendrier de main-d’œuvre', ar: 'افتح تقويم العمالة' },
+   711→  );
+   712→  let actionTab: TabId = 'calendar';
+   713→  let actionKey: string | undefined;
+   714→  let Icon = CheckCircle2;
+   715→  let color = '#16a34a';
+   716→
+   717→  if (today.precipitationProbability >= 60 || today.precipitationSum >= 10) {
+   718→    title = copyForLevel(language, level,
+   719→      { en: 'Review irrigation before the rain', fr: 'Vérifiez l’irrigation avant la pluie', ar: 'راجع الري قبل هطول المطر' },
+   720→      { en: 'Adjust irrigation before the rain', fr: 'Ajustez l’irrigation avant la pluie', ar: 'عدّل الري قبل هطول المطر' },
+   721→      { en: 'Review water operations before the rain', fr: 'Vérifiez les opérations hydriques avant la pluie', ar: 'راجع عمليات المياه قبل هطول المطر' },
+   722→    );
+   723→    description = copyForLevel(language, level,
+   724→      { en: `${today.precipitationProbability}% rain probability today. Adjust the schedule to avoid overwatering and save water.`, fr: `${today.precipitationProbability} % de probabilité de pluie aujourd’hui. Ajustez le programme pour éviter le surplus d’eau et économiser la ressource.`, ar: `احتمال المطر ${today.precipitationProbability}% اليوم. أعدّل الجدول لتجنب الري الزائد وتوفير المياه.` },
+   725→      { en: `${today.precipitationProbability}% rain probability today. Adjust the farm schedule to avoid overwatering and protect field operations.`, fr: `${today.precipitationProbability} % de probabilité de pluie aujourd’hui. Ajustez le programme de ferme pour éviter le surplus d’eau et protéger les opérations.`, ar: `احتمال المطر ${today.precipitationProbability}% اليوم. عدّل برنامج المزرعة لتجنب الري الزائد وحماية العمليات.` },
+   726→      { en: `${today.precipitationProbability}% rain probability today. Reassess water operations and treatment timing against the field evidence.`, fr: `${today.precipitationProbability} % de probabilité de pluie aujourd’hui. Réévaluez les opérations hydriques et le calendrier des traitements selon les données.`, ar: `احتمال المطر ${today.precipitationProbability}% اليوم. أعد تقييم عمليات المياه وتوقيت المعالجة وفقاً لأدلة الحقل.` },
+   727→    );
+   728→    actionLabel = copyForLevel(language, level,
+   729→      { en: 'Open irrigation schedule', fr: 'Ouvrir le programme d’irrigation', ar: 'افتح جدول الري' },
+   730→      { en: 'Open irrigation schedule', fr: 'Ouvrir le programme d’irrigation', ar: 'افتح جدول الري' },
+   731→      { en: 'Review irrigation schedule', fr: 'Vérifier le programme d’irrigation', ar: 'راجع جدول الري' },
+   732→    );
+   733→    actionTab = 'farm';
+   734→    actionKey = 'collapse_irr_sched';
+   735→    Icon = Droplets;
+   736→    color = '#0284c7';
+   737→  } else if (today.et0 >= 5) {
+   738→    title = copyForLevel(language, level,
+   739→      { en: 'Water demand is high today', fr: 'La demande en eau est élevée aujourd’hui', ar: 'الطلب المائي مرتفع اليوم' },
+   740→      { en: 'Water demand is high across operations', fr: 'La demande en eau est élevée pour les opérations', ar: 'الطلب المائي مرتفع في العمليات' },
+   741→      { en: 'High water-demand signal', fr: 'Signal de forte demande en eau', ar: 'مؤشر طلب مائي مرتفع' },
+   742→    );
+   743→    description = copyForLevel(language, level,
+   744→      { en: `Reference ET₀ is ${today.et0.toFixed(1)} mm. Calculate net crop need and schedule irrigation.`, fr: `L’ET₀ de référence est de ${today.et0.toFixed(1)} mm. Calculez le besoin net de la culture et programmez l’irrigation.`, ar: `قيمة ET₀ هي ${today.et0.toFixed(1)} مم. احسب الاحتياج الصافي وجدول الري للمحصول.` },
+   745→      { en: `Reference ET₀ is ${today.et0.toFixed(1)} mm. Review field demand and coordinate irrigation capacity across the farm.`, fr: `L’ET₀ de référence est de ${today.et0.toFixed(1)} mm. Vérifiez la demande des parcelles et coordonnez la capacité d’irrigation.`, ar: `قيمة ET₀ هي ${today.et0.toFixed(1)} مم. راجع طلب الحقول ونسّق قدرة الري عبر المزرعة.` },
+   746→      { en: `Reference ET₀ is ${today.et0.toFixed(1)} mm. Interpret the water-demand signal with crop stage and site evidence before scheduling.`, fr: `L’ET₀ de référence est de ${today.et0.toFixed(1)} mm. Interprétez le signal avec le stade cultural et les données du site avant de programmer.`, ar: `قيمة ET₀ هي ${today.et0.toFixed(1)} مم. فسّر مؤشر الطلب مع مرحلة المحصول وأدلة الموقع قبل الجدولة.` },
+   747→    );
+   748→    actionLabel = copyForLevel(language, level,
+   749→      { en: 'Open ET₀ tracker', fr: 'Ouvrir le suivi de l’ET₀', ar: 'افتح متعقّب ET₀' },
+   750→      { en: 'Review ET₀ operations', fr: 'Vérifier les opérations ET₀', ar: 'راجع عمليات ET₀' },
+   751→      { en: 'Analyze ET₀ signal', fr: 'Analyser le signal ET₀', ar: 'حلّل مؤشر ET₀' },
+   752→    );
+   753→    actionTab = 'farm';
+   754→    actionKey = 'collapse_et_tracker';
+   755→    Icon = Droplets;
+   756→    color = '#0891b2';
+   757→  } else if (today.tempMax >= 35 || current.temperature >= 35) {
+   758→    title = copyForLevel(language, level,
+   759→      { en: 'Watch for heat stress', fr: 'Surveillez le stress thermique', ar: 'راقب إجهاد الحرارة' },
+   760→      { en: 'Flag heat exposure across fields', fr: 'Signalez l’exposition à la chaleur dans les parcelles', ar: 'ارصد التعرض للحرارة عبر الحقول' },
+   761→      { en: 'Assess heat-stress risk', fr: 'Évaluez le risque de stress thermique', ar: 'قيّم خطر الإجهاد الحراري' },
+   762→    );
+   763→    description = copyForLevel(language, level,
+   764→      { en: `Temperatures may reach ${today.tempMax.toFixed(0)}°C. Scout the crop and review its water need.`, fr: `Les températures peuvent atteindre ${today.tempMax.toFixed(0)} °C. Inspectez la culture et vérifiez son besoin en eau.`, ar: `ستصل الحرارة إلى ${today.tempMax.toFixed(0)}°م. افحص المحصول وراجع احتياج المياه.` },
+   765→      { en: `Temperatures may reach ${today.tempMax.toFixed(0)}°C. Prioritize exposed fields for scouting and water coordination.`, fr: `Les températures peuvent atteindre ${today.tempMax.toFixed(0)} °C. Priorisez les parcelles exposées pour la prospection et la coordination de l’eau.`, ar: `ستصل الحرارة إلى ${today.tempMax.toFixed(0)}°م. أعطِ الأولوية للحقول المعرضة للكشف وتنسيق المياه.` },
+   766→      { en: `Temperatures may reach ${today.tempMax.toFixed(0)}°C. Assess crop-stage exposure and review scouting evidence before advising action.`, fr: `Les températures peuvent atteindre ${today.tempMax.toFixed(0)} °C. Évaluez l’exposition selon le stade et vérifiez les données de prospection.`, ar: `ستصل الحرارة إلى ${today.tempMax.toFixed(0)}°م. قيّم التعرض حسب مرحلة المحصول وراجع أدلة الكشف قبل التوصية.` },
+   767→    );
+   768→    actionLabel = copyForLevel(language, level,
+   769→      { en: 'Open field scouting', fr: 'Ouvrir la prospection de terrain', ar: 'افتح كشف الحقل' },
+   770→      { en: 'Open field scouting', fr: 'Ouvrir la prospection de terrain', ar: 'افتح كشف الحقل' },
+   771→      { en: 'Review scouting evidence', fr: 'Vérifier les données de prospection', ar: 'راجع أدلة الكشف' },
+   772→    );
+   773→    actionTab = 'farm';
+   774→    actionKey = 'collapse_scouting';
+   775→    Icon = AlertTriangle;
+   776→    color = '#d97706';
+   777→  } else if (today.windSpeedMax > 30 || current.windSpeed10m > 30) {
+   778→    title = copyForLevel(language, level,
+   779→      { en: 'Wind is strong — plan spraying carefully', fr: 'Le vent est fort — planifiez les traitements avec prudence', ar: 'الرياح قوية — خطط للرش بحذر' },
+   780→      { en: 'Wind is strong — check the spray window', fr: 'Le vent est fort — vérifiez la fenêtre de traitement', ar: 'الرياح قوية — تحقق من نافذة الرش' },
+   781→      { en: 'Wind constraint — assess drift risk', fr: 'Contrainte de vent — évaluez le risque de dérive', ar: 'قيد الرياح — قيّم خطر الانجراف' },
+   782→    );
+   783→    description = copyForLevel(language, level,
+   784→      { en: 'Delay spraying when appropriate and review drift risk before heading to the field.', fr: 'Reportez les traitements si nécessaire et vérifiez le risque de dérive avant de vous rendre au champ.', ar: 'أجّل الرش عند الحاجة وراجع خطر انجراف المبيدات قبل الخروج إلى الحقل.' },
+   785→      { en: 'Check the spray window, crew timing, and drift risk before assigning field work.', fr: 'Vérifiez la fenêtre de traitement, l’horaire de l’équipe et le risque de dérive avant d’affecter les travaux.', ar: 'تحقق من نافذة الرش وتوقيت الفريق وخطر الانجراف قبل تعيين العمل الميداني.' },
+   786→      { en: 'Review drift constraints and treatment timing before making a recommendation.', fr: 'Vérifiez les contraintes de dérive et le calendrier des traitements avant de formuler une recommandation.', ar: 'راجع قيود الانجراف وتوقيت المعالجة قبل تقديم التوصية.' },
+   787→    );
+   788→    actionLabel = copyForLevel(language, level,
+   789→      { en: 'Open drift assessment', fr: 'Ouvrir l’évaluation de la dérive', ar: 'افتح تقييم الانجراف' },
+   790→      { en: 'Check drift assessment', fr: 'Vérifier l’évaluation de la dérive', ar: 'تحقق من تقييم الانجراف' },
+   791→      { en: 'Assess drift constraints', fr: 'Évaluer les contraintes de dérive', ar: 'قيّم قيود الانجراف' },
+   792→    );
+   793→    actionTab = 'farm';
+   794→    actionKey = 'collapse_drift';
+   795→    Icon = AlertTriangle;
+   796→    color = '#ea580c';
+   797→  }
+   798→
+   799→  return (
+   800→    <section className="rounded-xl border p-4" style={{ borderColor: color + '55', background: `linear-gradient(135deg, ${color}12, transparent)` }}>
+   801→      <div className="flex items-start gap-3">
+   802→        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg" style={{ backgroundColor: color + '20' }}>
+   803→          <Icon className="h-5 w-5" style={{ color }} />
+   804→        </div>
+   805→        <div className="min-w-0 flex-1">
+   806→          <span className="text-[10px] font-semibold uppercase tracking-wide" style={{ color }}>
+   807→            {copyFor(language, 'Today\'s focus', 'Priorité du jour', 'خطة اليوم')}
+   808→          </span>
+   809→          <h3 className="mt-1 text-sm font-semibold">{title}</h3>
+   810→          <p className="mt-1 text-xs text-muted-foreground">{description}</p>
+   811→        </div>
+   812→        <Badge variant="outline" className="hidden shrink-0 text-[9px] sm:inline-flex">ET₀ {today.et0.toFixed(1)} mm</Badge>
+   813→      </div>
+   814→      <div className="mt-3 flex flex-wrap gap-2">
+   815→        <Button size="sm" onClick={() => onOpenTool(actionTab, actionKey)} className="h-8 gap-1.5 text-xs" style={{ backgroundColor: color }}>
+   816→          {actionLabel} <ArrowRight className="h-3.5 w-3.5" />
+   817→        </Button>
+   818→        <Button size="sm" variant="ghost" onClick={() => onOpenTool('insights', 'collapse_weather_radar')} className="h-8 text-xs">
+   819→          {copyFor(language, 'View weather', 'Voir la météo', 'عرض الطقس')}
+   820→        </Button>
+   821→      </div>
+   822→    </section>
+   823→  );
+   824→}
+   825→
+   826→function QuickAction({ icon: Icon, color, label, desc, onClick }: {
+   827→  icon: typeof Sprout; color: string; label: string; desc: string; onClick: () => void;
+   828→}) {
+   829→  return (
+   830→    <button
+   831→      onClick={onClick}
+   832→      className="text-left rounded-lg border bg-card p-3 hover:shadow-sm transition-all hover:-translate-y-0.5"
+   833→      style={{ borderTopWidth: 2, borderTopColor: color }}
+   834→    >
+   835→      <div
+   836→        className="w-8 h-8 rounded-md flex items-center justify-center mb-2"
+   837→        style={{ backgroundColor: color + '20' }}
+   838→      >
+   839→        <Icon className="h-4 w-4" style={{ color }} />
+   840→      </div>
+   841→      <div className="text-xs font-semibold leading-tight">{label}</div>
+   842→      <div className="text-[10px] text-muted-foreground mt-0.5">{desc}</div>
+   843→    </button>
+   844→  );
+   845→}
+   846→
+   847→function NavCard({ icon: Icon, label, desc, color, onClick }: {
+   848→  icon: typeof Tractor; label: string; desc: string; color: string; onClick: () => void;
+   849→}) {
+   850→  return (
+   851→    <button
+   852→      onClick={onClick}
+   853→      className="text-left rounded-xl border bg-card p-4 hover:shadow-md transition-all hover:-translate-y-0.5"
+   854→    >
+   855→      <div
+   856→        className="w-10 h-10 rounded-lg flex items-center justify-center mb-2"
+   857→        style={{ backgroundColor: color + '20' }}
+   858→      >
+   859→        <Icon className="h-5 w-5" style={{ color }} />
+   860→      </div>
+   861→      <div className="text-sm font-semibold">{label}</div>
+   862→      <div className="text-[10px] text-muted-foreground mt-0.5 leading-relaxed">{desc}</div>
+   863→    </button>
+   864→  );
+   865→}
+   866→
+   867→function greeting(lang?: 'en' | 'fr' | 'ar'): string {
+   868→  const h = new Date().getHours();
+   869→  if (lang === 'ar') {
+   870→    if (h < 12) return 'صباح الخير';
+   871→    if (h < 18) return 'مساء الخير';
+   872→    return 'مساء الخير';
+   873→  }
+   874→  if (lang === 'fr') {
+   875→    if (h < 12) return 'Bonjour';
+   876→    if (h < 18) return 'Bon après-midi';
+   877→    return 'Bonsoir';
+   878→  }
+   879→  if (h < 12) return 'Good morning';
+   880→  if (h < 18) return 'Good afternoon';
+   881→  return 'Good evening';
+   882→}
+   883→

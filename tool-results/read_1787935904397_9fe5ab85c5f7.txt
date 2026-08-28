@@ -1,0 +1,322 @@
+   440→          </div>
+   441→        </div>
+   442→      </header>
+   443→
+   444→      {/* HOME TAB — personalized dashboard */}
+   445→      {activeTab === 'home' && (
+   446→        <main className="flex-1 max-w-[1200px] mx-auto w-full p-4 sm:p-6 space-y-6 pb-20 sm:pb-6">
+   447→          <LevelHome
+   448→            level={level}
+   449→            onNavigate={(tab) => setActiveTab(tab)}
+   450→            onOpenTool={(tab, storageKey) => openTool(tab, storageKey)}
+   451→            onOpenSearch={() => setPaletteOpen(true)}
+   452→          />
+   453→
+   454→          {level !== 'farmer' && <>
+   455→            <SeasonScheduler onLaunchWorkflow={(workflowId) => {
+   456→              const wf = workflows.find(w => w.id === workflowId);
+   457→              if (wf) { setActiveWorkflow(wf); setWorkflowOpen(true); }
+   458→            }} />
+   459→            <CollapsibleSection
+   460→              title={t.achievements}
+   461→              description={t.achievementsDesc}
+   462→              icon={Trophy}
+   463→              color="#7c3aed"
+   464→              storageKey="collapse_gamification"
+   465→              defaultOpen={false}
+   466→            >
+   467→              <div className="p-4"><GamificationPanel /></div>
+   468→            </CollapsibleSection>
+   469→            <UseCasesSection onLaunch={(wf) => { setActiveWorkflow(wf); setWorkflowOpen(true); }} />
+   470→          </>}
+   471→        </main>
+   472→      )}
+   473→
+   474→      {/* SIMULATOR TAB — Algeria-aware crop business simulation */}
+   475→      {activeTab === 'simulator' && (
+   476→        <main className="flex-1 max-w-[1600px] mx-auto w-full p-4 sm:p-6 pb-20 sm:pb-6">
+   477→          <CropSimulator />
+   478→        </main>
+   479→      )}
+   480→
+   481→      {/* CALENDAR TAB — source-traceable Algeria crop operations */}
+   482→      {activeTab === 'calendar' && (
+   483→        <main className="flex-1 max-w-[1400px] mx-auto w-full p-4 sm:p-6 pb-20 sm:pb-6">
+   484→          <AlgeriaCropCalendar onSetupFarm={() => openTool('home')} />
+   485→        </main>
+   486→      )}
+   487→
+   488→      {/* FARM TAB — fields, crops, soil, livestock, irrigation */}
+   489→      {activeTab === 'farm' && (
+   490→        <main className="flex-1 max-w-[1200px] mx-auto w-full p-4 sm:p-6 space-y-6 pb-20 sm:pb-6">
+   491→          <div className="rounded-xl p-4 bg-gradient-to-r from-emerald-600 to-green-700 text-white">
+   492→            <div className="flex items-center gap-2"><Tractor className="h-5 w-5" /><h2 className="text-lg font-bold">{t.farmManagement}</h2></div>
+   493→            <p className="text-xs text-emerald-100 mt-1">{t.farmManagementSubtitle}</p>
+   494→          </div>
+   495→
+   496→          <FarmTabToolbar />
+   497→
+   498→          <CollapsibleSection title={tr('Workspace & Access', 'مساحة العمل والوصول', language)} description={tr('Manage your workspace, data backup, field mode, and app settings', 'أدر مساحة عملك ونسخ احتياطي للبيانات ووضع الحقل وإعدادات التطبيق', language)} icon={Settings} color="#64748b" storageKey="collapse_workspace" defaultOpen={false} enableExport group="overview"><div className="p-4"><WorkspacePanel /></div></CollapsibleSection>
+   499→
+   500→          {level === 'professional' && (
+   501→            <CollapsibleSection title={tr('Professional Decision Workspaces', 'مساحات القرار الاحترافية', language)} description={tr('Six connected tools for water, compliance, scenarios, soil evidence, and field execution', 'ست أدوات مترابطة للمياه والامتثال والسيناريوهات وأدلة التربة والتنفيذ الحقلي', language)} icon={Tractor} color="#059669" storageKey="professional_tools_hub" defaultOpen={true} enableExport><div className="p-4"><ProfessionalToolsHub onOpenTool={openTool} /></div></CollapsibleSection>
+   502→          )}
+   503→
+   504→          <CollapsibleSection title={tr('Farm Digital Twin', 'التوأم الرقمي للمزرعة', language)} description={tr('Command center: field status, priorities, alerts, and cross-tool recommendations', 'مركز القيادة: حالة الحقل والأولويات والتنبيهات والتوصيات عبر الأدوات', language)} icon={Activity} color="#0f766e" storageKey="collapse_digital_twin" defaultOpen={false} enableExport><div className="p-4"><FarmDigitalTwin onOpenFarmTool={(storageKey) => openTool('farm', storageKey)} onOpenSimulator={() => openTool('simulator')} /></div></CollapsibleSection>
+   505→
+   506→          <CollapsibleSection title={tr('Satellite Crop Health', 'صحة المحصول بالأقمار الصناعية', language)} description={tr('NDVI field maps, vegetation health heatmap, stress zones, and AI recommendations', 'خرائط NDVI للحقول، خريطة حرارية لصحة الغطاء النباتي، مناطق الإجهاد، وتوصيات بالذكاء', language)} icon={Satellite} color="#6366f1" storageKey="collapse_satellite_health" defaultOpen={false} enableExport><div className="p-4"><SatelliteCropHealthMonitor onOpenFarmTool={(storageKey) => openTool('farm', storageKey)} /></div></CollapsibleSection>
+   507→
+   508→          {level !== 'farmer' && (
+   509→          <CollapsibleSection title={tr('Demo Scenario Studio', 'استوديو سيناريوهات العرض', language)} description={tr('Reproducible Algeria-aware synthetic farm data for demos, onboarding, and QA — not for agronomic decisions', 'Données agricoles algériennes synthétiques et reproductibles pour démonstration, accueil et tests — pas pour décisions agronomiques', language)} icon={Sparkles} color="#7c3aed" storageKey="collapse_demo_scenario" defaultOpen={false} enableExport><div className="p-4"><DemoScenarioStudio /></div></CollapsibleSection>
+   510→          )}
+   511→
+   512→          <CollapsibleSection title={tr('Field Record Book', 'دفتر سجل الحقل', language)} description={tr('Traceable timeline for field decisions, scouting, soil tests, satellite checks, inputs, irrigation, and harvest', 'سجل زمني قابل للتتبع لقرارات الحقل والكشف وتحاليل التربة والأقمار الصناعية والمدخلات والري والحصاد', language)} icon={BookOpen} color="#047857" storageKey="collapse_field_records" defaultOpen={true} enableExport><div className="p-4"><FieldRecordBook /></div></CollapsibleSection>
+   513→
+   514→          <CollapsibleSection title={tr('Disease Encyclopedia', 'موسوعة الأمراض', language)} description={tr('Browse 20+ diseases by crop or search by symptom — chemical + organic treatments, precautions, and INPV-registered active substances', 'تصفّح 20+ مرضاً حسب المحصول أو ابحث بالعَرَض — علاجات كيميائية وعضوية، احتياطات، ومواد فعالة مسجلة INPV', language)} icon={Bug} color="#dc2626" storageKey="collapse_disease_encyclopedia" defaultOpen={false} enableExport group="protection"><div className="p-4"><DiseaseEncyclopedia /></div></CollapsibleSection>
+   515→
+   516→          <CollapsibleSection title={tr('Crop Recommendation Engine', 'محرّك توصية المحاصيل', language)} description={tr('Enter your soil test results — get top-3 crop recommendations with confidence scores. Also: Can I grow X here? feasibility check', 'أدخل نتائج تحليل التربة — احصل على أفضل 3 محاصيل مع درجات الثقة. أيضاً: هل يمكنني زراعة X هنا؟', language)} icon={Sparkles} color="#7c3aed" storageKey="collapse_crop_recommender" defaultOpen={false} enableExport group="crops"><div className="p-4"><CropRecommendationEngine /></div></CollapsibleSection>
+   517→
+   518→          <CollapsibleSection title={tr('Soil Sensor Dashboard', 'لوحة مستشعر التربة', language)} description={tr('Real-time or simulated soil N/P/K/pH/EC/moisture/temperature readings with alert thresholds — ready for Modbus sensor integration', 'قراءات لحظية أو محاكاة للنيتروجين والفوسفور والبوتاسيوم والـpH والتوصيل والرطوبة والحرارة — جاهز لتكامل مستشعرات Modbus', language)} icon={Activity} color="#0891b2" storageKey="collapse_soil_sensor" defaultOpen={false} enableExport group="soil"><div className="p-4"><SoilSensorDashboard /></div></CollapsibleSection>
+   519→
+   520→          <CollapsibleSection title={tr('Climate Scenario Simulator', 'محاكي سيناريو المناخ', language)} description={tr('Drag sliders for climate-smart practices → see your farm CO2 emissions, carbon sequestration, water savings, soil health, and net DZD impact — 10-year trajectory chart', 'اسحب مؤشرات الممارسات الذكية مناخياً → انظر تأثيرها على انبعاثات المزرعة وعزل الكربون وتوفير الماء وصحة التربة والمال', language)} icon={Cloud} color="#0ea5e9" storageKey="collapse_climate_simulator" defaultOpen={false} enableExport group="soil"><div className="p-4"><ClimateScenarioSimulator /></div></CollapsibleSection>
+   521→
+   522→          <CollapsibleSection title={tr('Crop Mission Planner', 'مخطط مهمة المحصول', language)} description={tr('Turn one crop, planting date, field area, and water system into role-aware field actions', 'حوّل محصولاً واحداً وتاريخ الزراعة ومساحة الحقل ونظام المياه إلى إجراءات ميدانية حسب الدور', language)} icon={Sprout} color="#0f766e" storageKey="crop_mission_planner" defaultOpen={true} enableExport><div className="p-4"><CropMissionPlanner level={level} onOpenTool={openTool} /></div></CollapsibleSection>
+   523→
+   524→          {/* Sub-category: Fields & Crops */}
+   525→          <div className="space-y-3">
+   526→            <SubHeader emoji="🌱" label={t.fieldsAndCrops} groupId="crops" />
+   527→            {level !== 'farmer' && (
+   528→            <CollapsibleSection title={tr('Multi-Field Dashboard', 'لوحة الحقول المتعددة', language)} description={tr('Track every field, crop stage and irrigation demand in one place', 'تابع كل حقل ومرحلة محصول وطلب ري في مكان واحد', language)} icon={Layers} color="#16a34a" storageKey="collapse_multifield" defaultOpen={false} enableExport><div className="p-4"><MultiFieldDashboard /></div></CollapsibleSection>
+   529→            )}
+   530→            {level !== 'farmer' && (
+   531→            <CollapsibleSection title={tr('Coordinate Converter', 'محوّل الإحداثيات', language)} description={tr('DMS ↔ Decimal · UTM ↔ Lat/Lng · Batch CSV conversion (WGS84)', 'DMS ↔ عشري · UTM ↔ خط عرض/طول · تحويل دفعة CSV (WGS84)', language)} icon={MapPin} color="#6366f1" storageKey="collapse_coords" defaultOpen={false} enableExport><div className="p-4"><CoordinateConverter /></div></CollapsibleSection>
+   532→            )}
+   533→            {level !== 'farmer' && (
+   534→            <CollapsibleSection title={tr('Field Boundary Importer', 'مستورد حدود الحقل', language)} description={tr('Import GeoJSON · KML · WKT · CSV · Area/perimeter/centroid · Convert & export · SVG preview', 'استيراد GeoJSON · KML · WKT · CSV · مساحة/محيط/مركز · تحويل وتصدير · معاينة SVG', language)} icon={Shapes} color="#10b981" storageKey="collapse_boundary" defaultOpen={false} enableExport><div className="p-4"><FieldBoundaryImporter /></div></CollapsibleSection>
+   535→            )}
+   536→            {level !== 'farmer' && (
+   537→            <CollapsibleSection title={tr('Distance & Bearing Calculator', 'حاسبة المسافة والاتجاه', language)} description={tr('Vincenty geodesic distance · Initial/final bearing · Destination projection · Batch CSV · Field-to-field', 'مسافة جيوديسية فينسنتي · اتجاه أولي/نهائي · إسقاط الوجهة · دفعة CSV · بين الحقول', language)} icon={Compass} color="#0891b2" storageKey="collapse_distance" defaultOpen={false} enableExport><div className="p-4"><DistanceBearingCalculator /></div></CollapsibleSection>
+   538→            )}
+   539→            {level !== 'farmer' && (
+   540→            <CollapsibleSection title={tr('Elevation & Slope Analyzer', 'محلّل الارتفاع والانحدار', language)} description={tr('Open-Meteo elevation API · Point / Path profile / Slope grid · Aspect · Hillshade · Frost risk — no key', 'واجهة Open-Meteo للارتفاع · نقطة / ملف المسار / شبكة الانحدار · اتجاه الانحدار · ظل التضاريس · خطر الصقيع — بدون مفتاح', language)} icon={Mountain} color="#78716c" storageKey="collapse_elevation" defaultOpen={false} enableExport><div className="p-4"><ElevationSlopeAnalyzer /></div></CollapsibleSection>
+   541→            )}
+   542→            {level !== 'farmer' && (
+   543→            <CollapsibleSection title={tr('Crop Rotation Planner', 'مخطّط دورة المحاصيل', language)} description={tr('Multi-year rotation · N credit tracking · Disease breaks · Cover crops · Soil health score', 'دورة متعددة السنين · تتبع رصيد النيتروجين · كسر الأمراض · محاصيل التغطية · درجة صحة التربة', language)} icon={RefreshCw} color="#16a34a" storageKey="collapse_rotation" defaultOpen={false} enableExport><div className="p-4"><CropRotationPlanner /></div></CollapsibleSection>
+   544→            )}
+   545→            {level !== 'farmer' && (
+   546→            <CollapsibleSection title={tr('Soil Health & Erosion Scenario Planner', 'مخطّط صحة التربة وسيناريوهات التعرية', language)} description={tr('Compare current practice with a practical conservation scenario using rotation, organic matter, slope, and support practices.', 'قارن الممارسة الحالية بسيناريو حفظ عملي باستخدام الدورة والمادة العضوية والانحدار والممارسات الداعمة.', language)} icon={Mountain} color="#15803d" storageKey="collapse_soil_health" defaultOpen={false} enableExport><div className="p-4"><SoilHealthPlanner /></div></CollapsibleSection>
+   547→            )}
+   548→            {level !== 'farmer' && (
+   549→            <CollapsibleSection title={tr('Season Plan Generator', 'مولّد خطة الموسم', language)} description={tr('AI-powered week-by-week crop plan · Kc + NPK + irrigation + fertigation + warnings', 'خطة محصول أسبوعية بالذكاء الاصطناعي · Kc + NPK + ري + تسميد بالري + تحذيرات', language)} icon={Sparkles} color="#7c3aed" storageKey="collapse_season_plan" defaultOpen={false} enableExport><div className="p-4"><SeasonPlanGeneratorWrapper /></div></CollapsibleSection>
+   550→            )}
+   551→            <CollapsibleSection title={tr('Fertilization Generator', 'مولّد التسميد', language)} description={tr('Per-crop lifecycle fertilization schedule · NPK + micros · Application methods + sources · 20 crops · PDF export', 'جدول تسميد لكل دورة حياة محصول · NPK + عناصر صغرى · طرق التطبيق + المصادر · 20 محصول · تصدير PDF', language)} icon={Flask} color="#16a34a" storageKey="collapse_fertilization" defaultOpen={false} enableExport><div className="p-4"><FertilizationGenerator /></div></CollapsibleSection>
+   552→            <CollapsibleSection title={tr('Field Workbench', 'لوحة عمل الحقل', language)} description={tr('One field view: soil health, irrigation demand, scouting follow-ups and 4R nutrient milestones', 'عرض حقل واحد: صحة التربة واحتياج الري ومتابعات الكشف ومحطات المغذيات 4R', language)} icon={Activity} color="#0f766e" storageKey="collapse_field_workbench" defaultOpen={false} enableExport><div className="p-4"><FieldWorkbench /></div></CollapsibleSection>
+   553→            <CollapsibleSection title={tr('4R Nutrient Budget Planner', 'مخطّط ميزانية المغذيات 4R', language)} description={tr('Field-specific nutrient budget · soil and organic-source credits · staged applications · source, rate, time and place checks · printable plan', 'ميزانية مغذيات خاصة بالحقل · ائتمانات التربة والمصدر العضوي · تطبيقات مرحلية · فحص المصدر والمعدل والتوقيت والمكان · خطة قابلة للطباعة', language)} icon={FlaskConical} color="#059669" storageKey="collapse_nutrient_budget" defaultOpen={false} enableExport><div className="p-4"><NutrientBudgetPlanner /></div></CollapsibleSection>
+   554→            <CollapsibleSection title={tr('Water Budget Optimizer', 'محسّن ميزانية المياه', language)} description={tr('FAO-56 ETc × soil-water balance · forecast-aware irrigation depth and volume', 'ميزان مياه التربة وفق ETc بطريقة FAO-56 · عمق وحجم الري مع مراعاة التوقعات', language)} icon={Droplets} color="#0891b2" storageKey="collapse_water_budget" defaultOpen={false} enableExport><div className="p-4"><WaterBudgetOptimizer /></div></CollapsibleSection>
+   555→            {level !== 'farmer' && (
+   556→            <CollapsibleSection title={tr('Labor Calendar', 'تقويم العمالة', language)} description={tr('Phenology-driven field operations · Person-days/ha · Peak week detection · Skill levels · 20 crops · PDF export', 'عمليات حقلية مدفوعة بالفينولوجيا · أيام-شخص/هكتار · كشف ذروة الأسابيع · مستويات المهارة · 20 محصول · تصدير PDF', language)} icon={CalendarDays} color="#0891b2" storageKey="collapse_labor_cal" defaultOpen={false} enableExport><div className="p-4"><LaborCalendar /></div></CollapsibleSection>
+   557→            )}
+   558→            <CollapsibleSection title={tr('Yield Gap Analysis', 'تحليل فجوة الإنتاج', language)} description={tr('Benchmark actual vs potential yield by crop and climate zone', 'قياس الإنتاج الفعلي مقابل المحتمل حسب المحصول والمنطقة المناخية', language)} icon={TrendingUp} color="#0891b2" storageKey="collapse_yieldgap" defaultOpen={false} enableExport><div className="p-4"><YieldGapAnalysis /></div></CollapsibleSection>
+   559→            <CollapsibleSection title={tr('Yield Estimation Calculator', 'حاسبة تقدير الإنتاج', language)} description={tr('Heads/m² × kernels/head × kernel weight → yield (t/ha) — 6 crops · reference: GWHD dataset', 'سنابل/م² × حبوب/سنبلة × وزن الحبة → إنتاج (طن/هكتار) — 6 محاصيل · مرجع: مجموعة GWHD', language)} icon={TrendingUp} color="#0891b2" storageKey="collapse_yieldest" defaultOpen={false} enableExport><div className="p-4"><YieldEstimationCalculator /></div></CollapsibleSection>
+   560→            {level !== 'farmer' && (
+   561→            <CollapsibleSection title={tr('Companion Planting Guide', 'دليل الزراعة المرافقة', language)} description={tr('20 crops · 100+ pairings · synergy (✓) · antagonism (✗) · search any crop', '20 محصول · أكثر من 100 اقتران · تآزر (✓) · تضاد (✗) · بحث في أي محصول', language)} icon={Sprout} color="#84cc16" storageKey="collapse_companion" defaultOpen={false} enableExport><div className="p-4"><CompanionPlantingGuide /></div></CollapsibleSection>
+   562→            )}
+   563→            <CollapsibleSection title={tr('Seed Rate Calculator', 'حاسبة معدل البذور', language)} description={tr('Target population × TGW × germination × field loss → kg seed/ha · 6 crops', 'الكثافة المستهدفة × وزن 1000 حبة × الإنبات × الفقد الحقلي → كغ بذور/هكتار · 6 محاصيل', language)} icon={Sprout} color="#16a34a" storageKey="collapse_seedrate" defaultOpen={false} enableExport><div className="p-4"><SeedRateCalculator /></div></CollapsibleSection>
+   564→            {level !== 'farmer' && (
+   565→            <CollapsibleSection title={tr('Moon Phase Planting Calendar', 'تقويم الزراعة بأطوار القمر', language)} description={tr('Biodynamic calendar · 29.5-day lunar cycle · 30-day forecast', 'تقويم حيوي ديناميكي · دورة قمرية 29.5 يوم · توقعات 30 يوم', language)} icon={Moon} color="#6366f1" storageKey="collapse_moon" defaultOpen={false} enableExport><div className="p-4"><MoonPhaseCalendar /></div></CollapsibleSection>
+   566→            )}
+   567→            {level !== 'farmer' && (
+   568→            <CollapsibleSection title={tr('GDD Tracker (Growing Degree Days)', 'متعقّب درجات النمو الحرارية (GDD)', language)} description={tr('Accumulates thermal time from Open-Meteo · predicts growth stages · 5 crops', 'يجمع الوقت الحراري من Open-Meteo · يتنبأ بمراحل النمو · 5 محاصيل', language)} icon={Sun} color="#f59e0b" storageKey="collapse_gdd" defaultOpen={false} enableExport><div className="p-4"><GDDTracker /></div></CollapsibleSection>
+   569→            )}
+   570→            <CollapsibleSection title={tr('Crop Calendar Generator', 'مولّد تقويم المحصول', language)} description={tr('One-click complete farm calendar: planting + fertilization + irrigation + pest control + labor · 20 crops · editable · PDF export', 'تقويم مزرعة كامل بنقرة واحدة: زراعة + تسميد + ري + مكافحة آفات + عمالة · 20 محصول · قابل للتعديل · تصدير PDF', language)} icon={CalendarDays} color="#16a34a" storageKey="collapse_crop_calendar_gen" defaultOpen={false} enableExport group="crops"><div className="p-4"><CropCalendarGenerator /></div></CollapsibleSection>
+   571→          </div>
+   572→
+   573→          {/* Sub-category: Plant Protection */}
+   574→          <div className="space-y-3">
+   575→            <SubHeader emoji="🛡️" label={t.plantProtection} groupId="protection" />
+   576→            <CollapsibleSection title={tr('AI Field Scout', 'كشاف الحقل بالذكاء الاصطناعي', language)} description={tr('Photo and observation-based crop scouting with evidence cards, verification prompts, and safety gates', 'Prospection des cultures par photo et observation avec preuves, vérification et garde-fous de sécurité', language)} icon={Sparkles} color="#0f766e" storageKey="collapse_ai_scout" defaultOpen={false} enableExport><div className="p-4"><AIFieldScout onOpenFarmTool={(storageKey) => openTool('farm', storageKey)} /></div></CollapsibleSection>
+   577→            <CollapsibleSection title={tr('Field Scouting Log', 'سجل الكشف الحقلي', language)} description={tr('Voice + photo field observations with severity tagging', 'ملاحظات حقلية بالصوت والصورة مع وسم درجة الخطورة', language)} icon={Sprout} color="#84cc16" storageKey="collapse_scouting" defaultOpen={false} enableExport><div className="p-4"><FieldScoutingLog /></div></CollapsibleSection>
+   578→            <CollapsibleSection title={tr('IPM Action Planner', 'مخطّط عمل الإدارة المتكاملة للآفات', language)} description={tr('Scouting evidence · action thresholds · lower-risk controls · responsible treatment review', 'أدلة الكشف · عتبات التدخل · وسائل المكافحة الأقل خطراً · مراجعة المعالجة المسؤولة', language)} icon={Bug} color="#e11d48" storageKey="collapse_ipm_action" defaultOpen={false} enableExport><div className="p-4"><IpmActionPlanner /></div></CollapsibleSection>
+   579→            {level !== 'farmer' && (
+   580→            <CollapsibleSection title={tr('Pest Threshold Calculator', 'حاسبة عتبة الآفات', language)} description={tr('EIL · action threshold · sequential sampling — 5 pest types', 'عتبة الإضرار الاقتصادي · عتبة التدخل · أخذ عينات تسلسلي — 5 أنواع آفات', language)} icon={Bug} color="#dc2626" storageKey="collapse_pest_threshold" defaultOpen={false} enableExport><div className="p-4"><PestThresholdCalculator /></div></CollapsibleSection>
+   581→            )}
+   582→            {level !== 'farmer' && (
+   583→            <CollapsibleSection title={tr('Pesticide Dose + PHI Calculator', 'حاسبة جرعة المبيد + فترة ما قبل الحصاد', language)} description={tr('AI rate → product rate · Tank mix · Rainfast · Pre-harvest interval countdown · 5 herbicides', 'معدل المادة الفعالة → معدل المنتج · خلط الخزّان · مقاومة المطر · عدّ فترة ما قبل الحصاد · 5 مبيدات أعشاب', language)} icon={FlaskConical} color="#dc2626" storageKey="collapse_pesticide" defaultOpen={false} enableExport><div className="p-4"><PesticideDoseCalculator /></div></CollapsibleSection>
+   584→            )}
+   585→            {level !== 'farmer' && (
+   586→            <CollapsibleSection title={tr('Spray Drift Risk Assessor', 'مقيّم خطر انجراف الرش', language)} description={tr('Wind · Delta-T · Droplet size · Boom height → drift score + buffer distance', 'الرياح · دلتا-T · حجم القطرة · ارتفاع الذراع → درجة الانجراف + مسافة الحاجز', language)} icon={Wind} color="#0ea5e9" storageKey="collapse_drift" defaultOpen={false} enableExport><div className="p-4"><SprayDriftAssessor /></div></CollapsibleSection>
+   587→            )}
+   588→            {level !== 'farmer' && (
+   589→            <CollapsibleSection title={tr('Disease Forecast Dashboard', 'لوحة تنبؤ الأمراض', language)} description={tr('5 disease models (Blitecast · TOMCAST · Mills · FHB · Downy mildew) · weather-based spray timing', '5 نماذج أمراض (Blitecast · TOMCAST · Mills · FHB · البياض الزغبي) · توقيت الرش حسب الطقس', language)} icon={Bug} color="#dc2626" storageKey="collapse_disease" defaultOpen={false} enableExport><div className="p-4"><DiseaseForecastDashboard /></div></CollapsibleSection>
+   590→            )}
+   591→            {level !== 'farmer' && (
+   592→            <CollapsibleSection title={tr('Drought Stress Index', 'مؤشر إجهاد الجفاف', language)} description={tr('ET₀ deficit + soil water depletion + crop stage → stress score + irrigation urgency', 'عجز ET₀ + استنزاف ماء التربة + مرحلة المحصول → درجة الإجهاد + إلحاح الري', language)} icon={Flame} color="#f97316" storageKey="collapse_drought" defaultOpen={false} enableExport><div className="p-4"><DroughtStressIndex /></div></CollapsibleSection>
+   593→            )}
+   594→            {level !== 'farmer' && (
+   595→            <CollapsibleSection title={tr('Frost Protection Calculator', 'حاسبة الحماية من الصقيع', language)} description={tr('Radiative vs advective frost · Sprinkler / wind machine / smudge pot sizing', 'صقيع إشعاعي vs تيارات · تحديد حجم الرشاش / ماكينة الرياح / الأوعية الدخانية', language)} icon={Snowflake} color="#3b82f6" storageKey="collapse_frost" defaultOpen={false} enableExport><div className="p-4"><FrostProtectionCalculator /></div></CollapsibleSection>
+   596→            )}
+   597→            {level !== 'farmer' && (
+   598→            <CollapsibleSection title={tr('Hail Damage Estimator', 'مقدّر أضرار البرَد', language)} description={tr('Crop stage × hail size × defoliation → yield loss % · insurance claim guidance', 'مرحلة المحصول × حجم البرَد × تساقط الأوراق → نسبة فقد الإنتاج · إرشادات مطالبة التأمين', language)} icon={CloudRain} color="#64748b" storageKey="collapse_hail" defaultOpen={false} enableExport><div className="p-4"><HailDamageEstimator /></div></CollapsibleSection>
+   599→            )}
+   600→            {level !== 'farmer' && (
+   601→            <CollapsibleSection title={tr('Disease & Weed Reference Gallery', 'معرض أمراض وأعشاب مرجعي', language)} description={tr('Curated from PlantVillage (50K images) · PlantDoc · DeepWeeds · 35+ research datasets', 'منظم من PlantVillage (50 ألف صورة) · PlantDoc · DeepWeeds · أكثر من 35 مجموعة بحثية', language)} icon={Microscope} color="#8b5cf6" storageKey="collapse_disease_ref" defaultOpen={false} enableExport><div className="p-4"><DiseaseReferenceGallery /></div></CollapsibleSection>
+   602→            )}
+   603→            {level !== 'farmer' && (
+   604→            <CollapsibleSection title={tr('Active Matter Selector (Algérie)', 'منتقي المادة الفعالة (الجزائر)', language)} description={tr('Decide which active ingredient to use against diseases, pests and weeds — crop-based advisor · INPV 2017 catalogue · symptom search · ranked recommendations with confidence, doses, DAR and restrictions', 'قرّر المادة الفعالة المناسبة ضد الأمراض والآفات والأعشاب — مستشار حسب المحصول · فهرس INPV 2017 · بحث بالأعراض · توصيات مرتّبة بدرجة الثقة والجرعات ومدة ما قبل الحصاد والقيود', language)} icon={Bug} color="#65a30d" storageKey="collapse_active_matter" defaultOpen={false} enableExport><div className="p-4"><ActiveMatterSelector /></div></CollapsibleSection>
+   605→            )}
+   606→          </div>
+   607→
+   608→          {/* Sub-category: Soil & Livestock */}
+   609→          <div className="space-y-3">
+   610→            <SubHeader emoji="🧪" label={t.soilAndLivestock} groupId="soil" />
+   611→            <CollapsibleSection title={tr('Soil Test History Tracker', 'متعقّب سجل تحاليل التربة', language)} description={tr('Multi-year soil test tracking · Trend charts · Amendment recommendations · PDF export', 'تتبع تحاليل التربة لسنوات متعددة · رسوم بيانية للاتجاه · توصيات التعديل · تصدير PDF', language)} icon={FlaskConical} color="#8b5cf6" storageKey="collapse_soil_history" defaultOpen={false} enableExport><div className="p-4"><SoilTestHistoryTracker /></div></CollapsibleSection>
+   612→            {level !== 'farmer' && (
+   613→            <CollapsibleSection title={tr('Soil Color Identifier', 'معرّف لون التربة', language)} description={tr('Munsell color → mineral + drainage + iron status · US state soils · 13 minerals · 50 states', 'لون مونسيل → المعادن + الصرف + حالة الحديد · تربة الولايات المتحدة · 13 معدناً · 50 ولاية', language)} icon={Mountain} color="#78716c" storageKey="collapse_soil_color" defaultOpen={false} enableExport><div className="p-4"><SoilColorIdentifier /></div></CollapsibleSection>
+   614→            )}
+   615→            {level !== 'farmer' && (
+   616→            <CollapsibleSection title={tr('Soil Texture Triangle', 'مثلث نسجة التربة', language)} description={tr('Interactive ternary diagram · USDA/SSEW/International classification · soil properties + management recommendations', 'مخطط ثلاثي تفاعلي · تصنيف USDA/SSEW/الدولي · خصائص التربة + توصيات الإدارة', language)} icon={Mountain} color="#78716c" storageKey="collapse_soil_texture" defaultOpen={false} enableExport><div className="p-4"><SoilTextureTriangle /></div></CollapsibleSection>
+   617→            )}
+   618→            {level !== 'farmer' && (
+   619→            <CollapsibleSection title={tr('Post-Harvest Storage Calculator', 'حاسبة التخزين بعد الحصاد', language)} description={tr('EMC (Henderson) · Safe storage days · Drying time + cost · Bin aeration fan sizing — 7 crops', 'محتوى الرطوبة التوازني (هندرسون) · أيام التخزين الآمن · وقت التجفيف + التكلفة · حجم مروحة التهوية — 7 محاصيل', language)} icon={Warehouse} color="#f59e0b" storageKey="collapse_postharvest" defaultOpen={false} enableExport><div className="p-4"><PostHarvestStorageCalculator /></div></CollapsibleSection>
+   620→            )}
+   621→            {level !== 'farmer' && (
+   622→            <CollapsibleSection title={tr('Compost Mixer Calculator', 'حاسبة خلط الكمبوست', language)} description={tr('C:N ratio · Moisture adjustment · 10 common feedstocks · Target 30:1', 'نسبة C:N · ضبط الرطوبة · 10 مواد شائعة · الهدف 30:1', language)} icon={Recycle} color="#16a34a" storageKey="collapse_compost" defaultOpen={false} enableExport><div className="p-4"><CompostMixerCalculator /></div></CollapsibleSection>
+   623→            )}
+   624→            {level !== 'farmer' && (
+   625→            <CollapsibleSection title={tr('Cover Crop Selector', 'منتقي المحاصيل المغطّية', language)} description={tr('12 species · 9 goals · drought tolerance · ranked recommendations', '12 نوعاً · 9 أهداف · تحمّل الجفاف · توصيات مرتّبة', language)} icon={Sprout} color="#84cc16" storageKey="collapse_covercrop" defaultOpen={false} enableExport><div className="p-4"><CoverCropSelector /></div></CollapsibleSection>
+   626→            )}
+   627→            {level !== 'farmer' && (
+   628→            <CollapsibleSection title={tr('Greenhouse Climate Designer', 'مصمّم مناخ البيوت المحمية', language)} description={tr('Heating load · Ventilation rate · CO₂ enrichment sizing · 4 glazing types', 'حمل التدفئة · معدل التهوية · تحديد إثراء CO₂ · 4 أنواع تغطية', language)} icon={Home} color="#10b981" storageKey="collapse_greenhouse" defaultOpen={false} enableExport><div className="p-4"><GreenhouseClimateDesigner /></div></CollapsibleSection>
+   629→            )}
+   630→            {level !== 'farmer' && (
+   631→            <CollapsibleSection title={tr('Grain Bin Inventory Tracker', 'متعقّب مخزون صوامع الحبوب', language)} description={tr('Volume × density × price → stored grain value · multi-bin', 'الحجم × الكثافة × السعر → قيمة الحبوب المخزّنة · صوامع متعددة', language)} icon={Warehouse} color="#f59e0b" storageKey="collapse_grainbin" defaultOpen={false} enableExport><div className="p-4"><GrainBinInventoryTracker /></div></CollapsibleSection>
+   632→            )}
+   633→            {level !== 'farmer' && (
+   634→            <CollapsibleSection title={tr('Manure Management Planner', 'مخطّط إدارة السماد العضوي', language)} description={tr('N-P-K value · application timing · buffer zone compliance · 6 manure types', 'قيمة N-P-K · توقيت التطبيق · الامتثال لمنطقة الحاجز · 6 أنواع سماد', language)} icon={Droplets} color="#8b5cf6" storageKey="collapse_manure" defaultOpen={false} enableExport><div className="p-4"><ManureManagementPlanner /></div></CollapsibleSection>
+   635→            )}
+   636→            {level !== 'farmer' && (
+   637→            <CollapsibleSection title={tr('Machinery Cost Calculator', 'حاسبة تكلفة الآلات', language)} description={tr('Ownership + operating cost → $/ha + $/hr · buy vs custom hire', 'تكلفة الملكية + التشغيل → $/هكتار + $/ساعة · شراء مقابل استئجار', language)} icon={Tractor} color="#f59e0b" storageKey="collapse_machinery" defaultOpen={false} enableExport><div className="p-4"><MachineryCostCalculator /></div></CollapsibleSection>
+   638→            )}
+   639→            {level !== 'farmer' && (
+   640→            <CollapsibleSection title={tr('Machinery & Field-Operation Optimizer', 'مُحسّن الآلات وعمليات الحقل', language)} description={tr('Compare ownership vs hire · schedule field operations · utilization and break-even', 'قارن التملك بالاستئجار · جدولة عمليات الحقل · الاستخدام ونقطة التعادل', language)} icon={Tractor} color="#d97706" storageKey="collapse_machinery_optimizer" defaultOpen={false} enableExport><div className="p-4"><MachineryFieldOptimizer /></div></CollapsibleSection>
+   641→            )}
+   642→            {level !== 'farmer' && (
+   643→            <CollapsibleSection title={tr('Yield Monitor Calibrator', 'معاير مراقب الإنتاج', language)} description={tr('Moisture correction · flow calibration · test weight assessment', 'تصحيح الرطوبة · معايرة التدفق · تقييم وزن الاختبار', language)} icon={Gauge} color="#6366f1" storageKey="collapse_yieldmon" defaultOpen={false} enableExport><div className="p-4"><YieldMonitorCalibrator /></div></CollapsibleSection>
+   644→            )}
+   645→            {level !== 'farmer' && (
+   646→            <CollapsibleSection title={tr('Livestock Management', 'إدارة الماشية', language)} description={tr('Feed rations (NRC 2021) · Pasture capacity · Manure NPK value · Rotational grazing', 'علائق التغذية (NRC 2021) · سعة المرعى · قيمة السماد NPK · الرعي الدوراني', language)} icon={Beef} color="#f59e0b" storageKey="collapse_livestock" defaultOpen={false} enableExport><div className="p-4"><LivestockIntegration /></div></CollapsibleSection>
+   647→            )}
+   648→            {level !== 'farmer' && (
+   649→            <CollapsibleSection title={tr('Feed Ration Balancer (NRC 2021)', 'موازن العليقة (NRC 2021)', language)} description={tr('DMI · CP · TDN · Ca · P balancing — 8 ingredients · 4 animal types', 'DMI · CP · TDN · Ca · P موازنة — 8 مكونات · 4 أنواع حيوانات', language)} icon={Beef} color="#8b5cf6" storageKey="collapse_ration" defaultOpen={false} enableExport><div className="p-4"><FeedRationBalancer /></div></CollapsibleSection>
+   650→            )}
+   651→            {level !== 'farmer' && (
+   652→            <CollapsibleSection title={tr('Livestock Growth Benchmarks', 'معايير نمو الماشية', language)} description={tr('Real trial data: broiler + pig + cattle · compare your animals to reference curves', 'بيانات تجارب حقيقية: دجاج لاحم + خنازير + أبقار · قارن حيواناتك بمنحنيات مرجعية', language)} icon={Beef} color="#f59e0b" storageKey="collapse_livestock_bench" defaultOpen={false} enableExport><div className="p-4"><LivestockGrowthBenchmark /></div></CollapsibleSection>
+   653→            )}
+   654→            {level !== 'farmer' && (
+   655→            <CollapsibleSection title={tr('Silage Fermentation Predictor', 'متوقّع تخمير السيلاج', language)} description={tr('Moisture · sugar · packing density · chop length → fermentation quality score', 'الرطوبة · السكر · كثافة الحزم · طول التقطيع → درجة جودة التخمير', language)} icon={Beef} color="#f59e0b" storageKey="collapse_silage" defaultOpen={false} enableExport><div className="p-4"><SilageFermentationPredictor /></div></CollapsibleSection>
+   656→            )}
+   657→            {level !== 'farmer' && (
+   658→            <CollapsibleSection title={tr('Bee Hive + Honey Yield Calculator', 'حاسبة خلية النحل + إنتاج العسل', language)} description={tr('Daily weight gain · nectar flow projection · honey yield + revenue', 'زيادة الوزن اليومية · توقعات تدفق الرحيق · إنتاج العسل + الإيرادات', language)} icon={Bug} color="#eab308" storageKey="collapse_beehive" defaultOpen={false} enableExport><div className="p-4"><BeeHiveHoneyCalculator /></div></CollapsibleSection>
+   659→            )}
+   660→            {level !== 'farmer' && (
+   661→            <CollapsibleSection title={tr('Water Harvesting Calculator', 'حاسبة حصاد المياه', language)} description={tr('Rooftop rainwater collection · cistern sizing · demand coverage', 'جمع مياه الأمطار من السطوح · تحديد حجم الخزّان · تغطية الطلب', language)} icon={Droplets} color="#0ea5e9" storageKey="collapse_water_harvest" defaultOpen={false} enableExport><div className="p-4"><WaterHarvestingCalculator /></div></CollapsibleSection>
+   662→            )}
+   663→            {level !== 'farmer' && (
+   664→            <CollapsibleSection title={tr('Biogas Digester Calculator', 'حاسبة هاضم الغاز الحيوي', language)} description={tr('Biogas yield · digester sizing · energy + revenue · 5 substrates', 'إنتاج الغاز الحيوي · حجم الهاضم · الطاقة + الإيرادات · 5 ركائز', language)} icon={Flame} color="#f97316" storageKey="collapse_biogas" defaultOpen={false} enableExport><div className="p-4"><BiogasDigesterCalculator /></div></CollapsibleSection>
+   665→            )}
+   666→          </div>
+   667→
+   668→          {/* Sub-category: Irrigation */}
+   669→          <div className="space-y-3">
+   670→            <SubHeader emoji="💧" label={t.irrigation} groupId="irrigation" />
+   671→            <CollapsibleSection title={tr('Irrigation Program Generator', 'مولّد برنامج الري', language)} description={tr('Decadal (10-day) irrigation schedule from the BRL/COM memento', 'جدول ري عشري (10 أيام) من مذكرة BRL/COM', language)} icon={Droplets} color="#0ea5e9" storageKey="collapse_irrigation" defaultOpen={false} enableExport><div className="p-4"><IrrigationProgramGenerator /></div></CollapsibleSection>
+   672→            {level !== 'farmer' && (
+   673→            <CollapsibleSection title={tr('Irrigation System Designer', 'مصمّم نظام الري', language)} description={tr('Multi-zone sprinkler / drip / bubbler designer with pump sizing', 'مصمّم متعدد المناطق للرش / التنقيط / الفقّاعات مع تحديد المضخة', language)} icon={Settings} color="#6366f1" storageKey="collapse_system_design" defaultOpen={false} enableExport><div className="p-4"><IrrigationSystemDesigner /></div></CollapsibleSection>
+   674→            )}
+   675→            {level !== 'farmer' && (
+   676→            <CollapsibleSection title={tr('Seasonal Irrigation Planner', 'مخطّط الري الموسمي', language)} description={tr('Season-by-season irrigation focus, risks and recommendations', 'تركيز ري حسب كل موسم، مخاطر وتوصيات', language)} icon={Calendar} color="#f59e0b" storageKey="collapse_seasonal" defaultOpen={false} enableExport><div className="p-4"><SeasonScheduler onLaunchWorkflow={(workflowId) => { const wf = workflows.find(w => w.id === workflowId); if (wf) { setActiveWorkflow(wf); setWorkflowOpen(true); } }} /></div></CollapsibleSection>
+   677→            )}
+   678→            <CollapsibleSection title={tr('Evapotranspiration Tracker', 'متعقّب التبخّر النتحي', language)} description={tr('Live ET₀ (Open-Meteo) · FAO-56 Kc × ETc · 7-day irrigation plan · ERA5 history — no API key needed', 'ET₀ مباشر (Open-Meteo) · FAO-56 Kc × ETc · خطة ري 7 أيام · سجل ERA5 — بدون مفتاح API', language)} icon={Sun} color="#0891b2" storageKey="collapse_et_tracker" defaultOpen={false} enableExport><div className="p-4"><EvapotranspirationTracker /></div></CollapsibleSection>
+   679→            {level !== 'farmer' && (
+   680→            <CollapsibleSection title={tr('Irrigation Scheduler', 'مجدول الري', language)} description={tr('Controllers · Zones · Schedules · Sequences · Cycle-and-soak eco-mode · Weather % adjust · YAML/CSV/JSON export', 'متحكمات · مناطق · جداول · تسلسلات · وضع eco دوري-وتشبّع · ضبط % حسب الطقس · تصدير YAML/CSV/JSON', language)} icon={Clock} color="#0ea5e9" storageKey="collapse_irr_sched" defaultOpen={false} enableExport><div className="p-4"><IrrigationScheduler /></div></CollapsibleSection>
+   681→            )}
+   682→          </div>
+   683→        </main>
+   684→      )}
+   685→
+   686→      {/* INSIGHTS TAB — intelligence, business, community */}
+   687→      {activeTab === 'insights' && (
+   688→        <main className="flex-1 max-w-[1200px] mx-auto w-full p-4 sm:p-6 space-y-6 pb-20 sm:pb-6">
+   689→          <div className="rounded-xl p-4 bg-gradient-to-r from-indigo-600 to-violet-700 text-white">
+   690→            <div className="flex items-center gap-2"><Sparkles className="h-5 w-5" /><h2 className="text-lg font-bold">{t.intelligenceAndInsights}</h2></div>
+   691→            <p className="text-xs text-indigo-100 mt-1">{t.intelligenceAndInsightsSubtitle}</p>
+   692→          </div>
+   693→
+   694→          {/* Sub-category: Intelligence */}
+   695→          <div className="space-y-3">
+   696→            <SubHeader emoji="🛰️" label={t.intelligenceAndAI} groupId="intelligence" />
+   697→            {level !== 'farmer' && (
+   698→            <CollapsibleSection title={tr('NDVI Satellite Field Maps', 'خرائط الحقول بالأقمار الصناعية NDVI', language)} description={tr('Vegetation health heatmap · Stress zone detection · AI recommendations · PDF export', 'خريطة حرارية لصحة الغطاء النباتي · كشف مناطق الإجهاد · توصيات بالذكاء الاصطناعي · تصدير PDF', language)} icon={Satellite} color="#6366f1" storageKey="collapse_ndvi" defaultOpen={false} enableExport><div className="p-4"><NdviFieldMaps /></div></CollapsibleSection>
+   699→            )}
+   700→            {level !== 'farmer' && (
+   701→            <CollapsibleSection title={tr('Weather Radar + Frost Maps', 'رادار الطقس + خرائط الصقيع', language)} description={tr('Live 7-day forecast · Frost risk · Heat warnings · Spray windows · Microclimate', 'توقعات 7 أيام مباشرة · خطر الصقيع · تحذيرات الحرارة · نوافذ الرش · المناخ المحلي', language)} icon={CloudRain} color="#0ea5e9" storageKey="collapse_weather_radar" defaultOpen={false} enableExport><div className="p-4"><WeatherRadar /></div></CollapsibleSection>
+   702→            )}
+   703→            {level !== 'farmer' && (
+   704→            <CollapsibleSection title={tr('Smart Agriculture Suite', 'مجموعة الزراعة الذكية', language)} description={tr('Disease detection · crop recommendation · fertilizer guidance', 'كشف الأمراض · توصية المحاصيل · إرشاد التسميد', language)} icon={Bug} color="#65a30d" storageKey="collapse_agriplanner" defaultOpen={false} enableExport><div className="p-4"><AgriPlannerSuite /></div></CollapsibleSection>
+   705→            )}
+   706→            {level !== 'farmer' && (
+   707→            <CollapsibleSection title={tr('AI Specialists (Multi-Agent Chat)', 'وكلاء الذكاء الاصطناعي (دردشة متعددة الوكلاء)', language)} description={tr('10 specialized AI agents — Agronomist · Crop Scout · Irrigation Engineer · Soil Scientist · Operations Manager · Financial Analyst · Sustainability Officer · Grant Writer · GIS Analyst · Livestock Vet', '10 وكلاء ذكاء تخصصيون — مهندس زراعي · كشّاف المحاصيل · مهندس الري · عالم التربة · مدير العمليات · محلل مالي · مسؤول الاستدامة · كاتب المنح · محلل GIS · طبيب بيطري', language)} icon={Sparkles} color="#6366f1" storageKey="collapse_agent_chat" defaultOpen={false} enableExport><div className="p-4"><AgriAgentChat /></div></CollapsibleSection>
+   708→            )}
+   709→          </div>
+   710→
+   711→          {/* Sub-category: Business */}
+   712→          <div className="space-y-3">
+   713→            <SubHeader emoji="💰" label={t.businessAndMarketplace} groupId="business" />
+   714→            {level !== 'farmer' && (
+   715→            <CollapsibleSection title={tr('Financial Dashboard', 'لوحة المالية', language)} description={tr('Costs · Revenue · Gross margin · Break-even · ROI · What-if scenario analysis', 'التكاليف · الإيرادات · الهامش الإجمالي · نقطة التعادل · العائد على الاستثمار · تحليل سيناريوهات ماذا لو', language)} icon={DollarSign} color="#f59e0b" storageKey="collapse_financial" defaultOpen={false} enableExport><div className="p-4"><FinancialDashboard /></div></CollapsibleSection>
+   716→            )}
+   717→            <CollapsibleSection title={tr('Gross-Margin & Break-Even Planner', 'مخطّط الهامش الإجمالي ونقطة التعادل', language)} description={tr('Compare crop choices · Cost and revenue per hectare · Break-even yield and price · Downside scenarios', 'قارن خيارات المحاصيل · التكلفة والإيراد لكل هكتار · إنتاج وسعر التعادل · سيناريوهات الهبوط', language)} icon={Scale} color="#d97706" storageKey="collapse_gross_margin" defaultOpen={false} enableExport><div className="p-4"><GrossMarginPlanner /></div></CollapsibleSection>
+   718→            <CollapsibleSection title={tr('Harvest Forecast & Lot Planner', 'مخطّط توقع الحصاد والدفعات', language)} description={tr('Harvest windows · Expected volume · Labor demand · Storage fit · Printable lot plan', 'نوافذ الحصاد · الإنتاج المتوقع · احتياج العمالة · ملاءمة التخزين · خطة دفعات قابلة للطباعة', language)} icon={CalendarDays} color="#059669" storageKey="collapse_harvest_forecast" defaultOpen={false} enableExport><div className="p-4"><HarvestForecastPlanner /></div></CollapsibleSection>
+   719→            {level !== 'farmer' && (
+   720→            <CollapsibleSection title={tr('Marketplace — Buy Fertilizers & Supplies', 'السوق — شراء الأسمدة والمستلزمات', language)} description={tr('Price comparison from 3 suppliers · Shopping cart · Order export', 'مقارنة الأسعار من 3 موردين · سلة تسوق · تصدير الطلبات', language)} icon={ShoppingCart} color="#f59e0b" storageKey="collapse_marketplace" defaultOpen={false} enableExport><div className="p-4"><Marketplace /></div></CollapsibleSection>
+   721→            )}
+   722→            {level !== 'farmer' && (
+   723→            <CollapsibleSection title={tr('Sustainability Scorecard', 'بطاقة الاستدامة', language)} description={tr('5 traffic-light metrics — NUE, water, carbon, soil, pesticides', '5 مؤشرات بإشارات مرورية — كفاءة النيتروجين، المياه، الكربون، التربة، المبيدات', language)} icon={Leaf} color="#16a34a" storageKey="collapse_sustainability" defaultOpen={false} enableExport><div className="p-4"><SustainabilityScorecard /></div></CollapsibleSection>
+   724→            )}
+   725→            {level !== 'farmer' && (
+   726→            <CollapsibleSection title={tr('RUSLE Erosion Calculator', 'حاسبة التعرّف RUSLE', language)} description={tr('A = R × K × LS × C × P — universal soil loss equation · 14 regions · 12 soil types', 'A = R × K × LS × C × P — معادلة الفقد العالمي للتربة · 14 منطقة · 12 نوع تربة', language)} icon={Mountain} color="#78716c" storageKey="collapse_rusle" defaultOpen={false} enableExport><div className="p-4"><RUSLEErosionCalculator /></div></CollapsibleSection>
+   727→            )}
+   728→            {level !== 'farmer' && (
+   729→            <CollapsibleSection title={tr('Buffer Strip Designer', 'مصمّم الأحزمة العازلة', language)} description={tr('Width × vegetation → sediment / N / P trapping efficiency · NRCS standards', 'العرض × الغطاء النباتي → كفاءة اصطياد الرواسب / النيتروجين / الفسفور · معايير NRCS', language)} icon={Shield} color="#14b8a6" storageKey="collapse_buffer" defaultOpen={false} enableExport><div className="p-4"><BufferStripDesigner /></div></CollapsibleSection>
+   730→            )}
+   731→            {level !== 'farmer' && (
+   732→            <CollapsibleSection title={tr('Pollinator Habitat Planner', 'مخطّط موائل الملقّحات', language)} description={tr('10 species · bloom season + pollinator type + goal filtering', '10 أنواع · موسم الإزهار + نوع الملقّح + تصفية الأهداف', language)} icon={Bug} color="#eab308" storageKey="collapse_pollinator" defaultOpen={false} enableExport><div className="p-4"><PollinatorHabitatPlanner /></div></CollapsibleSection>
+   733→            )}
+   734→            {level !== 'farmer' && (
+   735→            <CollapsibleSection title={tr('Carbon Credit Estimator', 'مقدّر أرصدة الكربون', language)} description={tr('IPCC Tier 2 · 6 practices · $/ha revenue · 20% permanence buffer · 10-yr commitment', 'IPCC Tier 2 · 6 ممارسات · إيراد $/هكتار · حاجز 20% للديمومة · التزام 10 سنوات', language)} icon={Leaf} color="#10b981" storageKey="collapse_carbon" defaultOpen={false} enableExport><div className="p-4"><CarbonCreditCalculator /></div></CollapsibleSection>
+   736→            )}
+   737→          </div>
+   738→
+   739→          {/* Sub-category: Community & Reports */}
+   740→          <div className="space-y-3">
+   741→            <SubHeader emoji="👥" label={t.communityAndReports} groupId="community" />
+   742→            {level !== 'farmer' && (
+   743→            <CollapsibleSection title={tr('Farmer Community & Knowledge Exchange', 'مجتمع المزارعين وتبادل المعرفة', language)} description={tr('Share experiences · Ask questions · Benchmark your farm · Success stories', 'شارك الخبرات · اطرح الأسئلة · قارن مزرعتك · قصص نجاح', language)} icon={Users} color="#3b82f6" storageKey="collapse_community" defaultOpen={false} enableExport><div className="p-4"><FarmerCommunity /></div></CollapsibleSection>
+   744→            )}
+   745→            {level !== 'farmer' && (
+   746→            <CollapsibleSection title={tr('Professional Report Generator', 'مولّد التقارير الاحترافية', language)} description={tr('Branded multi-page PDF · Combines all data · Cover page · AI recommendations', 'PDF متعدد الصفحات بهوية · يجمع كل البيانات · صفحة غلاف · توصيات بالذكاء الاصطناعي', language)} icon={FileText} color="#0ea5e9" storageKey="collapse_report" defaultOpen={false} enableExport><div className="p-4"><ReportGenerator /></div></CollapsibleSection>
+   747→            )}
+   748→          </div>
+   749→
+   750→          {/* Sub-category: Settings & Integrations */}
+   751→          <div className="space-y-3">
+   752→            <SubHeader emoji="🔌" label={t.settingsAndIntegrations} groupId="settings" />
+   753→            {level !== 'farmer' && (
+   754→            <CollapsibleSection title={tr('Service Integrations', 'تكاملات الخدمات', language)} description={tr('Plug in free-tier services — Clerk auth, Neon Postgres, OneSignal push, MapTiler maps, Gemini AI', 'أضف خدمات مجانية — Clerk للمصادقة، Neon Postgres، OneSignal للتنبيهات، MapTiler للخرائط، Gemini AI', language)} icon={Settings} color="#64748b" storageKey="collapse_integrations" defaultOpen={false} enableExport><div className="p-4"><ServiceIntegrations /></div></CollapsibleSection>
+   755→            )}
+   756→          </div>
+   757→        </main>
+   758→      )}
+   759→
+
+[showing lines 440-759 of 1031; use offset=760 with limit to continue reading]
