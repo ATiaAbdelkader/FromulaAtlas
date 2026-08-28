@@ -59,6 +59,12 @@ import {
   type LocustRiskZone,
   type SatelliteAgriGridPoint,
 } from '@/lib/algeria-gis-layers-data';
+import {
+  getAlgeriaNationalPath,
+  getWilayaPolygonFeatures,
+  TOPOGRAPHIC_RELIEF_DATA,
+  type WilayaPolygonFeature,
+} from '@/lib/algeria-gis-geometry';
 import { fetchForecastAndHistory, type ForecastCurrent, type DailyForecast } from '@/lib/open-meteo';
 import AlgeriaAdvancedGISTools from '@/components/agri/soil/AlgeriaAdvancedGISTools';
 import AlgeriaRegionalStatsPopup from '@/components/agri/soil/AlgeriaRegionalStatsPopup';
@@ -80,7 +86,7 @@ type MapViewLayer =
   | 'locust'
   | 'satellite_ndvi';
 
-type BaseMapTheme = 'vector' | 'satellite_tone' | 'topo_dark';
+type BaseMapTheme = 'vector' | 'topographic' | 'satellite_tone';
 
 export default function AlgeriaAgriMap() {
   const { language } = useLanguageStore();
@@ -153,6 +159,41 @@ export default function AlgeriaAgriMap() {
   const [activePlot, setActivePlot] = useState<DrawnPlot | null>(drawnPlots[0]);
   const [isDrawingMode, setIsDrawingMode] = useState<boolean>(false);
   const [currentDrawVertices, setCurrentDrawVertices] = useState<PlotVertex[]>([]);
+
+  // GIS Granular Vector & Layer Display Toggles
+  const [showWilayaPolygons, setShowWilayaPolygons] = useState<boolean>(true);
+  const [showTopography, setShowTopography] = useState<boolean>(true);
+  const [showWilayaLabels, setShowWilayaLabels] = useState<boolean>(true);
+  const [showMacroBands, setShowMacroBands] = useState<boolean>(false);
+  const [hoveredPolygonCode, setHoveredPolygonCode] = useState<number | null>(null);
+
+  // Pre-computed vector geometry
+  const nationalPath = useMemo(() => getAlgeriaNationalPath(), []);
+  const wilayaPolygons = useMemo(() => getWilayaPolygonFeatures(), []);
+
+  // Quick Region Focus Presets
+  const handleFocusRegion = (region: 'all' | 'tell' | 'plateaus' | 'oasis' | 'sahara') => {
+    if (region === 'all') {
+      setZoomLevel(1);
+      setPanOffset({ x: 0, y: 0 });
+    } else if (region === 'tell') {
+      // Focus on Tell & Littoral
+      setZoomLevel(2.2);
+      setPanOffset({ x: -20, y: 220 });
+    } else if (region === 'plateaus') {
+      // Focus on High Plateaus
+      setZoomLevel(2.0);
+      setPanOffset({ x: -30, y: 150 });
+    } else if (region === 'oasis') {
+      // Focus on Saharan Oasis & Ziban/Souf
+      setZoomLevel(2.0);
+      setPanOffset({ x: -100, y: 30 });
+    } else if (region === 'sahara') {
+      // Focus on Deep Sahara
+      setZoomLevel(1.5);
+      setPanOffset({ x: 0, y: -110 });
+    }
+  };
 
   // Live weather state for selected wilaya
   const [weatherData, setWeatherData] = useState<{
@@ -559,90 +600,180 @@ export default function AlgeriaAgriMap() {
       </div>
 
       {/* Multi-Layer Overlays & Theme HUD Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-white p-3 shadow-xs dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-        {/* Overlay Checkboxes */}
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-            {lang === 'ar' ? 'العناصر الظاهرة على الخريطة:' : 'Surimpressions SIG :'}
-          </span>
+      <div className="flex flex-col gap-3 rounded-2xl bg-white p-3 shadow-xs dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+        {/* Row 1: Overlays & Vector Polygon Toggles */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+              {lang === 'ar' ? 'طبقات الخريطة التفاعلية:' : 'Couches & Objets SIG :'}
+            </span>
 
-          <button
-            onClick={() => setShowDamsOverlay(!showDamsOverlay)}
-            className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
-              showDamsOverlay
-                ? 'bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300 ring-1 ring-sky-500'
-                : 'bg-slate-100 text-slate-500 dark:bg-slate-800'
-            }`}
-          >
-            <span>💧 Barrages</span>
-          </button>
+            {/* Wilaya Polygons Toggle */}
+            <button
+              onClick={() => setShowWilayaPolygons(!showWilayaPolygons)}
+              className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
+                showWilayaPolygons
+                  ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 ring-1 ring-emerald-500'
+                  : 'bg-slate-100 text-slate-500 dark:bg-slate-800'
+              }`}
+            >
+              <span>🗺️ 58 Wilayas</span>
+            </button>
 
-          <button
-            onClick={() => setShowPivotsOverlay(!showPivotsOverlay)}
-            className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
-              showPivotsOverlay
-                ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 ring-1 ring-amber-500'
-                : 'bg-slate-100 text-slate-500 dark:bg-slate-800'
-            }`}
-          >
-            <span>🌀 Pivots Sahariens</span>
-          </button>
+            {/* Topography & Relief Toggle */}
+            <button
+              onClick={() => setShowTopography(!showTopography)}
+              className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
+                showTopography
+                  ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 ring-1 ring-amber-500'
+                  : 'bg-slate-100 text-slate-500 dark:bg-slate-800'
+              }`}
+            >
+              <span>⛰️ Relief & Chotts</span>
+            </button>
 
-          <button
-            onClick={() => setShowCclsOverlay(!showCclsOverlay)}
-            className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
-              showCclsOverlay
-                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 ring-1 ring-emerald-500'
-                : 'bg-slate-100 text-slate-500 dark:bg-slate-800'
-            }`}
-          >
-            <span>🌾 Silos CCLS</span>
-          </button>
+            {/* Wilaya Labels Toggle */}
+            <button
+              onClick={() => setShowWilayaLabels(!showWilayaLabels)}
+              className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
+                showWilayaLabels
+                  ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 ring-1 ring-indigo-500'
+                  : 'bg-slate-100 text-slate-500 dark:bg-slate-800'
+              }`}
+            >
+              <span>🏷️ Noms & Codes</span>
+            </button>
 
-          <button
-            onClick={() => setShowLocustOverlay(!showLocustOverlay)}
-            className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
-              showLocustOverlay
-                ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 ring-1 ring-rose-500'
-                : 'bg-slate-100 text-slate-500 dark:bg-slate-800'
-            }`}
-          >
-            <span>🦗 Radar Acridien</span>
-          </button>
+            {/* Dams Overlay */}
+            <button
+              onClick={() => setShowDamsOverlay(!showDamsOverlay)}
+              className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
+                showDamsOverlay
+                  ? 'bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300 ring-1 ring-sky-500'
+                  : 'bg-slate-100 text-slate-500 dark:bg-slate-800'
+              }`}
+            >
+              <span>💧 Barrages</span>
+            </button>
 
-          <button
-            onClick={() => setShowSatelliteGridOverlay(!showSatelliteGridOverlay)}
-            className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
-              showSatelliteGridOverlay
-                ? 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 ring-1 ring-purple-500'
-                : 'bg-slate-100 text-slate-500 dark:bg-slate-800'
-            }`}
-          >
-            <span>🛰️ Grille NDVI</span>
-          </button>
+            {/* Pivots Overlay */}
+            <button
+              onClick={() => setShowPivotsOverlay(!showPivotsOverlay)}
+              className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
+                showPivotsOverlay
+                  ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 ring-1 ring-amber-500'
+                  : 'bg-slate-100 text-slate-500 dark:bg-slate-800'
+              }`}
+            >
+              <span>🌀 Pivots Sahariens</span>
+            </button>
+
+            {/* CCLS Silos */}
+            <button
+              onClick={() => setShowCclsOverlay(!showCclsOverlay)}
+              className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
+                showCclsOverlay
+                  ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 ring-1 ring-emerald-500'
+                  : 'bg-slate-100 text-slate-500 dark:bg-slate-800'
+              }`}
+            >
+              <span>🌾 Silos CCLS</span>
+            </button>
+
+            {/* Locust Radar */}
+            <button
+              onClick={() => setShowLocustOverlay(!showLocustOverlay)}
+              className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
+                showLocustOverlay
+                  ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 ring-1 ring-rose-500'
+                  : 'bg-slate-100 text-slate-500 dark:bg-slate-800'
+              }`}
+            >
+              <span>🦗 Radar Acridien</span>
+            </button>
+
+            {/* Satellite Grid */}
+            <button
+              onClick={() => setShowSatelliteGridOverlay(!showSatelliteGridOverlay)}
+              className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
+                showSatelliteGridOverlay
+                  ? 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 ring-1 ring-purple-500'
+                  : 'bg-slate-100 text-slate-500 dark:bg-slate-800'
+              }`}
+            >
+              <span>🛰️ Grille NDVI</span>
+            </button>
+          </div>
+
+          {/* Base Map Style Toggles */}
+          <div className="flex items-center gap-1 rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
+            <button
+              onClick={() => setBaseMapTheme('vector')}
+              className={`rounded-lg px-2.5 py-1 text-xs font-bold transition ${
+                baseMapTheme === 'vector'
+                  ? 'bg-white text-slate-900 shadow-xs dark:bg-slate-700 dark:text-white'
+                  : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+              }`}
+            >
+              Vector
+            </button>
+            <button
+              onClick={() => setBaseMapTheme('topographic')}
+              className={`rounded-lg px-2.5 py-1 text-xs font-bold transition ${
+                baseMapTheme === 'topographic'
+                  ? 'bg-amber-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+              }`}
+            >
+              Topographie
+            </button>
+            <button
+              onClick={() => setBaseMapTheme('satellite_tone')}
+              className={`rounded-lg px-2.5 py-1 text-xs font-bold transition ${
+                baseMapTheme === 'satellite_tone'
+                  ? 'bg-emerald-800 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+              }`}
+            >
+              Satellite
+            </button>
+          </div>
         </div>
 
-        {/* Base Map Style Toggles */}
-        <div className="flex items-center gap-1.5">
+        {/* Row 2: Geographic Region Quick Focus Bar */}
+        <div className="flex flex-wrap items-center gap-1.5 border-t border-slate-100 pt-2 dark:border-slate-800">
+          <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 mr-1">
+            {lang === 'ar' ? 'تركيز جغرافي سريع:' : 'Cadrage Régional :'}
+          </span>
           <button
-            onClick={() => setBaseMapTheme('vector')}
-            className={`rounded-lg px-2.5 py-1 text-xs font-bold ${
-              baseMapTheme === 'vector'
-                ? 'bg-slate-800 text-white dark:bg-slate-700'
-                : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800'
-            }`}
+            onClick={() => handleFocusRegion('all')}
+            className="rounded-lg bg-slate-50 hover:bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700"
           >
-            Vector
+            🇩🇿 {lang === 'ar' ? 'كامل القطر' : 'Tout le Pays'}
           </button>
           <button
-            onClick={() => setBaseMapTheme('satellite_tone')}
-            className={`rounded-lg px-2.5 py-1 text-xs font-bold ${
-              baseMapTheme === 'satellite_tone'
-                ? 'bg-emerald-800 text-white'
-                : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800'
-            }`}
+            onClick={() => handleFocusRegion('tell')}
+            className="rounded-lg bg-slate-50 hover:bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-emerald-700 dark:bg-slate-800 dark:text-emerald-400 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700"
           >
-            Satellite Tone
+            🌊 {lang === 'ar' ? 'التِّل والساحل' : 'Tell & Littoral'}
+          </button>
+          <button
+            onClick={() => handleFocusRegion('plateaus')}
+            className="rounded-lg bg-slate-50 hover:bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-amber-700 dark:bg-slate-800 dark:text-amber-400 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700"
+          >
+            🌾 {lang === 'ar' ? 'الهضاب والسهوب' : 'Hauts Plateaux'}
+          </button>
+          <button
+            onClick={() => handleFocusRegion('oasis')}
+            className="rounded-lg bg-slate-50 hover:bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-orange-700 dark:bg-slate-800 dark:text-orange-400 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700"
+          >
+            🌴 {lang === 'ar' ? 'الواحات والزيبان' : 'Oasis & Ziban'}
+          </button>
+          <button
+            onClick={() => handleFocusRegion('sahara')}
+            className="rounded-lg bg-slate-50 hover:bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-rose-700 dark:bg-slate-800 dark:text-rose-400 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700"
+          >
+            🏜️ {lang === 'ar' ? 'الصحراء الكبرى' : 'Grand Sud'}
           </button>
         </div>
       </div>
@@ -808,157 +939,419 @@ export default function AlgeriaAgriMap() {
               }}
               onClick={handleMapClick}
             >
-              {/* Mediterranean Sea Background */}
-              <path
-                d="M 280 80 Q 500 50 760 80 L 760 10 L 280 10 Z"
-                fill="#38bdf8"
-                fillOpacity="0.15"
-              />
-              <text x="500" y="55" fill="#0284c7" fontSize="11" fontWeight="600" textAnchor="middle" opacity="0.6">
-                MER MÉDITERRANÉE / البحر الأبيض المتوسط
-              </text>
+              <defs>
+                {/* Algeria National Border Clip Path */}
+                <clipPath id="algeria-national-clip">
+                  <path d={nationalPath} />
+                </clipPath>
 
-              {/* Macro Regional Zones */}
-              <g id="algeria-macro-regions">
-                {/* 1. Tell & Coastal Plains */}
-                <path
-                  d="M 320 130 Q 500 100 740 105 L 720 150 Q 500 140 330 155 Z"
-                  fill="#059669"
-                  fillOpacity={hoveredMacroZone === 'tell_coastal' ? 0.6 : activeLayer === 'agro_zones' ? 0.35 : 0.15}
-                  stroke="#059669"
-                  strokeWidth={hoveredMacroZone === 'tell_coastal' ? 3 : 1.5}
-                  className="cursor-pointer transition-all duration-150"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleMacroZoneClick('tell_coastal');
-                  }}
-                  onMouseEnter={() => setHoveredMacroZone('tell_coastal')}
-                  onMouseLeave={() => setHoveredMacroZone(null)}
-                >
-                  <title>{lang === 'ar' ? 'السهول الساحلية والتِّل (انقر لعرض إحصائيات الإقليم)' : 'Plaines Côtières & Tell (Cliquer pour voir les statistiques régionales)'}</title>
-                </path>
+                {/* Glow Filter for Active / Hovered Wilayas */}
+                <filter id="wilaya-glow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feDropShadow dx="0" dy="0" stdDeviation="3" floodColor="#38bdf8" floodOpacity="0.8" />
+                </filter>
 
-                {/* 2. High Plateaus & Cereal Steppes */}
-                <path
-                  d="M 330 155 Q 500 140 720 150 L 680 230 Q 500 220 370 240 Z"
-                  fill="#d97706"
-                  fillOpacity={hoveredMacroZone === 'high_plateaus' ? 0.6 : activeLayer === 'agro_zones' ? 0.35 : 0.15}
-                  stroke="#d97706"
-                  strokeWidth={hoveredMacroZone === 'high_plateaus' ? 3 : 1.5}
-                  className="cursor-pointer transition-all duration-150"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleMacroZoneClick('high_plateaus');
-                  }}
-                  onMouseEnter={() => setHoveredMacroZone('high_plateaus')}
-                  onMouseLeave={() => setHoveredMacroZone(null)}
-                >
-                  <title>{lang === 'ar' ? 'الهضاب العليا والسهوب الحبوبية (انقر لعرض إحصائيات الإقليم)' : 'Hauts Plateaux & Steppes (Cliquer pour voir les statistiques régionales)'}</title>
-                </path>
+                {/* Mediterranean Sea Gradient */}
+                <linearGradient id="med-sea-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#0284c7" stopOpacity="0.25" />
+                  <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.08" />
+                </linearGradient>
 
-                {/* 3. Saharan Oasis & Ziban/Souf */}
-                <path
-                  d="M 370 240 Q 500 220 680 230 L 700 320 Q 520 310 420 330 Z"
-                  fill="#ea580c"
-                  fillOpacity={hoveredMacroZone === 'sahara_oasis' ? 0.6 : activeLayer === 'agro_zones' ? 0.35 : 0.15}
-                  stroke="#ea580c"
-                  strokeWidth={hoveredMacroZone === 'sahara_oasis' ? 3 : 1.5}
-                  className="cursor-pointer transition-all duration-150"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleMacroZoneClick('sahara_oasis');
-                  }}
-                  onMouseEnter={() => setHoveredMacroZone('sahara_oasis')}
-                  onMouseLeave={() => setHoveredMacroZone(null)}
-                >
-                  <title>{lang === 'ar' ? 'الواحات الصحراوية وأحواض الزيبان وسوف (انقر لعرض إحصائيات الإقليم)' : 'Oasis Sahariennes & Bassins Ziban/Souf (Cliquer pour voir les statistiques régionales)'}</title>
-                </path>
+                {/* Chott Saline Gradient */}
+                <linearGradient id="chott-saline-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#bae6fd" stopOpacity="0.6" />
+                  <stop offset="50%" stopColor="#e0f2fe" stopOpacity="0.9" />
+                  <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.5" />
+                </linearGradient>
 
-                {/* 4. Deep Sahara Mega-Pivots */}
+                {/* Base Land Fill by Theme */}
+                <linearGradient id="algeria-base-land" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop
+                    offset="0%"
+                    stopColor={
+                      baseMapTheme === 'satellite_tone'
+                        ? '#064e3b'
+                        : baseMapTheme === 'topographic'
+                        ? '#d97706'
+                        : '#f8fafc'
+                    }
+                    stopOpacity={baseMapTheme === 'vector' ? 0.3 : 0.8}
+                  />
+                  <stop
+                    offset="100%"
+                    stopColor={
+                      baseMapTheme === 'satellite_tone'
+                        ? '#78350f'
+                        : baseMapTheme === 'topographic'
+                        ? '#b45309'
+                        : '#f1f5f9'
+                    }
+                    stopOpacity={baseMapTheme === 'vector' ? 0.4 : 0.9}
+                  />
+                </linearGradient>
+              </defs>
+
+              {/* 1. Mediterranean Sea Background & Maritime Shelf */}
+              <g id="mediterranean-sea">
                 <path
-                  d="M 420 330 Q 520 310 700 320 L 720 720 Q 500 820 320 650 L 260 420 Z"
-                  fill="#dc2626"
-                  fillOpacity={hoveredMacroZone === 'deep_sahara' ? 0.5 : activeLayer === 'agro_zones' ? 0.25 : 0.1}
-                  stroke="#dc2626"
-                  strokeWidth={hoveredMacroZone === 'deep_sahara' ? 3 : 1.5}
-                  className="cursor-pointer transition-all duration-150"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleMacroZoneClick('deep_sahara');
-                  }}
-                  onMouseEnter={() => setHoveredMacroZone('deep_sahara')}
-                  onMouseLeave={() => setHoveredMacroZone(null)}
+                  d="M 180 0 L 800 0 L 800 135 L 755 130 Q 640 100 500 102 Q 380 108 300 138 Q 230 165 210 180 Z"
+                  fill="url(#med-sea-gradient)"
+                />
+                <text
+                  x="520"
+                  y="45"
+                  fill="#0284c7"
+                  fontSize="11"
+                  fontWeight="700"
+                  letterSpacing="2"
+                  textAnchor="middle"
+                  opacity="0.75"
                 >
-                  <title>{lang === 'ar' ? 'أقطاب الفلاحة الصحراوية الكبرى بالري المحوري (انقر لعرض إحصائيات الإقليم)' : 'Grands Pôles Agricoles du Grand Sud (Cliquer pour voir les statistiques régionales)'}</title>
-                </path>
+                  MER MÉDITERRANÉE / البحر الأبيض المتوسط
+                </text>
+
+                {/* Major Coastal Ports & Maritime Gateways */}
+                <g id="mediterranean-ports" opacity="0.6">
+                  <circle cx="498" cy="104" r="2.5" fill="#0284c7" />
+                  <text x="498" y="98" fill="#0369a1" fontSize="7" fontWeight="bold" textAnchor="middle">
+                    Alger (16)
+                  </text>
+
+                  <circle cx="360" cy="148" r="2.5" fill="#0284c7" />
+                  <text x="360" y="142" fill="#0369a1" fontSize="7" fontWeight="bold" textAnchor="middle">
+                    Oran (31)
+                  </text>
+
+                  <circle cx="682" cy="118" r="2.5" fill="#0284c7" />
+                  <text x="682" y="112" fill="#0369a1" fontSize="7" fontWeight="bold" textAnchor="middle">
+                    Annaba (23)
+                  </text>
+
+                  <circle cx="585" cy="110" r="2.5" fill="#0284c7" />
+                  <text x="585" y="104" fill="#0369a1" fontSize="7" fontWeight="bold" textAnchor="middle">
+                    Béjaïa (06)
+                  </text>
+                </g>
               </g>
 
-              {/* Wilayas Markers */}
-              <g id="algeria-wilayas-nodes">
-                {filteredWilayas.map((w) => {
-                  const pt = projectCoordinates(w.lat, w.lng);
-                  const isSelected = w.code === selectedWilayaCode;
-                  const isHovered = hoveredWilaya?.code === w.code;
-                  const color = getWilayaColor(w);
+              {/* 2. Neighboring Countries Labels & Outer Boundaries */}
+              <g id="neighboring-countries" pointerEvents="none" opacity="0.45">
+                <text x="750" y="195" fill="#64748b" fontSize="9" fontWeight="bold" textAnchor="middle">
+                  TUNISIE / تونس
+                </text>
+                <text x="755" y="380" fill="#64748b" fontSize="9" fontWeight="bold" textAnchor="middle">
+                  LIBYE / ليبيا
+                </text>
+                <text x="650" y="760" fill="#64748b" fontSize="9" fontWeight="bold" textAnchor="middle">
+                  NIGER / النيجر
+                </text>
+                <text x="330" y="775" fill="#64748b" fontSize="9" fontWeight="bold" textAnchor="middle">
+                  MALI / مالي
+                </text>
+                <text x="110" y="580" fill="#64748b" fontSize="9" fontWeight="bold" textAnchor="middle">
+                  MAURITANIE / موريتانيا
+                </text>
+                <text x="190" y="240" fill="#64748b" fontSize="9" fontWeight="bold" textAnchor="middle">
+                  MAROC / المغرب
+                </text>
+              </g>
 
-                  return (
-                    <g
-                      key={w.code}
-                      className="cursor-pointer transition-transform duration-150"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleWilayaClick(w);
-                      }}
-                      onMouseEnter={() => setHoveredWilaya(w)}
-                      onMouseLeave={() => setHoveredWilaya(null)}
-                    >
-                      {isSelected && (
+              {/* 3. Base Land Fill Polygon for Algeria */}
+              <path
+                id="algeria-base-land-path"
+                d={nationalPath}
+                fill="url(#algeria-base-land)"
+                stroke={baseMapTheme === 'satellite_tone' ? '#047857' : '#94a3b8'}
+                strokeWidth={1.5}
+              />
+
+              {/* 4. 58-WILAYA GRANULAR CHOROPLETH POLYGON CELLS (Clipped to Algeria National Border) */}
+              {showWilayaPolygons && (
+                <g id="algeria-wilayas-polygons" clipPath="url(#algeria-national-clip)">
+                  {wilayaPolygons.map((poly) => {
+                    const w = poly.wilaya;
+                    const isSelected = w.code === selectedWilayaCode;
+                    const isHovered =
+                      hoveredPolygonCode === w.code || hoveredWilaya?.code === w.code;
+                    const color = getWilayaColor(w);
+
+                    // Opacity based on map theme and layer
+                    const fillOpacity = isSelected
+                      ? 0.95
+                      : isHovered
+                      ? 0.85
+                      : baseMapTheme === 'satellite_tone'
+                      ? 0.65
+                      : baseMapTheme === 'topographic'
+                      ? 0.72
+                      : 0.82;
+
+                    return (
+                      <path
+                        key={`poly-${poly.code}`}
+                        d={poly.pathData}
+                        fill={color}
+                        fillOpacity={fillOpacity}
+                        stroke={
+                          isSelected
+                            ? '#ffffff'
+                            : isHovered
+                            ? '#38bdf8'
+                            : baseMapTheme === 'satellite_tone'
+                            ? 'rgba(255,255,255,0.25)'
+                            : 'rgba(255,255,255,0.45)'
+                        }
+                        strokeWidth={isSelected ? 2.5 : isHovered ? 2.0 : 0.75}
+                        filter={isSelected || isHovered ? 'url(#wilaya-glow)' : undefined}
+                        className="cursor-pointer transition-colors duration-150"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleWilayaClick(w);
+                        }}
+                        onMouseEnter={() => {
+                          setHoveredPolygonCode(w.code);
+                          setHoveredWilaya(w);
+                        }}
+                        onMouseLeave={() => {
+                          setHoveredPolygonCode(null);
+                          setHoveredWilaya(null);
+                        }}
+                      >
+                        <title>
+                          {w.codeStr} - {lang === 'ar' ? w.nameAr : w.nameFr} | {w.soilNameFr} ({w.rainfallMm} mm)
+                        </title>
+                      </path>
+                    );
+                  })}
+                </g>
+              )}
+
+              {/* 5. TOPOGRAPHIC RELIEF & HYDROGRAPHY (Mountains, Chotts, Wadis, Ergs) */}
+              {showTopography && (
+                <g id="algeria-topography" clipPath="url(#algeria-national-clip)" pointerEvents="none">
+                  {/* Mountain Relief Ranges */}
+                  <g id="mountain-ranges" opacity={baseMapTheme === 'vector' ? 0.35 : 0.65}>
+                    {TOPOGRAPHIC_RELIEF_DATA.mountainRanges.map((range) => (
+                      <path
+                        key={range.id}
+                        d={range.path}
+                        fill="none"
+                        stroke={range.color || '#78350f'}
+                        strokeWidth={range.strokeWidth || 4}
+                        strokeLinecap="round"
+                        strokeDasharray={range.id.includes('tell') ? '6 2' : '8 3'}
+                      />
+                    ))}
+
+                    {/* Mountain Massif Labels & Peaks */}
+                    {TOPOGRAPHIC_RELIEF_DATA.mountainPeaks.map((peak) => (
+                      <g key={peak.id}>
+                        <polygon
+                          points={`${peak.x},${peak.y - 4} ${peak.x - 3.5},${peak.y + 3} ${peak.x + 3.5},${peak.y + 3}`}
+                          fill="#78350f"
+                          stroke="#ffffff"
+                          strokeWidth={0.75}
+                        />
+                        <text
+                          x={peak.x}
+                          y={peak.y - 6}
+                          fill="#451a03"
+                          fontSize="7"
+                          fontWeight="800"
+                          textAnchor="middle"
+                          className="dark:fill-amber-200 drop-shadow-sm"
+                        >
+                          ▲ {lang === 'ar' ? peak.nameAr : peak.nameFr} ({peak.altitudeM}m)
+                        </text>
+                      </g>
+                    ))}
+                  </g>
+
+                  {/* Chotts & Sebkhas (Endorheic Salt Lakes) */}
+                  <g id="chotts-and-sebkhas">
+                    {TOPOGRAPHIC_RELIEF_DATA.chotts.map((chott) => (
+                      <g key={chott.id}>
+                        <ellipse
+                          cx={chott.cx}
+                          cy={chott.cy}
+                          rx={chott.rx}
+                          ry={chott.ry}
+                          fill="url(#chott-saline-gradient)"
+                          stroke="#0284c7"
+                          strokeWidth={1}
+                          strokeDasharray="3 1"
+                          transform={chott.rotation ? `rotate(${chott.rotation} ${chott.cx} ${chott.cy})` : undefined}
+                        />
+                        <text
+                          x={chott.cx}
+                          y={chott.cy + 2.5}
+                          fill="#0369a1"
+                          fontSize="6.5"
+                          fontWeight="bold"
+                          textAnchor="middle"
+                          className="dark:fill-sky-200"
+                        >
+                          {lang === 'ar' ? chott.nameAr : chott.nameFr}
+                        </text>
+                      </g>
+                    ))}
+                  </g>
+
+                  {/* Major Wadis & River Networks */}
+                  <g id="major-wadis" opacity="0.6">
+                    {TOPOGRAPHIC_RELIEF_DATA.wadis.map((wadi) => (
+                      <path
+                        key={wadi.id}
+                        d={wadi.path}
+                        fill="none"
+                        stroke="#0284c7"
+                        strokeWidth={1.5}
+                        strokeLinecap="round"
+                      />
+                    ))}
+                  </g>
+
+                  {/* Sand Dune Ergs Formations */}
+                  <g id="desert-ergs" opacity="0.4">
+                    {TOPOGRAPHIC_RELIEF_DATA.ergs.map((erg) => (
+                      <g key={erg.id}>
+                        <path
+                          d={erg.path}
+                          fill="#fef3c7"
+                          fillOpacity={0.45}
+                          stroke="#f59e0b"
+                          strokeWidth={1}
+                          strokeDasharray="4 2"
+                        />
+                        <text
+                          x={erg.labelX}
+                          y={erg.labelY}
+                          fill="#b45309"
+                          fontSize="7.5"
+                          fontWeight="bold"
+                          letterSpacing="1"
+                          textAnchor="middle"
+                        >
+                          {lang === 'ar' ? erg.nameAr : erg.nameFr}
+                        </text>
+                      </g>
+                    ))}
+                  </g>
+                </g>
+              )}
+
+              {/* 6. Optional Macro Regional Ecological Zones Overlay */}
+              {showMacroBands && (
+                <g id="algeria-macro-regions" pointerEvents="none" opacity="0.25">
+                  <path
+                    d="M 210 180 Q 500 110 755 130 L 720 180 Q 500 160 300 200 Z"
+                    fill="#059669"
+                  />
+                  <path
+                    d="M 300 200 Q 500 160 720 180 L 690 265 Q 500 250 340 280 Z"
+                    fill="#d97706"
+                  />
+                  <path
+                    d="M 340 280 Q 500 250 690 265 L 710 360 Q 520 345 390 375 Z"
+                    fill="#ea580c"
+                  />
+                  <path
+                    d="M 390 375 Q 520 345 710 360 L 720 720 Q 500 820 320 650 L 260 420 Z"
+                    fill="#dc2626"
+                  />
+                </g>
+              )}
+
+              {/* 7. National Perimeter Border Crisp Line */}
+              <path
+                id="algeria-national-border-line"
+                d={nationalPath}
+                fill="none"
+                stroke={baseMapTheme === 'satellite_tone' ? '#10b981' : '#334155'}
+                strokeWidth={2.2}
+                pointerEvents="none"
+              />
+
+              {/* 8. Wilayas Centroid Nodes & Labels */}
+              {showWilayaLabels && (
+                <g id="algeria-wilayas-nodes">
+                  {filteredWilayas.map((w) => {
+                    const pt = projectCoordinates(w.lat, w.lng);
+                    const isSelected = w.code === selectedWilayaCode;
+                    const isHovered =
+                      hoveredPolygonCode === w.code || hoveredWilaya?.code === w.code;
+                    const color = getWilayaColor(w);
+
+                    return (
+                      <g
+                        key={w.code}
+                        className="cursor-pointer transition-transform duration-150"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleWilayaClick(w);
+                        }}
+                        onMouseEnter={() => {
+                          setHoveredPolygonCode(w.code);
+                          setHoveredWilaya(w);
+                        }}
+                        onMouseLeave={() => {
+                          setHoveredPolygonCode(null);
+                          setHoveredWilaya(null);
+                        }}
+                      >
+                        {isSelected && (
+                          <circle
+                            cx={pt.x}
+                            cy={pt.y}
+                            r={16}
+                            fill={color}
+                            fillOpacity={0.4}
+                            className="animate-ping"
+                          />
+                        )}
+
                         <circle
                           cx={pt.x}
                           cy={pt.y}
-                          r={18}
-                          fill={color}
-                          fillOpacity={0.3}
-                          className="animate-ping"
+                          r={isSelected ? 9 : isHovered ? 8 : 5.5}
+                          fill={isSelected ? '#ffffff' : color}
+                          stroke={isSelected ? color : '#ffffff'}
+                          strokeWidth={isSelected ? 2.5 : 1}
+                          className="transition-all drop-shadow-md"
                         />
-                      )}
 
-                      <circle
-                        cx={pt.x}
-                        cy={pt.y}
-                        r={isSelected ? 11 : isHovered ? 9.5 : 7}
-                        fill={color}
-                        stroke={isSelected ? '#ffffff' : '#1e293b'}
-                        strokeWidth={isSelected ? 2.5 : 1}
-                        className="transition-all drop-shadow-md"
-                      />
+                        <text
+                          x={pt.x}
+                          y={pt.y + 3}
+                          fill={isSelected ? color : '#ffffff'}
+                          fontSize={isSelected ? '7.5' : '5.5'}
+                          fontWeight="800"
+                          textAnchor="middle"
+                          pointerEvents="none"
+                        >
+                          {w.codeStr}
+                        </text>
 
-                      <text
-                        x={pt.x}
-                        y={pt.y + 3.5}
-                        fill="#ffffff"
-                        fontSize={isSelected ? '8' : '6.5'}
-                        fontWeight="800"
-                        textAnchor="middle"
-                        pointerEvents="none"
-                      >
-                        {w.codeStr}
-                      </text>
-
-                      <text
-                        x={pt.x + 9}
-                        y={pt.y + 3}
-                        fill={isSelected ? '#0f172a' : '#475569'}
-                        fontSize={isSelected ? '10' : '8'}
-                        fontWeight={isSelected ? '800' : '600'}
-                        className="dark:fill-slate-200 select-none pointer-events-none drop-shadow-sm"
-                      >
-                        {lang === 'ar' ? w.nameAr : w.nameFr}
-                      </text>
-                    </g>
-                  );
-                })}
-              </g>
+                        <text
+                          x={pt.x + 8}
+                          y={pt.y + 2.5}
+                          fill={
+                            isSelected
+                              ? '#0f172a'
+                              : baseMapTheme === 'satellite_tone'
+                              ? '#f8fafc'
+                              : '#334155'
+                          }
+                          fontSize={isSelected ? '9.5' : '7'}
+                          fontWeight={isSelected ? '800' : '600'}
+                          className="dark:fill-slate-100 select-none pointer-events-none drop-shadow-sm"
+                        >
+                          {lang === 'ar' ? w.nameAr : w.nameFr}
+                        </text>
+                      </g>
+                    );
+                  })}
+                </g>
+              )}
 
               {/* OVERLAY LAYER 1: DAMS & WATER RESERVOIRS */}
               {showDamsOverlay && (
@@ -981,7 +1374,7 @@ export default function AlgeriaAgriMap() {
                           cy={pt.y}
                           r={9}
                           fill="#0284c7"
-                          fillOpacity={0.8}
+                          fillOpacity={0.85}
                           stroke="#ffffff"
                           strokeWidth={2}
                           className="animate-pulse"
@@ -1023,7 +1416,7 @@ export default function AlgeriaAgriMap() {
                           cy={pt.y}
                           r={14}
                           fill="#10b981"
-                          fillOpacity={0.25}
+                          fillOpacity={0.3}
                           stroke="#10b981"
                           strokeWidth={1.5}
                           strokeDasharray="2 2"

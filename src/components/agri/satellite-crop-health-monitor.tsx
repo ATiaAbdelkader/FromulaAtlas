@@ -12,6 +12,7 @@ import { useWeatherStore, type WeatherData } from '@/lib/weather-store';
 import { readSavedFields, type SavedFieldRecord } from '@/lib/farm-digital-twin';
 import { fieldFromCenter, healthLabel, healthRecommendation, ndviColor, simulateNdvi, type NdviResult, type NdviZone } from '@/lib/satellite-service';
 import { createSatelliteHealthRecord, saveSatelliteHealthRecord, SATELLITE_HEALTH_CHANGED_EVENT, type SatelliteHealthLevel } from '@/lib/satellite-health';
+import { ToolExplainerDialog } from '@/components/agri/ToolExplainerDialog';
 
 interface SatelliteCropHealthMonitorProps {
   onOpenFarmTool?: (storageKey: string) => void;
@@ -178,7 +179,11 @@ export function SatelliteCropHealthMonitor({ onOpenFarmTool }: SatelliteCropHeal
       <CardHeader className="border-b border-indigo-100/70 bg-gradient-to-r from-indigo-50/80 via-card to-teal-50/50 pb-4 dark:border-indigo-950/70 dark:from-indigo-950/25 dark:to-teal-950/20">
         <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
           <div><div className="mb-2 flex flex-wrap items-center gap-2"><Badge className="bg-indigo-600 text-white"><Satellite className="me-1 h-3 w-3" />{tr(language, 'Satellite intelligence', 'ذكاء الأقمار الصناعية', 'Intelligence satellite')}</Badge><Badge variant="outline">{tr(language, 'Algeria-ready', 'جاهز للجزائر', 'Prêt pour l’Algérie')}</Badge></div><CardTitle className="text-xl">{tr(language, 'Satellite Crop Health Monitor', 'مراقب صحة المحصول بالقمر الصناعي', 'Suivi satellite de la santé des cultures')}</CardTitle><CardDescription className="mt-1 max-w-3xl leading-5">{tr(language, 'Scan a saved field, see where crop stress is concentrated, and turn the signal into a reviewed scouting or irrigation action.', 'افحص حقلاً محفوظاً، واعرف أين يتركز إجهاد المحصول، وحوّل الإشارة إلى كشف أو إجراء ري بعد المراجعة.', 'Analysez une parcelle, localisez le stress et transformez le signal en observation ou action d’irrigation vérifiée.')}</CardDescription></div>
-          <div className="flex shrink-0 gap-2"><Button type="button" size="sm" variant="outline" className="gap-1.5" onClick={refreshFields}><RefreshCw className="h-3.5 w-3.5" />{tr(language, 'Refresh fields', 'تحديث الحقول', 'Actualiser')}</Button>{result && <Button type="button" size="sm" variant="outline" className="gap-1.5" onClick={printReport}><Printer className="h-3.5 w-3.5" />{tr(language, 'Print', 'طباعة', 'Imprimer')}</Button>}</div>
+          <div className="flex shrink-0 flex-wrap gap-2">
+            <ToolExplainerDialog category="satellite_ndvi" triggerVariant="outline" className="border-indigo-200 text-indigo-700 hover:bg-indigo-50 dark:border-indigo-800 dark:text-indigo-300" />
+            <Button type="button" size="sm" variant="outline" className="gap-1.5" onClick={refreshFields}><RefreshCw className="h-3.5 w-3.5" />{tr(language, 'Refresh fields', 'تحديث الحقول', 'Actualiser')}</Button>
+            {result && <Button type="button" size="sm" variant="outline" className="gap-1.5" onClick={printReport}><Printer className="h-3.5 w-3.5" />{tr(language, 'Print', 'طباعة', 'Imprimer')}</Button>}
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-5 p-4 sm:p-5">

@@ -10,6 +10,7 @@ import {
   Mountain, Layers, Droplets, Sprout, Download,
 } from 'lucide-react';
 import { copyFor, useTranslation } from '@/lib/language-store';
+import { ToolExplainerDialog } from '../ToolExplainerDialog';
 
 // ============================================================================
 // Classification systems
@@ -245,10 +246,13 @@ export function SoilTextureTriangle() {
 
   return (
     <Card className="overflow-hidden border-amber-100 shadow-sm dark:border-amber-900/60">
-      <CardHeader className="border-b border-border/60 bg-amber-50/50 pb-4 dark:bg-amber-950/10">
-        <CardTitle className="flex items-center gap-2 text-base"><span className="rounded-lg bg-amber-100 p-2 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"><Mountain className="h-4 w-4" /></span> {copyFor(language, 'Soil Texture Triangle', 'مثلث قوام التربة')}
-        </CardTitle>
-        <p className="text-[10px] text-muted-foreground">{copyFor(language, 'Interactive ternary diagram · 3 classification systems (USDA/SSEW/International) · soil properties · irrigation + management recommendations', 'مخطط ثلاثي تفاعلي · 3 أنظمة تصنيف (USDA/SSEW/دولي) · خصائص التربة · توصيات الري والإدارة')}</p>
+      <CardHeader className="border-b border-border/60 bg-amber-50/50 pb-4 dark:bg-amber-950/10 flex flex-row items-center justify-between gap-2 flex-wrap">
+        <div>
+          <CardTitle className="flex items-center gap-2 text-base"><span className="rounded-lg bg-amber-100 p-2 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"><Mountain className="h-4 w-4" /></span> {copyFor(language, 'Soil Texture Triangle', 'مثلث قوام التربة')}
+          </CardTitle>
+          <p className="text-[10px] text-muted-foreground">{copyFor(language, 'Interactive ternary diagram · 3 classification systems (USDA/SSEW/International) · soil properties · irrigation + management recommendations', 'مخطط ثلاثي تفاعلي · 3 أنظمة تصنيف (USDA/SSEW/دولي) · خصائص التربة · توصيات الري والإدارة')}</p>
+        </div>
+        <ToolExplainerDialog category="soil_texture_awc" triggerVariant="outline" />
       </CardHeader>
       <CardContent className="space-y-3">
         {/* Classification system selector */}

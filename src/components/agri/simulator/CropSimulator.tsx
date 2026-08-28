@@ -58,6 +58,7 @@ import { RegionalPresetSelector } from './RegionalPresetSelector';
 import { AgronomicVerdictBanner } from './AgronomicVerdictBanner';
 import { SimulatorPrintReport } from './SimulatorPrintReport';
 import { PredictiveYieldCalculator } from './PredictiveYieldCalculator';
+import { InteractiveFinancialGauges } from './InteractiveFinancialGauges';
 import { type AlgerianAgroPreset } from '@/lib/algerian-agro-presets';
 
 const STORAGE_KEY = 'formula-atlas-crop-simulator-v1';
@@ -567,6 +568,15 @@ export function CropSimulator() {
 
             <div className="mt-6 grid gap-4 md:grid-cols-2"><div><InputLabel hint="t/ha">{tr(language, 'Active simulation yield', 'مردود المحاكاة الفعلي المعمول به', 'Rendement de simulation actif')}</InputLabel><Input className={`${inputClass} mt-1`} type="number" min="0" step="0.1" value={scenario.expectedYieldTPerHa} onChange={(event) => updateScenario({ expectedYieldTPerHa: Number(event.target.value) })} /></div><div><InputLabel hint="DZD/t">{tr(language, 'Expected selling price', 'سعر البيع المتوقع', 'Prix de vente attendu')}</InputLabel><Input className={`${inputClass} mt-1`} type="number" min="0" step="1000" value={scenario.expectedPricePerT} onChange={(event) => updateScenario({ expectedPricePerT: Number(event.target.value) })} /></div></div><div className="mt-4 rounded-xl bg-muted/50 p-4 text-xs"><div className="flex items-center justify-between gap-3"><span className="font-semibold">{tr(language, 'Base revenue', 'الإيراد الأساسي', 'Revenu de base')}</span><span className="font-black">{formatSimulatorDzd(result.cropRevenue)}</span></div><div className="mt-2"><ProgressBar value={result.cropRevenue} max={Math.max(result.cropRevenue, result.totalCost, 1)} /></div><p className="mt-2 text-muted-foreground">{formatSimulatorNumber(result.totalYieldT, 1)} t × {formatSimulatorDzd(scenario.expectedPricePerT)}/t</p></div>
           </div>
+
+          {/* Interactive Financial Gauges: Expected Input Cost Dial vs Estimated ROI */}
+          <InteractiveFinancialGauges
+            scenario={scenario}
+            result={result}
+            onUpdateScenario={updateScenario}
+            cropName={cropLabel(language, scenario.cropId, selectedProfile?.cropName ?? scenario.cropId)}
+            cropEmoji={selectedProfile?.emoji ?? '🌱'}
+          />
 
           <div className="rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-6">
             <SectionHeading step={tr(language, 'Step 5', 'الخطوة ٥', 'Étape 5')} icon={CircleDollarSign} title={tr(language, 'Read the decision dashboard', 'اقرأ لوحة القرار', 'Lire le tableau de décision')} description={tr(language, 'The simulator separates operating gross margin from the net margin after household overhead.', 'يفصل المحاكي بين الهامش التشغيلي والهامش الصافي بعد المصاريف المنزلية.', 'Le simulateur sépare la marge opérationnelle de la marge nette après frais du ménage.')} />

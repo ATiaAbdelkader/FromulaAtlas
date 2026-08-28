@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import type { ForecastResult } from '@/lib/open-meteo';
 import { useTranslation, copyFor } from '@/lib/language-store';
+import { ToolExplainerDialog } from '@/components/agri/ToolExplainerDialog';
 
 interface FarmerWeatherAdvisorProps {
   forecast: ForecastResult | null;
@@ -317,6 +318,8 @@ ${heatStatus === 'frost' ? '❄️ Frost Alert: Prepare protection!' : ''}`;
               <Send className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">WhatsApp</span>
             </Button>
+
+            <ToolExplainerDialog category="spray_weather_deltat" triggerVariant="outline" className="h-8 text-xs" />
 
             <Button
               type="button"

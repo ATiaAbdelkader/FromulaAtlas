@@ -24,6 +24,7 @@ import {
   Filter,
 } from 'lucide-react';
 import { useTranslation, copyFor } from '@/lib/language-store';
+import { ToolExplainerDialog } from '@/components/agri/ToolExplainerDialog';
 
 interface FarmerSymptomCheckerProps {
   cropName?: string;
@@ -301,9 +302,12 @@ export function FarmerSymptomChecker({
             <Camera className="h-5 w-5 text-rose-600" />
             <span>{tr('Quick Crop Diagnosis & INPV Disease Guide', 'مرشد أعراض وتشخيص أمراض المحاصيل ودليل INPV', 'Diagnostic rapide au champ & Guide INPV')}</span>
           </CardTitle>
-          <Badge variant="outline" className="text-[11px] font-normal">
-            {tr('10 Common Field Conditions', '10 أعراض حقلية رئيسية', '10 symptômes courants')}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <ToolExplainerDialog category="symptom_checker" triggerVariant="outline" className="h-7 text-xs" />
+            <Badge variant="outline" className="text-[11px] font-normal">
+              {tr('10 Common Field Conditions', '10 أعراض حقلية رئيسية', '10 symptômes courants')}
+            </Badge>
+          </div>
         </div>
         <p className="text-xs text-muted-foreground">
           {tr(

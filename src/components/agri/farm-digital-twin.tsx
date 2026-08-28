@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { copyFor, useTranslation, type Language } from '@/lib/language-store';
 import { FarmDigitalTwinMap } from '@/components/agri/farm-digital-twin-map';
 import { AlgeriaSoilZones } from '@/components/agri/soil/AlgeriaSoilZones';
+import { ToolExplainerDialog } from '@/components/agri/ToolExplainerDialog';
 import {
   buildFarmDigitalTwinSnapshot,
   DIGITAL_TWIN_CHANGED_EVENT,
@@ -208,7 +209,11 @@ export function FarmDigitalTwin({ onOpenFarmTool, onOpenSimulator }: FarmDigital
       <section className="overflow-hidden rounded-3xl border border-emerald-800/40 bg-gradient-to-br from-emerald-950 via-emerald-900 to-teal-800 p-5 text-white shadow-xl sm:p-7">
         <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
           <div className="max-w-3xl"><div className="mb-3 flex flex-wrap items-center gap-2"><Badge className="border-white/20 bg-white/10 text-white">{tr(language, 'Farm command center', 'مركز قيادة المزرعة', 'Centre de pilotage')}</Badge><Badge className="border-white/20 bg-white/10 text-white">{tr(language, 'Local-first · DZD', 'محلي أولاً · دج', 'Local d’abord · DZD')}</Badge></div><h2 className="text-2xl font-black tracking-tight sm:text-3xl">{tr(language, 'Farm Digital Twin', 'التوأم الرقمي للمزرعة', 'Jumeau numérique de la ferme')}</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-emerald-50/90">{tr(language, 'One living view of your fields: crop stage, water demand, soil constraints, scouting signals, priorities, and the economics of the season.', 'رؤية حية لحقولك: مرحلة المحصول واحتياج المياه وقيود التربة وإشارات الكشف والأولويات واقتصاديات الموسم.', 'Une vue vivante de vos parcelles : stade de culture, demande en eau, contraintes du sol, observations, priorités et économie de la saison.')}</p></div>
-          <div className="flex flex-wrap gap-2"><Button type="button" variant="secondary" className="gap-2 bg-white/95 text-emerald-900 hover:bg-white" onClick={refresh}><RefreshCw className="h-4 w-4" />{tr(language, 'Refresh twin', 'تحديث التوأم', 'Actualiser le jumeau')}</Button><Button type="button" variant="outline" className="gap-2 border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white" onClick={onOpenSimulator}><FlaskConical className="h-4 w-4" />{tr(language, 'Open Simulator', 'فتح المحاكي', 'Ouvrir le simulateur')}</Button></div>
+          <div className="flex flex-wrap gap-2">
+            <ToolExplainerDialog category="digital_twin_soil" triggerVariant="outline" className="border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white" />
+            <Button type="button" variant="secondary" className="gap-2 bg-white/95 text-emerald-900 hover:bg-white" onClick={refresh}><RefreshCw className="h-4 w-4" />{tr(language, 'Refresh twin', 'تحديث التوأم', 'Actualiser le jumeau')}</Button>
+            <Button type="button" variant="outline" className="gap-2 border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white" onClick={onOpenSimulator}><FlaskConical className="h-4 w-4" />{tr(language, 'Open Simulator', 'فتح المحاكي', 'Ouvrir le simulateur')}</Button>
+          </div>
         </div>
       </section>
 

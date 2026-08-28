@@ -17,6 +17,7 @@ import {
   Layers, RefreshCw, TrendingUp, Sprout, FlaskConical, Beef, CloudRain,
   Satellite, Bug, DollarSign, ShoppingCart, Leaf, Users, FileText,
   Calculator, Network, TableProperties, Star, Columns2, FileSpreadsheet, Brain,
+  HeartPulse, Bot,
 } from 'lucide-react';
 import { FORMULA_COUNT, FREE_TOOL_COUNT } from './catalog-stats';
 import type { Language } from './language-store';
@@ -132,6 +133,7 @@ export const TOOL_REGISTRY: ToolEntry[] = [
   { id: 'scouting-log', title: 'Field Scouting Log', description: 'Voice + photo field observations with severity tagging', keywords: 'scouting field observation pest disease photo voice', tab: 'farm', storageKey: 'collapse_scouting', icon: Sprout, category: 'farm', color: '#84cc16' },
   { id: 'field-record-book', title: 'Field Record Book', description: 'Traceable timeline for field decisions, scouting, soil tests, satellite checks, inputs, irrigation, and harvest', keywords: 'field record book journal timeline history scouting soil satellite input irrigation harvest cost decision', tab: 'farm', storageKey: 'collapse_field_records', icon: BookOpen, category: 'farm', color: '#047857' },
   { id: 'demo-scenario', title: 'Demo Scenario Studio', description: 'Reproducible Algeria-aware synthetic farm data for demos, onboarding, and QA', keywords: 'demo scenario synthetic farm data seed manifest qa investor onboarding test fixture', tab: 'farm', storageKey: 'collapse_demo_scenario', icon: Sparkles, category: 'farm', color: '#7c3aed' },
+  { id: 'nasa-crop-cycles', title: 'NASA Harvest Crop Cycle & Phenology Detector', description: 'Detect cropping intensity (fallow, single, double, triple cropping), SOS, POS, and EOS milestones', keywords: 'nasa harvest crop cycle detection phenology sos pos eos ndvi whittaker sentinel landsat double cropping fallow satellite', tab: 'farm', storageKey: 'collapse_nasa_crop_cycles', icon: Satellite, category: 'farm', color: '#059669' },
 
   // ==========================================================================
   // FARM TAB — Soil & Livestock
@@ -159,6 +161,10 @@ export const TOOL_REGISTRY: ToolEntry[] = [
   // ==========================================================================
   // INSIGHTS TAB — Intelligence & AI
   // ==========================================================================
+  { id: 'agroai-hub', title: 'AgroAI Precision Agronomy Suite', description: 'WHO toxicity tracking, Maas-Hoffman suitability, and autonomous multi-agent IPM remediation', keywords: 'agroai intelligence autonomous multi agent who toxicity rei phi maas hoffman suitability remediation', tab: 'farm', storageKey: 'collapse_agroai_hub', icon: Sparkles, category: 'insights', color: '#059669' },
+  { id: 'agroai-chemical-health', title: 'Chemical Usage & Human Health Impact Tracker', description: 'WHO toxicity classes, operator PPE matrix, safe re-entry (REI) & harvest (PHI) timers', keywords: 'chemical health impact tracker who toxicity ppe mask gloves rei phi dar dar safe spray', tab: 'farm', storageKey: 'collapse_agroai_chemical_health', icon: HeartPulse, category: 'farm', color: '#e11d48' },
+  { id: 'agroai-crop-suitability', title: 'Multi-Factor Bio-Climatic & Edaphic Crop Suitability Forecaster', description: 'Maas-Hoffman salinity curves, GDD thermal modeling & regional Algerian presets with yield projection', keywords: 'crop suitability forecaster maas hoffman salinity ece gdd thermal lime limestone yield forecast bioclimatic', tab: 'farm', storageKey: 'collapse_agroai_crop_suitability', icon: Compass, category: 'farm', color: '#0d9488' },
+  { id: 'agroai-remediation-planner', title: 'Autonomous Multi-Agent Remediation Planner', description: '4 specialized AI agents: diagnosis, bio-control recipes, chemical prescription with IRAC/FRAC rotation', keywords: 'autonomous multi agent remediation planner ipm pest disease triage bio control irac frac tank mix', tab: 'farm', storageKey: 'collapse_agroai_remediation_planner', icon: Bot, category: 'agents', color: '#6366f1' },
   { id: 'ndvi', title: 'NDVI Satellite Field Maps', description: 'Vegetation health heatmap · Stress zone detection', keywords: 'ndvi satellite vegetation health stress map', tab: 'insights', storageKey: 'collapse_ndvi', icon: Satellite, category: 'insights', color: '#6366f1' },
   { id: 'weather-radar', title: 'Weather Radar + Frost Maps', description: 'Live 7-day forecast · Frost risk · Heat warnings', keywords: 'weather radar frost heat forecast spray window', tab: 'insights', storageKey: 'collapse_weather_radar', icon: CloudRain, category: 'insights', color: '#0ea5e9' },
   { id: 'agri-planner', title: 'Smart Agriculture Suite', description: 'Disease detection · crop recommendation · fertilizer guidance', keywords: 'smart agriculture disease detection crop recommendation fertilizer', tab: 'insights', storageKey: 'collapse_agriplanner', icon: Bug, category: 'insights', color: '#65a30d' },

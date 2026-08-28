@@ -34,6 +34,7 @@ import {
   Activity,
 } from 'lucide-react';
 import { useTranslation, copyFor } from '@/lib/language-store';
+import { ToolExplainerDialog } from '@/components/agri/ToolExplainerDialog';
 
 interface FarmerCalculatorsProps {
   defaultAreaHa?: number;
@@ -604,9 +605,12 @@ export function FarmerCalculators({ defaultAreaHa = 1, cropName = 'Potato', sunM
           {/* TAB 1: BACKPACK SPRAYER */}
           <TabsContent value="sprayer" className="space-y-4">
             <div className="rounded-xl bg-emerald-50/70 p-3.5 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800">
-              <div className="flex items-center gap-2 text-xs font-semibold text-emerald-800 dark:text-emerald-300 mb-1">
-                <ShieldCheck className="h-4 w-4 text-emerald-600" />
-                {tr('Accurate Tank Dosing Guide', 'دليل دقيق لخلط خزان الرش', 'Guide de dosage pour pulvérisateur')}
+              <div className="flex items-center justify-between gap-2 mb-1">
+                <div className="flex items-center gap-2 text-xs font-semibold text-emerald-800 dark:text-emerald-300">
+                  <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                  {tr('Accurate Tank Dosing Guide', 'دليل دقيق لخلط خزان الرش', 'Guide de dosage pour pulvérisateur')}
+                </div>
+                <ToolExplainerDialog category="backpack_sprayer" triggerVariant="ghost" className="h-6 text-[11px] px-2 text-emerald-700 hover:bg-emerald-100 dark:text-emerald-300" />
               </div>
               <p className="text-xs text-muted-foreground">
                 {tr(
@@ -777,9 +781,12 @@ export function FarmerCalculators({ defaultAreaHa = 1, cropName = 'Potato', sunM
                     {tr('2-Second Tank Mix Compatibility Traffic Light', 'إشارة المرور لفحص توافق خلط المبيدات والأسمدة', 'Feu tricolore de compatibilité des mélanges')}
                   </span>
                 </div>
-                <Badge className="bg-purple-700 text-white text-[10px]">
-                  {tr('Instant Verification', 'فحص فوري', 'Vérification instantanée')}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <ToolExplainerDialog category="tank_mix_compatibility" triggerVariant="ghost" className="h-6 text-[11px] px-2 text-purple-700 hover:bg-purple-100 dark:text-purple-300" />
+                  <Badge className="bg-purple-700 text-white text-[10px]">
+                    {tr('Instant Verification', 'فحص فوري', 'Vérification instantanée')}
+                  </Badge>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -849,9 +856,12 @@ export function FarmerCalculators({ defaultAreaHa = 1, cropName = 'Potato', sunM
                   <ShieldCheck className="h-4 w-4 text-purple-600" />
                   {tr('Algerian INPV Homologated Products & DAR Safety', 'دليل المبيدات المعتمدة رسمياً في الجزائر وفترة الأمان', 'Index Phytosanitaire Homologué INPV Algérie & DAR')}
                 </span>
-                <Badge className="bg-purple-700 text-white font-mono text-xs">
-                  {customDarDays} {tr('Days DAR', 'أيام أمان', 'Jours DAR')}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <ToolExplainerDialog category="dar_safety" triggerVariant="ghost" className="h-6 text-[11px] px-2 text-purple-700 hover:bg-purple-100 dark:text-purple-300" />
+                  <Badge className="bg-purple-700 text-white font-mono text-xs">
+                    {customDarDays} {tr('Days DAR', 'أيام أمان', 'Jours DAR')}
+                  </Badge>
+                </div>
               </div>
 
               {/* Quick Search in Algerian Registry */}
@@ -984,17 +994,20 @@ export function FarmerCalculators({ defaultAreaHa = 1, cropName = 'Potato', sunM
                   <Package className="h-4 w-4 text-amber-600" />
                   {tr('Algerian Fertilizer Program in 50kg Bags', 'برنامج التسميد الجزائري بالأكياس 50 كغ', 'Programme d\'engrais en sacs de 50 kg')}
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[11px] font-medium text-amber-900 dark:text-amber-200">{tr('Calcareous Soil (pH > 7.8):', 'تربة كلسية قلوية:', 'Sol Calcaire :')}</span>
-                  <button
-                    type="button"
-                    onClick={() => setIsCalcareousSoil((v) => !v)}
-                    className={`text-[10px] px-2 py-0.5 rounded font-bold transition-all ${
-                      isCalcareousSoil ? 'bg-amber-600 text-white' : 'bg-muted text-muted-foreground'
-                    }`}
-                  >
-                    {isCalcareousSoil ? tr('Active (Alkaline)', 'مفعل (قلوية)', 'Actif') : tr('Neutral', 'معتدلة', 'Neutre')}
-                  </button>
+                <div className="flex items-center gap-2">
+                  <ToolExplainerDialog category="fertilizer_bags" triggerVariant="ghost" className="h-6 text-[11px] px-2 text-amber-800 hover:bg-amber-100 dark:text-amber-300" />
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[11px] font-medium text-amber-900 dark:text-amber-200">{tr('Calcareous Soil (pH > 7.8):', 'تربة كلسية قلوية:', 'Sol Calcaire :')}</span>
+                    <button
+                      type="button"
+                      onClick={() => setIsCalcareousSoil((v) => !v)}
+                      className={`text-[10px] px-2 py-0.5 rounded font-bold transition-all ${
+                        isCalcareousSoil ? 'bg-amber-600 text-white' : 'bg-muted text-muted-foreground'
+                      }`}
+                    >
+                      {isCalcareousSoil ? tr('Active (Alkaline)', 'مفعل (قلوية)', 'Actif') : tr('Neutral', 'معتدلة', 'Neutre')}
+                    </button>
+                  </div>
                 </div>
               </div>
               <p className="text-xs text-muted-foreground">
@@ -1183,7 +1196,8 @@ export function FarmerCalculators({ defaultAreaHa = 1, cropName = 'Potato', sunM
                   <Timer className="h-4 w-4 text-cyan-600" />
                   {tr('Drip Irrigation Valve Run-Time & Salinity Shield', 'حاسبة مدة تشغيل صمام التقطير والوقاية من الملوحة والشهيلي', 'Calculateur de durée d\'arrosage & Bouclier Salinité/Sirocco')}
                 </div>
-                <div className="flex gap-2">
+                <div className="flex items-center gap-2">
+                  <ToolExplainerDialog category="irrigation_salinity" triggerVariant="ghost" className="h-6 text-[11px] px-2 text-cyan-800 hover:bg-cyan-100 dark:text-cyan-300" />
                   <button
                     type="button"
                     onClick={() => setIsSiroccoActive((v) => !v)}

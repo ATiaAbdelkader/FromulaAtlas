@@ -41,6 +41,7 @@ import {
 import { useTranslation, copyFor, type Language } from '@/lib/language-store';
 import { toast } from '@/hooks/use-toast';
 import { appendManualFieldRecord } from '@/lib/field-record-book';
+import { ToolExplainerDialog } from '@/components/agri/ToolExplainerDialog';
 
 interface CropPhenologyTimelineProps {
   initialCropId?: string;
@@ -207,6 +208,7 @@ export function CropPhenologyTimeline({
 
             {/* Quick Sowing & Realtime Status */}
             <div className="flex flex-wrap items-center gap-3 bg-muted/40 p-3 rounded-lg border border-border/60">
+              <ToolExplainerDialog category="gdd_phenology" triggerVariant="outline" className="h-8 text-xs" />
               <div className="space-y-1">
                 <Label htmlFor="sowing-date-picker" className="text-xs font-medium flex items-center gap-1.5 text-muted-foreground">
                   <Calendar className="w-3.5 h-3.5 text-primary" />

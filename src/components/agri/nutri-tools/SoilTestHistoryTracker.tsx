@@ -34,6 +34,7 @@ import {
   Printer,
   History,
   Trees,
+  LineChart,
 } from 'lucide-react';
 import {
   getSoilTests,
@@ -48,6 +49,7 @@ import {
   type FieldHealthScore,
 } from '@/lib/soil-history-store';
 import { useTranslation, copyFor } from '@/lib/language-store';
+import { SoilMultiYearTrendsChart } from '@/components/agri/nutri-tools/SoilMultiYearTrendsChart';
 
 const TREND_COLORS: Record<SoilTrend['direction'], string> = {
   improving: '#16a34a',
@@ -68,7 +70,7 @@ export function SoilTestHistoryTracker() {
   const isFr = language === 'fr';
   const [entries, setEntries] = useState<SoilTestEntry[]>([]);
   const [selectedField, setSelectedField] = useState<string>('Pivot 1 - North Valley');
-  const [activeView, setActiveView] = useState<'timeline' | 'trends' | 'health' | 'history'>('timeline');
+  const [activeView, setActiveView] = useState<'d3-trends' | 'timeline' | 'trends' | 'health' | 'history'>('d3-trends');
   const [showForm, setShowForm] = useState(false);
 
   const [newEntry, setNewEntry] = useState<Record<string, any>>({
@@ -291,24 +293,39 @@ export function SoilTestHistoryTracker() {
       {/* Main Tabs Navigation */}
       <div className="p-3">
         <Tabs value={activeView} onValueChange={(v: any) => setActiveView(v)}>
-          <TabsList className="grid grid-cols-2 sm:grid-cols-4 w-full h-auto p-1 bg-muted/80 rounded-xl border">
+          <TabsList className="grid grid-cols-2 sm:grid-cols-5 w-full h-auto p-1 bg-muted/80 rounded-xl border">
+            <TabsTrigger value="d3-trends" className="py-2 text-xs font-bold flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300">
+              <TrendingUp className="h-3.5 w-3.5 text-emerald-600" />
+              <span>{tr('D3 Multi-Year Trends', 'مخطط الاتجاهات D3', 'Tendances D3')}</span>
+              <Badge variant="secondary" className="text-[9px] px-1 py-0 bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-mono">
+                pH • OM • CEC
+              </Badge>
+            </TabsTrigger>
             <TabsTrigger value="timeline" className="py-2 text-xs font-semibold flex items-center gap-1.5">
               <History className="h-3.5 w-3.5 text-blue-600" />
-              <span>{tr('Multi-Year Comparison Matrix', 'مصفوفة المقارنة السنوية', 'Matrice Pluriannuelle')}</span>
+              <span>{tr('Matrix', 'مصفوفة المقارنة', 'Matrice')}</span>
             </TabsTrigger>
             <TabsTrigger value="trends" className="py-2 text-xs font-semibold flex items-center gap-1.5">
-              <TrendingUp className="h-3.5 w-3.5 text-emerald-600" />
-              <span>{tr('Nutrient Trends & Warnings', 'اتجاهات العناصر والتحذيرات', 'Tendances & Alertes')}</span>
+              <Activity className="h-3.5 w-3.5 text-amber-600" />
+              <span>{tr('Nutrient Warnings', 'تحذيرات العناصر', 'Alertes')}</span>
             </TabsTrigger>
             <TabsTrigger value="health" className="py-2 text-xs font-semibold flex items-center gap-1.5">
               <Leaf className="h-3.5 w-3.5 text-green-600" />
-              <span>{tr('Soil Health & Carbon Index', 'مؤشر صحة التربة ومخزون الكربون', 'Indice Santé & Carbone')}</span>
+              <span>{tr('Health & Carbon', 'الصحة والكربون', 'Santé & Carbone')}</span>
             </TabsTrigger>
             <TabsTrigger value="history" className="py-2 text-xs font-semibold flex items-center gap-1.5">
               <Layers className="h-3.5 w-3.5 text-purple-600" />
-              <span>{tr('All Raw Lab Records', 'سجل التحاليل المخبرية الكامل', 'Toutes les Analyses')}</span>
+              <span>{tr('Lab Records', 'سجل التحاليل', 'Analyses')}</span>
             </TabsTrigger>
           </TabsList>
+
+          {/* TAB 0: D3.JS MULTI-YEAR VISUALIZATION */}
+          <TabsContent value="d3-trends" className="space-y-4 pt-3">
+            <SoilMultiYearTrendsChart
+              entries={entries}
+              selectedField={selectedField}
+            />
+          </TabsContent>
 
           {/* TAB 1: MULTI-YEAR COMPARISON MATRIX */}
           <TabsContent value="timeline" className="space-y-4 pt-3">

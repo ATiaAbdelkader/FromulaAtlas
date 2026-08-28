@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import {
   FERTILIZERS_COMPAT, COMPAT_LABELS, inferCompatLevel,
 } from '@/lib/nutri-tools-data';
+import { ToolExplainerDialog } from '../ToolExplainerDialog';
 
 /**
  * Tool 12 — Fertilizer Compatibility Matrix
@@ -35,9 +36,12 @@ export function FertilizerCompatibility() {
 
   return (
     <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base">Fertilizer Compatibility Matrix</CardTitle>
-        <p className="text-xs text-muted-foreground">Click a cell to see details. C = Compatible, R = Caution, I = Incompatible.</p>
+      <CardHeader className="pb-3 flex flex-row items-center justify-between gap-2 flex-wrap">
+        <div>
+          <CardTitle className="text-base">Fertilizer Compatibility Matrix</CardTitle>
+          <p className="text-xs text-muted-foreground">Click a cell to see details. C = Compatible, R = Caution, I = Incompatible.</p>
+        </div>
+        <ToolExplainerDialog category="tank_mix_compatibility" triggerVariant="outline" />
       </CardHeader>
       <CardContent className="space-y-3">
         <Input

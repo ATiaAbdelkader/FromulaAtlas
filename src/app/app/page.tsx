@@ -123,6 +123,7 @@ import { WorkspacePanel } from '@/components/agri/workspace-panel';
 import { CropSimulator } from '@/components/agri/simulator/CropSimulator';
 import { FarmDigitalTwin } from '@/components/agri/farm-digital-twin';
 import { SatelliteCropHealthMonitor } from '@/components/agri/satellite-crop-health-monitor';
+import NasaHarvestCropCycleDetector from '@/components/agri/satellite/NasaHarvestCropCycleDetector';
 import { DemoScenarioStudio } from '@/components/agri/demo-scenario-studio';
 import { FarmerField } from '@/components/agri/farmer-field';
 import { FarmerHelp } from '@/components/agri/farmer-help';
@@ -131,6 +132,10 @@ import { FarmerProductFinder } from '@/components/agri/farmer-product-finder';
 import { AutonomousCalibrationHub } from '@/components/agri/AutonomousCalibrationHub';
 import { AlgeriaSoilZones } from '@/components/agri/soil/AlgeriaSoilZones';
 import AlgeriaAgriMap from '@/components/agri/nutri-tools/AlgeriaAgriMap';
+import ChemicalHealthTracker from '@/components/agri/agroai/ChemicalHealthTracker';
+import CropSuitabilityForecaster from '@/components/agri/agroai/CropSuitabilityForecaster';
+import AutonomousRemediationPlanner from '@/components/agri/agroai/AutonomousRemediationPlanner';
+import { AgroAIHub } from '@/components/agri/agroai/AgroAIHub';
 
 
 /** French labels for the app shell's farm and insights tool index. */
@@ -495,6 +500,8 @@ export default function Page() {
 
           <CollapsibleSection title={tr('Satellite Crop Health', 'صحة المحصول بالأقمار الصناعية', language)} description={tr('NDVI field maps, vegetation health heatmap, stress zones, and AI recommendations', 'خرائط NDVI للحقول، خريطة حرارية لصحة الغطاء النباتي، مناطق الإجهاد، وتوصيات بالذكاء', language)} icon={Satellite} color="#6366f1" storageKey="collapse_satellite_health" defaultOpen={false} enableExport><div className="p-4"><SatelliteCropHealthMonitor onOpenFarmTool={(storageKey) => openTool('farm', storageKey)} /></div></CollapsibleSection>
 
+          <CollapsibleSection title={tr('NASA Harvest Crop Cycle & Phenology Detector', 'كاشف الدورات المحصولية والظواهر الفينولوجية (NASA Harvest)', language)} description={tr('Detect cropping intensity (single, double, triple cropping, fallow), SOS green-up, POS peak & EOS harvest dates with Whittaker smoothing', 'كشف شدة الزراعة (أحادية، مزدوجة، ثلاثية، بور) ومواعيد بداية ونهاية الموسم والقمة الفينولوجية عبر خوارزمية ناسا', language)} icon={Satellite} color="#059669" storageKey="collapse_nasa_crop_cycles" defaultOpen={false} enableExport><div className="p-4"><NasaHarvestCropCycleDetector /></div></CollapsibleSection>
+
           {level !== 'farmer' && (
           <CollapsibleSection title={tr('Demo Scenario Studio', 'استوديو سيناريوهات العرض', language)} description={tr('Reproducible Algeria-aware synthetic farm data for demos, onboarding, and QA — not for agronomic decisions', 'Données agricoles algériennes synthétiques et reproductibles pour démonstration, accueil et tests — pas pour décisions agronomiques', language)} icon={Sparkles} color="#7c3aed" storageKey="collapse_demo_scenario" defaultOpen={false} enableExport><div className="p-4"><DemoScenarioStudio /></div></CollapsibleSection>
           )}
@@ -554,9 +561,19 @@ export default function Page() {
             <CollapsibleSection title={tr('Crop Calendar Generator', 'مولّد تقويم المحصول', language)} description={tr('One-click complete farm calendar: planting + fertilization + irrigation + pest control + labor · 20 crops · editable · PDF export', 'تقويم مزرعة كامل بنقرة واحدة: زراعة + تسميد + ري + مكافحة آفات + عمالة · 20 محصول · قابل للتعديل · تصدير PDF', language)} icon={CalendarDays} color="#16a34a" storageKey="crop_calendar_gen" defaultOpen={false} enableExport><div className="p-4"><CropCalendarGenerator /></div></CollapsibleSection>
           </div>
 
-          {/* Sub-category: Plant Protection */}
+          {/* Sub-category: Plant Protection & AgroAI */}
           <div className="space-y-3">
-            <SubHeader emoji="🛡️" label={t.plantProtection} />
+            <SubHeader emoji="🛡️" label={tr('Plant Protection & AgroAI Intelligence', 'وقاية النبات ومنظومة AgroAI الذكية', language)} />
+            
+            {/* AgroAI Hub Unified Suite */}
+            <CollapsibleSection title={tr('AgroAI Precision Agronomy & Operator Protection Suite', 'منظومة AgroAI للزراعة الدقيقة وسلامة المزارع والمحاصيل', language)} description={tr('Integrated WHO toxicity tracker, PPE matrix, Maas-Hoffman salinity curves, and autonomous multi-agent IPM remediation planning', 'تتبع سمية منظمة الصحة، مصفوفة معدات الوقاية، منحنيات ماس-هوفمان للملوحة، ومخطط العلاج الذكي متعدد الوكلاء', language)} icon={Sparkles} color="#059669" storageKey="collapse_agroai_hub" defaultOpen={true} enableExport><div className="p-4"><AgroAIHub /></div></CollapsibleSection>
+
+            <CollapsibleSection title={tr('Chemical Usage & Human Health Impact Tracker', 'متتبع استخدام المواد الكيميائية والتأثير على صحة الإنسان', language)} description={tr('WHO toxicity classes (Ia/Ib/II/III), PPE compliance matrix, safe re-entry (REI) & harvest (PHI) timers, ecotoxicity & spray weather auditor', 'تصنيفات سمية WHO، مصفوفة معدات الوقاية الفردية، حاسبة مهلة الدخول والجني، والمؤشرات البيئية للرش', language)} icon={HeartPulse} color="#e11d48" storageKey="collapse_agroai_chemical_health" defaultOpen={false} enableExport><div className="p-4"><ChemicalHealthTracker /></div></CollapsibleSection>
+
+            <CollapsibleSection title={tr('Multi-Factor Bio-Climatic & Edaphic Crop Suitability Forecaster', 'المتنبئ متعدد العوامل لملاءمة المحاصيل للمناخ والتربة', language)} description={tr('Maas-Hoffman salinity threshold (ECe), thermal GDD, active CaCO₃, texture, and regional Algerian presets with yield projection', 'نموذج ماس-هوفمان لتحمل الملوحة، الاحتياج الحراري GDD، الكلس الفعال، وقوام التربة مع التنبؤ بالمردود', language)} icon={Compass} color="#0d9488" storageKey="collapse_agroai_crop_suitability" defaultOpen={false} enableExport><div className="p-4"><CropSuitabilityForecaster /></div></CollapsibleSection>
+
+            <CollapsibleSection title={tr('Autonomous Multi-Agent Remediation Planner', 'المخطط الذكي متعدد الوكلاء لعلاج وحماية المحاصيل', language)} description={tr('4 specialized AI agents: diagnosis, bio-control recipes, chemical prescription with IRAC/FRAC rotation, and safety/cost audit', '4 وكلاء ذكاء اصطناعي: التشخيص، الوصفات البيولوجية، الوصفة الكيميائية الدقيقة، ومراجعة التكلفة والسلامة', language)} icon={Bot} color="#6366f1" storageKey="collapse_agroai_remediation_planner" defaultOpen={false} enableExport><div className="p-4"><AutonomousRemediationPlanner /></div></CollapsibleSection>
+
             <CollapsibleSection title={tr('AI Field Scout', 'كشاف الحقل بالذكاء الاصطناعي', language)} description={tr('Photo and observation-based crop scouting with evidence cards, verification prompts, and safety gates', 'Prospection des cultures par photo et observation avec preuves, vérification et garde-fous de sécurité', language)} icon={Sparkles} color="#0f766e" storageKey="collapse_ai_scout" defaultOpen={false} enableExport><div className="p-4"><AIFieldScout onOpenFarmTool={(storageKey) => openTool('farm', storageKey)} /></div></CollapsibleSection>
             <CollapsibleSection title={tr('Field Scouting Log', 'سجل الكشف الحقلي', language)} description={tr('Voice + photo field observations with severity tagging', 'ملاحظات حقلية بالصوت والصورة مع وسم درجة الخطورة', language)} icon={Sprout} color="#84cc16" storageKey="collapse_scouting" defaultOpen={false} enableExport><div className="p-4"><FieldScoutingLog /></div></CollapsibleSection>
             <CollapsibleSection title={tr('IPM Action Planner', 'مخطّط عمل الإدارة المتكاملة للآفات', language)} description={tr('Scouting evidence · action thresholds · lower-risk controls · responsible treatment review', 'أدلة الكشف · عتبات التدخل · وسائل المكافحة الأقل خطراً · مراجعة المعالجة المسؤولة', language)} icon={Bug} color="#e11d48" storageKey="collapse_ipm_action" defaultOpen={false} enableExport><div className="p-4"><IpmActionPlanner /></div></CollapsibleSection>

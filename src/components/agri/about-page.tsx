@@ -7,6 +7,7 @@
  */
 
 import { useState, useEffect, useRef, ElementType } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Sprout, GraduationCap, Microscope, TrendingUp, Users, Lightbulb, Sparkles,
   MapPin, BookOpen, Heart, ArrowRight, CheckCircle2, ShieldCheck, Cpu, Database,
@@ -182,7 +183,6 @@ export function AboutPage() {
   const focusReveal = useScrollReveal(0.1);
   const beliefsReveal = useScrollReveal(0.1);
   const appFeaturesReveal = useScrollReveal(0.1);
-  const roadmapReveal = useScrollReveal(0.1);
   const closingReveal = useScrollReveal(0.1);
 
   // Roadmap filter & interaction states
@@ -471,19 +471,26 @@ export function AboutPage() {
       </section>
 
       {/* ===================================================================== */}
-      {/* INTERACTIVE ROADMAP & TIMELINE SECTION */}
+      {/* INTERACTIVE ROADMAP & TIMELINE SECTION WITH FRAMER MOTION ANIMATIONS */}
       {/* ===================================================================== */}
-      <section
-        ref={roadmapReveal.ref}
-        className={`rounded-xl border bg-card p-5 sm:p-6 shadow-sm space-y-6 transition-all duration-700 ease-out transform ${
-          roadmapReveal.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
-        }`}
+      <motion.section
+        initial={{ opacity: 0, y: 32 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.1 }}
+        transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+        className="rounded-xl border bg-card p-5 sm:p-6 shadow-sm space-y-6"
       >
         {/* Roadmap Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b pb-4">
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b pb-4"
+        >
           <div>
             <div className="flex items-center gap-2 text-xs font-semibold text-emerald-600 uppercase tracking-wider mb-1">
-              <Rocket className="h-3.5 w-3.5" />
+              <Rocket className="h-3.5 w-3.5 animate-bounce" />
               {isRTL ? 'خارطة طريق التطوير' : 'Interactive Product Roadmap'}
             </div>
             <h3 className="text-base sm:text-lg font-bold text-foreground">
@@ -498,20 +505,32 @@ export function AboutPage() {
 
           {/* Interactive Progress Chips */}
           <div className="flex items-center gap-2 self-start sm:self-auto shrink-0 flex-wrap">
-            <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800">
+            <motion.span
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800 transition-colors"
+            >
               <CheckCircle2 className="h-3.5 w-3.5" />
               <span>{completedCount} {isRTL ? 'مكتمل' : 'Completed'}</span>
-            </span>
-            <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+            </motion.span>
+            <motion.span
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 transition-colors"
+            >
               <Clock className="h-3.5 w-3.5 animate-pulse" />
               <span>{inProgressCount} {isRTL ? 'قيد التطوير' : 'In-Progress'}</span>
-            </span>
-            <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-indigo-100 dark:bg-indigo-950/60 text-indigo-800 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-800">
+            </motion.span>
+            <motion.span
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-indigo-100 dark:bg-indigo-950/60 text-indigo-800 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-800 transition-colors"
+            >
               <Sparkles className="h-3.5 w-3.5" />
               <span>{plannedCount} {isRTL ? 'مخطط' : 'Planned'}</span>
-            </span>
+            </motion.span>
           </div>
-        </div>
+        </motion.div>
 
         {/* Filter Navigation Bar */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
@@ -528,9 +547,11 @@ export function AboutPage() {
               planned: isRTL ? 'المخطط لها' : 'Planned',
             };
             return (
-              <button
+              <motion.button
                 key={filterKey}
                 onClick={() => setStatusFilter(filterKey)}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
                 className={`px-3 py-1.5 rounded-lg font-medium transition-all shrink-0 cursor-pointer ${
                   isActive
                     ? 'bg-emerald-700 text-white shadow-sm'
@@ -538,142 +559,198 @@ export function AboutPage() {
                 }`}
               >
                 {labels[filterKey]}
-              </button>
+              </motion.button>
             );
           })}
         </div>
 
         {/* Timeline Checklist Flow */}
         <div className="relative border-s-2 border-border/80 ms-3 sm:ms-4 space-y-6 pt-1">
-          {filteredRoadmap.map((item, idx) => {
-            const isExpanded = expandedItems[item.id] ?? false;
-            const isVoted = userUpvotes[item.id] ?? false;
+          <AnimatePresence mode="popLayout">
+            {filteredRoadmap.map((item, idx) => {
+              const isExpanded = expandedItems[item.id] ?? false;
+              const isVoted = userUpvotes[item.id] ?? false;
 
-            // Status Styling Map
-            const statusConfig = {
-              completed: {
-                badgeBg: 'bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800',
-                dotBg: 'bg-emerald-600 text-white ring-4 ring-emerald-100 dark:ring-emerald-950/80',
-                icon: CheckCircle2,
-                labelEn: 'Completed',
-                labelAr: 'مكتمل',
-              },
-              'in-progress': {
-                badgeBg: 'bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800',
-                dotBg: 'bg-amber-500 text-white ring-4 ring-amber-100 dark:ring-amber-950/80',
-                icon: Clock,
-                labelEn: 'In-Progress',
-                labelAr: 'قيد التطوير',
-              },
-              planned: {
-                badgeBg: 'bg-indigo-100 dark:bg-indigo-950/70 text-indigo-800 dark:text-indigo-300 border-indigo-300 dark:border-indigo-800',
-                dotBg: 'bg-indigo-500 text-white ring-4 ring-indigo-100 dark:ring-indigo-950/80',
-                icon: Calendar,
-                labelEn: 'Planned',
-                labelAr: 'مخطط له',
-              },
-            }[item.status];
+              // Status Styling Map
+              const statusConfig = {
+                completed: {
+                  badgeBg: 'bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800',
+                  dotBg: 'bg-emerald-600 text-white ring-4 ring-emerald-100 dark:ring-emerald-950/80',
+                  icon: CheckCircle2,
+                  labelEn: 'Completed',
+                  labelAr: 'مكتمل',
+                },
+                'in-progress': {
+                  badgeBg: 'bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800',
+                  dotBg: 'bg-amber-500 text-white ring-4 ring-amber-100 dark:ring-amber-950/80',
+                  icon: Clock,
+                  labelEn: 'In-Progress',
+                  labelAr: 'قيد التطوير',
+                },
+                planned: {
+                  badgeBg: 'bg-indigo-100 dark:bg-indigo-950/70 text-indigo-800 dark:text-indigo-300 border-indigo-300 dark:border-indigo-800',
+                  dotBg: 'bg-indigo-500 text-white ring-4 ring-indigo-100 dark:ring-indigo-950/80',
+                  icon: Calendar,
+                  labelEn: 'Planned',
+                  labelAr: 'مخطط له',
+                },
+              }[item.status];
 
-            const StatusIcon = statusConfig.icon;
+              const StatusIcon = statusConfig.icon;
 
-            return (
-              <div
-                key={item.id}
-                className="relative ps-6 sm:ps-8 transition-all group"
-              >
-                {/* Timeline node icon */}
-                <div
-                  className={`absolute -start-[17px] top-1.5 w-8 h-8 rounded-full flex items-center justify-center shadow-sm transition-transform duration-300 group-hover:scale-110 ${statusConfig.dotBg}`}
+              return (
+                <motion.div
+                  key={item.id}
+                  layout
+                  initial={{ opacity: 0, y: 24, x: isRTL ? 16 : -16, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, x: 0, scale: 1 }}
+                  exit={{
+                    opacity: 0,
+                    y: -20,
+                    x: isRTL ? -16 : 16,
+                    scale: 0.95,
+                    transition: {
+                      duration: 0.28,
+                      ease: [0.32, 0, 0.67, 0],
+                    },
+                  }}
+                  transition={{
+                    duration: 0.45,
+                    delay: Math.min(idx * 0.06, 0.3),
+                    ease: [0.22, 1, 0.36, 1],
+                    layout: { duration: 0.3, ease: 'easeOut' },
+                  }}
+                  className="relative ps-6 sm:ps-8 transition-all group"
                 >
-                  <StatusIcon className="h-4 w-4" />
-                </div>
+                  {/* Timeline node icon */}
+                  <motion.div
+                    initial={{ scale: 0.6, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.6, opacity: 0 }}
+                    transition={{ duration: 0.3, delay: Math.min(idx * 0.05 + 0.05, 0.3) }}
+                    whileHover={{ scale: 1.15 }}
+                    className={`absolute -start-[17px] top-1.5 w-8 h-8 rounded-full flex items-center justify-center shadow-sm transition-transform duration-300 ${statusConfig.dotBg}`}
+                  >
+                    <StatusIcon className="h-4 w-4" />
+                  </motion.div>
 
-                {/* Main Card */}
-                <div className="rounded-xl border bg-card/70 hover:bg-card hover:border-emerald-500/50 p-4 transition-all duration-300 shadow-xs hover:shadow-sm">
-                  {/* Card Top Row */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span
-                        className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${statusConfig.badgeBg}`}
-                      >
-                        <StatusIcon className="h-3 w-3" />
-                        <span>{isRTL ? statusConfig.labelAr : statusConfig.labelEn}</span>
-                      </span>
+                  {/* Main Card */}
+                  <motion.div
+                    whileHover={{ y: -2 }}
+                    transition={{ duration: 0.2 }}
+                    className="rounded-xl border bg-card/70 hover:bg-card hover:border-emerald-500/50 p-4 transition-colors duration-300 shadow-xs hover:shadow-md"
+                  >
+                    {/* Card Top Row */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span
+                          className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${statusConfig.badgeBg}`}
+                        >
+                          <StatusIcon className="h-3 w-3" />
+                          <span>{isRTL ? statusConfig.labelAr : statusConfig.labelEn}</span>
+                        </span>
 
-                      <span className="text-[11px] font-mono font-medium px-2 py-0.5 rounded bg-muted/60 text-muted-foreground border">
-                        {item.quarter}
-                      </span>
+                        <span className="text-[11px] font-mono font-medium px-2 py-0.5 rounded bg-muted/60 text-muted-foreground border">
+                          {item.quarter}
+                        </span>
 
-                      <span className="text-[11px] text-muted-foreground flex items-center gap-1">
-                        <Tag className="h-3 w-3 text-emerald-600" />
-                        {isRTL ? item.categoryAr : item.categoryEn}
-                      </span>
-                    </div>
-
-                    {/* Upvote & Interaction Button */}
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => toggleUpvote(item.id)}
-                        className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border transition-all cursor-pointer ${
-                          isVoted
-                            ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
-                            : 'bg-muted/40 hover:bg-muted/80 text-muted-foreground hover:text-foreground border-border'
-                        }`}
-                        title={isRTL ? 'صوّت لهذه الميزة' : 'Vote / Show interest'}
-                      >
-                        <ThumbsUp className={`h-3.5 w-3.5 ${isVoted ? 'fill-current' : ''}`} />
-                        <span>{isVoted ? (isRTL ? 'مهتم ✓' : 'Interested ✓') : (isRTL ? 'أرغب بهذه' : 'I want this')}</span>
-                      </button>
-
-                      <button
-                        onClick={() => toggleExpand(item.id)}
-                        className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
-                        aria-label="Toggle details"
-                      >
-                        {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Title & Description */}
-                  <h4 className="text-sm sm:text-base font-semibold text-foreground mb-1">
-                    {isRTL ? item.titleAr : item.titleEn}
-                  </h4>
-                  <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                    {isRTL ? item.descAr : item.descEn}
-                  </p>
-
-                  {/* Expandable Checklist Deliverables */}
-                  {isExpanded && (
-                    <div className="mt-3 pt-3 border-t border-dashed space-y-2 bg-muted/20 p-3 rounded-lg">
-                      <div className="text-[11px] font-semibold text-foreground uppercase tracking-wider flex items-center gap-1">
-                        <CheckSquare className="h-3.5 w-3.5 text-emerald-600" />
-                        {isRTL ? 'عناصر الإنجاز والمواصفات:' : 'Key Deliverables & Specifications:'}
+                        <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                          <Tag className="h-3 w-3 text-emerald-600" />
+                          {isRTL ? item.categoryAr : item.categoryEn}
+                        </span>
                       </div>
-                      <ul className="space-y-1.5 text-xs text-foreground/90">
-                        {(isRTL ? item.deliverablesAr : item.deliverablesEn).map((del, dIdx) => (
-                          <li key={dIdx} className="flex items-start gap-2">
-                            {item.status === 'completed' ? (
-                              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0 mt-0.5" />
-                            ) : item.status === 'in-progress' ? (
-                              <Clock className="h-3.5 w-3.5 text-amber-500 shrink-0 mt-0.5" />
-                            ) : (
-                              <Square className="h-3.5 w-3.5 text-muted-foreground/60 shrink-0 mt-0.5" />
-                            )}
-                            <span className={item.status === 'completed' ? 'text-foreground' : 'text-muted-foreground'}>
-                              {del}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
+
+                      {/* Upvote & Interaction Button */}
+                      <div className="flex items-center gap-2">
+                        <motion.button
+                          whileHover={{ scale: 1.04 }}
+                          whileTap={{ scale: 0.94 }}
+                          onClick={() => toggleUpvote(item.id)}
+                          className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border transition-all cursor-pointer ${
+                            isVoted
+                              ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                              : 'bg-muted/40 hover:bg-muted/80 text-muted-foreground hover:text-foreground border-border'
+                          }`}
+                          title={isRTL ? 'صوّت لهذه الميزة' : 'Vote / Show interest'}
+                        >
+                          <ThumbsUp className={`h-3.5 w-3.5 ${isVoted ? 'fill-current' : ''}`} />
+                          <span>{isVoted ? (isRTL ? 'مهتم ✓' : 'Interested ✓') : (isRTL ? 'أرغب بهذه' : 'I want this')}</span>
+                        </motion.button>
+
+                        <button
+                          onClick={() => toggleExpand(item.id)}
+                          className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+                          aria-label="Toggle details"
+                        >
+                          {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                        </button>
+                      </div>
                     </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+
+                    {/* Title & Description */}
+                    <h4 className="text-sm sm:text-base font-semibold text-foreground mb-1">
+                      {isRTL ? item.titleAr : item.titleEn}
+                    </h4>
+                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                      {isRTL ? item.descAr : item.descEn}
+                    </p>
+
+                    {/* Expandable Checklist Deliverables */}
+                    <AnimatePresence initial={false}>
+                      {isExpanded && (
+                        <motion.div
+                          key="deliverables-panel"
+                          initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                          animate={{ opacity: 1, height: 'auto', marginTop: 12 }}
+                          exit={{
+                            opacity: 0,
+                            height: 0,
+                            marginTop: 0,
+                            transition: {
+                              height: { duration: 0.25, ease: 'easeInOut' },
+                              opacity: { duration: 0.15 },
+                            },
+                          }}
+                          transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                          className="overflow-hidden pt-3 border-t border-dashed space-y-2 bg-muted/20 p-3 rounded-lg"
+                        >
+                          <div className="text-[11px] font-semibold text-foreground uppercase tracking-wider flex items-center gap-1">
+                            <CheckSquare className="h-3.5 w-3.5 text-emerald-600" />
+                            {isRTL ? 'عناصر الإنجاز والمواصفات:' : 'Key Deliverables & Specifications:'}
+                          </div>
+                          <ul className="space-y-1.5 text-xs text-foreground/90">
+                            {(isRTL ? item.deliverablesAr : item.deliverablesEn).map((del, dIdx) => (
+                              <motion.li
+                                key={dIdx}
+                                initial={{ opacity: 0, x: isRTL ? 10 : -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: isRTL ? -10 : 10 }}
+                                transition={{ duration: 0.2, delay: dIdx * 0.04 }}
+                                className="flex items-start gap-2"
+                              >
+                                {item.status === 'completed' ? (
+                                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                                ) : item.status === 'in-progress' ? (
+                                  <Clock className="h-3.5 w-3.5 text-amber-500 shrink-0 mt-0.5" />
+                                ) : (
+                                  <Square className="h-3.5 w-3.5 text-muted-foreground/60 shrink-0 mt-0.5" />
+                                )}
+                                <span className={item.status === 'completed' ? 'text-foreground' : 'text-muted-foreground'}>
+                                  {del}
+                                </span>
+                              </motion.li>
+                            ))}
+                          </ul>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
         </div>
-      </section>
+      </motion.section>
 
       {/* Closing reflection */}
       <section

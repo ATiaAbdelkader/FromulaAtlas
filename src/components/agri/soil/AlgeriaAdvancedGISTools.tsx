@@ -73,6 +73,7 @@ import {
   Bar,
 } from 'recharts';
 import AlgeriaPlotDrawerModal, { type DrawnPlot, type PlotShapeType } from './AlgeriaPlotDrawerModal';
+import NasaHarvestCropCycleDetector from '@/components/agri/satellite/NasaHarvestCropCycleDetector';
 
 interface AdvancedToolsModalProps {
   currentWilayaCode: number;
@@ -97,6 +98,7 @@ export type ActiveAdvancedTab =
   | 'agro_risks'
   | 'lab_interpolator'
   | 'ndvi_drought'
+  | 'crop_cycles'
   | 'comparator';
 
 export default function AlgeriaAdvancedGISTools({
@@ -288,6 +290,12 @@ export default function AlgeriaAdvancedGISTools({
             labelFr: '🛰️ Télédétection NDVI & Sécheresse',
             labelAr: '🛰️ الاستشعار عن بعد ومؤشر الجفاف',
             labelEn: '🛰️ Satellite NDVI & Drought',
+          },
+          {
+            id: 'crop_cycles',
+            labelFr: '🌾 Détecteur Cycles NASA Harvest',
+            labelAr: '🌾 كاشف الدورات المحصولية ناسا',
+            labelEn: '🌾 NASA Harvest Crop Cycles',
           },
           {
             id: 'comparator',
@@ -1216,7 +1224,16 @@ export default function AlgeriaAdvancedGISTools({
       )}
 
       {/* ========================================================================= */}
-      {/* 11. WILAYAS COMPARATOR TAB                                                */}
+      {/* 11. NASA HARVEST CROP CYCLE DETECTION TAB                                 */}
+      {/* ========================================================================= */}
+      {activeTab === 'crop_cycles' && (
+        <div className="space-y-4">
+          <NasaHarvestCropCycleDetector />
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 12. WILAYAS COMPARATOR TAB                                                */}
       {/* ========================================================================= */}
       {activeTab === 'comparator' && (
         <div className="space-y-6">

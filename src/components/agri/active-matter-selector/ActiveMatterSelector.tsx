@@ -16,7 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Slider } from '@/components/ui/slider';
 import {
   AlertTriangle, Search, Wand2, ShieldCheck, BookOpen, Sparkles, Check, Thermometer, Droplets, Gauge, Library,
-  Camera, Download, Calendar, Loader2, FileText, ExternalLink,
+  Camera, Download, Calendar, Loader2, FileText, ExternalLink, FlaskConical,
 } from 'lucide-react';
 import {
   ALGERIA_CROPS, ALGERIAN_ACTIVE_MATTERS, ACTIVE_MATTER_BY_ID, CROP_BY_ID,
@@ -25,6 +25,7 @@ import {
 } from '@/lib/algeria-phyto-data';
 import { InpvIndexBrowser } from './InpvIndexBrowser';
 import { EphyIndexBrowser } from './EphyIndexBrowser';
+import { ActiveMatterExplainer, ActiveMatterMechanismModal } from './ActiveMatterExplainer';
 import {
   fetchPhytoIndex, indexByActive, normPhyto, type PhytoProduct,
 } from '@/lib/phyto-index';
@@ -212,6 +213,10 @@ export function ActiveMatterSelector() {
   const [severity, setSeverity] = useState<Severity>('medium');
   const [results, setResults] = useState<Scored[] | null>(null);
   const [analysedProblem, setAnalysedProblem] = useState<PlantProblem | null>(null);
+
+  // ----- explainer state -----
+  const [selectedExplainerSubstance, setSelectedExplainerSubstance] = useState<string>('abamectine');
+  const [explainerModalSubstance, setExplainerModalSubstance] = useState<{ id?: string; name?: string } | null>(null);
 
   // ----- photo identification state -----
   const [photoData, setPhotoData] = useState<string | null>(null);
@@ -475,8 +480,9 @@ export function ActiveMatterSelector() {
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="grid h-auto w-full max-w-2xl grid-cols-2 gap-1 p-1 sm:grid-cols-4">
+        <TabsList className="grid h-auto w-full max-w-3xl grid-cols-2 gap-1 p-1 sm:grid-cols-5">
           <TabsTrigger value="decision" className="min-h-10 text-sm">🧭 Décision</TabsTrigger>
+          <TabsTrigger value="explainer" className="min-h-10 text-sm">🔬 Mode d’action</TabsTrigger>
           <TabsTrigger value="catalog" className="min-h-10 text-sm">📚 Catalogue</TabsTrigger>
           <TabsTrigger value="inpv" className="min-h-10 text-sm">📜 Index INPV</TabsTrigger>
           <TabsTrigger value="ephy" className="min-h-10 text-sm">🇫🇷 E-Phy</TabsTrigger>
@@ -758,7 +764,16 @@ export function ActiveMatterSelector() {
               </div>
 
               {results.map((r, i) => (
-                <RecommendationCard key={r.matter.id} scored={r} rank={i + 1} top={i === 0} problem={analysedProblem} inpv={inpvMatchesFor.get(r.matter.id) ?? []} onSaveTreatment={saveTreatment} />
+                <RecommendationCard
+                  key={r.matter.id}
+                  scored={r}
+                  rank={i + 1}
+                  top={i === 0}
+                  problem={analysedProblem}
+                  inpv={inpvMatchesFor.get(r.matter.id) ?? []}
+                  onSaveTreatment={saveTreatment}
+                  onOpenExplainer={(id) => setExplainerModalSubstance({ id, name: r.matter.name })}
+                />
               ))}
 
               {/* ===== Enhancement: Bee Safety Card ===== */}
@@ -804,6 +819,16 @@ export function ActiveMatterSelector() {
               </p>
             </div>
           )}
+        </TabsContent>
+
+        {/* ================================================================
+            EXPLAINER TAB (How each active matter works)
+        ================================================================ */}
+        <TabsContent value="explainer" className="space-y-4">
+          <ActiveMatterExplainer
+            initialSubstanceId={selectedExplainerSubstance}
+            onSelectSubstance={setSelectedExplainerSubstance}
+          />
         </TabsContent>
 
         {/* ================================================================
@@ -905,6 +930,16 @@ export function ActiveMatterSelector() {
                         <div className="mt-2 text-[10px] text-muted-foreground">
                           {m.targets.length} cible{m.targets.length > 1 ? 's' : ''} · Dose : {m.applicationRate} · DAR : {m.preHarvestInterval}
                         </div>
+                        <div className="mt-2 flex items-center justify-between border-t border-border/40 pt-2">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 px-2 text-[11px] font-medium text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/40 gap-1 rounded-lg"
+                            onClick={() => setExplainerModalSubstance({ id: m.id, name: m.name })}
+                          >
+                            <FlaskConical className="h-3 w-3" /> Comment ça marche ?
+                          </Button>
+                        </div>
                         {inpvMatchesFor.get(m.id)?.length ? (
                           <div className="mt-2 flex flex-wrap items-center gap-1">
                             <span className="text-[9px] font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">Index INPV :</span>
@@ -956,6 +991,14 @@ export function ActiveMatterSelector() {
           </div>
         </div>
       </div>
+
+      {/* Mechanism Details Modal */}
+      <ActiveMatterMechanismModal
+        isOpen={!!explainerModalSubstance}
+        substanceId={explainerModalSubstance?.id}
+        substanceName={explainerModalSubstance?.name}
+        onClose={() => setExplainerModalSubstance(null)}
+      />
     </div>
   );
 }
@@ -964,7 +1007,7 @@ export function ActiveMatterSelector() {
 // Recommendation card
 // ---------------------------------------------------------------------------
 function RecommendationCard({
-  scored, rank, top, problem, inpv, onSaveTreatment,
+  scored, rank, top, problem, inpv, onSaveTreatment, onOpenExplainer,
 }: {
   scored: Scored;
   rank: number;
@@ -972,6 +1015,7 @@ function RecommendationCard({
   problem: PlantProblem;
   inpv: PhytoProduct[];
   onSaveTreatment: (matterId: string, dar: number) => void;
+  onOpenExplainer?: (matterId: string) => void;
 }) {
   const { matter: m } = scored;
   const cropNames = m.crops.slice(0, 4).map((c) => CROP_BY_ID[c]?.name ?? c);
@@ -1016,7 +1060,20 @@ function RecommendationCard({
           </p>
 
           <ul className="space-y-1 text-xs text-muted-foreground">
-            <li><span className="font-medium text-foreground">Mode d’action :</span> {m.modeOfAction} — cible : {problem.name}.</li>
+            <li>
+              <div className="flex flex-wrap items-center gap-2">
+                <span><span className="font-medium text-foreground">Mode d’action :</span> {m.modeOfAction} — cible : {problem.name}.</span>
+                {onOpenExplainer && (
+                  <button
+                    type="button"
+                    onClick={() => onOpenExplainer(m.id)}
+                    className="inline-flex items-center gap-1 rounded-md border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-800 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 transition"
+                  >
+                    <FlaskConical className="h-3 w-3" /> Comment ça marche ?
+                  </button>
+                )}
+              </div>
+            </li>
             <li>
               <span className="font-medium text-foreground">Application :</span> {m.applicationRate} · DAR {m.preHarvestInterval} ·
               cultures : {cropNames.join(', ')}{m.crops.length > 4 ? ` (+${m.crops.length - 4})` : ''}

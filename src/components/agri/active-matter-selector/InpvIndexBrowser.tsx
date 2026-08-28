@@ -6,11 +6,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AlertTriangle, FileText, Hash, Loader2, Search } from 'lucide-react';
+import { AlertTriangle, FileText, Hash, Loader2, Search, FlaskConical } from 'lucide-react';
 import {
   fetchPhytoIndex, normPhyto, sectionEmoji, sectionLabel, productActiveName,
   type PhytoProduct,
 } from '@/lib/phyto-index';
+import { ActiveMatterMechanismModal } from './ActiveMatterExplainer';
 
 const PAGE_SIZE = 40;
 
@@ -23,6 +24,7 @@ export function InpvIndexBrowser() {
   const [query, setQuery] = useState('');
   const [section, setSection] = useState('all');
   const [visible, setVisible] = useState(PAGE_SIZE);
+  const [selectedSubstanceForModal, setSelectedSubstanceForModal] = useState<string | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -164,7 +166,19 @@ export function InpvIndexBrowser() {
                         )}
                       </div>
                     </div>
-                    <span className="shrink-0 text-[10px] text-slate-400">p. {p.page}</span>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 px-2 text-[10px] font-medium text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/40 gap-1 rounded-md"
+                        onClick={() => setSelectedSubstanceForModal(p.active || p.brand)}
+                        title="Voir comment fonctionne cette matière active"
+                      >
+                        <FlaskConical className="h-3 w-3" /> Mode d'action
+                      </Button>
+                      <span className="text-[10px] text-slate-400">p. {p.page}</span>
+                    </div>
                   </div>
                 ))}
 
@@ -192,6 +206,12 @@ export function InpvIndexBrowser() {
           </>
         )}
       </CardContent>
+
+      <ActiveMatterMechanismModal
+        isOpen={!!selectedSubstanceForModal}
+        substanceName={selectedSubstanceForModal ?? undefined}
+        onClose={() => setSelectedSubstanceForModal(null)}
+      />
     </Card>
   );
 }
