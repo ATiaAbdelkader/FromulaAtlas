@@ -81,9 +81,10 @@ export function FarmerWeatherAdvisor({
 
   // 1. Spray Go / No-Go Decision Logic
   let sprayStatus: 'good' | 'caution' | 'bad' = 'good';
-  let sprayReasonEn = 'Calm wind (< 12 km/h) & no heavy rain: Optimal spray window.';
-  let sprayReasonFr = 'Vent faible (< 12 km/h) et sans pluie : Conditions idéales pour traiter.';
-  let sprayReasonAr = 'رياح هادئة (< 12 كم/سا) وبدون أمطار: توقيت ممتاز للرش والمعالجة.';
+  // P0-4 fix: Soften 'Safe' language — weather only, not a final safety declaration
+  let sprayReasonEn = 'Calm wind & no heavy rain: Weather appears suitable for spraying. Still check label, nozzle, inversion risk & buffer zones.';
+  let sprayReasonFr = 'Vent faible et sans pluie : Les conditions météo semblent favorables. Vérifiez l\'étiquette, les buses, le risque d\'inversion et les zones tampon.';
+  let sprayReasonAr = 'رياح هادئة وبدون أمطار: الظروف الجوية تبدو ملائمة للرش. تحقّق أيضاً من الملصق والفوهة وخطر الانقلاب ومناطق العزل.';
 
   if (windSpeed > 20) {
     sprayStatus = 'bad';
@@ -354,7 +355,7 @@ ${heatStatus === 'frost' ? '❄️ Frost Alert: Prepare protection!' : ''}`;
             <div>
               <div className="text-xs font-bold">
                 {sprayStatus === 'good'
-                  ? tr('✅ GO: Optimal Spray Window', '✅ مسموح: الظروف مثالية للرش', '✅ GO : Conditions idéales pour pulvériser')
+                  ? tr('✅ Weather suitable for spraying (check label & nozzle)', '✅ الظروف الجوية ملائمة للرش (تحقّق من الملصق والفوهة)', '✅ Conditions météo favorables (vérifiez étiquette & buses)')
                   : sprayStatus === 'caution'
                   ? tr('⚠️ CAUTION: Moderate Wind', '⚠️ انتباه: رياح معتدلة', '⚠️ ATTENTION : Vent modéré')
                   : tr('⛔ NO-GO: Do Not Spray Today', '⛔ ممنوع: لا تقم بالرش اليوم', '⛔ NO-GO : Ne pas traiter aujourd\'aujourd\'hui')}

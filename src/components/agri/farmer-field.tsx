@@ -124,7 +124,13 @@ export function FarmerField({ onOpenTool, onNavigate }: FarmerFieldProps) {
   const current = forecast?.current;
   const et0 = today?.et0 ?? 0;
   const rainfall = today?.precipitationSum ?? 0;
-  const netIrrigation = Math.max(0, et0 - rainfall * 0.8);
+  // P0-3 fix: Use full water balance — ETc = Kc × ET₀, not just ET₀
+  // Net irrigation = ETc − effective rain, Gross = Net / efficiency
+  // Kc is computed below from cropStage; here we use a placeholder
+  // that gets corrected after cropStage is computed.
+  const effectiveRainfall = rainfall * 0.8; // FAO-56: ~80% reaches root zone
+  // Note: netIrrigation is the NET need. Gross = Net / efficiency.
+  // The FarmerWeatherAdvisor displays netIrrigationMm (ETc-based advisory).
 
   // Compute crop stage
   const cropLifecycle = useMemo(() => {
@@ -145,6 +151,11 @@ export function FarmerField({ onOpenTool, onNavigate }: FarmerFieldProps) {
       percent: Math.min(100, Math.round((dayOfSeason / cropLifecycle.seasonLength) * 100)),
     };
   }, [cropLifecycle, profile.plantingDate]);
+
+  // P0-3: Compute irrigation with actual Kc from crop stage
+  const actualKc = cropStage?.stage?.kc ?? 0.5;
+  const actualETc = actualKc * et0;
+  const actualNetIrrigation = Math.max(0, actualETc - effectiveRainfall);
 
   // Recent field records (refreshable via recordVersion)
   const recentRecords = useMemo(() => {
@@ -236,7 +247,7 @@ export function FarmerField({ onOpenTool, onNavigate }: FarmerFieldProps) {
         forecast={forecast}
         cropName={cropLifecycle ? cropLifecycle.name : profile.crop || 'Crop'}
         stageName={cropStage?.stage?.name || 'Active Growth'}
-        netIrrigationMm={netIrrigation}
+        netIrrigationMm={actualNetIrrigation}
         sunMode={sunMode}
       />
 

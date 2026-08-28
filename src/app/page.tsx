@@ -76,7 +76,7 @@ export default function LandingPage() {
             </motion.div>
             <div>
               <span className="font-bold text-base tracking-tight group-hover:text-emerald-600 transition-colors">Formula Atlas</span>
-              <span className="hidden sm:inline-block ml-2 px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">v3.5</span>
+              <span className="hidden sm:inline-block ml-2 px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">v0.2.0 · Prototype</span>
             </div>
           </Link>
           <div className="hidden md:flex items-center gap-5 text-xs font-medium">
@@ -190,7 +190,7 @@ export default function LandingPage() {
           >
             {isRTL
               ? `${FORMULA_COUNT} معادلة زراعية معتمدة. ${FREE_TOOL_COUNT} حاسبة ميدانية فورية. نظم معلومات جغرافية، وكلاء ذكاء اصطناعي، وجدولة ري وفق FAO-56. مصممة للباحثين والمزارعين والمهندسين الزراعيين.`
-              : `${FORMULA_COUNT} peer-reviewed agronomic formulas. ${FREE_TOOL_COUNT} field-ready calculators. GIS boundary mapping, AI specialists, and FAO-56 ET₀ scheduling — engineered for researchers, agronomists, and growers.`}
+              : `${FORMULA_COUNT} agronomic formulas sourced from peer-reviewed references and institutional sources (FAO, USDA, ASABE, INPV, Fertial). ${FREE_TOOL_COUNT} field-ready calculators. GIS boundary mapping, AI specialists, and FAO-56 ET₀ scheduling — engineered for researchers, agronomists, and growers.`}
           </motion.p>
 
           {/* CTAs */}
@@ -397,7 +397,7 @@ export default function LandingPage() {
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border bg-muted/50 text-xs text-muted-foreground mb-4">
               <Zap className="h-3.5 w-3.5 text-emerald-600" />
-              <span>{isRTL ? 'سير عمل متكامل 360°' : 'Complete 360° Agronomic Suite'}</span>
+              <span>{isRTL ? 'سير عمل متكامل 360° · نموذج أولي' : '360° Agronomic Suite · Prototype'}</span>
             </div>
             <h2 className="text-3xl sm:text-5xl font-bold tracking-tight mb-4">
               {isRTL ? (

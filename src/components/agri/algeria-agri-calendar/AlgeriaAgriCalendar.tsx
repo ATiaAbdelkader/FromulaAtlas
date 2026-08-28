@@ -1152,7 +1152,7 @@ function WeatherStrip({ lat, lng, days }: { lat: number; lng: number; days: Date
               ) : (
                 <Badge variant="outline" className={cn('mt-0.5 text-[8px]',
                   sprayOk ? 'border-emerald-400 text-emerald-700' : 'border-amber-400 text-amber-700')}>
-                  {sprayOk ? '✓ Spray' : '⚠ Hold'}
+                  {sprayOk ? '✓ Weather OK' : '⚠ Hold'}
                 </Badge>
               )}
             </div>
