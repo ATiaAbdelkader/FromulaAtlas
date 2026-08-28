@@ -505,7 +505,7 @@ export function ActiveMatterMechanismModal({
   isOpen: boolean;
   onClose: () => void;
 }) {
-  const { language } = useLanguage();
+  const { language } = useTranslation();
   const lang = (language === 'ar' ? 'ar' : language === 'en' ? 'en' : 'fr') as 'fr' | 'ar' | 'en';
 
   if (!isOpen) return null;

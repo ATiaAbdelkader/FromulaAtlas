@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware';
 
 export type UserLevel = 'farmer' | 'manager' | 'professional';
 
-export type TabId = 'home' | 'formulas' | 'tools' | 'farm' | 'calendar' | 'myfield' | 'simulator' | 'insights' | 'about' | 'help';
+export type TabId = 'home' | 'formulas' | 'tools' | 'farm' | 'calendar' | 'myfield' | 'simulator' | 'insights' | 'about' | 'help' | 'guide';
 
 export interface UserLevelCopy {
   en: string;
@@ -98,9 +98,9 @@ export const useUserLevelStore = create<UserLevelState>()(
 );
 
 export function getUserLevelTabs(level: UserLevel): TabId[] {
-  if (level === 'farmer') return ['home', 'myfield', 'farm', 'calendar', 'simulator', 'help', 'about'];
-  if (level === 'manager') return ['home', 'farm', 'calendar', 'simulator', 'insights', 'tools', 'about'];
-  return ['home', 'formulas', 'tools', 'farm', 'calendar', 'simulator', 'insights', 'about'];
+  if (level === 'farmer') return ['home', 'myfield', 'farm', 'calendar', 'simulator', 'help', 'guide', 'about'];
+  if (level === 'manager') return ['home', 'farm', 'calendar', 'simulator', 'insights', 'tools', 'help', 'guide', 'about'];
+  return ['home', 'formulas', 'tools', 'farm', 'calendar', 'simulator', 'insights', 'help', 'guide', 'about'];
 }
 
 export function getUserLevelOption(level: UserLevel): UserLevelOption {

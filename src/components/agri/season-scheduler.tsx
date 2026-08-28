@@ -9,7 +9,7 @@ import type { Workflow } from '@/lib/workflows';
 import { copyFor, useTranslation } from '@/lib/language-store';
 
 interface SeasonSchedulerProps {
-  onLaunchWorkflow?: (workflow: Workflow) => void;
+  onLaunchWorkflow?: (workflowId: string) => void;
 }
 
 type Hemisphere = 'northern' | 'southern';
@@ -116,7 +116,7 @@ function getSeason(month: number, hemisphere: Hemisphere): SeasonInfo {
   return hemisphere === 'northern' ? northern[month] : southern[month];
 }
 
-export function SeasonScheduler({ onLaunchWorkflow }: SeasonSchedulerProps) {
+export function SeasonScheduler({ onLaunchWorkflow }: SeasonSchedulerProps = {}) {
   const [hemisphere, setHemisphere] = useState<Hemisphere>('northern');
   // Defer date computation to after mount to avoid SSR hydration mismatch
   // (server renders in UTC, client in user's timezone — they can differ by a day)

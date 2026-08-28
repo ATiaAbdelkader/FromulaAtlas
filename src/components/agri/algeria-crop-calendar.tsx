@@ -157,7 +157,7 @@ function entryMatches(
   return true;
 }
 
-export function AlgeriaCropCalendar() {
+export function AlgeriaCropCalendar({ onSetupFarm }: { onSetupFarm?: () => void }) {
   const { language, isRTL } = useTranslation();
   const currentRealMonth = useMemo(() => new Date().getMonth() + 1, []);
   const [selectedMonth, setSelectedMonth] = useState<number>(currentRealMonth);

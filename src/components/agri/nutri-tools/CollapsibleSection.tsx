@@ -15,12 +15,14 @@ interface CollapsibleSectionProps {
   enableExport?: boolean;
   /** When provided, shows a Reset button that calls this callback. */
   onReset?: () => void;
+  /** Group ID for collapsible group headers (used by FarmTabToolbar search). */
+  group?: string;
   children: React.ReactNode;
 }
 
 export function CollapsibleSection({
   title, description, icon: Icon, color = '#16a34a',
-  defaultOpen = false, storageKey, enableExport = false, onReset,
+  defaultOpen = false, storageKey, enableExport = false, onReset, group,
   children,
 }: CollapsibleSectionProps) {
   const [open, setOpen] = useState(defaultOpen);
@@ -50,6 +52,8 @@ export function CollapsibleSection({
   return (
     <section
       data-farm-tool
+      data-storage-key={storageKey}
+      data-group={group}
       data-state={open ? 'open' : 'closed'}
       className={`group overflow-hidden rounded-2xl border bg-card/95 shadow-sm shadow-black/[0.03] transition-all duration-200 hover:shadow-md hover:shadow-emerald-950/[0.04] ${
         open ? 'border-emerald-200/80 dark:border-emerald-900/70' : 'border-border/80'
