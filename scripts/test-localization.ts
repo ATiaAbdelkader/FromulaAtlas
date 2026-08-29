@@ -35,16 +35,15 @@ assert(weatherAlerts.includes('formatWeatherDate'), 'Weather alerts must format 
 assert(!weatherAlerts.includes('computeAlerts(forecast, isRTL)'), 'Weather alerts must not collapse French into the English branch');
 
 const calendar = readFileSync(resolve(process.cwd(), 'src/components/agri/algeria-crop-calendar.tsx'), 'utf8');
-assert(calendar.includes('source entries') && calendar.includes('entrées source') && calendar.includes('إدخالاً من المصدر'), 'Calendar entry counts must remain trilingual');
-assert(calendar.includes("Source-traceable', 'موثق بالمصدر', 'Traçable par source'"), 'Calendar source badge must remain trilingual');
-assert(calendar.includes("matching source entries across the year', 'إدخالات مصدر مطابقة على مدار السنة', 'entrées source correspondantes sur l’année'"), 'Calendar annual matching-entry label must remain trilingual');
-assert(calendar.includes('const moveMonth = (offset: number)'), 'Calendar must expose compact previous/next month navigation');
-assert(calendar.includes('Previous month') && calendar.includes('Next month'), 'Calendar mobile navigation must be accessible and trilingual');
-assert(calendar.includes('className="flex items-center justify-between gap-2 rounded-lg border border-border bg-muted/20 p-2 sm:hidden"'), 'Calendar mobile month navigator must be visible only on small screens');
-assert(calendar.includes('grid-cols-4 gap-1.5 sm:grid-cols-4'), 'Calendar month grid must use a compact mobile density');
-assert(calendar.includes('className="h-9 ps-9 text-xs"'), 'Calendar crop search input must use RTL-safe logical padding');
+assert(calendar.includes("'source operations', 'عملية موثقة', 'opérations documentées'"), 'Calendar source-operations count must remain trilingual');
+assert(calendar.includes("'Algeria Agricultural Operations Calendar', 'التقويم الزراعي وعمليات المحاصيل في الجزائر', 'Calendrier des Opérations Culturales en Algérie'"), 'Calendar header title must remain trilingual');
+assert(calendar.includes("'matching operations this year', 'عملية مطابقة خلال السنة', 'opérations correspondantes sur l’année'"), 'Calendar annual matching-operations label must remain trilingual');
+assert(calendar.includes('moveMonth = useCallback'), 'Calendar must expose compact previous/next month navigation');
+assert(calendar.includes("'Previous Month', 'الشهر السابق', 'Mois Précédent'") && calendar.includes("'Next Month', 'الشهر التالي', 'Mois Suivant'"), 'Calendar mobile navigation must be accessible and trilingual');
+assert(calendar.includes('grid grid-cols-4 gap-1.5 sm:grid-cols-6'), 'Calendar month grid must use a compact mobile density');
+assert(calendar.includes('className="h-9 ps-9 pe-8 text-xs"'), 'Calendar crop search input must use RTL-safe logical padding');
 assert(calendar.includes('absolute start-3 top-1/2'), 'Calendar crop search icon must use RTL-safe logical positioning');
-assert(calendar.includes("'12 PDF sources', '12 مصدر PDF', '12 sources PDF'"), 'Calendar source-count badge must remain trilingual');
+assert(calendar.includes("'Sources', 'المصادر', 'Sources'"), 'Calendar sources label must remain trilingual');
 
 const wizard = readFileSync(resolve(process.cwd(), 'src/components/agri/farm-profile-wizard.tsx'), 'utf8');
 assert(wizard.includes('localizedCropName(language, c.id, c.name)'), 'Farm Profile Wizard crop choices must use localized crop labels');

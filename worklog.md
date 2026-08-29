@@ -583,3 +583,35 @@ Stage Summary:
   - First-run experience for Farmer mode is now functional: new users will
     see the setup wizard auto-open on the Home tab, and can re-edit their
     profile via the Edit button without leaving Farmer mode.
+
+---
+Task ID: v0.2.0-milestone-prep
+Agent: main (Super Z)
+Task: Run full test suite, tag v0.2.0-prototype, create audit tracker, push everything
+
+Work Log:
+- Ran `npm run test:domain` — discovered 3 stale tests (pre-existing drift, not regressions from P1 work):
+    * test-user-level-tool-visibility.ts: expected tab lists WITHOUT 'help'/'guide' but TabId union was extended in bf5990a
+    * test-localization.ts: asserted calendar strings ('source entries', '12 PDF sources', 'Source-traceable badge') that no longer exist — calendar was iteratively redesigned
+    * test-count-consistency.ts: asserted FREE_TOOL_COUNT=19 / INTERACTIVE_TOOL_COUNT=34 / 34 registry entries but catalog was extended to 27/39/48
+- Verified all 3 failures also occurred at previous commit (ec7829c) — pre-existing, not regressions
+- Updated test assertions to match current canonical contract while preserving trilingual + RTL-safety intent
+- All deterministic domain suites now pass: `All deterministic domain suites passed.`
+- Created AUDIT-TRACKER.md as the single source of truth for audit findings (was missing — findings lived only in conversation context)
+  - Logged 4 P0 (all RESOLVED), 9 P1 (all RESOLVED), 4 P2 (2 RESOLVED, 2 OPEN)
+- Committed test sync + audit tracker as 7197422
+- Created annotated tag v0.2.0-prototype
+- Attempted `git push origin main` + `git push origin v0.2.0-prototype` — BOTH FAILED with "could not read Username for 'https://github.com': No such device or address"
+  - No GitHub credentials available in this session (no env vars, no ~/.git-credentials, no ~/.ssh, ssh not installed, no gh CLI)
+  - Previous session had working credentials that have since expired
+- Cleaned up credential.helper config I added during troubleshooting
+
+Stage Summary:
+- Local state: clean working tree
+- HEAD: 7197422 (1 commit ahead of origin/main at e276d04)
+- Tag v0.2.0-prototype created locally (annotated, with full release notes)
+- AUDIT-TRACKER.md created at repo root
+- All domain tests green
+- PUSH FAILED — user needs to push manually or provide a token
+  $ git push origin main
+  $ git push origin v0.2.0-prototype

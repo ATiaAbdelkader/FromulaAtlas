@@ -77,9 +77,9 @@ assert(!userLevelSource.includes('UserLevelTabId'), 'User-level navigation contr
 
 const appShellSource = readFileSync(resolve(process.cwd(), 'src/app/app/page.tsx'), 'utf8');
 assert(!appShellSource.includes("type TabId = 'home'"), 'App shell must consume the canonical TabId instead of redefining it');
-assert(JSON.stringify(getUserLevelTabs('farmer')) === JSON.stringify(['home', 'myfield', 'farm', 'calendar', 'simulator', 'help', 'about']), 'Farmer mobile navigation must expose every permitted destination');
-assert(JSON.stringify(getUserLevelTabs('manager')) === JSON.stringify(['home', 'farm', 'calendar', 'simulator', 'insights', 'tools', 'about']), 'Manager mobile navigation must expose every permitted destination');
-assert(JSON.stringify(getUserLevelTabs('professional')) === JSON.stringify(['home', 'formulas', 'tools', 'farm', 'calendar', 'simulator', 'insights', 'about']), 'Professional mobile navigation must expose every permitted destination');
+assert(JSON.stringify(getUserLevelTabs('farmer')) === JSON.stringify(['home', 'myfield', 'farm', 'calendar', 'simulator', 'help', 'guide', 'about']), 'Farmer mobile navigation must expose every permitted destination');
+assert(JSON.stringify(getUserLevelTabs('manager')) === JSON.stringify(['home', 'farm', 'calendar', 'simulator', 'insights', 'tools', 'help', 'guide', 'about']), 'Manager mobile navigation must expose every permitted destination');
+assert(JSON.stringify(getUserLevelTabs('professional')) === JSON.stringify(['home', 'formulas', 'tools', 'farm', 'calendar', 'simulator', 'insights', 'help', 'guide', 'about']), 'Professional mobile navigation must expose every permitted destination');
 assert(appShellSource.includes('const mobileTabIds = getUserLevelTabs(level);'), 'Mobile navigation must consume the canonical level-aware tab contract');
 assert(appShellSource.includes('{tabs.map(tab => ('), 'Mobile navigation must render all permitted tabs rather than slicing a subset');
 assert(appShellSource.includes('overflow-x-auto'), 'Mobile navigation must support horizontal access to all role tabs on narrow screens');

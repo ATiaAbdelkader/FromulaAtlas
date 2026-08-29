@@ -15,12 +15,12 @@ function assert(condition: boolean, message: string): void {
 }
 
 assert(stats.includes('export const FORMULA_COUNT = allFormulas.length;'), 'formula count should derive from the canonical formula catalog');
-assert(stats.includes('export const FREE_TOOL_COUNT = 19;'), 'free-tool count should remain the guarded catalog count');
-assert(stats.includes('export const INTERACTIVE_TOOL_COUNT = 34;'), 'interactive-tool count should be explicit and canonical');
+assert(stats.includes('export const FREE_TOOL_COUNT = 27;'), 'free-tool count should remain the guarded catalog count');
+assert(stats.includes('export const INTERACTIVE_TOOL_COUNT = 39;'), 'interactive-tool count should be explicit and canonical');
 assert(stats.includes('export const CALCULATOR_COUNT = FREE_TOOL_COUNT;'), 'calculator count should reuse the free calculator catalog');
 
 const registeredToolCount = (registry.match(/^  \{ id: '/gm) ?? []).length;
-assert(registeredToolCount === 34, `tool registry should contain 34 registered destinations, found ${registeredToolCount}`);
+assert(registeredToolCount === 48, `tool registry should contain 48 registered destinations, found ${registeredToolCount}`);
 
 assert(homepage.includes('value={FORMULA_COUNT}'), 'homepage formula stat should use FORMULA_COUNT');
 assert(homepage.includes('value={INTERACTIVE_TOOL_COUNT}'), 'homepage interactive-tool stat should use INTERACTIVE_TOOL_COUNT');
