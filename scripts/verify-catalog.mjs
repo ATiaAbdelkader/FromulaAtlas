@@ -16,7 +16,7 @@ const expected = {
   formulaCount: 500,
   partCount: 44,
   sectionCount: 120,
-  freeToolCount: 23,
+  freeToolCount: 27,
 };
 const actual = { formulaCount, partCount, sectionCount, freeToolCount };
 
