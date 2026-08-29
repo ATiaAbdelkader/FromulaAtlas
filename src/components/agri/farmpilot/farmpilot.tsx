@@ -35,6 +35,13 @@ import {
 import { useTranslation, copyFor } from '@/lib/language-store';
 import { useFarmProfile } from '@/components/agri/farm-profile-wizard';
 import { ALL_58_WILAYAS } from '@/lib/algeria-wilayas-58';
+import { getForecast, type ForecastResult } from '@/lib/open-meteo';
+import { WeatherAlertBanner } from '@/components/agri/weather-alert-banner';
+import {
+  buildFieldRecordTimeline, getFieldRecordBookStats,
+  FIELD_RECORD_BOOK_CHANGED_EVENT,
+  type FieldRecord, type FieldRecordBookStats,
+} from '@/lib/field-record-book';
 import { cn } from '@/lib/utils';
 
 import {
@@ -75,6 +82,39 @@ export function FarmPilot() {
   const [soil, setSoil] = useState<SoilData>({ provenance: emptySoilProv() });
   const [water, setWater] = useState<WaterData>({ provenance: emptyWaterProv() });
   const [plan, setPlan] = useState<FarmPilotPlan | null>(null);
+
+  // Weather forecast — replaces hardcoded ET₀ = 5.0 mm/day everywhere.
+  // Falls back to wilaya climatic default when API unavailable or no wilaya.
+  const [forecast, setForecast] = useState<ForecastResult | null>(null);
+  const [forecastLoading, setForecastLoading] = useState(false);
+  const [forecastError, setForecastError] = useState<string | null>(null);
+
+  // Field records (from any source: manual, scouting, soil-test, satellite, demo).
+  const [recentRecords, setRecentRecords] = useState<FieldRecord[]>([]);
+  const [recordStats, setRecordStats] = useState<FieldRecordBookStats | null>(null);
+
+  // Build a single refresh function for records so views can call it after logging.
+  const refreshRecords = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const timeline = buildFieldRecordTimeline();
+      setRecentRecords(timeline.slice(0, 6));
+      setRecordStats(getFieldRecordBookStats(timeline));
+    } catch { /* ignore */ }
+  }, []);
+
+  // Listen for field-record-book changes (e.g., when a QuickLogger saves from elsewhere).
+  useEffect(() => {
+    refreshRecords();
+    if (typeof window === 'undefined') return;
+    const handler = () => refreshRecords();
+    window.addEventListener(FIELD_RECORD_BOOK_CHANGED_EVENT, handler);
+    window.addEventListener('storage', handler);
+    return () => {
+      window.removeEventListener(FIELD_RECORD_BOOK_CHANGED_EVENT, handler);
+      window.removeEventListener('storage', handler);
+    };
+  }, [refreshRecords]);
 
   // Persisted plan loading
   useEffect(() => {
@@ -150,7 +190,53 @@ export function FarmPilot() {
     });
   }, [wilayaCode]);
 
+  // Fetch weather forecast whenever we have a lat/lng (from wilaya or farm profile).
+  // The forecast provides ET₀ and rainfall to the irrigation calculator, replacing
+  // the previous hardcoded ET₀ = 5.0 mm/day.
+  useEffect(() => {
+    const wilaya = ALL_58_WILAYAS.find((w) => w.code === wilayaCode);
+    const lat = profile?.lat ? parseFloat(profile.lat) : wilaya?.lat;
+    const lng = profile?.lng ? parseFloat(profile.lng) : wilaya?.lng;
+    if (lat == null || lng == null || !Number.isFinite(lat) || !Number.isFinite(lng)) {
+      setForecast(null);
+      return;
+    }
+    let cancelled = false;
+    setForecastLoading(true);
+    setForecastError(null);
+    getForecast(lat, lng, { days: 4 })
+      .then((f) => {
+        if (!cancelled) {
+          setForecast(f);
+          setForecastLoading(false);
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setForecastError(err instanceof Error ? err.message : String(err));
+          setForecastLoading(false);
+        }
+      });
+    return () => { cancelled = true; };
+  }, [wilayaCode, profile?.lat, profile?.lng]);
+
   const [view, setView] = useState<View>('home');
+
+  // Derive today's ET₀ and rainfall from the live forecast (replaces hardcoded 5.0).
+  // Falls back to wilaya climatic default (ALL_58_WILAYAS[].et0) when forecast unavailable.
+  const weatherContext = useMemo(() => {
+    const today = forecast?.daily?.[0];
+    const wilaya = ALL_58_WILAYAS.find((w) => w.code === wilayaCode);
+    const fallbackEto = wilaya?.et0 ?? 5.0;
+    return {
+      etoMmPerDay: today?.et0 ?? fallbackEto,
+      rainfallMm: today?.precipitationSum ?? 0,
+      forecast,
+      forecastLoading,
+      forecastError,
+      isLiveForecast: Boolean(today),
+    };
+  }, [forecast, forecastLoading, forecastError, wilayaCode]);
 
   const context: FarmContext = useMemo(() => {
     const wilaya = ALL_58_WILAYAS.find((w) => w.code === wilayaCode);
@@ -182,7 +268,11 @@ export function FarmPilot() {
         productionSystem={productionSystem}
         cropId={plan?.cropId}
         plantingDate={plan?.plantingDate}
+        forecast={forecast}
       />
+
+      {/* Weather alert banner — drop-in from weather-alert-banner.tsx */}
+      <WeatherAlertBanner forecast={forecast} />
 
       {/* Navigation */}
       <nav className="flex flex-wrap gap-2 sticky top-0 z-10 bg-background/95 backdrop-blur p-2 -mx-2 rounded-lg border border-border">
@@ -209,6 +299,24 @@ export function FarmPilot() {
         ))}
       </nav>
 
+      {/* Forecast fetch status (inline, dismissable) */}
+      {forecastLoading && (
+        <div className="text-xs text-muted-foreground flex items-center gap-2">
+          <RefreshCw className="h-3 w-3 animate-spin" />
+          {tr('Fetching live weather…', 'جلب الطقس المباشر…', 'Récupération météo en direct…')}
+        </div>
+      )}
+      {forecastError && !forecastLoading && (
+        <div className="text-xs text-amber-700 dark:text-amber-300 flex items-center gap-2">
+          <AlertTriangle className="h-3 w-3" />
+          {tr(
+            'Live weather unavailable — using Atlas climatic defaults for irrigation.',
+            'الطقس المباشر غير متاح — استخدام القيم المناخية الافتراضية لأطلس للري.',
+            'Météo en direct indisponible — utilisation des valeurs climatiques Atlas pour l’irrigation.',
+          )}
+        </div>
+      )}
+
       {/* Views */}
       {view === 'home' && (
         <HomeView
@@ -216,6 +324,9 @@ export function FarmPilot() {
           plan={plan}
           isDemoMode={isDemoMode}
           onNavigate={setView}
+          weatherContext={weatherContext}
+          recentRecords={recentRecords}
+          recordStats={recordStats}
         />
       )}
       {view === 'recommend' && (
@@ -253,10 +364,17 @@ export function FarmPilot() {
           plan={plan}
           context={context}
           onChange={savePlan}
+          weatherContext={weatherContext}
         />
       )}
       {view === 'today' && plan && (
-        <TodayView plan={plan} context={context} />
+        <TodayView
+          plan={plan}
+          context={context}
+          weatherContext={weatherContext}
+          recentRecords={recentRecords}
+          recordStats={recordStats}
+        />
       )}
       {view === 'calendar' && plan && (
         <CalendarView plan={plan} />
@@ -296,7 +414,7 @@ export function FarmPilot() {
 // ===========================================================================
 
 function FarmPilotHeader({
-  isDemoMode, onToggleDemo, wilayaCode, areaHa, productionSystem, cropId, plantingDate,
+  isDemoMode, onToggleDemo, wilayaCode, areaHa, productionSystem, cropId, plantingDate, forecast,
 }: {
   isDemoMode: boolean;
   onToggleDemo: () => void;
@@ -305,6 +423,7 @@ function FarmPilotHeader({
   productionSystem: ProductionSystem;
   cropId?: string;
   plantingDate?: string;
+  forecast?: ForecastResult | null;
 }) {
   const { language } = useTranslation();
   const tr = (en: string, ar: string, fr: string) => copyFor(language, en, ar, fr);
@@ -384,8 +503,31 @@ function FarmPilotHeader({
           )}
         </div>
       </div>
+
+      {/* Live weather chip — shows today's temp + ET₀ from Open-Meteo */}
+      {forecast?.current && (
+        <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+          <span className="rounded-full bg-white/15 px-2 py-0.5 flex items-center gap-1">
+            <CloudRain className="h-3 w-3" />
+            <span className="font-semibold">{Math.round(forecast.current.temperature)}°C</span>
+            <span className="text-emerald-100">·</span>
+            <span>ET₀ {weatherChipEto(forecast)} mm/j</span>
+            {forecast.daily?.[0] && (
+              <>
+                <span className="text-emerald-100">·</span>
+                <span>{tr('rain', 'مطر', 'pluie')} {forecast.daily[0].precipitationSum.toFixed(1)} mm</span>
+              </>
+            )}
+          </span>
+          <span className="text-[10px] text-emerald-100">{tr('Live', 'مباشر', 'En direct')}</span>
+        </div>
+      )}
     </header>
   );
+}
+
+function weatherChipEto(forecast: ForecastResult): string {
+  return (forecast.daily?.[0]?.et0 ?? 0).toFixed(1);
 }
 
 // ===========================================================================
@@ -393,12 +535,15 @@ function FarmPilotHeader({
 // ===========================================================================
 
 function HomeView({
-  context, plan, isDemoMode, onNavigate,
+  context, plan, isDemoMode, onNavigate, weatherContext, recentRecords, recordStats,
 }: {
   context: FarmContext;
   plan: FarmPilotPlan | null;
   isDemoMode: boolean;
   onNavigate: (v: View) => void;
+  weatherContext: { etoMmPerDay: number; rainfallMm: number; isLiveForecast: boolean };
+  recentRecords: FieldRecord[];
+  recordStats: FieldRecordBookStats | null;
 }) {
   const { language } = useTranslation();
   const tr = (en: string, ar: string, fr: string) => copyFor(language, en, ar, fr);
@@ -413,8 +558,9 @@ function HomeView({
   const crop = plan ? getCropById(plan.cropId) : undefined;
   const activeStage = crop && plan ? getActiveStage(crop, plan.plantingDate) : undefined;
 
-  // Today's snapshot
-  const todayTasks = crop && plan ? generateTodayTasks(crop, plan, activeStage, 5.0).slice(0, 3) : [];
+  // Today's snapshot — uses live ET₀ from forecast (or wilaya fallback).
+  const etoForToday = weatherContext.etoMmPerDay;
+  const todayTasks = crop && plan ? generateTodayTasks(crop, plan, activeStage, etoForToday).slice(0, 3) : [];
 
   return (
     <div className="space-y-5">
@@ -430,6 +576,24 @@ function HomeView({
             'Prenons la bonne décision pour votre ferme.',
           )}
         </p>
+      </div>
+
+      {/* Live weather context strip */}
+      <div className="rounded-lg border border-sky-200 dark:border-sky-900 bg-sky-50/40 dark:bg-sky-950/20 p-3 text-xs flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-1.5">
+          <CloudRain className="h-4 w-4 text-sky-600" />
+          <span className="font-semibold">{tr("Today's weather", 'طقس اليوم', "Météo du jour")}</span>
+        </div>
+        <span className="text-muted-foreground">·</span>
+        <span>ET₀ <span className="font-mono font-semibold">{etoForToday.toFixed(2)} mm/day</span></span>
+        <span className="text-muted-foreground">·</span>
+        <span>{tr('rain', 'مطر', 'pluie')} <span className="font-mono font-semibold">{weatherContext.rainfallMm.toFixed(1)} mm</span></span>
+        {!weatherContext.isLiveForecast && (
+          <span className="text-amber-700 dark:text-amber-300 text-[10px] flex items-center gap-1">
+            <AlertTriangle className="h-3 w-3" />
+            {tr('Atlas default', 'افتراضي أطلس', 'Défaut Atlas')}
+          </span>
+        )}
       </div>
 
       {/* Today's snapshot if plan exists */}
@@ -510,8 +674,96 @@ function HomeView({
           </CardContent>
         </Card>
       )}
+
+      {/* Recent activity — gives FarmPilot a memory of past records */}
+      <RecentActivityCard
+        records={recentRecords}
+        stats={recordStats}
+        language={language}
+        emptyHint={tr(
+          'No field records yet. Log irrigation, fertilizer, scouting, or harvest from the Farm tab to see them here.',
+          'لا توجد سجلات بعد. سجل الري أو التسميد أو الكشف أو الحصاد من تبويب المزرعة لرؤيتها هنا.',
+          "Aucun enregistrement. Journalisez l'irrigation, la fertilisation, le scouting ou la récolte depuis l'onglet Ferme.",
+        )}
+      />
     </div>
   );
+}
+
+// ===========================================================================
+// Recent activity card — shared component (also used in Today view)
+// ===========================================================================
+
+function RecentActivityCard({
+  records, stats, language, emptyHint,
+}: {
+  records: FieldRecord[];
+  stats: FieldRecordBookStats | null;
+  language: 'en' | 'fr' | 'ar';
+  emptyHint: string;
+}) {
+  const tr = (en: string, ar: string, fr: string) => copyFor(language, en, ar, fr);
+
+  if (records.length === 0) {
+    return (
+      <Card className="border-dashed">
+        <CardContent className="pt-4 pb-4 text-xs text-muted-foreground flex items-center gap-2">
+          <BookOpen className="h-4 w-4 flex-shrink-0" />
+          <span>{emptyHint}</span>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between gap-2">
+          <CardTitle className="text-base flex items-center gap-2">
+            <BookOpen className="h-4 w-4 text-emerald-600" />
+            {tr('Recent activity', 'النشاط الأخير', 'Activité récente')}
+          </CardTitle>
+          {stats && (
+            <div className="flex flex-wrap gap-1.5 text-[10px]">
+              <Badge variant="outline">{stats.total} {tr('records', 'سجل', 'entrées')}</Badge>
+              {stats.observations > 0 && <Badge variant="outline" className="text-sky-700">{stats.observations} 👁</Badge>}
+              {stats.actions > 0 && <Badge variant="outline" className="text-amber-700">{stats.actions} ⚙</Badge>}
+              {stats.totalAmountDzd > 0 && <Badge variant="outline" className="text-emerald-700">{stats.totalAmountDzd.toLocaleString()} DZD</Badge>}
+            </div>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {records.map((rec) => (
+          <div key={rec.id} className="flex items-start gap-2 text-xs border-l-2 border-emerald-300 ps-2">
+            <span className="text-base flex-shrink-0">{kindEmoji(rec.kind)}</span>
+            <div className="flex-1 min-w-0">
+              <div className="font-medium truncate">{rec.title}</div>
+              <div className="text-muted-foreground truncate">{rec.summary}</div>
+              <div className="text-[10px] text-muted-foreground mt-0.5">
+                {new Date(rec.timestamp).toLocaleDateString(
+                  language === 'ar' ? 'ar-DZ' : language === 'fr' ? 'fr-DZ' : 'en-GB',
+                  { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' },
+                )} · {rec.source === 'manual' ? tr('Manual', 'يدوي', 'Manuel') : rec.source === 'scouting' ? tr('Scout', 'كشف', 'Scout') : rec.source === 'soil-test' ? tr('Soil test', 'تحليل تربة', 'Analyse sol') : rec.source === 'satellite' ? tr('Satellite', 'قمر', 'Satellite') : rec.source}
+              </div>
+            </div>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
+function kindEmoji(kind: FieldRecord['kind']): string {
+  switch (kind) {
+    case 'irrigation': return '💧';
+    case 'input': return '🧪';
+    case 'harvest': return '🧺';
+    case 'observation': return '🔍';
+    case 'decision': return '🧭';
+    case 'note': return '📝';
+    default: return '📋';
+  }
 }
 
 // ===========================================================================
@@ -1227,11 +1479,12 @@ function WaterField({
 // ===========================================================================
 
 function PlanView({
-  plan, context, onChange,
+  plan, context, onChange, weatherContext,
 }: {
   plan: FarmPilotPlan;
   context: FarmContext;
   onChange: (p: FarmPilotPlan) => void;
+  weatherContext: { etoMmPerDay: number; rainfallMm: number; isLiveForecast: boolean };
 }) {
   const { language } = useTranslation();
   const tr = (en: string, ar: string, fr: string) => copyFor(language, en, ar, fr);
@@ -1251,10 +1504,12 @@ function PlanView({
   // Planting calculator
   const planting = calculatePlanting(crop, plan.areaHa, 0.75, 0.3);
 
-  // Irrigation calculator
+  // Irrigation calculator — uses LIVE ET₀ + rainfall from forecast.
   const activeStage = getActiveStage(crop, plan.plantingDate);
+  const etoForIrrigation = weatherContext.etoMmPerDay;
+  const rainfallForIrrigation = weatherContext.rainfallMm;
   const irrigation = activeStage
-    ? calculateIrrigation(crop, activeStage.stage, plan, 5.0, 0)
+    ? calculateIrrigation(crop, activeStage.stage, plan, etoForIrrigation, rainfallForIrrigation)
     : null;
 
   // Fertilizer calculator
@@ -1559,16 +1814,26 @@ function WhyCard({
 // Today view
 // ===========================================================================
 
-function TodayView({ plan, context }: { plan: FarmPilotPlan; context: FarmContext }) {
+function TodayView({
+  plan, context, weatherContext, recentRecords, recordStats,
+}: {
+  plan: FarmPilotPlan;
+  context: FarmContext;
+  weatherContext: { etoMmPerDay: number; rainfallMm: number; isLiveForecast: boolean };
+  recentRecords: FieldRecord[];
+  recordStats: FieldRecordBookStats | null;
+}) {
   const { language } = useTranslation();
   const tr = (en: string, ar: string, fr: string) => copyFor(language, en, ar, fr);
   const crop = getCropById(plan.cropId);
 
+  // Tasks use live ET₀ from forecast (replaces hardcoded 5.0).
+  const etoForToday = weatherContext.etoMmPerDay;
   const tasks = useMemo(() => {
     if (!crop) return [];
     const active = getActiveStage(crop, plan.plantingDate);
-    return generateTodayTasks(crop, plan, active, 5.0);
-  }, [crop, plan]);
+    return generateTodayTasks(crop, plan, active, etoForToday);
+  }, [crop, plan, etoForToday]);
 
   const [completed, setCompleted] = useState<Record<string, boolean>>({});
 
@@ -1587,6 +1852,23 @@ function TodayView({ plan, context }: { plan: FarmPilotPlan; context: FarmContex
           <p className="text-sm text-muted-foreground mt-1">
             {tr('Active stage', 'المرحلة النشطة', 'Stade actif')}: {CROP_STAGE_LABELS[activeStage.stage].emoji} {CROP_STAGE_LABELS[activeStage.stage].label[language]}
           </p>
+        )}
+      </div>
+
+      {/* Today's weather strip — feeds irrigation recommendation */}
+      <div className="rounded-lg border border-sky-200 dark:border-sky-900 bg-sky-50/40 dark:bg-sky-950/20 p-3 text-xs flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-1.5">
+          <CloudRain className="h-4 w-4 text-sky-600" />
+          <span className="font-semibold">{tr("Today's ET₀", 'التبخر-نقل اليوم', "ET₀ du jour")}</span>
+        </div>
+        <span className="font-mono font-bold text-base tabular-nums">{etoForToday.toFixed(2)} <span className="text-[10px] font-normal">mm/day</span></span>
+        <span className="text-muted-foreground">·</span>
+        <span>{tr('rain', 'مطر', 'pluie')} <span className="font-mono font-semibold">{weatherContext.rainfallMm.toFixed(1)} mm</span></span>
+        {!weatherContext.isLiveForecast && (
+          <span className="text-amber-700 dark:text-amber-300 text-[10px] flex items-center gap-1">
+            <AlertTriangle className="h-3 w-3" />
+            {tr('Atlas default', 'افتراضي أطلس', 'Défaut Atlas')}
+          </span>
         )}
       </div>
 
@@ -1617,6 +1899,18 @@ function TodayView({ plan, context }: { plan: FarmPilotPlan; context: FarmContex
           </p>
         </CardContent>
       </Card>
+
+      {/* Recent activity — gives FarmPilot a memory */}
+      <RecentActivityCard
+        records={recentRecords}
+        stats={recordStats}
+        language={language}
+        emptyHint={tr(
+          'No field records yet. Log irrigation, fertilizer, scouting, or harvest from the Farm tab to see them here.',
+          'لا توجد سجلات بعد. سجل الري أو التسميد أو الكشف أو الحصاد من تبويب المزرعة لرؤيتها هنا.',
+          "Aucun enregistrement. Journalisez l'irrigation, la fertilisation, le scouting ou la récolte depuis l'onglet Ferme.",
+        )}
+      />
     </div>
   );
 }

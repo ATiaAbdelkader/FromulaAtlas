@@ -796,3 +796,68 @@ Stage Summary:
 - Demo farm mode for instant testing without entering real data
 - AUDIT-TRACKER.md updated with P3-1 entry
 - Ready for commit + push
+
+---
+Task ID: farmpilot-p0-integrations
+Agent: main (Super Z)
+Task: Implement P0 findings from "My Field" → FarmPilot integration audit
+
+Work Log:
+- P0-1: Live weather forecast (replaces hardcoded ET₀ = 5.0 mm/day)
+  * Added getForecast import from open-meteo.ts
+  * New useEffect in FarmPilot shell fetches 4-day forecast using wilaya
+    lat/lng (or farm profile lat/lng) via getForecast(lat, lng, { days: 4 })
+  * New weatherContext useMemo derives today's ET₀ + rainfall from
+    forecast.daily[0], with fallback to ALL_58_WILAYAS[].et0 (Atlas
+    climatic default) when fetch fails or no wilaya
+  * Threaded weatherContext through to PlanView + TodayView + HomeView
+  * Replaced literal `5.0` in calculateIrrigation (PlanView line 1257)
+    with etoForIrrigation from weatherContext
+  * Replaced literal `5.0` in generateTodayTasks (TodayView + HomeView)
+    with etoForToday from weatherContext
+  * Added loading + error indicators inline above the views
+  * Added "Live" vs "Atlas default" badge throughout so farmers know
+    whether the irrigation number is from real weather or fallback
+
+- P0-2: Weather alert banner (drop-in component)
+  * Imported WeatherAlertBanner from weather-alert-banner.tsx
+  * Mounted <WeatherAlertBanner forecast={forecast} /> between
+    FarmPilotHeader and the nav bar — always visible across all views
+  * No props other than forecast (which we already have from P0-1)
+  * Component auto-computes frost/heat/rain/wind/good alerts from
+    forecast.daily.slice(0, 3) using FAO thresholds
+
+- P0-3: Recent field records timeline (gives FarmPilot a memory)
+  * Imported buildFieldRecordTimeline + getFieldRecordBookStats +
+    FIELD_RECORD_BOOK_CHANGED_EVENT from field-record-book.ts
+  * New refreshRecords() callback builds the timeline (aggregates 6
+    sources: manual / scouting / soil-test / satellite / demo /
+    field-profile) and slices top 6
+  * New useEffect subscribes to FIELD_RECORD_BOOK_CHANGED_EVENT +
+    'storage' events so records logged elsewhere (e.g., from the Farm
+    tab's QuickLogger) update FarmPilot in real time
+  * New RecentActivityCard component shows records with kind emoji,
+    title, summary, localized date + source badge. Header shows
+    total + observations 👁 + actions ⚙ + total DZD badges
+  * Mounted in HomeView (below demo card) and TodayView (below
+    tomorrow preview) — gives FarmPilot a sense of past activity
+
+- Bonus: live weather chip in FarmPilotHeader
+  * Added a slim chip to the header showing current temp + ET₀ +
+    rainfall + "Live" badge — visible across all views
+
+Verification:
+  npx tsc --noEmit     -> 0 errors
+  npm run test:domain  -> 'All deterministic domain suites passed.'
+  npx next build       -> 'Compiled successfully in 39.1s'
+
+Stage Summary:
+- FarmPilot's irrigation math is now driven by real Open-Meteo weather
+  data instead of a hardcoded 5.0 mm/day constant
+- Weather alerts (frost/heat/rain/wind) visible across all FarmPilot views
+- FarmPilot now has a memory of past field records (irrigation,
+  fertilizer, scouting, harvest, observations) — both on Home view and
+  Today view, with live updates when records are added from elsewhere
+- Live weather chip in header shows current temp + ET₀ + rainfall at a glance
+- All changes trilingual, RTL-safe, mobile-first
+- AUDIT-TRACKER.md updated with P3-2 entry
