@@ -835,7 +835,8 @@ export function SoilNutrientHeatmap({ className = '' }: { className?: string }) 
     const colorScale = d3.scaleSequential(currentMeta.colorInterpolator).domain([minVal, maxVal]);
 
     // Define Grid Matrix as 1D array for d3.contours
-    const flatGrid = new Float64Array(gridResolution * gridResolution);
+    // (d3.contours expects a number[], not a typed array, in current @types/d3)
+    const flatGrid: number[] = new Array(gridResolution * gridResolution);
     for (let r = 0; r < gridResolution; r++) {
       for (let c = 0; c < gridResolution; c++) {
         flatGrid[r * gridResolution + c] = idwMatrix[r][c];
@@ -896,7 +897,7 @@ export function SoilNutrientHeatmap({ className = '' }: { className?: string }) 
             .attr('height', cellH + 0.8)
             .call((upd) =>
               animDuration > 0
-                ? upd.transition(t).attr('fill', (d) => colorScale(d.val))
+                ? upd.transition().duration(animDuration).ease(d3.easeCubicInOut).attr('fill', (d) => colorScale(d.val))
                 : upd.attr('fill', (d) => colorScale(d.val))
             ),
         (exit) => exit.remove()
@@ -946,7 +947,7 @@ export function SoilNutrientHeatmap({ className = '' }: { className?: string }) 
               )
               .call((upd) =>
                 animDuration > 0
-                  ? upd.transition(t).attr('d', pathGenerator).attr('opacity', 1)
+                  ? upd.transition().duration(animDuration).ease(d3.easeCubicInOut).attr('d', pathGenerator).attr('opacity', 1)
                   : upd.attr('d', pathGenerator).attr('opacity', 1)
               ),
           (exit) =>
@@ -984,7 +985,7 @@ export function SoilNutrientHeatmap({ className = '' }: { className?: string }) 
               .call((upd) =>
                 animDuration > 0
                   ? upd
-                      .transition(t)
+                      .transition().duration(animDuration).ease(d3.easeCubicInOut)
                       .attr('transform', (d) => {
                         const centroid = pathGenerator.centroid(d);
                         return isNaN(centroid[0]) ? 'translate(-100,-100)' : `translate(${centroid[0]},${centroid[1]})`;

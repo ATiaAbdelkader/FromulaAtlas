@@ -40,9 +40,9 @@ Commit at time of audit: `bf5990a` (fix: 3 runtime errors — useLanguage, isRTL
 | ID | Finding | Status | Resolved in | Notes |
 |----|---------|--------|-------------|-------|
 | P2-1 | Calendar source provenance fields not surfaced in UI | RESOLVED | `1180ee6` | New "Source provenance" Card surfaces institution / documentTitle / language / extractionStatus / interpretationRule. |
-| P2-2 | Tests drifted from implementation contract | RESOLVED | (this commit) | Updated `test-localization.ts`, `test-user-level-tool-visibility.ts`, `test-count-consistency.ts` to match current canonical counts (FREE_TOOL_COUNT=27, INTERACTIVE_TOOL_COUNT=39, 48 tool-registry entries) and current calendar wording (`source operations` / `Previous Month` / `moveMonth = useCallback`). |
-| P2-3 | Pre-existing TS errors in algeria-wilayas-58 / algeria-soil-zones-data / tool-explainer-data (`very_high` not in union, missing `algerianContextFr`) | OPEN | — | Does not block `next build` (config has `ignoreBuildErrors: true`). Should be cleaned up before stable release. |
-| P2-4 | 'guide' tab added to all 3 user levels without UX review | OPEN | — | Functional but `help` + `guide` may overlap; consider consolidating or differentiating. |
+| P2-2 | Tests drifted from implementation contract | RESOLVED | `157e892` | Updated `test-localization.ts`, `test-user-level-tool-visibility.ts`, `test-count-consistency.ts` to match current canonical counts (FREE_TOOL_COUNT=27, INTERACTIVE_TOOL_COUNT=39, 48 tool-registry entries) and current calendar wording (`source operations` / `Previous Month` / `moveMonth = useCallback`). |
+| P2-3 | Pre-existing TS errors in algeria-wilayas-58 / algeria-soil-zones-data / tool-explainer-data (`very_high` not in union, missing `algerianContextFr`) — and 54 more across 19 source files | RESOLVED | (this commit) | **All 63 pre-existing TS errors fixed.** `npx tsc --noEmit` is now clean. Key fixes: (a) standardized `very_high` → `severe` across all 5 risk unions in 3 algeria data files; (b) added missing `algerianContextFr` to `rusle_erosion` tool-explainer entry; (c) fixed `ManualFieldRecordInput` API mismatches in crop-phenology-timeline and farmer-market-benchmarks; (d) migrated two `sendToBridge()` call sites from old 2-arg signature to new `{targetToolId, sourceToolId, values}` shape; (e) extended `VpdResult` with `vpsAir` / `vpa` / `vpsLeaf` and populated in `calcVpdAdvanced`; (f) added `formula` field to `AcidDef` + populated 4 acids; (g) added `usslRisk` / `clToxRisk` / `naToxRisk` / `boronRisk` to WaterLabAnalyzer diagnostics; (h) rewrote AlgeriaAgriMap topography rendering to use actual `TOPOGRAPHIC_RELIEF_DATA` shape (tellAtlas/saharanAtlas/hoggarTassili arrays + majorChotts/majorWadis/desertErgs); (i) added `lithosol` to AlgeriaSoilClass union + injected lithosol entries into 9 `soilClassMultipliers` records; (j) replaced `Float64Array` with `number[]` for d3.contours compatibility; (k) inlined d3 transition setup to avoid cross-element-type `transition(t)` typing issues. |
+| P2-4 | 'guide' tab added to all 3 user levels without UX review | WONTFIX | — | Reviewed: `help` mounts `<FarmerHelp>` (Farmer support: FAQ, tutorials, contact); `guide` mounts `<YourGuide>` (Professional in-depth feature catalogue). They serve distinct audiences and purposes — not redundant. Keeping both. |
 
 ### P3 — Low (nice-to-have)
 
@@ -62,10 +62,10 @@ _None tracked yet._
 ## How to run the verification suite
 
 ```bash
-# Type check (warnings OK, build ignores errors)
+# Type check — CLEAN as of P2-3 resolution (was 63 errors, now 0)
 npx tsc --noEmit
 
-# Next.js production build
+# Next.js production build (TS errors would be ignored by config, but no longer any)
 npx next build
 
 # Domain tests (all must pass before tagging)

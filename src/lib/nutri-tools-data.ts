@@ -262,13 +262,15 @@ export interface AcidDef {
   name: string;
   meqPerMl: number;
   densityKgL: number;
+  /** Chemical formula display string (e.g. 'HNO₃', 'H₂SO₄'). */
+  formula?: string;
 }
 
 export const ACIDS: AcidDef[] = [
-  { id: 'acido_nitrico_55',   name: 'Nitric Acid 55%',    meqPerMl: 11.6, densityKgL: 1.37 },
-  { id: 'acido_sulfurico_98', name: 'Sulfuric Acid 98%',  meqPerMl: 36.7, densityKgL: 1.84 },
-  { id: 'acido_fosforico_75', name: 'Phosphoric Acid 75%', meqPerMl: 12.0, densityKgL: 1.57 },
-  { id: 'acido_fosforico_85', name: 'Phosphoric Acid 85%', meqPerMl: 14.6, densityKgL: 1.69 },
+  { id: 'acido_nitrico_55',   name: 'Nitric Acid 55%',    meqPerMl: 11.6, densityKgL: 1.37, formula: 'HNO₃' },
+  { id: 'acido_sulfurico_98', name: 'Sulfuric Acid 98%',  meqPerMl: 36.7, densityKgL: 1.84, formula: 'H₂SO₄' },
+  { id: 'acido_fosforico_75', name: 'Phosphoric Acid 75%', meqPerMl: 12.0, densityKgL: 1.57, formula: 'H₃PO₄' },
+  { id: 'acido_fosforico_85', name: 'Phosphoric Acid 85%', meqPerMl: 14.6, densityKgL: 1.69, formula: 'H₃PO₄' },
 ];
 
 export function hardnessClassByPpm(ppm: number): { label: string; color: string } {
@@ -299,6 +301,12 @@ export interface VpdResult {
   vpd: number;  // kPa
   hd: number;   // g/m³
   leafTemp?: number;
+  /** Saturated vapor pressure at air temperature (kPa). */
+  vpsAir?: number;
+  /** Actual vapor pressure of air (kPa). */
+  vpa?: number;
+  /** Saturated vapor pressure at leaf temperature (kPa). */
+  vpsLeaf?: number;
 }
 
 export function calcVpdSimple(airTemp: number, humidity: number): VpdResult {
@@ -323,6 +331,9 @@ export function calcVpdAdvanced(
     vpd: Math.round(vpd * 100) / 100,
     hd: Math.round(hd * 100) / 100,
     leafTemp,
+    vpsAir: Math.round(esAir * 100) / 100,
+    vpa: Math.round(ea * 100) / 100,
+    vpsLeaf: Math.round(esLeaf * 100) / 100,
   };
 }
 

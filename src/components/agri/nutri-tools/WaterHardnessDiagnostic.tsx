@@ -319,7 +319,7 @@ ACID NEUTRALIZATION RECIPE:
 Bicarbonate (HCO3-): ${hco3N.toFixed(2)} meq/L | Carbonate (CO32-): ${co3N.toFixed(2)} meq/L
 Residual Target Buffer: ${residualN.toFixed(2)} meq/L
 Net Neutralization Required: ${needMeq.toFixed(2)} meq/L
-Selected Acid: ${acid.name} (${acid.formula})
+Selected Acid: ${acid.name} (${acid.formula ?? '—'})
 Acid Rate: ${mlPerM3.toFixed(1)} mL / m3 water (${kgPerM3Water.toFixed(3)} kg/m3)
 Total Acid for ${volM3.toFixed(1)} m3: ${totalL.toFixed(2)} Liters (${kgTotal.toFixed(2)} kg)
 ${suppliedNutrient ? `Fertilizer Contribution: ${suppliedNutrient.label}` : ''}
@@ -338,8 +338,9 @@ Langelier Saturation Index (LSI): ${lsiEstimate.lsi.toFixed(2)} (${lsiEstimate.s
   };
 
   const handleSendToHydro = () => {
-    sendToBridge('hydro-solution', {
-      sourceTool: 'Water Hardness Diagnostic',
+    sendToBridge({
+      targetToolId: 'hydro-solution',
+      sourceToolId: 'Water Hardness Diagnostic',
       values: {
         hco3: Number(hco3N.toFixed(2)),
         ca: Number(caMeq.toFixed(2)),

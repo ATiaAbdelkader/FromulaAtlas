@@ -175,9 +175,9 @@ RESULTS:
 • Advanced Leaf VPD: ${result.vpd.toFixed(2)} kPa [Status: ${status.label}]
 • Humidity Deficit (HD): ${result.hd.toFixed(2)} g/m³ [${hdCls?.label}]
 • Simple Air VPD: ${simple?.vpd.toFixed(2)} kPa
-• Saturated Vapor Pressure (Air): ${result.vpsAir.toFixed(2)} kPa
-• Actual Vapor Pressure (Air): ${result.vpa.toFixed(2)} kPa
-• Saturated Vapor Pressure (Leaf): ${result.vpsLeaf.toFixed(2)} kPa
+• Saturated Vapor Pressure (Air): ${(result.vpsAir ?? 0).toFixed(2)} kPa
+• Actual Vapor Pressure (Air): ${(result.vpa ?? 0).toFixed(2)} kPa
+• Saturated Vapor Pressure (Leaf): ${(result.vpsLeaf ?? 0).toFixed(2)} kPa
 
 AGRONOMIC RECOMMENDATION:
 ${hdCls?.message}
@@ -530,7 +530,7 @@ ${hdCls?.message}
 
                         <div className="p-3 rounded-xl border bg-muted/20 space-y-1">
                           <div className="text-[10px] text-muted-foreground">{tr('Saturated Vapor Press. (Leaf)', 'ضغط التشبع عند الورقة', 'Pression Vapeur Sat. Feuille')}</div>
-                          <div className="font-mono font-bold text-foreground text-base">{result.vpsLeaf.toFixed(2)} kPa</div>
+                          <div className="font-mono font-bold text-foreground text-base">{(result.vpsLeaf ?? 0).toFixed(2)} kPa</div>
                         </div>
                       </div>
 

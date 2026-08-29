@@ -625,7 +625,7 @@ function FormulaOfDayBanner({
   language: Language;
   onSelect: (f: Formula) => void;
 }) {
-  const { formula, dayOfYear } = useMemo(() => getFormulaOfTheDay(), []);
+  const formula = useMemo<Formula>(() => getFormulaOfTheDay(), []);
   const scenario = useMemo(() => getPrimaryScenario(formula), [formula]);
   const calc = hasCalculator(formula.code);
 

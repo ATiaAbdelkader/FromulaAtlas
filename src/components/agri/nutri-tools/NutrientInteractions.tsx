@@ -232,7 +232,7 @@ export function NutrientInteractions() {
   // TAB 3: PLANT MOBILITY & LEAF DIAGNOSTIC WIZARD
   // ============================================================================
   const [selectedZoneId, setSelectedZoneId] = useState<'apical' | 'young' | 'mature' | 'lower'>('lower');
-  const [wizardLocation, setWizardLocation] = useState<'all' | 'lower' | 'young' | 'apical'>('all');
+  const [wizardLocation, setWizardLocation] = useState<'all' | 'lower' | 'young' | 'apical' | 'mature'>('all');
   const [wizardPattern, setWizardPattern] = useState<string>('all');
   const [selectedDiagNodeId, setSelectedDiagNodeId] = useState<string>('mg-def');
 

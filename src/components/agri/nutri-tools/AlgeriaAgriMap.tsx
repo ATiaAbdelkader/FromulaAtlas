@@ -324,15 +324,15 @@ export default function AlgeriaAgriMap() {
         return '#06b6d4';
 
       case 'soil_ph':
-        if (w.avgSoilPh >= 8.2) return '#dc2626';
-        if (w.avgSoilPh >= 7.8) return '#f59e0b';
-        if (w.avgSoilPh >= 7.2) return '#10b981';
+        if (w.ph >= 8.2) return '#dc2626';
+        if (w.ph >= 7.8) return '#f59e0b';
+        if (w.ph >= 7.2) return '#10b981';
         return '#0284c7';
 
       case 'crop_suitability': {
         const rule = selectedCropRule;
-        if (rule.idealWilayas.includes(w.code)) return '#059669'; // optimal (green)
-        if (rule.unfavorableWilayas.includes(w.code)) return '#dc2626'; // unfavorable (red)
+        if (rule.favorableZones.includes(w.zone)) return '#059669'; // optimal (green)
+        if (rule.unsuitableZones.includes(w.zone)) return '#dc2626'; // unfavorable (red)
         return '#eab308'; // moderate / conditional (amber)
       }
 
@@ -1068,7 +1068,7 @@ export default function AlgeriaAgriMap() {
               {showWilayaPolygons && (
                 <g id="algeria-wilayas-polygons" clipPath="url(#algeria-national-clip)">
                   {wilayaPolygons.map((poly) => {
-                    const w = poly.wilaya;
+                    const w = poly.wilayaData;
                     const isSelected = w.code === selectedWilayaCode;
                     const isHovered =
                       hoveredPolygonCode === w.code || hoveredWilaya?.code === w.code;
@@ -1088,7 +1088,7 @@ export default function AlgeriaAgriMap() {
                     return (
                       <path
                         key={`poly-${poly.code}`}
-                        d={poly.pathData}
+                        d={poly.polygonPath}
                         fill={color}
                         fillOpacity={fillOpacity}
                         stroke={
@@ -1130,60 +1130,31 @@ export default function AlgeriaAgriMap() {
                 <g id="algeria-topography" clipPath="url(#algeria-national-clip)" pointerEvents="none">
                   {/* Mountain Relief Ranges */}
                   <g id="mountain-ranges" opacity={baseMapTheme === 'vector' ? 0.35 : 0.65}>
-                    {TOPOGRAPHIC_RELIEF_DATA.mountainRanges.map((range) => (
+                    {[...TOPOGRAPHIC_RELIEF_DATA.tellAtlas, ...TOPOGRAPHIC_RELIEF_DATA.saharanAtlas, ...TOPOGRAPHIC_RELIEF_DATA.hoggarTassili].map((rangePath, idx) => (
                       <path
-                        key={range.id}
-                        d={range.path}
+                        key={`range-${idx}`}
+                        d={rangePath}
                         fill="none"
-                        stroke={range.color || '#78350f'}
-                        strokeWidth={range.strokeWidth || 4}
+                        stroke="#78350f"
+                        strokeWidth={4}
                         strokeLinecap="round"
-                        strokeDasharray={range.id.includes('tell') ? '6 2' : '8 3'}
+                        strokeDasharray={idx < TOPOGRAPHIC_RELIEF_DATA.tellAtlas.length ? '6 2' : '8 3'}
                       />
-                    ))}
-
-                    {/* Mountain Massif Labels & Peaks */}
-                    {TOPOGRAPHIC_RELIEF_DATA.mountainPeaks.map((peak) => (
-                      <g key={peak.id}>
-                        <polygon
-                          points={`${peak.x},${peak.y - 4} ${peak.x - 3.5},${peak.y + 3} ${peak.x + 3.5},${peak.y + 3}`}
-                          fill="#78350f"
-                          stroke="#ffffff"
-                          strokeWidth={0.75}
-                        />
-                        <text
-                          x={peak.x}
-                          y={peak.y - 6}
-                          fill="#451a03"
-                          fontSize="7"
-                          fontWeight="800"
-                          textAnchor="middle"
-                          className="dark:fill-amber-200 drop-shadow-sm"
-                        >
-                          ▲ {lang === 'ar' ? peak.nameAr : peak.nameFr} ({peak.altitudeM}m)
-                        </text>
-                      </g>
                     ))}
                   </g>
 
                   {/* Chotts & Sebkhas (Endorheic Salt Lakes) */}
                   <g id="chotts-and-sebkhas">
-                    {TOPOGRAPHIC_RELIEF_DATA.chotts.map((chott) => (
+                    {TOPOGRAPHIC_RELIEF_DATA.majorChotts.map((chott) => (
                       <g key={chott.id}>
-                        <ellipse
-                          cx={chott.cx}
-                          cy={chott.cy}
-                          rx={chott.rx}
-                          ry={chott.ry}
+                        <path
+                          d={chott.path}
                           fill="url(#chott-saline-gradient)"
-                          stroke="#0284c7"
+                          stroke={chott.color || '#0284c7'}
                           strokeWidth={1}
                           strokeDasharray="3 1"
-                          transform={chott.rotation ? `rotate(${chott.rotation} ${chott.cx} ${chott.cy})` : undefined}
                         />
                         <text
-                          x={chott.cx}
-                          y={chott.cy + 2.5}
                           fill="#0369a1"
                           fontSize="6.5"
                           fontWeight="bold"
@@ -1198,7 +1169,7 @@ export default function AlgeriaAgriMap() {
 
                   {/* Major Wadis & River Networks */}
                   <g id="major-wadis" opacity="0.6">
-                    {TOPOGRAPHIC_RELIEF_DATA.wadis.map((wadi) => (
+                    {TOPOGRAPHIC_RELIEF_DATA.majorWadis.map((wadi) => (
                       <path
                         key={wadi.id}
                         d={wadi.path}
@@ -1212,27 +1183,16 @@ export default function AlgeriaAgriMap() {
 
                   {/* Sand Dune Ergs Formations */}
                   <g id="desert-ergs" opacity="0.4">
-                    {TOPOGRAPHIC_RELIEF_DATA.ergs.map((erg) => (
+                    {TOPOGRAPHIC_RELIEF_DATA.desertErgs.map((erg) => (
                       <g key={erg.id}>
                         <path
                           d={erg.path}
-                          fill="#fef3c7"
+                          fill={erg.color || '#f59e0b'}
                           fillOpacity={0.45}
                           stroke="#f59e0b"
                           strokeWidth={1}
                           strokeDasharray="4 2"
                         />
-                        <text
-                          x={erg.labelX}
-                          y={erg.labelY}
-                          fill="#b45309"
-                          fontSize="7.5"
-                          fontWeight="bold"
-                          letterSpacing="1"
-                          textAnchor="middle"
-                        >
-                          {lang === 'ar' ? erg.nameAr : erg.nameFr}
-                        </text>
                       </g>
                     ))}
                   </g>

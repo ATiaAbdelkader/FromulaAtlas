@@ -615,3 +615,98 @@ Stage Summary:
 - PUSH FAILED — user needs to push manually or provide a token
   $ git push origin main
   $ git push origin v0.2.0-prototype
+
+---
+Task ID: p2-tsc-cleanup
+Agent: main (Super Z)
+Task: Fix all pre-existing TypeScript errors (P2-3 + 54 more across 19 files)
+
+Work Log:
+- Ran `npx tsc --noEmit` — found 63 pre-existing TS errors across 19 source files
+  (the audit tracker P2-3 only flagged 4 of them; full cleanup was overdue)
+- Audited and fixed each error cluster:
+  * algeria-wilayas-58.ts, algeria-soil-zones-data.ts, algeria-map-data.ts (9 errors):
+    - Standardized 'very_high' → 'severe' across all 5 risk unions
+      (waterloggingRisk, chlorosisRisk, salinityRisk, compactionRisk, erosionRisk,
+      swellingShrinkageRisk) — 'severe' was already the highest tier in 4 of them
+    - Updated 12 data values from 'very_high' to 'severe'
+    - Removed dead `'very_high'` comparison branches from subsoiling checks
+  * tool-explainer-data.ts (1 error): added missing algerianContextFr to
+    rusle_erosion entry (was the only entry without a French context paragraph)
+  * crop-phenology-timeline.ts (1 error): fixed ManualFieldRecordInput API
+    mismatch — replaced ad-hoc plotId/stage/activityType/notes/operator/status
+    with the canonical fieldName/crop/date/kind/title/summary/amountDzd shape
+  * farmer-market-benchmarks.tsx (2 errors): same ManualFieldRecordInput fix
+    for harvest and CCLS save handlers
+  * HydroSolutionDesigner.tsx (2 errors): migrated sourceTool → sourceToolId
+    on BridgePayload access; rewrote sendToBridge() call from old 2-arg
+    ('toolId', {sourceTool, values}) to new 1-arg ({targetToolId,
+    sourceToolId, values}) shape
+  * WaterHardnessDiagnostic.tsx (1 TS error + 1 latent bug): same
+    sendToBridge() migration
+  * FieldBoundaryImporter.tsx (2 errors): removed fmtArea(metrics.areaM2)
+    call inside PolygonPreview (component didn't have access to outer scope's
+    fmtArea/metrics); tooltip now just shows boundary.name
+  * NutrientInteractions.tsx (1 error): extended wizardLocation state type
+    to include 'mature' (was missing — selectedZoneId accepted it but
+    wizardLocation didn't, so setWizardLocation(zone.id) failed when
+    zone.id === 'mature')
+  * CropSuitabilityForecaster.tsx (1 error): changed siroccoRisk 'high' →
+    'extreme' (union only allows none/low/moderate/extreme; 'high' was a typo)
+  * formula-explorer.tsx (7 errors): fixed bad destructure
+    `const { formula, dayOfYear } = useMemo(() => getFormulaOfTheDay(), [])`
+    — getFormulaOfTheDay returns a Formula directly, not {formula, dayOfYear}.
+    Removed unused dayOfYear. All 7 cascading errors cleared.
+  * CropSimulator.tsx (1 error): changed selectedProfile.name →
+    selectedProfile?.cropName (was wrong property name + missing optional
+    chaining)
+  * AlgeriaAgriMap.tsx (12 errors): major rewrite of topography rendering
+    - Replaced w.avgSoilPh → w.ph (property was renamed in WilayaDataFull)
+    - Replaced rule.idealWilayas/unfavorableWilayas → rule.favorableZones/
+      unsuitableZones (CropSuitabilityRule uses zone names, not wilaya codes)
+    - Replaced poly.wilaya → poly.wilayaData (WilayaPolygonFeature field name)
+    - Replaced poly.pathData → poly.polygonPath
+    - Rewrote mountain ranges to iterate tellAtlas + saharanAtlas + hoggarTassili
+      arrays (was accessing non-existent .mountainRanges / .mountainPeaks)
+    - Rewrote chotts/wadis/ergs to use majorChotts/majorWadis/desertErgs
+      (data uses 'major' prefix; component was using unprefixed names)
+  * AlgeriaAdvancedGISTools.tsx (8 errors):
+    - Replaced wilayaName (object) → wilayaName[lang] in concession display
+    - Replaced allocatedSurfaceHa → allocatedAreaHa
+    - Replaced operatorType === 'foreign_bilateral' → agencyType === 'GIPLAIT_BALADNA'
+    - Replaced targetObjective[lang] → description[lang]
+    - Replaced keyCrops.join with derived label from strategicPillar
+    - Replaced irrigationTech with `Pivot × ${pivotCountEstimate}`
+    - Replaced agencyFramework → agencyType
+    - Fixed springFrostRisk 'high' → 'critical' (union uses 'critical' as highest)
+  * AlgeriaSoilZones.tsx (2 errors):
+    - Added 'lithosol' to AlgeriaSoilClass union (was missing — wilaya data
+      uses it but type didn't include it)
+    - Fixed syntax error: missing `[` in `const [hoveredMapSoil, ...]` destructure
+  * algeria-soil-zones-data.ts (9 errors after lithosol added): wrote
+    scripts/add-lithosol-to-multipliers.py to inject lithosol entries
+    into all 9 soilClassMultipliers Record<AlgeriaSoilClass, ...> blocks
+    (each block now has a 'challenging' compatibility entry with trilingual
+    reason about shallow soils over bedrock)
+  * WaterLabAnalyzer.tsx (5 errors): added usslRisk/clToxRisk/naToxRisk/
+    boronRisk to diagnostics return (was missing — report rendering
+    referenced them but they weren't computed); added isRTL to
+    useTranslation destructuring; added boron to useMemo deps
+  * VpdEstimator.tsx (4 errors): extended VpdResult with optional vpsAir/
+    vpa/vpsLeaf fields, populated them in calcVpdAdvanced, and added
+    nullish coalescing (?? 0) at consumption sites
+  * SoilNutrientHeatmap.tsx (4 errors):
+    - Changed `new Float64Array(N)` → `new Array(N)` typed as number[]
+      (d3.contours typing expects number[], not Float64Array in current @types/d3)
+    - Inlined d3 transition setup `upd.transition().duration(animDuration).ease(d3.easeCubicInOut)`
+      instead of sharing `upd.transition(t)` — the shared transition was typed
+      for SVGSVGElement but applied to SVGRectElement/SVGPathElement/SVGTextElement,
+      causing "No overload matches this call"
+
+Stage Summary:
+- TS error count: 63 → 0 (`npx tsc --noEmit` is now clean)
+- All domain tests still pass (`npm run test:domain`)
+- Next.js build still succeeds (`npx next build` ✓ Compiled in 34.5s)
+- 1 reusable script persisted: scripts/add-lithosol-to-multipliers.py
+- AUDIT-TRACKER.md updated: P2-3 RESOLVED, P2-4 WONTFIX (intentional design)
+- Ready for commit + (eventual) push

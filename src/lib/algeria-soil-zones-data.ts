@@ -16,7 +16,8 @@ export type AlgeriaSoilClass =
   | 'fluvisol'       // Sols alluviaux récents / Vallées d'Oueds (Cheliff, Soummam, Seybouse)
   | 'solonchak'      // Sols halomorphes / Salés / Sebkhas (Chott Melghir, Relizane plain, Hodna)
   | 'luvisol'        // Sols rouges fersiallitiques / Terra Rossa (Tlemcen, Dahra, Kabylie)
-  | 'cambisol';      // Sols bruns eutrophes / Piémonts (Médéa, Mascara, Guelma)
+  | 'cambisol'       // Sols bruns eutrophes / Piémonts (Médéa, Mascara, Guelma)
+  | 'lithosol';      // Sols minces sur roche / Regs (Saharan borders)
 
 export interface SoilHorizonLayer {
   horizon: string;
@@ -67,12 +68,12 @@ export interface AlgeriaSoilZone {
   infiltrationRateMmh: number;
 
   // Pedological & Structural dynamics
-  swellingShrinkageRisk: 'none' | 'low' | 'moderate' | 'high' | 'very_high';
+  swellingShrinkageRisk: 'none' | 'low' | 'moderate' | 'high' | 'severe';
   waterloggingRisk: 'none' | 'low' | 'moderate' | 'high' | 'severe';
   chlorosisRisk: 'none' | 'low' | 'moderate' | 'high' | 'severe';
   salinityRisk: 'none' | 'low' | 'moderate' | 'high' | 'severe';
   compactionRisk: 'none' | 'low' | 'moderate' | 'high' | 'severe';
-  erosionRisk: 'low' | 'moderate' | 'high' | 'very_high';
+  erosionRisk: 'low' | 'moderate' | 'high' | 'severe';
 
   // Profile Horizons
   horizons: SoilHorizonLayer[];
@@ -124,11 +125,11 @@ export const ALGERIA_SOIL_ZONES: AlgeriaSoilZone[] = [
     electricalConductivityDsm: 1.1,
     availableWaterCapacityMmPerM: 195,
     infiltrationRateMmh: 8,
-    swellingShrinkageRisk: 'very_high',
+    swellingShrinkageRisk: 'severe',
     waterloggingRisk: 'high',
     chlorosisRisk: 'low',
     salinityRisk: 'low',
-    compactionRisk: 'very_high',
+    compactionRisk: 'severe',
     erosionRisk: 'low',
     horizons: [
       {
@@ -289,7 +290,7 @@ export const ALGERIA_SOIL_ZONES: AlgeriaSoilZone[] = [
     infiltrationRateMmh: 16,
     swellingShrinkageRisk: 'low',
     waterloggingRisk: 'low',
-    chlorosisRisk: 'very_high',
+    chlorosisRisk: 'severe',
     salinityRisk: 'low',
     compactionRisk: 'moderate',
     erosionRisk: 'high',
@@ -453,9 +454,9 @@ export const ALGERIA_SOIL_ZONES: AlgeriaSoilZone[] = [
     swellingShrinkageRisk: 'none',
     waterloggingRisk: 'none',
     chlorosisRisk: 'moderate',
-    salinityRisk: 'very_high',
+    salinityRisk: 'severe',
     compactionRisk: 'none',
-    erosionRisk: 'very_high',
+    erosionRisk: 'severe',
     horizons: [
       {
         horizon: 'A (0-20 cm)',
@@ -1172,7 +1173,7 @@ export function calculateSoilCalibratedYield(
   }
 
   // 4. Subsoiling & Drainage boost
-  if (overrides?.hasSubsoiling && (zone.soilClass === 'vertisol' || zone.compactionRisk === 'severe' || zone.compactionRisk === 'very_high')) {
+  if (overrides?.hasSubsoiling && (zone.soilClass === 'vertisol' || zone.compactionRisk === 'severe')) {
     baseMultiplier *= 1.08;
     factors.push({
       name: {
@@ -1324,6 +1325,7 @@ export const REGIONAL_CROP_BENCHMARKS: RegionalCropBenchmark[] = [
           fr: 'Sols bruns fertiles assurant un développement racinaire régulier et une CEC équilibrée.',
         },
       },
+      lithosol: { multiplier: 0.60, compatibility: 'challenging', reason: { en: 'Shallow lithosols over bedrock limit root volume and water holding capacity; supplemental drip irrigation and organic matter are required.', ar: 'التربة الحجرية الضحلة فوق الصخر الأم تقيّد حجم الجذور ومخزون المياه؛ يتطلب الري بالتنقيط الداعم وتحسين المادة العضوية.', fr: 'Lithosols peu profonds sur roche mère limitant l’enracinement et la RU ; irrigation goutte-à-goutte et matière organique nécessaires.' } },
     },
     regionalBenchmarks: [
       {
@@ -1404,6 +1406,7 @@ export const REGIONAL_CROP_BENCHMARKS: RegionalCropBenchmark[] = [
       luvisol: { multiplier: 1.14, compatibility: 'good', reason: { en: 'Uniform grain development and healthy straw.', ar: 'نمو متجانس للحبوب وقش سليم.', fr: 'Développement homogène et paille saine.' } },
       solonchak: { multiplier: 0.60, compatibility: 'challenging', reason: { en: 'Sensitive during anthesis to osmotic spikes.', ar: 'حساس في مرحلة الإزهار للارتفاع الأسموزي.', fr: 'Sensibilité accrue à la floraison.' } },
       cambisol: { multiplier: 1.12, compatibility: 'good', reason: { en: 'Reliable all-around performance.', ar: 'أداء مستقر وموثوق.', fr: 'Performance équilibrée.' } },
+      lithosol: { multiplier: 0.60, compatibility: 'challenging', reason: { en: 'Shallow lithosols over bedrock limit root volume and water holding capacity; supplemental drip irrigation and organic matter are required.', ar: 'التربة الحجرية الضحلة فوق الصخر الأم تقيّد حجم الجذور ومخزون المياه؛ يتطلب الري بالتنقيط الداعم وتحسين المادة العضوية.', fr: 'Lithosols peu profonds sur roche mère limitant l’enracinement et la RU ; irrigation goutte-à-goutte et matière organique nécessaires.' } },
     },
     regionalBenchmarks: [
       {
@@ -1444,6 +1447,7 @@ export const REGIONAL_CROP_BENCHMARKS: RegionalCropBenchmark[] = [
       luvisol: { multiplier: 1.10, compatibility: 'good', reason: { en: 'Balanced fodder grain weight.', ar: 'وزن نوعي ممتاز لحبوب العلف.', fr: 'Bonne densité du grain fourrager.' } },
       solonchak: { multiplier: 0.88, compatibility: 'good', reason: { en: 'Top-tier tolerance to moderate salinity (up to 7.5 dS/m).', ar: 'قدرة فائقة على تحمل الملوحة المتوسطة حتى 7.5 ديسي سيمنز/م.', fr: 'Excellente rusticité en milieu modérément salé (jusqu’à 7.5 dS/m).' } },
       cambisol: { multiplier: 1.10, compatibility: 'good', reason: { en: 'Consistent pasture and grain yield.', ar: 'إنتاجية مستقرة للحبوب والمرعى.', fr: 'Rendement grain et pâture régulier.' } },
+      lithosol: { multiplier: 0.60, compatibility: 'challenging', reason: { en: 'Shallow lithosols over bedrock limit root volume and water holding capacity; supplemental drip irrigation and organic matter are required.', ar: 'التربة الحجرية الضحلة فوق الصخر الأم تقيّد حجم الجذور ومخزون المياه؛ يتطلب الري بالتنقيط الداعم وتحسين المادة العضوية.', fr: 'Lithosols peu profonds sur roche mère limitant l’enracinement et la RU ; irrigation goutte-à-goutte et matière organique nécessaires.' } },
     },
     regionalBenchmarks: [
       {
@@ -1516,6 +1520,7 @@ export const REGIONAL_CROP_BENCHMARKS: RegionalCropBenchmark[] = [
       luvisol: { multiplier: 1.10, compatibility: 'good', reason: { en: 'Good results on loose, elevated ridges.', ar: 'نتائج جيدة على الخطوط الترابية المرتفعة والمفككة.', fr: 'Bons résultats sur billons meubles.' } },
       solonchak: { multiplier: 0.40, compatibility: 'unsuitable', reason: { en: 'Severe sensitivity to salinity (ECe > 2.5 causes stunted tubers and tip burn).', ar: 'حساسية شديدة للملوحة (ECe > 2.5 تسبب تقزم الدرنات واحتراق الأوراق).', fr: 'Très forte intolérance au sel (perte drastique au-delà de 2.5 dS/m).' } },
       cambisol: { multiplier: 1.15, compatibility: 'good', reason: { en: 'Well-drained hill soils produce sound storage tubers.', ar: 'تربة جيدة الصرف تعطي درنات ممتازة للتخزين.', fr: 'Bonne conservation en sols bruns filtrants.' } },
+      lithosol: { multiplier: 0.60, compatibility: 'challenging', reason: { en: 'Shallow lithosols over bedrock limit root volume and water holding capacity; supplemental drip irrigation and organic matter are required.', ar: 'التربة الحجرية الضحلة فوق الصخر الأم تقيّد حجم الجذور ومخزون المياه؛ يتطلب الري بالتنقيط الداعم وتحسين المادة العضوية.', fr: 'Lithosols peu profonds sur roche mère limitant l’enracinement et la RU ; irrigation goutte-à-goutte et matière organique nécessaires.' } },
     },
     regionalBenchmarks: [
       {
@@ -1564,6 +1569,7 @@ export const REGIONAL_CROP_BENCHMARKS: RegionalCropBenchmark[] = [
       luvisol: { multiplier: 1.18, compatibility: 'optimal', reason: { en: 'Terra rossa provides balanced iron and magnesium nutrition with good drainage.', ar: 'التربة الحمراء توفر تغذية متوازنة بالحديد والمغنيسيوم مع صرف ممتاز.', fr: 'Nutrition équilibrée en Fe/Mg et bon drainage.' } },
       solonchak: { multiplier: 0.35, compatibility: 'unsuitable', reason: { en: 'Citrus is extremely sensitive to sodium and chloride toxicities.', ar: 'أشجار الحمضيات شديدة الحساسية لسمية الصوديوم والكلور.', fr: 'Toxicité sévère aux chlorures et au sodium.' } },
       cambisol: { multiplier: 1.10, compatibility: 'good', reason: { en: 'Favorable orchard performance on foothill slopes.', ar: 'أداء ممتاز للبساتين في سفوح التلال.', fr: 'Bonne tenue en piémonts drainés.' } },
+      lithosol: { multiplier: 0.60, compatibility: 'challenging', reason: { en: 'Shallow lithosols over bedrock limit root volume and water holding capacity; supplemental drip irrigation and organic matter are required.', ar: 'التربة الحجرية الضحلة فوق الصخر الأم تقيّد حجم الجذور ومخزون المياه؛ يتطلب الري بالتنقيط الداعم وتحسين المادة العضوية.', fr: 'Lithosols peu profonds sur roche mère limitant l’enracinement et la RU ; irrigation goutte-à-goutte et matière organique nécessaires.' } },
     },
     regionalBenchmarks: [
       {
@@ -1604,6 +1610,7 @@ export const REGIONAL_CROP_BENCHMARKS: RegionalCropBenchmark[] = [
       fluvisol: { multiplier: 1.10, compatibility: 'good', reason: { en: 'High table olive caliber (Sigoise).', ar: 'حجم ثمار كبير لزيتون المائدة (السيقواز).', fr: 'Gros calibre pour olive de table (Sigoise).' } },
       arenosol: { multiplier: 0.90, compatibility: 'moderate', reason: { en: 'Requires localized drip; flourishes in Biskra oases.', ar: 'يتطلب رياً موضعياً بالتنقيط؛ يزدهر في واحات بسكرة.', fr: 'Nécessite du goutte-à-goutte; performant dans les oasis de Biskra.' } },
       solonchak: { multiplier: 0.70, compatibility: 'moderate', reason: { en: 'Moderate salt tolerance, but reduces fruit weight if ECe > 5.5 dS/m.', ar: 'تحمل معتدل للملوحة، لكنه يقلل وزن الثمار إذا تجاوزت 5.5 ديسي سيمنز/م.', fr: 'Tolérance modérée, mais baisse du poids du fruit si CEe > 5.5 dS/m.' } },
+      lithosol: { multiplier: 0.60, compatibility: 'challenging', reason: { en: 'Shallow lithosols over bedrock limit root volume and water holding capacity; supplemental drip irrigation and organic matter are required.', ar: 'التربة الحجرية الضحلة فوق الصخر الأم تقيّد حجم الجذور ومخزون المياه؛ يتطلب الري بالتنقيط الداعم وتحسين المادة العضوية.', fr: 'Lithosols peu profonds sur roche mère limitant l’enracinement et la RU ; irrigation goutte-à-goutte et matière organique nécessaires.' } },
     },
     regionalBenchmarks: [
       {
@@ -1644,6 +1651,7 @@ export const REGIONAL_CROP_BENCHMARKS: RegionalCropBenchmark[] = [
       vertisol: { multiplier: 0.65, compatibility: 'challenging', reason: { en: 'Heavy clay limits root aeration and promotes root rot under heavy flood irrigation.', ar: 'الطين الثقيل يحد من تهوية الجذور ويزيد من تعفنها عند الغمر.', fr: 'Argile trop lourde asphyxiante sous submersion.' } },
       luvisol: { multiplier: 0.80, compatibility: 'moderate', reason: { en: 'Outside climatic thermal optimum.', ar: 'خارج النطاق الحراري المثالي للنخيل.', fr: 'En dehors de l’optimum thermique saharien.' } },
       cambisol: { multiplier: 0.80, compatibility: 'moderate', reason: { en: 'Suboptimal thermal unit accumulation.', ar: 'تراكم وحدات حرارية غير كافٍ لنضج دقلة نور.', fr: 'Somme de températures insuffisante.' } },
+      lithosol: { multiplier: 0.60, compatibility: 'challenging', reason: { en: 'Shallow lithosols over bedrock limit root volume and water holding capacity; supplemental drip irrigation and organic matter are required.', ar: 'التربة الحجرية الضحلة فوق الصخر الأم تقيّد حجم الجذور ومخزون المياه؛ يتطلب الري بالتنقيط الداعم وتحسين المادة العضوية.', fr: 'Lithosols peu profonds sur roche mère limitant l’enracinement et la RU ; irrigation goutte-à-goutte et matière organique nécessaires.' } },
     },
     regionalBenchmarks: [
       {
@@ -1684,6 +1692,7 @@ export const REGIONAL_CROP_BENCHMARKS: RegionalCropBenchmark[] = [
       arenosol: { multiplier: 0.70, compatibility: 'challenging', reason: { en: 'Poor nodulation and low water holding capacity.', ar: 'ضعف العقد البكتيرية وانخفاض السعة التخزينية للمياه.', fr: 'Faible nodulation et dessèchement rapide.' } },
       solonchak: { multiplier: 0.30, compatibility: 'unsuitable', reason: { en: 'Legumes are extremely sensitive to chloride and osmotic shock.', ar: 'البقوليات شديدة الحساسية للكلوريدات والصدمات الأسموزية.', fr: 'Très forte intolérance à la salinité.' } },
       cambisol: { multiplier: 1.15, compatibility: 'good', reason: { en: 'Ideal crop in rotation with durum wheat.', ar: 'محصول مثالي في الدورة الزراعية مع القمح الصلب.', fr: 'Culture de coupure idéale en rotation avec le blé dur.' } },
+      lithosol: { multiplier: 0.60, compatibility: 'challenging', reason: { en: 'Shallow lithosols over bedrock limit root volume and water holding capacity; supplemental drip irrigation and organic matter are required.', ar: 'التربة الحجرية الضحلة فوق الصخر الأم تقيّد حجم الجذور ومخزون المياه؛ يتطلب الري بالتنقيط الداعم وتحسين المادة العضوية.', fr: 'Lithosols peu profonds sur roche mère limitant l’enracinement et la RU ; irrigation goutte-à-goutte et matière organique nécessaires.' } },
     },
     regionalBenchmarks: [
       {
@@ -1724,6 +1733,7 @@ export const REGIONAL_CROP_BENCHMARKS: RegionalCropBenchmark[] = [
       calcisol: { multiplier: 1.05, compatibility: 'good', reason: { en: 'Good color and blossom-end rot resistance with abundant calcium.', ar: 'لون جذاب ومقاومة لعفن الطرف الزهري بفضل وفرة الكالسيوم.', fr: 'Bonne coloration et résistance au cul noir grâce au calcium.' } },
       solonchak: { multiplier: 0.55, compatibility: 'challenging', reason: { en: 'Increases fruit sugar concentration but drastically cuts total fruit volume.', ar: 'يرفع تركيز السكر في الثمار لكنه يخفض الحجم الكلي بشدة.', fr: 'Augmente le sucre mais réduit drastiquement le calibre.' } },
       cambisol: { multiplier: 1.12, compatibility: 'good', reason: { en: 'Balanced field production.', ar: 'إنتاج حقلي متوازن.', fr: 'Production de plein champ équilibrée.' } },
+      lithosol: { multiplier: 0.60, compatibility: 'challenging', reason: { en: 'Shallow lithosols over bedrock limit root volume and water holding capacity; supplemental drip irrigation and organic matter are required.', ar: 'التربة الحجرية الضحلة فوق الصخر الأم تقيّد حجم الجذور ومخزون المياه؛ يتطلب الري بالتنقيط الداعم وتحسين المادة العضوية.', fr: 'Lithosols peu profonds sur roche mère limitant l’enracinement et la RU ; irrigation goutte-à-goutte et matière organique nécessaires.' } },
     },
     regionalBenchmarks: [
       {
@@ -1959,7 +1969,7 @@ export function calculateDynamicYieldCrossReference(
   }
 
   // 7. Management practices: Subsoiling & Amendments
-  if (customOverrides?.hasSubsoiling && (zone.soilClass === 'vertisol' || zone.compactionRisk === 'severe' || zone.compactionRisk === 'very_high')) {
+  if (customOverrides?.hasSubsoiling && (zone.soilClass === 'vertisol' || zone.compactionRisk === 'severe')) {
     const subsoilingBoost = 1.08;
     cumulativeMultiplier *= subsoilingBoost;
     factors.push({

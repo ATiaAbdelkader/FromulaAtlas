@@ -263,7 +263,7 @@ export const CROP_SALINITY_DATABASE: CropSalinityTolerance[] = [
 // ============================================================================
 
 export function WaterLabAnalyzer() {
-  const { language } = useTranslation();
+  const { language, isRTL } = useTranslation();
   const tr = (en: string, ar: string, fr: string) => copyFor(language, en, ar, fr);
   const isAr = language === 'ar';
   const isFr = language === 'fr';
@@ -499,16 +499,20 @@ Charge Balance Error: ${diagnostics.chargeBalanceErrorPct}% (${diagnostics.isCha
       sar,
       adjSAR,
       usslCode,
+      usslRisk: `${cDesc} / ${sDesc}`,
       cClass,
       cDesc,
       cDesc_ar,
       sClass,
       sDesc,
       sDesc_ar,
+      clToxRisk: cl_meq > 10 ? 'severe' : cl_meq > 4 ? 'moderate' : cl_meq > 2 ? 'slight' : 'none',
+      naToxRisk: na_meq > 15 ? 'severe' : na_meq > 8 ? 'moderate' : na_meq > 3 ? 'slight' : 'none',
+      boronRisk: boron > 2.0 ? 'severe' : boron > 1.0 ? 'moderate' : boron > 0.5 ? 'slight' : 'none',
       infiltrationRisk,
       hardnessCaCO3,
     };
-  }, [ph, ec, ca, mg, na, k, hco3, co3, cl, so4, no3]);
+  }, [ph, ec, ca, mg, na, k, hco3, co3, cl, so4, no3, boron]);
 
   // ==========================================================================
   // Crop Specific Toxicity & Yield Loss Impact

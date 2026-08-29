@@ -308,8 +308,13 @@ export function FarmerMarketBenchmarks({
     const summary = `${selectedCrop.nameEn} Harvest: ${crateCount} packages (${totalHarvestBatchKg} kg) @ ${todayPriceDzdKg} DZD/kg. Gross: ${totalGrossHarvestDzd.toLocaleString()} DZD. Transport: ${transportCostDzd.toLocaleString()} DZD. Net: ${netHarvestAfterTransportDzd.toLocaleString()} DZD.`;
 
     appendManualFieldRecord({
-      cropName: selectedCrop.nameEn,
-      notes: summary,
+      fieldName: selectedCrop.nameEn,
+      crop: selectedCrop.nameEn,
+      date: new Date().toISOString().slice(0, 10),
+      kind: 'harvest',
+      title: `${selectedCrop.nameEn} Harvest Recorded`,
+      summary,
+      amountDzd: totalGrossHarvestDzd,
     });
 
     setSavedBatchSuccess(true);
@@ -320,8 +325,13 @@ export function FarmerMarketBenchmarks({
     const summary = `CCLS Cereal Delivery: ${cclsDeliveredQx} Qx ${cclsCerealType.replace('_', ' ')}. PS: ${cclsPsKgHl} kg/hL, Moisture: ${cclsMoisturePct}%. Gross: ${cclsGrossPayoutDzd.toLocaleString()} DZD. Net after Freight: ${cclsNetAfterTransportDzd.toLocaleString()} DZD.`;
 
     appendManualFieldRecord({
-      cropName: 'Cereal (CCLS)',
-      notes: summary,
+      fieldName: 'Cereal (CCLS)',
+      crop: 'Cereal (CCLS)',
+      date: new Date().toISOString().slice(0, 10),
+      kind: 'harvest',
+      title: 'CCLS Cereal Delivery Recorded',
+      summary,
+      amountDzd: cclsGrossPayoutDzd,
     });
 
     setSavedBatchSuccess(true);

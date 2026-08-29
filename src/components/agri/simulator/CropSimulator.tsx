@@ -554,8 +554,8 @@ export function CropSimulator() {
             <div className="mt-5">
               <PredictiveYieldCalculator
                 cropId={scenario.cropId}
-                cropName={cropLabel(language, scenario.cropId, selectedProfile.name)}
-                cropEmoji={selectedProfile.emoji}
+                cropName={cropLabel(language, scenario.cropId, selectedProfile?.cropName ?? scenario.cropId)}
+                cropEmoji={selectedProfile?.emoji ?? '🌱'}
                 currentAreaHa={scenario.areaHa}
                 currentExpectedYieldTPerHa={scenario.expectedYieldTPerHa}
                 currentPlantingDate={scenario.plantingDate}

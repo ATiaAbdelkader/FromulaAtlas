@@ -137,14 +137,12 @@ export function CropPhenologyTimeline({
   // Dispatch stage task to field book / planner
   const handleAddStageTaskToBook = (task: PhenologyStage['tasks'][0], stage: PhenologyStage) => {
     appendManualFieldRecord({
-      date: new Date().toISOString().slice(0, 10),
-      plotId: `plot-${crop.id}`,
+      fieldName: `plot-${crop.id}`,
       crop: crop.name[lang],
-      stage: stage.name[lang],
-      activityType: task.type === 'irrigation' ? 'irrigation' : task.type === 'fertigation' ? 'fertilization' : 'other',
-      notes: `${task.title[lang]}: ${task.details[lang]} [Day ${task.timingDay} Phenology Plan]`,
-      operator: 'Farm Manager',
-      status: 'pending',
+      date: new Date().toISOString().slice(0, 10),
+      kind: task.type === 'irrigation' ? 'irrigation' : task.type === 'fertigation' ? 'input' : 'note',
+      title: task.title[lang],
+      summary: `${task.title[lang]}: ${task.details[lang]} [Day ${task.timingDay} Phenology Plan]`,
     });
 
     if (onSendTaskToPlanner) {

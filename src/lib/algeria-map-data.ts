@@ -750,7 +750,7 @@ export const ALGERIA_WILAYAS_DATA: WilayaAgroProfile[] = [
     salinityECeDsm: 2.2,
     waterHoldingCapacityMmPerM: 38,
     salinityRisk: 'moderate',
-    erosionRisk: 'very_high',
+    erosionRisk: 'severe',
     bioclimate: 'hyper_arid',
     annualRainfallMm: 75,
     avgTempSummer: 46,

@@ -103,7 +103,7 @@ const ALGERIAN_WILAYA_PRESETS: WilayaPreset[] = [
     availableGdd: 2600,
     annualRainfallPlusIrrigationMm: 600,
     springFrostRisk: 'moderate',
-    siroccoRisk: 'high',
+    siroccoRisk: 'extreme',
   },
 ];
 

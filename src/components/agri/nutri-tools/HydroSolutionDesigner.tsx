@@ -185,7 +185,7 @@ export function HydroSolutionDesigner() {
     const hco3 = typeof v.hco3 === 'number' ? v.hco3 : parseFloat(String(v.hco3 ?? '0')) || 0;
     if (hco3 > 0) {
       setMeq((prev) => ({ ...prev, Cl: Number(hco3.toFixed(2)) }));
-      setBridgeBanner({ hco3, source: bridgePayload.sourceTool });
+      setBridgeBanner({ hco3, source: bridgePayload.sourceToolId });
       toast({
         title: tr('Bridge Data Injected', 'تم استلام بيانات الجسر الأيوني', 'Données injectées via la passerelle'),
         description: `${tr('Received bicarbonate HCO₃⁻:', 'تم استيراد البيكربونات HCO₃⁻:', 'Bicarbonate HCO₃⁻ reçu :')} ${hco3.toFixed(2)} meq/L`,
@@ -501,8 +501,9 @@ Total Tank B Salts: ${fertilizerRecipe.totalTankBKg.toFixed(2)} kg
   };
 
   const handleSendToWaterLab = () => {
-    sendToBridge('water-lab', {
-      sourceTool: 'Hydroponic Solution Designer',
+    sendToBridge({
+      targetToolId: 'water-lab',
+      sourceToolId: 'Hydroponic Solution Designer',
       values: {
         ca: meq.Ca,
         mg: meq.Mg,

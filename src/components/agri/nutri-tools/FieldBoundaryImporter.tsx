@@ -484,7 +484,7 @@ function PolygonPreview({ boundary, bbox: bb }: { boundary: Boundary; bbox: Boun
             strokeWidth="1.5"
             vectorEffect="non-scaling-stroke"
           >
-            <title>{`${boundary.name} — ${fmtArea(metrics.areaM2)}`}</title>
+            <title>{boundary.name}</title>
           </path>
         ))}
         <g transform={`translate(${W - 22}, 16)`} className="text-muted-foreground">

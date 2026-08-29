@@ -847,6 +847,7 @@ export const TOOL_EXPLAINER_DATA: Record<ToolExplainerCategory, ToolExplainerTop
       },
     ],
     algerianContextEn: 'Critical for the mountainous Tell Atlas, Dahra, and Medea hillsides, where torrential autumn storms wash away topsoil into dam reservoirs (siltation of dams like Keddara and Beni Haroun).',
+    algerianContextFr: 'Critique pour les montagnes de l’Atlas Tellien, du Dahra et des collines de Médéa, où les orages automnaux torrentiels lessivent la terre arable vers les retenues de barrages (envasement de Keddara et Beni Haroun).',
     algerianContextAr: 'بالغ الأهمية لمرتفعات الأطلس التلي والظهرة والمدية لحماية التربة الخصبة من الانجراف ومنع توحل السدود (سد بني هارون وقدارة).',
     practicalTips: [
       {

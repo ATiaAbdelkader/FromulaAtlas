@@ -860,10 +860,10 @@ export default function AlgeriaAdvancedGISTools({
                 <div className="space-y-2.5">
                   <div className="flex items-center justify-between gap-2">
                     <span className="rounded-lg bg-emerald-100 px-2.5 py-0.5 text-xs font-bold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                      {c.wilayaName} • {c.allocatedSurfaceHa.toLocaleString()} ha
+                      {c.wilayaName[lang] || c.wilayaName.fr} • {c.allocatedAreaHa.toLocaleString()} ha
                     </span>
                     <span className="text-xs font-semibold text-slate-400">
-                      {c.operatorType === 'foreign_bilateral' ? '🤝 Partenariat International' : '🇩🇿 Portefeuille National'}
+                      {c.agencyType === 'GIPLAIT_BALADNA' ? '🤝 Partenariat International' : '🇩🇿 Portefeuille National'}
                     </span>
                   </div>
 
@@ -872,20 +872,30 @@ export default function AlgeriaAdvancedGISTools({
                   </h4>
 
                   <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                    {c.targetObjective[lang] || c.targetObjective.fr}
+                    {c.description[lang] || c.description.fr}
                   </p>
 
                   <div className="grid grid-cols-2 gap-2 pt-1 text-xs">
                     <div className="rounded-xl bg-slate-50 p-2 dark:bg-slate-800/60">
                       <span className="text-[10px] text-slate-400 block">{lang === 'ar' ? 'المحاصيل المستهدفة' : 'Cultures phares'}</span>
                       <span className="font-semibold text-emerald-700 dark:text-emerald-300">
-                        {c.keyCrops.join(' • ')}
+                        {c.strategicPillar === 'cereal_pivot'
+                          ? 'Blé dur • Céréales'
+                          : c.strategicPillar === 'dairy_mega_farm'
+                          ? 'Luzerne • Maïs fourrage'
+                          : c.strategicPillar === 'sugar_beet'
+                          ? 'Betterave sucrière'
+                          : c.strategicPillar === 'date_export'
+                          ? 'Palmier dattier'
+                          : c.strategicPillar === 'arboriculture'
+                          ? 'Arboriculture'
+                          : 'Colza • Oléoprotéagineux'}
                       </span>
                     </div>
                     <div className="rounded-xl bg-slate-50 p-2 dark:bg-slate-800/60">
                       <span className="text-[10px] text-slate-400 block">{lang === 'ar' ? 'نظام الري المعتمد' : 'Mode d’irrigation'}</span>
                       <span className="font-semibold text-slate-700 dark:text-slate-200">
-                        {c.irrigationTech}
+                        {lang === 'ar' ? `محور دوار ×${c.pivotCountEstimate}` : `Pivot × ${c.pivotCountEstimate}`}
                       </span>
                     </div>
                   </div>
@@ -900,7 +910,7 @@ export default function AlgeriaAdvancedGISTools({
                     <span>→</span>
                   </button>
                   <span className="text-[11px] font-mono text-slate-400">
-                    {c.agencyFramework}
+                    {c.agencyType}
                   </span>
                 </div>
               </div>
@@ -942,7 +952,7 @@ export default function AlgeriaAdvancedGISTools({
               <div className="flex items-baseline gap-2">
                 <span
                   className={`text-lg font-extrabold capitalize ${
-                    riskProfile.springFrostRisk === 'high'
+                    riskProfile.springFrostRisk === 'critical'
                       ? 'text-rose-600'
                       : riskProfile.springFrostRisk === 'moderate'
                       ? 'text-amber-600'
