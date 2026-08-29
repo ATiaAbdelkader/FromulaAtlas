@@ -69,7 +69,15 @@ export function FarmStats() {
         } catch { /* ignore */ }
       }
 
-      // Irrigation zones — from Irrigation Scheduler store
+      // Irrigation zones — from Irrigation Scheduler store.
+      // Important: the store ships with prefabricated demo data (1 Main
+      // Controller, 2 zones 'Front Lawn' + 'Vegetable Garden', 2 schedules
+      // 'Morning' + 'Evening'). For a newly-onboarded farmer who hasn't
+      // configured their own irrigation yet, displaying "2 zones / 2
+      // schedules" is misleading. So we only count zones + schedules if
+      // the farmer has explicitly renamed at least one zone away from the
+      // default 'Front Lawn' / 'Vegetable Garden' names (signal of real
+      // customization).
       let zoneCount = 0;
       let schedCount = 0;
       try {
@@ -77,10 +85,28 @@ export function FarmStats() {
         if (raw) {
           const sys = JSON.parse(raw);
           if (sys.controllers) {
+            const defaultZoneNames = new Set(['Front Lawn', 'Vegetable Garden']);
+            let hasCustomZone = false;
             for (const c of sys.controllers) {
-              zoneCount += c.zones?.length || 0;
               for (const z of (c.zones || [])) {
-                schedCount += z.schedules?.length || 0;
+                if (z.name && !defaultZoneNames.has(z.name)) {
+                  hasCustomZone = true;
+                  break;
+                }
+              }
+              if (hasCustomZone) break;
+            }
+            // Only count if the farmer has customized at least one zone,
+            // OR if the controller is not 'Main Controller' (renamed).
+            const hasCustomController = sys.controllers.some(
+              (c: any) => c.name && c.name !== 'Main Controller',
+            );
+            if (hasCustomZone || hasCustomController) {
+              for (const c of sys.controllers) {
+                zoneCount += c.zones?.length || 0;
+                for (const z of (c.zones || [])) {
+                  schedCount += z.schedules?.length || 0;
+                }
               }
             }
           }

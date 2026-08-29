@@ -135,7 +135,9 @@ function useFarmDecisionContext(active: boolean): FarmDecisionContext {
           return;
         }
 
-        // Reverse-lookup nearest wilaya for display name
+        // Reverse-lookup nearest wilaya for display name (skipped if the
+        // user is more than 300 km from any Algerian wilaya, which means
+        // they're likely outside Algeria).
         let best: { name: string; distanceKm: number } | null = null;
         for (const w of ALL_58_WILAYAS) {
           const x = (lng - w.lng) * Math.cos(((lat + w.lat) / 2) * Math.PI / 180);
@@ -148,7 +150,7 @@ function useFarmDecisionContext(active: boolean): FarmDecisionContext {
             };
           }
         }
-        setLocationName(best?.name ?? null);
+        setLocationName(best && best.distanceKm <= 300 ? best.name : null);
 
         const f = await getForecast(lat, lng, { days: 4 });
         if (!cancelled) setForecast(f);

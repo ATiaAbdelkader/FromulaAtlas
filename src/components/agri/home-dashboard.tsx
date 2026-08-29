@@ -65,6 +65,10 @@ function copyFor(language: Language, en: string, fr: string, ar: string) {
  * haversine distance. Used to surface a human-readable location name next
  * to the "Current Weather" header when the user has granted location but
  * we don't have an explicit city name stored.
+ *
+ * Returns null when the closest wilaya is more than 300 km away — this
+ * means the user is likely outside Algeria and surfacing a misleading
+ * Algerian wilaya name would be worse than showing nothing.
  */
 function findNearestWilayaName(lat: number, lng: number, language: Language): string | null {
   let best: { name: string; distanceKm: number } | null = null;
@@ -81,7 +85,11 @@ function findNearestWilayaName(lat: number, lng: number, language: Language): st
       };
     }
   }
-  return best?.name ?? null;
+  // Sanity check: don't surface a wilaya name if the user is far outside
+  // Algeria (e.g. testing from Europe). 300 km covers all of Algeria +
+  // a small buffer.
+  if (!best || best.distanceKm > 300) return null;
+  return best.name;
 }
 
 type RoleCopy = { en: string; fr: string; ar: string };
