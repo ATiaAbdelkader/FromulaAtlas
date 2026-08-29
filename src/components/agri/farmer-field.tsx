@@ -35,6 +35,7 @@ import { FarmerCalculators } from '@/components/agri/farmer-calculators';
 import { FarmerMarketBenchmarks } from '@/components/agri/farmer-market-benchmarks';
 import { FarmerSymptomChecker } from '@/components/agri/farmer-symptom-checker';
 import { AgroVisionHub } from '@/components/agri/agro-vision-hub';
+import { FarmPilotDecisionCard } from '@/components/agri/farmpilot-decision-card';
 import { getForecast, wmoDescription, type ForecastResult } from '@/lib/open-meteo';
 import { formatWeatherDate, localizedWeatherLabel } from '@/lib/weather-localization';
 import { CROP_LIFECYCLES, stageForDay } from '@/lib/crop-lifecycle';
@@ -241,6 +242,17 @@ export function FarmerField({ onOpenTool, onNavigate }: FarmerFieldProps) {
           </div>
         </div>
       </div>
+
+      {/* 0. FARMPILOT DECISION INTELLIGENCE — irrigation + fertilizer + crop recommendation + provenance */}
+      <FarmPilotDecisionCard
+        cropId={profile.crop}
+        plantingDate={profile.plantingDate}
+        areaHa={profile.area || 0.5}
+        forecast={forecast}
+        isLiveForecast={Boolean(today?.et0)}
+        sunMode={sunMode}
+        onOpenFarmPilotWizard={() => onNavigate('farmpilot')}
+      />
 
       {/* 1. SMART WEATHER & GO / NO-GO SPRAY ADVISOR (WITH TTS VOICE) */}
       <FarmerWeatherAdvisor

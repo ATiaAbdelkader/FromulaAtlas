@@ -861,3 +861,55 @@ Stage Summary:
 - Live weather chip in header shows current temp + ET₀ + rainfall at a glance
 - All changes trilingual, RTL-safe, mobile-first
 - AUDIT-TRACKER.md updated with P3-2 entry
+
+---
+Task ID: option-b-merge-farmpilot-into-myfield
+Agent: main (Super Z)
+Task: Option B — port FarmPilot's decision engine INTO My Field
+
+Work Log:
+- Created src/components/agri/farmpilot-decision-card.tsx (~440 lines):
+  * FarmPilotDecisionCard component with 3 cards:
+    1. Today's Decision — irrigation (m³ + duration) + fertilizer (kg/ha +
+       stage split) from calculateIrrigation() and calculateFertilizer()
+       using My Field's live forecast ET₀
+    2. Crop Recommendation preview — top 3 ranked crops from
+       recommendCrops() with medals, score %, strengths, confidence
+    3. Atlas Estimates status — provenance counts (measured/Atlas/unknown)
+  * DecisionRow sub-component with WHY? toggle (ET₀/Kc/ETc/efficiency/
+    rainfall/stage breakdown) + provenance note + confidence badge
+  * ConfidenceBadgeInline + AtlasEstimatesStatusCard helpers
+  * mapLifecycleIdToFarmPilotId() — translates CROP_LIFECYCLES IDs
+    (used by My Field's farm profile) to FARMPILOT_CROPS IDs (used by
+    the engine). Handles wheat → wheat_durum and bell-pepper →
+    bell_pepper mismatches.
+  * Uses My Field's existing forecast (no duplicate fetch)
+  * Uses My Field's sunMode prop for high-contrast outdoor display
+  * Deep-links to FarmPilot tab via onOpenFarmPilotWizard callback
+- Wired FarmPilotDecisionCard into FarmerField (farmer-field.tsx):
+  * Imported the component
+  * Mounted it at position 0 (right after top banner, before
+    FarmerWeatherAdvisor) so decision intelligence is the first thing
+    the farmer sees
+  * Passes: cropId, plantingDate, areaHa, forecast, isLiveForecast,
+    sunMode, onOpenFarmPilotWizard → onNavigate('farmpilot')
+- FarmPilot tab remains as a "wizard" launched from My Field's
+  "Open FarmPilot wizard" button — the full decision flow (soil/water
+  entry, plan creation, calendar, economics) lives there
+
+Verification:
+  npx tsc --noEmit     -> 0 errors
+  npm run test:domain  -> 'All deterministic domain suites passed.'
+  npx next build       -> 'Compiled successfully in 38.4s'
+
+Stage Summary:
+- My Field now has BOTH operational depth (QuickLogger, calculators,
+  symptom checker, computer vision, market benchmarks, sun mode,
+  audio brief, TTS) AND decision intelligence (FarmPilot engine,
+  provenance badges, confidence indicators, WHY? buttons, crop
+  recommendation scorer)
+- FarmPilot tab remains as a wizard for the full guided flow
+  (recommend → soil → water → plan → today → calendar → economics)
+- One tool, one mental model — farmer gets decision intelligence +
+  operational tools in My Field, with FarmPilot as the deep-dive wizard
+- AUDIT-TRACKER.md updated with P3-3 entry
