@@ -132,6 +132,7 @@ import { CropRecommendationEngine } from '@/components/agri/crop-recommendation-
 import { SoilSensorDashboard } from '@/components/agri/soil-sensor-dashboard';
 import { ClimateScenarioSimulator } from '@/components/agri/climate-scenario-simulator';
 import { YourGuide } from '@/components/agri/your-guide';
+import { FarmPilot } from '@/components/agri/farmpilot/farmpilot';
 
 
 /** French labels for the app shell's farm and insights tool index. */
@@ -431,6 +432,7 @@ export default function Page() {
               {visibleTabs.includes('farm') && <TabButton active={activeTab === 'farm'} onClick={() => setActiveTab('farm')} icon={Tractor} label={t.tabFarm} />}
               {visibleTabs.includes('calendar') && <TabButton active={activeTab === 'calendar'} onClick={() => setActiveTab('calendar')} icon={CalendarDays} label={tr('Calendar', 'التقويم', language)} />}
               {visibleTabs.includes('myfield') && <TabButton active={activeTab === 'myfield'} onClick={() => setActiveTab('myfield')} icon={Sprout} label={tr('My Field', 'حقلتي', language)} />}
+              {visibleTabs.includes('farmpilot') && <TabButton active={activeTab === 'farmpilot'} onClick={() => setActiveTab('farmpilot')} icon={Sprout} label={tr('FarmPilot', 'مساعد المزرعة', language)} />}
               {visibleTabs.includes('simulator') && <TabButton active={activeTab === 'simulator'} onClick={() => setActiveTab('simulator')} icon={FlaskConical} label={tr('Simulator', 'المحاكي', language)} />}
               {visibleTabs.includes('insights') && <TabButton active={activeTab === 'insights'} onClick={() => setActiveTab('insights')} icon={Sparkles} label={t.tabInsights} />}
               {visibleTabs.includes('help') && <TabButton active={activeTab === 'help'} onClick={() => setActiveTab('help')} icon={MessageCircle} label={tr('Help', 'مساعدة', language)} />}
@@ -808,6 +810,13 @@ export default function Page() {
         </main>
       )}
 
+      {/* FARMPILOT TAB — Your Farm Decision Assistant */}
+      {activeTab === 'farmpilot' && (
+        <main className="flex-1 max-w-[1200px] mx-auto w-full p-4 sm:p-6 pb-20 sm:pb-6">
+          <FarmPilot />
+        </main>
+      )}
+
       {/* ABOUT TAB — founder profile + mission */}
       {activeTab === 'about' && (
         <main className="flex-1 max-w-[1000px] mx-auto w-full p-4 sm:p-6 pb-20 sm:pb-6">
@@ -899,8 +908,8 @@ function MobileBottomNav({ level, activeTab, onTabChange, onSearch }: {
   const mobileTabIds = getUserLevelTabs(level);
   const tabs: { id: TabId; icon: typeof Home; label: string }[] = mobileTabIds.map(id => ({
     id,
-    icon: id === 'home' ? Home : id === 'farm' ? Tractor : id === 'myfield' ? Sprout : id === 'help' ? MessageCircle : id === 'insights' ? Sparkles : id === 'tools' ? Wrench : id === 'formulas' ? BookOpen : id === 'about' ? Info : id === 'calendar' ? CalendarDays : id === 'guide' ? Compass : id === 'simulator' ? FlaskConical : Layers,
-    label: id === 'home' ? t.tabHome : id === 'farm' ? t.tabFarm : id === 'myfield' ? tr('My Field', 'حقلتي', language) : id === 'help' ? tr('Help', 'مساعدة', language) : id === 'insights' ? t.tabInsights : id === 'tools' ? t.tabTools : id === 'formulas' ? t.tabFormulas : id === 'about' ? t.tabAbout : id === 'calendar' ? tr('Calendar', 'التقويم', language) : id === 'guide' ? tr('Guide', 'دليل', language) : id === 'simulator' ? tr('Simulator', 'المحاكي', language) : tr('Tools', 'الأدوات', language),
+    icon: id === 'home' ? Home : id === 'farm' ? Tractor : id === 'myfield' ? Sprout : id === 'help' ? MessageCircle : id === 'farmpilot' ? Sprout : id === 'insights' ? Sparkles : id === 'tools' ? Wrench : id === 'formulas' ? BookOpen : id === 'about' ? Info : id === 'calendar' ? CalendarDays : id === 'guide' ? Compass : id === 'simulator' ? FlaskConical : Layers,
+    label: id === 'home' ? t.tabHome : id === 'farm' ? t.tabFarm : id === 'myfield' ? tr('My Field', 'حقلتي', language) : id === 'help' ? tr('Help', 'مساعدة', language) : id === 'farmpilot' ? tr('FarmPilot', 'مساعد المزرعة', language) : id === 'insights' ? t.tabInsights : id === 'tools' ? t.tabTools : id === 'formulas' ? t.tabFormulas : id === 'about' ? t.tabAbout : id === 'calendar' ? tr('Calendar', 'التقويم', language) : id === 'guide' ? tr('Guide', 'دليل', language) : id === 'simulator' ? tr('Simulator', 'المحاكي', language) : tr('Tools', 'الأدوات', language),
   }));
   return (
     <nav aria-label={tr('Mobile navigation', 'التنقل على الهاتف', language)} dir={language === 'ar' ? 'rtl' : 'ltr'} className="sm:hidden fixed bottom-0 inset-x-0 z-40 border-t bg-background/95 backdrop-blur-md safe-area-pb">

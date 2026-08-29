@@ -46,7 +46,9 @@ Commit at time of audit: `bf5990a` (fix: 3 runtime errors — useLanguage, isRTL
 
 ### P3 — Low (nice-to-have)
 
-_None tracked yet._
+| ID | Finding | Status | Resolved in | Notes |
+|----|---------|--------|-------------|-------|
+| P3-1 | New major tool "FarmPilot" integrated into Farmer (and Manager) mode | RESOLVED | (this commit) | Adds a top-level "FarmPilot" tab to Farmer + Manager navigation. Implements all 16 MVP features from the master prompt: (1) farm context integration via useFarmProfile(); (2) soil information (Basic + Advanced modes); (3) water information with FAO-29 classification; (4) Atlas estimates with explicit provenance tags (Measured/Farmer estimate/Atlas estimate/Unknown); (5) 14-crop FarmPilot database with FAO-56 Kc stages; (6) multi-factor recommendation engine (8 weighted factors: climate/soil/water/salinity/season/system/water-req/economics); (7) "I already know what I want to plant" reverse evaluation; (8) planting calculator (density/seed/cycle); (9) irrigation calculator ETc = ETo × Kc with efficiency + rainfall + duration; (10) fertilizer calculator NPK product → kg/ha with stage-split applications; (11) dynamic crop calendar from planting date; (12) Today's Tasks engine (irrigation/fertilization/inspection/field-work); (13) basic economics (revenue/cost/margin/ROI/break-even); (14) WHY? buttons on every recommendation; (15) High/Medium/Low confidence indicators; (16) demo farm mode (El Oued, 0.5 ha sandy, drip, potato) clearly labelled as Atlas estimates. All values carry source provenance; estimates are never presented as measured. Trilingual (EN/FR/AR), RTL-safe, mobile-first, PWA-friendly (localStorage persistence). Reuses: useFarmProfile, ALL_58_WILAYAS, useTranslation/copyFor, PROVENANCE/CONFIDENCE badges. Does not duplicate existing CropRecommendationEngine — operates on FarmPilot's own 14-crop database with FarmPilot-specific Kc/N-uptake/stage parameters. |
 
 ---
 

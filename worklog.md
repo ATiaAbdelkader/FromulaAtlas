@@ -710,3 +710,89 @@ Stage Summary:
 - 1 reusable script persisted: scripts/add-lithosol-to-multipliers.py
 - AUDIT-TRACKER.md updated: P2-3 RESOLVED, P2-4 WONTFIX (intentional design)
 - Ready for commit + (eventual) push
+
+---
+Task ID: farmpilot-integration
+Agent: main (Super Z)
+Task: Add FarmPilot — major new tool inside Farmer mode (40-section master prompt)
+
+Work Log:
+- Inspected existing patterns: user-level.ts (TabId type + getUserLevelTabs),
+  app/page.tsx (TabButton + main render blocks), FarmProfile shape, crop-localization,
+  ALL_58_WILAYAS, useTranslation/copyFor, ALGERIA_CROP_SUITABILITY_RULES (existing
+  crop data — FarmPilot uses its own 14-crop database to avoid coupling)
+- Built src/lib/farmpilot-data.ts (~480 lines):
+  * ProductionSystem union (open_field / greenhouse / oasis / hydroponic) with
+    kcMultiplier + irrigationEfficiencyMultiplier
+  * Provenance system (measured / farmer_estimate / atlas_estimate / unknown)
+    with trilingual badges (🟢🟡🔵🔴)
+  * Confidence system (high / medium / low) with trilingual badges
+  * SoilData interface (texture/ph/ec/om/N/P/K basic + CEC/SAR/CaCO3 advanced)
+  * WaterData interface (pH/EC/TDS/Na/Cl/Ca/Mg/HCO3/SAR/B)
+  * WaterSuitability classification (suitable / moderate / significant)
+  * 14-crop FarmPilot database (potato, tomato, onion, carrot, wheat_durum,
+    barley, maize, lettuce, bell_pepper, cucumber, strawberry, alfalfa,
+    date_palm, cucumber_greenhouse) — each with FAO-56 Kc stages, NPK uptake
+    fractions, planting windows, water demand, indicative economics
+  * RecommendationWeights (8 factors, configurable, defaults baked in)
+  * DEMO_FARM constant (El Oued 0.5 ha sandy drip potato — all Atlas estimates)
+- Built src/lib/farmpilot-engine.ts (~530 lines, pure functions, no React):
+  * atlasEstimateSoil() / atlasEstimateWater() — fallback values from
+    ALL_58_WILAYAS when farmer has no measurement
+  * classifyWater() — FAO-29 Ayers & Westcot framework (EC/SAR/Cl/B thresholds)
+  * recommendCrops() — multi-factor weighted scorer
+  * scoreCrop() — 8 factors (climate/soil/water/salinity/season/system/water-req/
+    economics) with per-factor reasons in EN/FR/AR
+  * calculateIrrigation() — ETc = ETo × Kc with efficiency multiplier,
+    effective rainfall deduction, irrigation duration from flow rate
+  * getStageProgression() / getActiveStage() — date-based stage timeline
+  * calculateFertilizer() — NPK product → kg/ha with stage-split applications
+    using cumulative N uptake fractions
+  * calculatePlanting() — total plants, seed kg, density, cycle length
+  * calculateEconomics() — revenue/cost/margin/ROI/break-even/cost-per-kg
+  * generateTodayTasks() — irrigation/fertilization/inspection/field-work
+    based on active crop stage
+  * generateCalendar() — week-by-week plan from planting date
+- Built src/components/agri/farmpilot/farmpilot.tsx (~1300 lines, single file):
+  * FarmPilot shell with 8 views: Home / Recommend / Soil / Water / Plan /
+    Today / Calendar / Economics
+  * Header with farm summary (location/area/system/crop/active stage)
+  * HomeView with greeting + today's snapshot + 7 action cards
+  * RecommendView with ranked crop cards (medals, score %, strengths/watch-outs,
+    expandable factors, WHY? button, "I already know" reverse evaluation)
+  * SoilView with Basic/Advanced toggle + per-field provenance picker +
+    Atlas estimate button
+  * WaterView with 10 parameters + classification card
+  * PlanView with planting/irrigation/fertilizer calculators + stage timeline
+  * TodayView with task cards (toggle complete, WHY? button, confidence)
+  * CalendarView with week-by-week plan (current week highlighted)
+  * EconomicsView with editable inputs + 4 stat cards (revenue/cost/margin/ROI)
+    + 3 stat cards (margin/ha, cost/kg, break-even)
+  * WhyCard reusable component with WHY? + CALCULATION toggles
+  * ConfidenceBadge / ConfidenceBadgeInline / ProvenanceBadge helpers
+  * Demo mode toggle in header (clearly labelled "DEMO DATA")
+  * All text trilingual via copyFor(language, en, ar, fr)
+  * All RTL-safe (logical CSS properties, dir="rtl" on root)
+  * Mobile-first (grid-cols-1 → sm:grid-cols-2 → lg:grid-cols-3)
+- Wired 'farmpilot' tab into the navigation:
+  * user-level.ts: added 'farmpilot' to TabId union + Farmer + Manager tab lists
+    (placed right after 'home' for prominent access)
+  * app/page.tsx: imported FarmPilot, added TabButton (desktop nav),
+    added main render block, added to mobile nav (icon + label mapping)
+  * scripts/test-user-level-tool-visibility.ts: updated expected tab lists
+- Fixed TypeScript generic typing issue in SoilField (loosened value type to
+  string | number | undefined to avoid union propagation problems)
+
+Verification:
+  npx tsc --noEmit     -> 0 errors
+  npm run test:domain  -> 'All deterministic domain suites passed.'
+  npx next build       -> 'Compiled successfully in 34.6s'
+
+Stage Summary:
+- New tab 'farmpilot' live in Farmer + Manager navigation
+- 14-crop FarmPilot database + 8-factor recommendation engine
+- All 16 MVP features from the master prompt implemented
+- Trilingual, RTL-safe, mobile-first, PWA-friendly
+- Demo farm mode for instant testing without entering real data
+- AUDIT-TRACKER.md updated with P3-1 entry
+- Ready for commit + push
