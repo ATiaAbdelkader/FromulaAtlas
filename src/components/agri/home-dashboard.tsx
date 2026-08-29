@@ -21,8 +21,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import {
   Cloud, Sun, Droplets, MapPin, RefreshCw, AlertTriangle, CheckCircle2,
   Sprout, Clock, Sparkles, Tractor, BookOpen, Wrench, Pin,
-  ArrowRight, Zap, Calendar, Thermometer, Wind, CloudRain, Activity, Radio,
-  SlidersHorizontal,
+  ArrowRight, Zap, Calendar, CalendarDays, Thermometer, Wind, CloudRain, Activity, Radio,
+  SlidersHorizontal, FlaskConical,
 } from 'lucide-react';
 import {
   TelemetryThresholdsDialog,
@@ -51,12 +51,37 @@ import { FREE_TOOL_COUNT, FORMULA_COUNT } from '@/lib/catalog-stats';
 import { localizeToolEntry } from '@/lib/tool-registry';
 import { formatWeatherDate, localizedWeatherLabel } from '@/lib/weather-localization';
 import { localizedCropName } from '@/lib/crop-localization';
+import { ALL_58_WILAYAS } from '@/lib/algeria-wilayas-58';
 
 const FARM_PROFILE_KEY = 'farm_profile_v1';
 const LAST_LOC_KEY = 'et_tracker_last_loc_v1';
 
 function copyFor(language: Language, en: string, fr: string, ar: string) {
   return language === 'ar' ? ar : language === 'fr' ? fr : en;
+}
+
+/**
+ * Reverse-lookup the nearest Algerian wilaya by lat/lng using a simple
+ * haversine distance. Used to surface a human-readable location name next
+ * to the "Current Weather" header when the user has granted location but
+ * we don't have an explicit city name stored.
+ */
+function findNearestWilayaName(lat: number, lng: number, language: Language): string | null {
+  let best: { name: string; distanceKm: number } | null = null;
+  for (const w of ALL_58_WILAYAS) {
+    // Approximate haversine (equirectangular projection is good enough for
+    // small distances inside a single country).
+    const x = (lng - w.lng) * Math.cos(((lat + w.lat) / 2) * Math.PI / 180);
+    const y = (lat - w.lat);
+    const distanceKm = Math.sqrt(x * x + y * y) * 111;
+    if (!best || distanceKm < best.distanceKm) {
+      best = {
+        name: language === 'ar' ? w.nameAr : language === 'fr' ? w.nameFr : w.nameEn,
+        distanceKm,
+      };
+    }
+  }
+  return best?.name ?? null;
 }
 
 type RoleCopy = { en: string; fr: string; ar: string };
@@ -335,6 +360,10 @@ export function HomeDashboard({ level, onNavigate, onOpenTool, onOpenSearch }: H
   const [forecast, setForecast] = useState<ForecastResult | null>(null);
   const [weatherLoading, setWeatherLoading] = useState(false);
   const [weatherError, setWeatherError] = useState<string | null>(null);
+  // Location name surfaced next to "Current Weather" — reverse-looked-up
+  // from lat/lng against the 58 Algerian wilayas when no explicit name
+  // is stored. Updated every time we fetch weather.
+  const [locationName, setLocationName] = useState<string | null>(null);
   const [dataVersion, setDataVersion] = useState(0);
   const [isPulsing, setIsPulsing] = useState(false);
   const [recent, setRecent] = useState<ToolEntry[]>([]);
@@ -405,8 +434,15 @@ export function HomeDashboard({ level, onNavigate, onOpenTool, onOpenSearch }: H
 
       if (lat === undefined || lng === undefined) {
         setForecast(null);
+        setLocationName(null);
         return;
       }
+
+      // Reverse-lookup the nearest Algerian wilaya so we can surface a
+      // human-readable location name next to "Current Weather" without
+      // requiring an extra geocoding API call.
+      const wilayaName = findNearestWilayaName(lat, lng, language);
+      setLocationName(wilayaName);
 
       const f = await getForecast(lat, lng, { days: 4 });
       setForecast(f);
@@ -418,7 +454,7 @@ export function HomeDashboard({ level, onNavigate, onOpenTool, onOpenSearch }: H
     } finally {
       setWeatherLoading(false);
     }
-  }, []);
+  }, [language]);
 
   useEffect(() => { fetchWeather(); }, [fetchWeather]);
 
@@ -522,6 +558,13 @@ export function HomeDashboard({ level, onNavigate, onOpenTool, onOpenSearch }: H
               <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                 <MapPin className="h-3 w-3" /> {copyFor(language, 'Current Weather', 'Météo actuelle', 'الطقس الحالي')}
               </div>
+              {/* Show the nearest wilaya name once location is resolved */}
+              {locationName && (
+                <span className="text-xs font-semibold text-foreground normal-case tracking-normal flex items-center gap-1">
+                  <span className="text-muted-foreground">·</span>
+                  <span>{locationName}</span>
+                </span>
+              )}
               {forecast && (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
@@ -864,14 +907,16 @@ export function HomeDashboard({ level, onNavigate, onOpenTool, onOpenSearch }: H
                     {Math.max(0, today.et0 - today.precipitationSum * 0.8).toFixed(1)} mm
                   </span>
                 </motion.div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => onOpenTool('farm', 'collapse_et_tracker')}
-                  className="w-full text-[10px] h-7 mt-2 gap-1"
-                >
-                  {copyForLevel(language, level, { en: 'Open ET Tracker', fr: 'Ouvrir le suivi de l’ET₀', ar: 'افتح متعقّب التبدّر' }, { en: 'Open water operations', fr: 'Ouvrir les opérations hydriques', ar: 'افتح عمليات المياه' }, { en: 'Inspect ET₀ signal', fr: 'Inspecter le signal ET₀', ar: 'افحص مؤشر ET₀' })} <ArrowRight className="h-3 w-3" />
-                </Button>
+                {level !== 'farmer' && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => onOpenTool('farm', 'collapse_et_tracker')}
+                    className="w-full text-[10px] h-7 mt-2 gap-1"
+                  >
+                    {copyForLevel(language, level, { en: 'Open ET Tracker', fr: 'Ouvrir le suivi de l’ET₀', ar: 'افتح متعقّب التبدّر' }, { en: 'Open water operations', fr: 'Ouvrir les opérations hydriques', ar: 'افتح عمليات المياه' }, { en: 'Inspect ET₀ signal', fr: 'Inspecter le signal ET₀', ar: 'افحص مؤشر ET₀' })} <ArrowRight className="h-3 w-3" />
+                  </Button>
+                )}
               </div>
             </>
           ) : (
@@ -881,54 +926,30 @@ export function HomeDashboard({ level, onNavigate, onOpenTool, onOpenSearch }: H
       </section>
 
       {/* =================================================================== */}
-      {/* 7-Day Soil Moisture & ET₀ Trend Analysis (Open-Meteo) */}
+      {/* 7-Day Soil Moisture & ET₀ Trend Analysis (Open-Meteo) — hidden for */}
+      {/* Farmer mode (graph is too technical); visible for Manager/Professional. */}
       {/* =================================================================== */}
-      <section>
-        <SoilMoistureTrendChart
-          lat={profile.location?.lat ?? 36.75}
-          lng={profile.location?.lng ?? 3.05}
-          language={language}
-          level={level}
-          onNavigate={(tab) => onNavigate(tab as TabId)}
-        />
-      </section>
+      {level !== 'farmer' && (
+        <section>
+          <SoilMoistureTrendChart
+            lat={profile.location?.lat ?? 36.75}
+            lng={profile.location?.lng ?? 3.05}
+            language={language}
+            level={level}
+            onNavigate={(tab) => onNavigate(tab as TabId)}
+            onOpenTool={(tab, storageKey) => onOpenTool(tab as TabId, storageKey)}
+          />
+        </section>
+      )}
 
       {/* =================================================================== */}
-      {/* Quick actions */}
+      {/* Quick Actions section removed — see ActionCards in level-home.tsx */}
+      {/* for the equivalent per-level shortcut grid (Plan one crop / Will I */}
+      {/* make money? / Record an activity). The old 4-card Quick Actions grid */}
+      {/* had multiple issues: navigated to 'insights' (not in Farmer tabs), */}
+      {/* duplicated ActionCards, and confused the home dashboard layout. */}
       {/* =================================================================== */}
-      <section>
-        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{copyForLevel(language, level, { en: 'Quick Actions', fr: 'Actions rapides', ar: 'إجراءات سريعة' }, { en: 'Operations Shortcuts', fr: 'Raccourcis opérationnels', ar: 'اختصارات العمليات' }, { en: 'Analysis Actions', fr: 'Actions d’analyse', ar: 'إجراءات التحليل' })}</div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          <QuickAction
-            icon={Sprout}
-            color="#16a34a"
-            label={copyFor(language, 'Fertilization plan', 'Plan de fertilisation', 'خطة التسميد')}
-            desc={copyFor(language, '20 crops · NPK schedule', '20 cultures · programme NPK', '20 محصول · جدول NPK')}
-            onClick={() => { recordToolUse('fertilization'); onOpenTool('farm', 'collapse_fertilization'); }}
-          />
-          <QuickAction
-            icon={Clock}
-            color="#0ea5e9"
-            label={copyFor(language, 'Irrigation schedule', 'Programme d’irrigation', 'جدول الري')}
-            desc={copyFor(language, 'Controllers · YAML export', 'Contrôleurs · export YAML', 'متحكّمات · تصدير YAML')}
-            onClick={() => { recordToolUse('irrigation-scheduler'); onOpenTool('farm', 'collapse_irr_sched'); }}
-          />
-          <QuickAction
-            icon={Sparkles}
-            color="#6366f1"
-            label={copyFor(language, 'Ask AI specialist', 'Demander à un spécialiste IA', 'اسأل وكيل ذكاء')}
-            desc={copyFor(language, '10 agents · Crop Scout, etc.', '10 agents · prospection des cultures, etc.', '10 وكلاء · كشف المحاصيل...')}
-            onClick={() => { recordToolUse('ai-specialists'); onOpenTool('insights', 'collapse_agent_chat'); }}
-          />
-          <QuickAction
-            icon={MapPin}
-            color="#10b981"
-            label={copyFor(language, 'Import field', 'Importer une parcelle', 'استيراد حقل')}
-            desc={copyFor(language, 'GeoJSON · KML · CSV', 'GeoJSON · KML · CSV', 'GeoJSON · KML · CSV')}
-            onClick={() => { recordToolUse('field-boundary'); onOpenTool('farm', 'collapse_boundary'); }}
-          />
-        </div>
-      </section>
+
 
       {/* =================================================================== */}
       {/* Today's Tasks + Weather details side-by-side on large screens */}
@@ -1077,10 +1098,24 @@ export function HomeDashboard({ level, onNavigate, onOpenTool, onOpenSearch }: H
       <section>
         <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{copyFor(language, 'Browse by Category', 'Parcourir par catégorie', 'تصفّح حسب الفئة')}</div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <NavCard icon={Tractor} label={t.tabFarm} desc={copyFor(language, 'Fields, crops, soil, livestock, irrigation', 'Parcelles, cultures, sols, élevage, irrigation', 'الحقول، المحاصيل، التربة، الماشية، الري')} color="#16a34a" onClick={() => onNavigate('farm')} />
-          <NavCard icon={Sparkles} label={t.tabInsights} desc={copyFor(language, 'NDVI, weather, AI, financial, community', 'NDVI, météo, IA, finances, communauté', 'NDVI، الطقس، الذكاء، المالية، المجتمع')} color="#6366f1" onClick={() => onNavigate('insights')} />
-          <NavCard icon={Wrench} label={t.tabTools} desc={copyFor(language, `${FREE_TOOL_COUNT} free agronomic calculators`, `${FREE_TOOL_COUNT} calculateurs agronomiques gratuits`, `${FREE_TOOL_COUNT} حاسبات زراعية مجانية`)} color="#0891b2" onClick={() => onNavigate('tools')} />
-          <NavCard icon={BookOpen} label={t.tabFormulas} desc={copyFor(language, `${FORMULA_COUNT} formulas with calculators`, `${FORMULA_COUNT} formules avec calculateurs`, `${FORMULA_COUNT} معادلة بحاسبات`)} color="#f59e0b" onClick={() => onNavigate('formulas')} />
+          {level === 'farmer' ? (
+            // Farmer mode: show only Farmer-available tabs (Calendar, My Field, Simulator + Farm)
+            // Insights/Tools/Formulas are not in the Farmer tab list.
+            <>
+              <NavCard icon={Tractor} label={t.tabFarm} desc={copyFor(language, 'Fields, crops, soil, livestock, irrigation', 'Parcelles, cultures, sols, élevage, irrigation', 'الحقول، المحاصيل، التربة، الماشية، الري')} color="#16a34a" onClick={() => onNavigate('farm')} />
+              <NavCard icon={CalendarDays} label={copyFor(language, 'Calendar', 'Calendrier', 'التقويم')} desc={copyFor(language, '12-month crop operations calendar', 'Calendrier cultural sur 12 mois', 'تقويم العمليات الزراعية لـ 12 شهر')} color="#0ea5e9" onClick={() => onNavigate('calendar')} />
+              <NavCard icon={Sprout} label={copyFor(language, 'My Field', 'Ma parcelle', 'حقلتي')} desc={copyFor(language, 'Your single-field dashboard', 'Tableau de bord de votre parcelle', 'لوحة حقلتك الفردية')} color="#16a34a" onClick={() => onNavigate('myfield')} />
+              <NavCard icon={FlaskConical} label={copyFor(language, 'Simulator', 'Simulateur', 'المحاكي')} desc={copyFor(language, 'Crop economics & break-even', 'Économie agricole et seuil de rentabilité', 'اقتصاد المحاصيل ونقطة التعادل')} color="#8b5cf6" onClick={() => onNavigate('simulator')} />
+            </>
+          ) : (
+            // Manager + Professional: keep the original Insights/Tools/Formulas grid
+            <>
+              <NavCard icon={Tractor} label={t.tabFarm} desc={copyFor(language, 'Fields, crops, soil, livestock, irrigation', 'Parcelles, cultures, sols, élevage, irrigation', 'الحقول، المحاصيل، التربة، الماشية، الري')} color="#16a34a" onClick={() => onNavigate('farm')} />
+              <NavCard icon={Sparkles} label={t.tabInsights} desc={copyFor(language, 'NDVI, weather, AI, financial, community', 'NDVI, météo, IA, finances, communauté', 'NDVI، الطقس، الذكاء، المالية، المجتمع')} color="#6366f1" onClick={() => onNavigate('insights')} />
+              <NavCard icon={Wrench} label={t.tabTools} desc={copyFor(language, `${FREE_TOOL_COUNT} free agronomic calculators`, `${FREE_TOOL_COUNT} calculateurs agronomiques gratuits`, `${FREE_TOOL_COUNT} حاسبات زراعية مجانية`)} color="#0891b2" onClick={() => onNavigate('tools')} />
+              <NavCard icon={BookOpen} label={t.tabFormulas} desc={copyFor(language, `${FORMULA_COUNT} formulas with calculators`, `${FORMULA_COUNT} formules avec calculateurs`, `${FORMULA_COUNT} معادلة بحاسبات`)} color="#f59e0b" onClick={() => onNavigate('formulas')} />
+            </>
+          )}
         </div>
       </section>
 
@@ -1309,7 +1344,11 @@ function TodayFocusPanel({
     actionKey = 'collapse_irr_sched';
     Icon = Droplets;
     color = '#0284c7';
-  } else if (today.et0 >= 5) {
+  } else if (today.et0 >= 5 && level !== 'farmer') {
+    // The "Open ET₀ tracker" action is too technical for Farmer mode —
+    // skip this branch entirely for farmers so they fall through to the
+    // heat / wind / default branches instead. Manager + Professional
+    // still see the ET₀ tracker shortcut.
     title = copyForLevel(language, level,
       { en: 'Water demand is high today', fr: 'La demande en eau est élevée aujourd’hui', ar: 'الطلب المائي مرتفع اليوم' },
       { en: 'Water demand is high across operations', fr: 'La demande en eau est élevée pour les opérations', ar: 'الطلب المائي مرتفع في العمليات' },

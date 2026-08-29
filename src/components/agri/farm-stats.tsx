@@ -39,7 +39,9 @@ export function FarmStats() {
 
   useEffect(() => {
     const compute = () => {
-      // Fields — from MultiFieldDashboard store
+      // Fields — from MultiFieldDashboard store (preferred), with farm_profile_v1
+      // fallback so newly-onboarded farmers see "1 field" after the wizard
+      // (instead of "0 fields") before they create a multi-field entry.
       let fieldCount = 0;
       let totalArea = 0;
       try {
@@ -52,6 +54,20 @@ export function FarmStats() {
           }
         }
       } catch { /* ignore */ }
+      // Fallback: if no multi-field entries exist but a farm profile does,
+      // count the profile as one field with its area.
+      if (fieldCount === 0) {
+        try {
+          const rawProfile = localStorage.getItem('farm_profile_v1');
+          if (rawProfile) {
+            const profile = JSON.parse(rawProfile);
+            if (profile && (profile.name || profile.crop || profile.area) && profile.setupCompleted !== false) {
+              fieldCount = 1;
+              totalArea = typeof profile.area === 'number' ? profile.area : 0;
+            }
+          }
+        } catch { /* ignore */ }
+      }
 
       // Irrigation zones — from Irrigation Scheduler store
       let zoneCount = 0;

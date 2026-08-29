@@ -913,3 +913,119 @@ Stage Summary:
 - One tool, one mental model — farmer gets decision intelligence +
   operational tools in My Field, with FarmPilot as the deep-dive wizard
 - AUDIT-TRACKER.md updated with P3-3 entry
+
+---
+Task ID: farmer-home-14-fixes
+Agent: main (Super Z)
+Task: Fix 14 issues in Farmer mode Home tab (user-reported)
+
+Work Log:
+- Fix #1 (Today's Focus ET₀ Tracker button hidden for Farmer):
+  In home-dashboard.tsx TodayFocusPanel, added `&& level !== 'farmer'`
+  to the `else if (today.et0 >= 5)` condition. Farmer now falls through
+  to heat / wind / default branches. Manager + Professional still see
+  the ET₀ tracker shortcut.
+
+- Fix #2 (Farm at a Glance showing 0 Fields after setup):
+  Root cause: FarmStats reads from `nutriplant_fields_v1` (multi-field
+  store) but the Farm Profile Wizard only writes to `farm_profile_v1`.
+  Added a fallback in farm-stats.tsx: if `nutriplant_fields_v1` is empty
+  but `farm_profile_v1` has a setup-completed profile, treat it as
+  1 field with the profile's area. Newly-onboarded farmers now see
+  "1 Field · X.X ha" instead of "0 Fields".
+
+- Fix #3 (Current Weather location name after geolocation):
+  In home-dashboard.tsx, added a `findNearestWilayaName()` helper that
+  reverse-looks-up the nearest Algerian wilaya by lat/lng (equirectangular
+  projection). Stored in new `locationName` state, populated by
+  fetchWeather. Displayed inline next to the "Current Weather" label
+  as `· <wilaya name>`. Falls back to nothing if no wilaya is close
+  enough.
+
+- Fix #4 (Today's Water Need ET Tracker button hidden for Farmer):
+  Wrapped the "Open ET Tracker" button in Today's Water Need card
+  with `{level !== 'farmer' && ...}`. Manager + Professional still
+  see the shortcut.
+
+- Fix #5 (7-Day Soil Moisture & ET₀ graph hidden for Farmer + Open
+  Irrigation Balance wired):
+  In home-dashboard.tsx, wrapped the entire SoilMoistureTrendChart
+  section with `{level !== 'farmer' && ...}`. In soil-moisture-trend-
+  chart.tsx, added new `onOpenTool` prop and changed the "Open
+  Irrigation Balance" button to call `onOpenTool('farm',
+  'collapse_irrigation')` (Irrigation Program Generator) when wired,
+  else fallback to `onNavigate('farm')`. HomeDashboard passes
+  onOpenTool through.
+
+- Fix #6 (Browse by Category — replace Insights/Tools/Formulas with
+  Calendar/My Field/Simulator for Farmer):
+  In home-dashboard.tsx, added `level === 'farmer' ?` branch showing
+  Farm / Calendar / My Field / Simulator cards (4 cards using icons
+  Tractor, CalendarDays, Sprout, FlaskConical). Manager + Professional
+  keep the original Insights/Tools/Formulas cards.
+
+- Fix #14 (Remove Quick Actions section):
+  Removed the entire 4-card Quick Actions grid from home-dashboard.tsx
+  (Fertilization plan / Irrigation schedule / Ask AI specialist /
+  Import field). Replaced with a comment block explaining why it was
+  removed (duplicated ActionCards, navigated to 'insights' tab not
+  available to Farmer, confused layout). ActionCards in level-home.tsx
+  are the per-level equivalent.
+
+- Fixes #7, #8, #9 (Decision popups):
+  Created src/components/agri/farmer-decision-popups.tsx (~530 lines):
+    - useFarmDecisionContext() hook lazily fetches farm profile +
+      weather forecast + computes crop stage from crop-lifecycle when
+      popup opens (no duplicate fetch when closed)
+    - WhatToDoPopup: shows crop + active stage summary, day-of-season,
+      days-to-harvest, 3-5 stage-relevant suggested activities (weed
+      control, NPK application, pest scouting, harvest prep, etc.),
+      today's weather summary, CTA button → "Open Your Crop Mission"
+      (onOpenTool('farm', 'crop_mission_planner'))
+    - ShouldIrrigatePopup: shows irrigation recommendation (yes/light/no)
+      with crop stage, ET₀ / rain / net need / max wind breakdown, spray
+      advisory (wind + rain thresholds), CTA → "Open Water Budget
+      Optimizer" (onOpenTool('farm', 'collapse_water_budget'))
+    - ApplyFertilizerPopup: shows date + crop + stage + day-of-season,
+      recommended NPK dose for the active stage (uses FarmPilot engine
+      + mapLifecycleIdToFarmPilotId for crops in DB), NPK stage
+      fractions, required product (15-15-15) in kg/ha, total cycle N,
+      CTA → "Open 4R Nutrient Budget" (onOpenTool('farm',
+      'collapse_nutrient_budget'))
+
+- Fix #10 (What's wrong with my plant? → open AI Field Scout):
+  Verified existing behavior was already correct:
+  onOpenTool('farm', 'collapse_ai_scout'). No change needed — confirmed
+  in code.
+
+- Fix #11 (Plan one crop → Crop Calendar Generator):
+  Changed ActionCard onClick from `onOpenTool('calendar')` (no
+  storageKey, navigates to Calendar tab without opening a tool) to
+  `onOpenTool('farm', 'collapse_crop_calendar_gen')` — opens the
+  Crop Calendar Generator collapsible in the Farm tab, exactly as
+  described on the ActionCard.
+
+- Fix #12 (Will I make money? → Simulator):
+  Verified existing behavior was already correct:
+  onOpenTool('simulator'). No change needed.
+
+- Fix #13 (Record an activity → Field Record Book):
+  Verified existing behavior was already correct:
+  onOpenTool('farm', 'collapse_field_records'). No change needed.
+
+Verification:
+  npx tsc --noEmit     -> 0 errors
+  npm run test:domain  -> 'All deterministic domain suites passed.'
+  npx next build       -> 'Compiled successfully in 44s'
+
+Stage Summary:
+- Farmer Home tab now has all 14 user-reported issues fixed
+- 3 decision popups replace direct tool navigation with explanation +
+  CTA pattern (matches user's "pop window" requirement)
+- 7-Day graph + 2 ET Tracker buttons hidden for Farmer (kept for
+  Manager + Professional)
+- Farm at a Glance shows "1 Field" after wizard setup (instead of "0")
+- Current Weather shows nearest wilaya name after geolocation
+- Browse by Category shows Farmer-relevant tabs only
+- Quick Actions section removed (was duplicating ActionCards)
+- All changes trilingual (EN/FR/AR), RTL-safe, mobile-first

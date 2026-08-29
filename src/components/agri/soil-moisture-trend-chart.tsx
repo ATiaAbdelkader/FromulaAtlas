@@ -46,6 +46,8 @@ interface SoilMoistureTrendChartProps {
   language?: 'en' | 'fr' | 'ar';
   level?: UserLevel;
   onNavigate?: (tab: string) => void;
+  /** Optional: open a specific collapsible tool. Preferred over onNavigate when wired. */
+  onOpenTool?: (tab: string, storageKey?: string) => void;
   className?: string;
 }
 
@@ -106,6 +108,7 @@ export function SoilMoistureTrendChart({
   language = 'en',
   level = 'farmer',
   onNavigate,
+  onOpenTool,
   className = '',
 }: SoilMoistureTrendChartProps) {
   const gradientId = useId();
@@ -992,11 +995,18 @@ export function SoilMoistureTrendChart({
                 </p>
               </div>
 
-              {onNavigate && (
+              {(onOpenTool || onNavigate) && (
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => onNavigate('tools')}
+                  onClick={() => {
+                    // Prefer onOpenTool to open the Irrigation Program Generator
+                    // (storageKey 'collapse_irrigation' under the Farm tab) so the
+                    // farmer can generate and see the irrigation program. Fall back
+                    // to plain onNavigate('farm') for older callers.
+                    if (onOpenTool) onOpenTool('farm', 'collapse_irrigation');
+                    else if (onNavigate) onNavigate('farm');
+                  }}
                   className="shrink-0 h-7 text-[11px] gap-1 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/10"
                 >
                   <Sparkles className="h-3 w-3" />
