@@ -6,33 +6,22 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Microscope,
   Brain,
   FlaskConical,
   Upload,
-  Leaf,
   Loader2,
   ExternalLink,
   Sparkles,
-  CheckCircle2,
   AlertTriangle,
-  FileSpreadsheet,
-  Download,
   Copy,
   Check,
   RotateCcw,
-  Sliders,
   ShieldCheck,
-  ShieldAlert,
-  ArrowRight,
-  Info,
-  Layers,
   Sprout,
   Activity,
-  Zap,
 } from 'lucide-react';
 import {
   PLANT_DISEASES,
@@ -42,6 +31,28 @@ import {
 } from '@/lib/plant-disease-data';
 import { copyFor, useTranslation } from '@/lib/language-store';
 import { toast } from '@/hooks/use-toast';
+import {
+  CalculatorShell,
+  type TrilingualString,
+} from '@/components/agri/nutri-tools/CalculatorShell';
+
+const TITLE: TrilingualString = {
+  en: 'AgriPlanner AI Diagnostics & Agronomy Suite',
+  ar: 'حزمة المخطط الزراعي الذكي وتشخيص الأمراض',
+  fr: 'Suite Agronomique & Diagnostic IA AgriPlanner',
+};
+
+const DESC: TrilingualString = {
+  en: 'Integrated agronomist decision workspace: Computer-vision plant pathology, multi-factor crop suitability matching, and precise soil-adjusted fertilizer formulations.',
+  ar: 'مساحة عمل متكاملة للمهندس والمزارع: تشخيص أمراض النبات بالرؤية الحاسوبية، وتوصيات المحاصيل بحسب المناخ والتربة، وحساب التسميد الدقيق.',
+  fr: 'Espace décisionnel complet : Détection des maladies par vision IA, recommandation de cultures et plan de fertilisation ajusté au sol.',
+};
+
+const TAB_LABELS: Record<'disease' | 'crop' | 'fert', TrilingualString> = {
+  disease: { en: 'Pathology & Disease AI', ar: 'تشخيص الأمراض والآفات', fr: 'Diagnostic Maladies & Ravageurs' },
+  crop:    { en: 'Crop Recommendation Engine', ar: 'محرك توصية المحاصيل المثلى', fr: 'Moteur de Choix Cultural' },
+  fert:    { en: 'Fertilizer Formulator', ar: 'مرشد التسميد والتراكيب', fr: 'Formulation & Conseils Engrais' },
+};
 
 const SEVERITY_CLASSES: Record<PlantDisease['severity'], string> = {
   low: 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800',
@@ -63,63 +74,61 @@ function localizeStatus(language: Parameters<typeof copyFor>[0], value: string) 
 }
 
 export function AgriPlannerSuite() {
-  const { language, isRTL } = useTranslation();
-  const isAr = language === 'ar';
-  const isFr = language === 'fr';
-
+  const { language } = useTranslation();
   const tr = (enText: string, arText: string, frText?: string) => copyFor(language, enText, arText, frText);
 
   const [activeTab, setActiveTab] = useState<'disease' | 'crop' | 'fert'>('disease');
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    const text = `=== AGRIPLANNER SUITE ===\nActive tab: ${tr(TAB_LABELS[activeTab].en, TAB_LABELS[activeTab].ar, TAB_LABELS[activeTab].fr)}\nPathology catalog: ${PLANT_DISEASES.length} diseases`.trim();
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    toast({ title: tr('Summary Copied!', 'تم النسخ!', 'Copié !') });
+    setTimeout(() => setCopied(false), 3000);
+  };
+
+  const handleReset = () => {
+    setActiveTab('disease');
+    toast({ title: tr('Reset to Pathology tab', 'إعادة إلى تبويب الأمراض', 'Réinitialisé') });
+  };
 
   return (
-    <div className="w-full space-y-6 max-w-7xl mx-auto" dir={isRTL ? 'rtl' : 'ltr'}>
-      {/* Hero Header Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-900 via-teal-900 to-cyan-950 text-white p-6 shadow-xl border border-emerald-700/40">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2">
-              <span className="p-2.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 shadow-inner">
-                <Leaf className="h-6 w-6 text-emerald-300" />
-              </span>
-              <div>
-                <h2 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-                  {tr('AgriPlanner AI Diagnostics & Agronomy Suite', 'حزمة المخطط الزراعي الذكي وتشخيص الأمراض', 'Suite Agronomique & Diagnostic IA AgriPlanner')}
-                  <Badge variant="outline" className="bg-emerald-500/20 text-emerald-200 border-emerald-400/40 text-[10px] uppercase tracking-wider">
-                    AI VLM 2.5
-                  </Badge>
-                </h2>
-              </div>
-            </div>
-            <p className="text-sm text-emerald-100/90 max-w-3xl leading-relaxed">
-              {tr(
-                'Integrated agronomist decision workspace: Computer-vision plant pathology, multi-factor crop suitability matching, and precise soil-adjusted fertilizer formulations.',
-                'مساحة عمل متكاملة للمهندس والمزارع: تشخيص أمراض النبات بالرؤية الحاسوبية، وتوصيات المحاصيل بحسب المناخ والتربة، وحساب التسميد الدقيق.',
-                'Espace décisionnel complet : Détection des maladies par vision IA, recommandation de cultures et plan de fertilisation ajusté au sol.'
-              )}
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center gap-1.5 bg-black/25 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/15 text-xs text-emerald-200">
-              <ShieldCheck className="h-4 w-4 text-emerald-400" />
-              <span>{tr('FAO & Global Crop Registry', 'مطابق لمعايير الفاو وسجل المحاصيل', 'Normes FAO & Registre Mondial')}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Tab Navigation Pill Bar inside Header */}
-        <div className="mt-6 pt-4 border-t border-white/15 flex flex-wrap gap-2">
+    <CalculatorShell
+      icon={Sparkles}
+      title={TITLE}
+      description={DESC}
+      badge="AI VLM 2.5"
+      accent="violet"
+      actions={[
+        {
+          icon: Copy,
+          label: { en: 'Copy Summary', ar: 'نسخ التقرير', fr: 'Copier' },
+          onClick: handleCopy,
+          variant: 'primary',
+          showCheck: copied,
+        },
+        {
+          icon: RotateCcw,
+          label: { en: 'Reset', ar: 'إعادة', fr: 'Réinitialiser' },
+          onClick: handleReset,
+        },
+      ]}
+    >
+      {/* Tab Navigation Pill Bar */}
+      <div className="lg:col-span-12 flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-2xl border bg-card shadow-xs">
+        <div className="flex flex-wrap gap-2">
           <button
             onClick={() => setActiveTab('disease')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
               activeTab === 'disease'
-                ? 'bg-emerald-500 text-white shadow-md'
-                : 'bg-white/10 hover:bg-white/20 text-emerald-100'
+                ? 'bg-violet-500 text-white shadow-md'
+                : 'bg-muted hover:bg-muted/70 text-foreground'
             }`}
           >
-            <Microscope className="h-4 w-4 text-emerald-200" />
-            <span>{tr('Pathology & Disease AI', 'تشخيص الأمراض والآفات', 'Diagnostic Maladies & Ravageurs')}</span>
-            <Badge variant="outline" className="bg-white/20 text-white border-0 text-[10px] px-1.5 py-0">
+            <Microscope className="h-4 w-4" />
+            <span>{tr(TAB_LABELS.disease.en, TAB_LABELS.disease.ar, TAB_LABELS.disease.fr)}</span>
+            <Badge variant="outline" className="bg-background/30 text-current border-0 text-[10px] px-1.5 py-0">
               {PLANT_DISEASES.length}
             </Badge>
           </button>
@@ -128,33 +137,40 @@ export function AgriPlannerSuite() {
             onClick={() => setActiveTab('crop')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
               activeTab === 'crop'
-                ? 'bg-teal-500 text-white shadow-md'
-                : 'bg-white/10 hover:bg-white/20 text-teal-100'
+                ? 'bg-violet-500 text-white shadow-md'
+                : 'bg-muted hover:bg-muted/70 text-foreground'
             }`}
           >
-            <Brain className="h-4 w-4 text-teal-200" />
-            <span>{tr('Crop Recommendation Engine', 'محرك توصية المحاصيل المثلى', 'Moteur de Choix Cultural')}</span>
+            <Brain className="h-4 w-4" />
+            <span>{tr(TAB_LABELS.crop.en, TAB_LABELS.crop.ar, TAB_LABELS.crop.fr)}</span>
           </button>
 
           <button
             onClick={() => setActiveTab('fert')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
               activeTab === 'fert'
-                ? 'bg-cyan-500 text-white shadow-md'
-                : 'bg-white/10 hover:bg-white/20 text-cyan-100'
+                ? 'bg-violet-500 text-white shadow-md'
+                : 'bg-muted hover:bg-muted/70 text-foreground'
             }`}
           >
-            <FlaskConical className="h-4 w-4 text-cyan-200" />
-            <span>{tr('Fertilizer Formulator', 'مرشد التسميد والتراكيب', 'Formulation & Conseils Engrais')}</span>
+            <FlaskConical className="h-4 w-4" />
+            <span>{tr(TAB_LABELS.fert.en, TAB_LABELS.fert.ar, TAB_LABELS.fert.fr)}</span>
           </button>
+        </div>
+
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <ShieldCheck className="h-4 w-4 text-emerald-600" />
+          <span>{tr('FAO & Global Crop Registry', 'مطابق لمعايير الفاو وسجل المحاصيل', 'Normes FAO & Registre Mondial')}</span>
         </div>
       </div>
 
       {/* Tab Contents */}
-      {activeTab === 'disease' && <DiseaseTab />}
-      {activeTab === 'crop' && <CropTab />}
-      {activeTab === 'fert' && <FertilizerTab />}
-    </div>
+      <div className="lg:col-span-12 space-y-6">
+        {activeTab === 'disease' && <DiseaseTab />}
+        {activeTab === 'crop' && <CropTab />}
+        {activeTab === 'fert' && <FertilizerTab />}
+      </div>
+    </CalculatorShell>
   );
 }
 

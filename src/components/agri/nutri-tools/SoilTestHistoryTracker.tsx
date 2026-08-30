@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -24,9 +24,7 @@ import {
   Minus,
   AlertTriangle,
   CheckCircle2,
-  Download,
   MapPin,
-  Calendar,
   Sparkles,
   Leaf,
   Activity,
@@ -34,7 +32,9 @@ import {
   Printer,
   History,
   Trees,
-  LineChart,
+  Copy,
+  Check,
+  RotateCcw,
 } from 'lucide-react';
 import {
   getSoilTests,
@@ -50,6 +50,11 @@ import {
 } from '@/lib/soil-history-store';
 import { useTranslation, copyFor } from '@/lib/language-store';
 import { SoilMultiYearTrendsChart } from '@/components/agri/nutri-tools/SoilMultiYearTrendsChart';
+import {
+  CalculatorShell,
+  type TrilingualString,
+} from '@/components/agri/nutri-tools/CalculatorShell';
+import { toast } from '@/hooks/use-toast';
 
 const TREND_COLORS: Record<SoilTrend['direction'], string> = {
   improving: '#16a34a',
@@ -63,6 +68,18 @@ const STATUS_COLORS: Record<SoilTrend['status'], string> = {
   high: '#7c3aed',
 };
 
+const TITLE: TrilingualString = {
+  en: 'Multi-Year Soil Health & Historic Parcel Tracker',
+  ar: 'سجل صحة التربة المتعدد السنوات وتتبع استنزاف القطع',
+  fr: 'Suivi Historique & Santé du Sol',
+};
+
+const DESC: TrilingualString = {
+  en: 'Monitor nutrient trajectory, drawdown warnings, and carbon stock changes across parcels. Track OM, pH, CEC, P, K, Ca, Mg multi-year evolution.',
+  ar: 'متابعة تغيرات خصوبة التربة ومخزون الكربون والتحذير من استنزاف العناصر عبر القطع والسنوات.',
+  fr: 'Évolution pluriannuelle des nutriments, alertes d\'épuisement et séquestration carbone par parcelle.',
+};
+
 export function SoilTestHistoryTracker() {
   const { language } = useTranslation();
   const tr = (en: string, ar: string, fr: string) => copyFor(language, en, ar, fr);
@@ -72,6 +89,7 @@ export function SoilTestHistoryTracker() {
   const [selectedField, setSelectedField] = useState<string>('Pivot 1 - North Valley');
   const [activeView, setActiveView] = useState<'d3-trends' | 'timeline' | 'trends' | 'health' | 'history'>('d3-trends');
   const [showForm, setShowForm] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const [newEntry, setNewEntry] = useState<Record<string, any>>({
     date: new Date().toISOString().slice(0, 10),
@@ -137,25 +155,70 @@ export function SoilTestHistoryTracker() {
     return trends.filter((t) => t.drawdownWarning);
   }, [trends]);
 
-  return (
-    <Card className="overflow-hidden border-emerald-100 shadow-sm dark:border-emerald-900/60">
-      {/* Top Header & Field Switcher Bar */}
-      <div className="flex items-center justify-between gap-3 flex-wrap border-b border-border/60 bg-muted/20 p-3.5">
-        <div className="flex items-center gap-2">
-          <div className="p-2 rounded-xl bg-emerald-600 text-white shadow-xs">
-            <History className="h-4 w-4" />
-          </div>
-          <div>
-            <div className="text-xs font-bold text-foreground">
-              {tr('Multi-Year Soil Health & Historic Parcel Tracker', 'سجل صحة التربة المتعدد السنوات وتتبع استنزاف القطع', 'Suivi Historique & Santé du Sol')}
-            </div>
-            <div className="text-[10px] text-muted-foreground">
-              {tr('Monitor nutrient trajectory, drawdown warnings, and carbon stock changes.', 'متابعة تغيرات خصوبة التربة ومخزون الكربون والتحذير من استنزاف العناصر.', 'Évolution pluriannuelle des nutriments et séquestration carbone.')}
-            </div>
-          </div>
-        </div>
+  const handleReset = () => {
+    setSelectedField('all');
+    setActiveView('d3-trends');
+    setShowForm(false);
+    toast({ title: tr('View Reset', 'تمت الإعادة', 'Réinitialisé') });
+  };
 
-        <div className="flex items-center gap-2 ml-auto">
+  const handleCopy = () => {
+    const text = `=== SOIL HEALTH TRACKER ===\nField: ${selectedField}\nTests logged: ${filtered.length}\n\nLatest test:\n${latest ? `Date: ${latest.date}\nCrop: ${latest.cropGrown || '—'}\npH: ${latest.ph} | OM: ${latest.om}% | CEC: ${latest.cec}\nP: ${latest.p} ppm | K: ${latest.k} | Ca: ${latest.ca} | Mg: ${latest.mg}\nTexture: ${latest.sand}/${100 - latest.sand - latest.clay}/${latest.clay} (sand/silt/clay)` : 'No data'}\n\nSoil Health Index: ${healthScore.overallScore}/100\nCarbon stock: ${healthScore.carbonStockTonPerHa} t C/ha (Δ ${healthScore.carbonDeltaTonPerHa})\nCO₂e sequestered: ${healthScore.co2eSequesteredTonPerHa} t/ha\n\nDrawdown warnings: ${drawdownAlerts.length}`.trim();
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    toast({ title: tr('Summary Copied!', 'تم النسخ!', 'Copié !') });
+    setTimeout(() => setCopied(false), 3000);
+  };
+
+  return (
+    <CalculatorShell
+      icon={FlaskConical}
+      title={TITLE}
+      description={DESC}
+      badge="Lab Tracker"
+      accent="amber"
+      actions={[
+        {
+          icon: Copy,
+          label: { en: 'Copy Summary', ar: 'نسخ التقرير', fr: 'Copier' },
+          onClick: handleCopy,
+          variant: 'primary',
+          showCheck: copied,
+        },
+        {
+          icon: Plus,
+          label: { en: 'Log Lab Test', ar: 'تسجيل تحليل', fr: 'Ajouter Analyse' },
+          onClick: () => setShowForm(!showForm),
+        },
+        {
+          icon: Printer,
+          label: { en: 'Print', ar: 'طباعة', fr: 'Imprimer' },
+          onClick: () => window.print(),
+        },
+        {
+          icon: RotateCcw,
+          label: { en: 'Reset View', ar: 'إعادة العرض', fr: 'Réinitialiser' },
+          onClick: handleReset,
+        },
+      ]}
+    >
+      <div className="lg:col-span-12 space-y-4">
+        {/* Field Switcher Bar */}
+        <div className="flex items-center justify-between gap-3 flex-wrap p-3.5 rounded-2xl border bg-card shadow-xs">
+          <div className="flex items-center gap-2">
+            <div className="p-2 rounded-xl bg-amber-600 text-white shadow-xs">
+              <History className="h-4 w-4" />
+            </div>
+            <div>
+              <div className="text-xs font-bold text-foreground">
+                {tr('Parcel Selection & View Switcher', 'اختيار القطعة وتغيير العرض', 'Sélection de Parcelle & Vue')}
+              </div>
+              <div className="text-[10px] text-muted-foreground">
+                {tr(`${filtered.length} lab records · ${fieldNames.length} parcels tracked`, `${filtered.length} سجل · ${fieldNames.length} قطع`, `${filtered.length} analyses · ${fieldNames.length} parcelles`)}
+              </div>
+            </div>
+          </div>
+
           <Select value={selectedField} onValueChange={setSelectedField}>
             <SelectTrigger className="h-9 min-w-44 text-xs font-bold bg-background">
               <SelectValue />
@@ -170,128 +233,116 @@ export function SoilTestHistoryTracker() {
               ))}
             </SelectContent>
           </Select>
-
-          <Button size="sm" onClick={() => setShowForm(!showForm)} className="h-9 gap-1.5 px-3 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
-            <Plus className="h-3.5 w-3.5" />
-            {tr('Log Lab Test', 'تسجيل تحليل مخبري', 'Ajouter Analyse')}
-          </Button>
-
-          <Button size="sm" variant="outline" onClick={() => window.print()} className="h-9 gap-1.5 px-2.5 text-xs">
-            <Printer className="h-3.5 w-3.5" />
-            {tr('Print', 'طباعة', 'Imprimer')}
-          </Button>
         </div>
-      </div>
 
-      {/* Critical Drawdown Banner */}
-      {drawdownAlerts.length > 0 && (
-        <div className="m-3 p-3 rounded-xl bg-red-50/80 dark:bg-red-950/40 border border-red-300 dark:border-red-900 text-red-950 dark:text-red-100 flex items-start gap-2.5 text-xs shadow-2xs">
-          <AlertTriangle className="h-4 w-4 text-red-600 shrink-0 mt-0.5" />
-          <div>
-            <span className="font-bold">
-              {tr('Critical Nutrient Drawdown Detected!', 'تنبيه حرج: رصد استنزاف حاد للعناصر الغذائية!', 'Alerte : Épuisement Nutritif Détecté !')}
-            </span>
-            <p className="text-[11px] mt-0.5">
-              {tr(
-                `The soil records for this parcel indicate significant depletion in: ${drawdownAlerts.map((d) => isAr ? d.label_ar : d.label).join(', ')}. Nutrient harvest extraction is exceeding application replenishment.`,
-                `تشير السجلات إلى تراجع حاد في مخزون: ${drawdownAlerts.map((d) => isAr ? d.label_ar : d.label).join('، ')}. كميات السحب بالمحصول تفوق التسميد التعويضي.`,
-                `Épuisement important détecté sur : ${drawdownAlerts.map((d) => d.label).join(', ')}.`
-              )}
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Add New Soil Test Form (Collapsible) */}
-      {showForm && (
-        <div className="mx-3 mt-3 rounded-xl border-2 border-emerald-200 bg-emerald-50/40 p-4 shadow-xs dark:border-emerald-800 dark:bg-emerald-950/10">
-          <div className="mb-3 flex items-start gap-2">
-            <div className="rounded-lg bg-emerald-100 p-2 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
-              <FlaskConical className="h-4 w-4" />
-            </div>
+        {/* Critical Drawdown Banner */}
+        {drawdownAlerts.length > 0 && (
+          <div className="p-3 rounded-xl bg-red-50/80 dark:bg-red-950/40 border border-red-300 dark:border-red-900 text-red-950 dark:text-red-100 flex items-start gap-2.5 text-xs shadow-2xs">
+            <AlertTriangle className="h-4 w-4 text-red-600 shrink-0 mt-0.5" />
             <div>
-              <p className="text-xs font-bold">{tr('Enter Laboratory Soil Test Record', 'إدخال نتائج تحليل التربة المخبري', 'Saisie Analyse de Sol')}</p>
-              <p className="text-[11px] text-muted-foreground">
-                {tr('Capture analytical values to update parcel history and nutrient trajectory.', 'سجل بيانات المختبر لتحديث سجل القطعة ومؤشر صحة التربة.', 'Renseignez les valeurs pour recalculer les trajectoires.')}
+              <span className="font-bold">
+                {tr('Critical Nutrient Drawdown Detected!', 'تنبيه حرج: رصد استنزاف حاد للعناصر الغذائية!', 'Alerte : Épuisement Nutritif Détecté !')}
+              </span>
+              <p className="text-[11px] mt-0.5">
+                {tr(
+                  `The soil records for this parcel indicate significant depletion in: ${drawdownAlerts.map((d) => isAr ? d.label_ar : d.label).join(', ')}. Nutrient harvest extraction is exceeding application replenishment.`,
+                  `تشير السجلات إلى تراجع حاد في مخزون: ${drawdownAlerts.map((d) => isAr ? d.label_ar : d.label).join('، ')}. كميات السحب بالمحصول تفوق التسميد التعويضي.`,
+                  `Épuisement important détecté sur : ${drawdownAlerts.map((d) => d.label).join(', ')}.`
+                )}
               </p>
             </div>
           </div>
+        )}
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
-            <div>
-              <Label className="text-[10px] font-semibold">{tr('Sampling Date', 'تاريخ أخذ العينة', 'Date')}</Label>
-              <Input type="date" value={newEntry.date} onChange={(e) => setNewEntry({ ...newEntry, date: e.target.value })} className="h-8 text-xs mt-0.5" />
-            </div>
-            <div>
-              <Label className="text-[10px] font-semibold">{tr('Parcel Name', 'اسم القطعة / الحقل', 'Parcelle')}</Label>
-              <Input value={newEntry.fieldName} onChange={(e) => setNewEntry({ ...newEntry, fieldName: e.target.value })} className="h-8 text-xs mt-0.5" />
-            </div>
-            <div>
-              <Label className="text-[10px] font-semibold">pH (1:2.5)</Label>
-              <Input type="number" step="0.1" value={newEntry.ph} onChange={(e) => setNewEntry({ ...newEntry, ph: e.target.value })} className="h-8 text-xs mt-0.5" />
-            </div>
-            <div>
-              <Label className="text-[10px] font-semibold">{tr('Organic Matter (%)', 'المادة العضوية (%)', 'MO (%)')}</Label>
-              <Input type="number" step="0.1" value={newEntry.om} onChange={(e) => setNewEntry({ ...newEntry, om: e.target.value })} className="h-8 text-xs mt-0.5" />
-            </div>
-            <div>
-              <Label className="text-[10px] font-semibold">P Olsen (ppm)</Label>
-              <Input type="number" value={newEntry.p} onChange={(e) => setNewEntry({ ...newEntry, p: e.target.value })} className="h-8 text-xs mt-0.5" />
-            </div>
-            <div>
-              <Label className="text-[10px] font-semibold">K (meq/100g)</Label>
-              <Input type="number" step="0.05" value={newEntry.k} onChange={(e) => setNewEntry({ ...newEntry, k: e.target.value })} className="h-8 text-xs mt-0.5" />
-            </div>
-            <div>
-              <Label className="text-[10px] font-semibold">Ca (meq/100g)</Label>
-              <Input type="number" step="0.1" value={newEntry.ca} onChange={(e) => setNewEntry({ ...newEntry, ca: e.target.value })} className="h-8 text-xs mt-0.5" />
-            </div>
-            <div>
-              <Label className="text-[10px] font-semibold">Mg (meq/100g)</Label>
-              <Input type="number" step="0.1" value={newEntry.mg} onChange={(e) => setNewEntry({ ...newEntry, mg: e.target.value })} className="h-8 text-xs mt-0.5" />
-            </div>
-            <div>
-              <Label className="text-[10px] font-semibold">Na (meq/100g)</Label>
-              <Input type="number" step="0.05" value={newEntry.na} onChange={(e) => setNewEntry({ ...newEntry, na: e.target.value })} className="h-8 text-xs mt-0.5" />
-            </div>
-            <div>
-              <Label className="text-[10px] font-semibold">CEC (meq/100g)</Label>
-              <Input type="number" step="0.5" value={newEntry.cec} onChange={(e) => setNewEntry({ ...newEntry, cec: e.target.value })} className="h-8 text-xs mt-0.5" />
-            </div>
-            <div>
-              <Label className="text-[10px] font-semibold">{tr('Crop Grown', 'المحصول المزروع', 'Culture')}</Label>
-              <Input value={newEntry.cropGrown} onChange={(e) => setNewEntry({ ...newEntry, cropGrown: e.target.value })} placeholder="e.g. Tomato" className="h-8 text-xs mt-0.5" />
-            </div>
-            <div>
-              <Label className="text-[10px] font-semibold">{tr('Texture (Sand/Clay %)', 'القوام (رمل/طين %)', 'Texture')}</Label>
-              <div className="flex gap-1 mt-0.5">
-                <Input type="number" placeholder="Sand" value={newEntry.sand} onChange={(e) => setNewEntry({ ...newEntry, sand: e.target.value })} className="h-8 text-xs" />
-                <Input type="number" placeholder="Clay" value={newEntry.clay} onChange={(e) => setNewEntry({ ...newEntry, clay: e.target.value })} className="h-8 text-xs" />
+        {/* Add New Soil Test Form (Collapsible) */}
+        {showForm && (
+          <div className="rounded-xl border-2 border-emerald-200 bg-emerald-50/40 p-4 shadow-xs dark:border-emerald-800 dark:bg-emerald-950/10">
+            <div className="mb-3 flex items-start gap-2">
+              <div className="rounded-lg bg-emerald-100 p-2 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                <FlaskConical className="h-4 w-4" />
+              </div>
+              <div>
+                <p className="text-xs font-bold">{tr('Enter Laboratory Soil Test Record', 'إدخال نتائج تحليل التربة المخبري', 'Saisie Analyse de Sol')}</p>
+                <p className="text-[11px] text-muted-foreground">
+                  {tr('Capture analytical values to update parcel history and nutrient trajectory.', 'سجل بيانات المختبر لتحديث سجل القطعة ومؤشر صحة التربة.', 'Renseignez les valeurs pour recalculer les trajectoires.')}
+                </p>
               </div>
             </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+              <div>
+                <Label className="text-[10px] font-semibold">{tr('Sampling Date', 'تاريخ أخذ العينة', 'Date')}</Label>
+                <Input type="date" value={newEntry.date} onChange={(e) => setNewEntry({ ...newEntry, date: e.target.value })} className="h-8 text-xs mt-0.5" />
+              </div>
+              <div>
+                <Label className="text-[10px] font-semibold">{tr('Parcel Name', 'اسم القطعة / الحقل', 'Parcelle')}</Label>
+                <Input value={newEntry.fieldName} onChange={(e) => setNewEntry({ ...newEntry, fieldName: e.target.value })} className="h-8 text-xs mt-0.5" />
+              </div>
+              <div>
+                <Label className="text-[10px] font-semibold">pH (1:2.5)</Label>
+                <Input type="number" step="0.1" value={newEntry.ph} onChange={(e) => setNewEntry({ ...newEntry, ph: e.target.value })} className="h-8 text-xs mt-0.5" />
+              </div>
+              <div>
+                <Label className="text-[10px] font-semibold">{tr('Organic Matter (%)', 'المادة العضوية (%)', 'MO (%)')}</Label>
+                <Input type="number" step="0.1" value={newEntry.om} onChange={(e) => setNewEntry({ ...newEntry, om: e.target.value })} className="h-8 text-xs mt-0.5" />
+              </div>
+              <div>
+                <Label className="text-[10px] font-semibold">P Olsen (ppm)</Label>
+                <Input type="number" value={newEntry.p} onChange={(e) => setNewEntry({ ...newEntry, p: e.target.value })} className="h-8 text-xs mt-0.5" />
+              </div>
+              <div>
+                <Label className="text-[10px] font-semibold">K (meq/100g)</Label>
+                <Input type="number" step="0.05" value={newEntry.k} onChange={(e) => setNewEntry({ ...newEntry, k: e.target.value })} className="h-8 text-xs mt-0.5" />
+              </div>
+              <div>
+                <Label className="text-[10px] font-semibold">Ca (meq/100g)</Label>
+                <Input type="number" step="0.1" value={newEntry.ca} onChange={(e) => setNewEntry({ ...newEntry, ca: e.target.value })} className="h-8 text-xs mt-0.5" />
+              </div>
+              <div>
+                <Label className="text-[10px] font-semibold">Mg (meq/100g)</Label>
+                <Input type="number" step="0.1" value={newEntry.mg} onChange={(e) => setNewEntry({ ...newEntry, mg: e.target.value })} className="h-8 text-xs mt-0.5" />
+              </div>
+              <div>
+                <Label className="text-[10px] font-semibold">Na (meq/100g)</Label>
+                <Input type="number" step="0.05" value={newEntry.na} onChange={(e) => setNewEntry({ ...newEntry, na: e.target.value })} className="h-8 text-xs mt-0.5" />
+              </div>
+              <div>
+                <Label className="text-[10px] font-semibold">CEC (meq/100g)</Label>
+                <Input type="number" step="0.5" value={newEntry.cec} onChange={(e) => setNewEntry({ ...newEntry, cec: e.target.value })} className="h-8 text-xs mt-0.5" />
+              </div>
+              <div>
+                <Label className="text-[10px] font-semibold">{tr('Crop Grown', 'المحصول المزروع', 'Culture')}</Label>
+                <Input value={newEntry.cropGrown} onChange={(e) => setNewEntry({ ...newEntry, cropGrown: e.target.value })} placeholder="e.g. Tomato" className="h-8 text-xs mt-0.5" />
+              </div>
+              <div>
+                <Label className="text-[10px] font-semibold">{tr('Texture (Sand/Clay %)', 'القوام (رمل/طين %)', 'Texture')}</Label>
+                <div className="flex gap-1 mt-0.5">
+                  <Input type="number" placeholder="Sand" value={newEntry.sand} onChange={(e) => setNewEntry({ ...newEntry, sand: e.target.value })} className="h-8 text-xs" />
+                  <Input type="number" placeholder="Clay" value={newEntry.clay} onChange={(e) => setNewEntry({ ...newEntry, clay: e.target.value })} className="h-8 text-xs" />
+                </div>
+              </div>
+            </div>
+
+            <Textarea
+              value={newEntry.notes}
+              onChange={(e) => setNewEntry({ ...newEntry, notes: e.target.value })}
+              placeholder={tr('Agronomic observations, fertilizations applied, yield notes...', 'ملاحظات زراعية، تسميد مطبق، إنتاجية...', 'Observations...')}
+              className="min-h-16 text-xs mt-2.5"
+            />
+
+            <div className="flex justify-end gap-2 mt-2.5">
+              <Button size="sm" variant="ghost" onClick={() => setShowForm(false)} className="h-8 text-xs">
+                {tr('Cancel', 'إلغاء', 'Annuler')}
+              </Button>
+              <Button size="sm" onClick={handleAdd} className="h-8 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
+                <Plus className="h-3.5 w-3.5 mr-1" />
+                {tr('Save to Soil Database', 'حفظ في قاعدة البيانات', 'Enregistrer')}
+              </Button>
+            </div>
           </div>
+        )}
 
-          <Textarea
-            value={newEntry.notes}
-            onChange={(e) => setNewEntry({ ...newEntry, notes: e.target.value })}
-            placeholder={tr('Agronomic observations, fertilizations applied, yield notes...', 'ملاحظات زراعية، تسميد مطبق، إنتاجية...', 'Observations...')}
-            className="min-h-16 text-xs mt-2.5"
-          />
-
-          <div className="flex justify-end gap-2 mt-2.5">
-            <Button size="sm" variant="ghost" onClick={() => setShowForm(false)} className="h-8 text-xs">
-              {tr('Cancel', 'إلغاء', 'Annuler')}
-            </Button>
-            <Button size="sm" onClick={handleAdd} className="h-8 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
-              <Plus className="h-3.5 w-3.5 mr-1" />
-              {tr('Save to Soil Database', 'حفظ في قاعدة البيانات', 'Enregistrer')}
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* Main Tabs Navigation */}
-      <div className="p-3">
+        {/* Main Tabs Navigation */}
         <Tabs value={activeView} onValueChange={(v: any) => setActiveView(v)}>
           <TabsList className="grid grid-cols-2 sm:grid-cols-5 w-full h-auto p-1 bg-muted/80 rounded-xl border">
             <TabsTrigger value="d3-trends" className="py-2 text-xs font-bold flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300">
@@ -637,6 +688,6 @@ export function SoilTestHistoryTracker() {
           </TabsContent>
         </Tabs>
       </div>
-    </Card>
+    </CalculatorShell>
   );
 }

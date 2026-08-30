@@ -1,10 +1,9 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -12,10 +11,6 @@ import {
   CloudSun,
   Thermometer,
   Droplets,
-  Wind,
-  Sun,
-  Sparkles,
-  Zap,
   CheckCircle2,
   AlertTriangle,
   RotateCcw,
@@ -34,6 +29,10 @@ import { AnimatedCounter } from './AnimatedCounter';
 import { RangeSparkline } from './RangeSparkline';
 import { useTranslation, copyFor } from '@/lib/language-store';
 import { toast } from '@/hooks/use-toast';
+import {
+  CalculatorShell,
+  type TrilingualString,
+} from '@/components/agri/nutri-tools/CalculatorShell';
 
 interface VpdPreset {
   id: string;
@@ -105,6 +104,18 @@ const EXTENDED_VPD_PRESETS: VpdPreset[] = [
     leafTemp: '24.2',
   },
 ];
+
+const TITLE: TrilingualString = {
+  en: 'Precision VPD & Transpiration Deficit Estimator',
+  ar: 'حاسبة عجز ضغط البخار (VPD) والعجز الرطوبي وعوامل النتح الدقيقة',
+  fr: 'Estimateur DPV & Déficit de Pression de Vapeur',
+};
+
+const DESC: TrilingualString = {
+  en: 'Compute true Vapor Pressure Deficit (VPD in kPa) using actual leaf temperature or solar radiation energy balance. Prevent fungal outbreaks, eliminate calcium tip burn, and optimize stomatal conductance.',
+  ar: 'حساب عجز ضغط البخار الحقيقي (VPD) بدقة باستخدام حرارة أوراق النبات وتوازن الإشعاع الشمسي لمنع الأمراض الفطرية واحتراق القمم النامية وضمان الفتح المثالي للثغور.',
+  fr: 'Calculez le DPV foliaire réel (kPa) et le déficit hydrique de l\'air (g/m³) pour piloter le climat de serre, éviter le tip-burn et maximiser la photosynthèse.',
+};
 
 export function VpdEstimator() {
   const { language, isRTL } = useTranslation();
@@ -192,95 +203,56 @@ ${hdCls?.message}
     setTimeout(() => setCopied(false), 3000);
   };
 
+  const handleReset = () => {
+    applyPreset(EXTENDED_VPD_PRESETS[0]);
+    setActiveTab('calculator');
+  };
+
   return (
-    <div className="w-full space-y-6 max-w-7xl mx-auto" dir={isRTL ? 'rtl' : 'ltr'}>
-      {/* Signature Hero Header Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-950 via-teal-900 to-cyan-950 text-white p-6 shadow-xl border border-emerald-700/40">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2">
-              <span className="p-2.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 shadow-inner">
-                <Gauge className="h-6 w-6 text-emerald-300" />
-              </span>
-              <div>
-                <h2 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-                  {tr(
-                    'Precision VPD & Transpiration Deficit Estimator',
-                    'حاسبة عجز ضغط البخار (VPD) والعجز الرطوبي وعوامل النتح الدقيقة',
-                    'Estimateur DPV & Déficit de Pression de Vapeur'
-                  )}
-                  <Badge variant="outline" className="bg-emerald-500/20 text-emerald-200 border-emerald-400/40 text-[10px] uppercase tracking-wider">
-                    Leaf Psychrometrics & Dew Point
-                  </Badge>
-                </h2>
-              </div>
-            </div>
-            <p className="text-sm text-emerald-100/90 max-w-3xl leading-relaxed">
-              {tr(
-                'Compute true Vapor Pressure Deficit (VPD in kPa) using actual leaf temperature or solar radiation energy balance. Prevent fungal outbreaks (Botrytis, powdery mildew), eliminate calcium tip burn, and optimize stomatal conductance for maximum photosynthetic biomass.',
-                'حساب عجز ضغط البخار الحقيقي (VPD) بدقة باستخدام حرارة أوراق النبات وتوازن الإشعاع الشمسي لمنع الأمراض الفطرية واحتراق القمم النامية وضمان الفتح المثالي للثغور.',
-                'Calculez le DPV foliaire réel (kPa) et le déficit hydrique de l’air (g/m³) pour piloter le climat de serre, éviter le tip-burn et maximiser la photosynthèse.'
-              )}
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              onClick={handleCopyReport}
-              variant="outline"
-              size="sm"
-              className="bg-white/15 hover:bg-white/25 text-white border-white/25 backdrop-blur font-semibold shadow-sm"
-            >
-              {copied ? (
-                <>
-                  <Check className="h-4 w-4 mr-1 text-emerald-300" />
-                  {tr('Copied!', 'تم النسخ!', 'Copié !')}
-                </>
-              ) : (
-                <>
-                  <Copy className="h-4 w-4 mr-1 text-emerald-300" />
-                  {tr('Copy Diagnostics', 'نسخ التشخيص', 'Copier')}
-                </>
-              )}
-            </Button>
-            <Button
-              onClick={() => {
-                applyPreset(EXTENDED_VPD_PRESETS[0]);
-              }}
-              variant="outline"
-              size="sm"
-              className="bg-white/10 hover:bg-white/20 text-white border-white/20 backdrop-blur"
-            >
-              <RotateCcw className="h-4 w-4 mr-1 text-stone-300" />
-              {tr('Reset', 'إعادة تعيين', 'Réinitialiser')}
-            </Button>
-          </div>
-        </div>
-
-        {/* Quick Presets Bar */}
-        <div className="mt-5 pt-4 border-t border-white/15 flex flex-wrap items-center gap-2">
-          <span className="text-xs text-emerald-200/80 font-medium mr-1">
-            {tr('Quick Climate Scenarios:', 'سيناريوهات مناخية سريعة:', 'Scénarios climatiques :')}
-          </span>
-          {EXTENDED_VPD_PRESETS.map((p) => (
-            <button
-              key={p.id}
-              onClick={() => applyPreset(p)}
-              className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all ${
-                activePresetId === p.id
-                  ? 'bg-emerald-400 text-emerald-950 shadow-md font-bold'
-                  : 'bg-white/10 hover:bg-white/20 text-emerald-100'
-              }`}
-            >
-              {isAr ? p.label_ar : isFr ? p.label_fr : p.label}
-            </button>
-          ))}
-        </div>
+    <CalculatorShell
+      icon={Droplets}
+      title={TITLE}
+      description={DESC}
+      badge="Leaf Psychrometrics"
+      accent="teal"
+      actions={[
+        {
+          icon: Copy,
+          label: { en: 'Copy Diagnostics', ar: 'نسخ التشخيص', fr: 'Copier' },
+          onClick: handleCopyReport,
+          variant: 'primary',
+          showCheck: copied,
+        },
+        {
+          icon: RotateCcw,
+          label: { en: 'Reset', ar: 'إعادة تعيين', fr: 'Réinitialiser' },
+          onClick: handleReset,
+        },
+      ]}
+    >
+      {/* Quick Climate Scenarios Pill Bar */}
+      <div className="lg:col-span-12 flex flex-wrap items-center gap-2 p-3.5 rounded-2xl border bg-card shadow-xs">
+        <span className="text-xs text-muted-foreground font-medium me-1">
+          {tr('Quick Climate Scenarios:', 'سيناريوهات مناخية سريعة:', 'Scénarios climatiques :')}
+        </span>
+        {EXTENDED_VPD_PRESETS.map((p) => (
+          <button
+            key={p.id}
+            onClick={() => applyPreset(p)}
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+              activePresetId === p.id
+                ? 'bg-teal-500 text-white shadow-md font-bold'
+                : 'bg-muted hover:bg-muted/70 text-foreground'
+            }`}
+          >
+            {isAr ? p.label_ar : isFr ? p.label_fr : p.label}
+          </button>
+        ))}
       </div>
 
       {/* Top Vital Metric Displays */}
       {result && status && hdCls && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="lg:col-span-12 grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div className="p-4 rounded-2xl border bg-card shadow-xs space-y-1" style={{ borderColor: `${status.color}40` }}>
             <div className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider flex items-center justify-between">
               <span>{tr('True Leaf VPD', 'عجز ضغط بخار الورقة (VPD)', 'DPV Foliaire Réel')}</span>
@@ -349,7 +321,7 @@ ${hdCls?.message}
       )}
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="lg:col-span-12 w-full">
         <TabsList className="grid grid-cols-3 w-full h-11 p-1 bg-muted/60 rounded-xl">
           <TabsTrigger value="calculator" className="rounded-lg text-xs font-bold gap-1.5">
             <Gauge className="h-3.5 w-3.5 text-emerald-600" />
@@ -398,7 +370,7 @@ ${hdCls?.message}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <Label className="text-xs font-semibold flex items-center gap-1.5">
-                        {tr('Air Temperature (°C)', 'حرارة الهواء الجاف (°C)', 'Température de l’air (°C)')}
+                        {tr('Air Temperature (°C)', 'حرارة الهواء الجاف (°C)', 'Température de l\'air (°C)')}
                         {liveApplied && (
                           <span className="inline-flex items-center gap-1 text-[9px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/50 rounded-full px-1.5 py-px">
                             <CloudSun className="h-2.5 w-2.5" />
@@ -505,7 +477,7 @@ ${hdCls?.message}
                     <>
                       <div>
                         <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1.5 font-bold">
-                          {tr('Active VPD Position on Agronomic Scale:', 'موقع الـ VPD على سلم الاستجابة النباتية:', 'Position sur l’échelle agronomique :')}
+                          {tr('Active VPD Position on Agronomic Scale:', 'موقع الـ VPD على سلم الاستجابة النباتية:', 'Position sur l\'échelle agronomique :')}
                         </div>
                         <RangeSparkline
                           value={result.vpd}
@@ -698,7 +670,7 @@ ${hdCls?.message}
                   </div>
                   <ul className="list-disc list-inside text-[11px] text-rose-900/90 dark:text-rose-300 space-y-0.5">
                     <li>{tr('Deploy high-pressure fogging/misting systems or wet pads.', 'تشغيل نظام التضبيب عالي الضغط (Fogging) أو وسائد التبريد الرطب.', 'Activer la brumisation haute pression ou les cooling pads.')}</li>
-                    <li>{tr('Close thermal shade screens to reduce radiative heat load.', 'فرد ستائر التظليل الحراري لخفض الحمل الإشعاعي المباشر.', 'Déployer les écrans d’ombrage thermiques.')}</li>
+                    <li>{tr('Close thermal shade screens to reduce radiative heat load.', 'فرد ستائر التظليل الحراري لخفض الحمل الإشعاعي المباشر.', 'Déployer les écrans d\'ombrage thermiques.')}</li>
                     <li>{tr('Increase irrigation frequency to support high transpiration demand.', 'زيادة وتيرة الري لتعويض استهلاك المياه العالي.', 'Augmenter la fréquence des irrigations.')}</li>
                   </ul>
                 </div>
@@ -708,9 +680,9 @@ ${hdCls?.message}
                     {tr('If VPD is Too Low (< 0.5 kPa):', 'إذا كان الـ VPD منخفضاً جداً (< 0.5 kPa):', 'Si le DPV est trop bas (< 0.5 kPa) :')}
                   </div>
                   <ul className="list-disc list-inside text-[11px] text-blue-900/90 dark:text-blue-300 space-y-0.5">
-                    <li>{tr('Open ridge vents to expel saturated moisture and increase air renewal.', 'فتح النوافذ العلوية لطرد الرطوبة المشبعة وتجديد الهواء.', 'Ouvrir les ouvrants pour évacuer l’humidité.')}</li>
+                    <li>{tr('Open ridge vents to expel saturated moisture and increase air renewal.', 'فتح النوافذ العلوية لطرد الرطوبة المشبعة وتجديد الهواء.', 'Ouvrir les ouvrants pour évacuer l\'humidité.')}</li>
                     <li>{tr('Activate minimum heating (heating + venting combo) to raise air temp and water holding capacity.', 'تشغيل التدفئة الخفيفة مع التهوية لرفع درجة حرارة الهواء وقدرته على حمل البخار.', 'Chauffer légèrement tout en ventilant.')}</li>
-                    <li>{tr('Run horizontal air circulation fans to break humid boundary layers around leaves.', 'تشغيل مراوح تدوير الهواء لكسر الطبقة الرطوبة الملاصقة للأوراق.', 'Activer les brasseurs d’air pour casser la couche limite.')}</li>
+                    <li>{tr('Run horizontal air circulation fans to break humid boundary layers around leaves.', 'تشغيل مراوح تدوير الهواء لكسر الطبقة الرطوبة الملاصقة للأوراق.', 'Activer les brasseurs d\'air pour casser la couche limite.')}</li>
                   </ul>
                 </div>
               </CardContent>
@@ -718,6 +690,6 @@ ${hdCls?.message}
           </div>
         </TabsContent>
       </Tabs>
-    </div>
+    </CalculatorShell>
   );
 }

@@ -17,8 +17,7 @@
  * All math is client-side via `@/lib/geodesy` and `@/lib/field-boundary`.
  */
 
-import { useState, useMemo, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState, useMemo } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -27,7 +26,7 @@ import { Textarea } from '@/components/ui/textarea';
 import {
   Compass, ArrowRight, MapPin, Download, Copy, Check,
   Navigation, Globe2, FileSpreadsheet, Layers, AlertTriangle,
-  CheckCircle2,
+  CheckCircle2, RotateCcw,
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import {
@@ -40,8 +39,31 @@ import {
   detectAndParse, computeMetrics,
 } from '@/lib/field-boundary';
 import { copyFor, useTranslation } from '@/lib/language-store';
+import {
+  CalculatorShell,
+  type TrilingualString,
+} from '@/components/agri/nutri-tools/CalculatorShell';
 
 type Tab = 'point' | 'destination' | 'batch' | 'fields';
+
+const TITLE: TrilingualString = {
+  en: 'Distance & Bearing Calculator',
+  ar: 'حاسبة المسافة والاتجاه',
+  fr: 'Calculateur de Distance & Azimut',
+};
+
+const DESC: TrilingualString = {
+  en: 'Vincenty geodesic distance, initial + final bearing, midpoint, batch CSV processing, and field-to-field centroid / edge distances on the WGS84 ellipsoid.',
+  ar: 'حساب دقيق للمسافة والاتجاه على مجسم WGS84، معالجة دفعة CSV، ومسافات بين الحقول (مركز/حافة).',
+  fr: 'Distance géodésique (Vincenty), azimuts, point milieu, traitement par lot CSV et distances inter-parcelles sur l\'ellipsoïde WGS84.',
+};
+
+const TAB_LABELS: Record<Tab, TrilingualString> = {
+  point:       { en: 'Point-to-Point',  ar: 'من نقطة إلى نقطة',     fr: 'Point à Point' },
+  destination: { en: 'Destination',     ar: 'الوجهة',                fr: 'Destination' },
+  batch:       { en: 'Batch CSV',       ar: 'CSV متعدد السجلات',     fr: 'Lot CSV' },
+  fields:      { en: 'Field-to-Field',  ar: 'من حقل إلى حقل',        fr: 'Parcelle à Parcelle' },
+};
 
 // ============================================================================
 // Main component
@@ -49,28 +71,61 @@ type Tab = 'point' | 'destination' | 'batch' | 'fields';
 
 export function DistanceBearingCalculator() {
   const { language } = useTranslation();
+  const tr = (en: string, ar: string, fr?: string) => copyFor(language, en, ar, fr);
   const [tab, setTab] = useState<Tab>('point');
+  const [copied, setCopied] = useState(false);
+
+  const handleCopySummary = () => {
+    const text = `=== DISTANCE & BEARING CALCULATOR ===\nActive tab: ${tr(TAB_LABELS[tab].en, TAB_LABELS[tab].ar, TAB_LABELS[tab].fr)}\n\nUse the per-tab "Copy Summary" button to copy detailed geodesic results.`.trim();
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    toast({ title: tr('Summary Copied!', 'تم النسخ!', 'Copié !') });
+    setTimeout(() => setCopied(false), 3000);
+  };
+
+  const handleReset = () => {
+    setTab('point');
+    toast({ title: tr('Reset to Point-to-Point', 'تمت الإعادة إلى نقطة-نقطة', 'Réinitialisé') });
+  };
 
   return (
-    <Card className="overflow-hidden border-cyan-100/80 shadow-sm dark:border-cyan-950/60">
-      <CardHeader className="border-b border-cyan-100/70 bg-gradient-to-br from-cyan-50/70 via-card to-card pb-4 dark:border-cyan-950/70 dark:from-cyan-950/30">
-        <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-100 text-cyan-700 dark:bg-cyan-950/70 dark:text-cyan-300"><Compass className="h-4 w-4" /></span> {copyFor(language, 'Distance & Bearing Calculator', 'حاسبة المسافة والاتجاه')}
-        </CardTitle>
-        <div className="mt-3 grid grid-cols-2 gap-1 rounded-xl bg-muted/50 p-1 sm:grid-cols-4">
-          <TabBtn active={tab === 'point'} onClick={() => setTab('point')} icon={Navigation} label={copyFor(language, 'Point-to-Point', 'من نقطة إلى نقطة')} />
-          <TabBtn active={tab === 'destination'} onClick={() => setTab('destination')} icon={Globe2} label={copyFor(language, 'Destination', 'الوجهة')} />
-          <TabBtn active={tab === 'batch'} onClick={() => setTab('batch')} icon={FileSpreadsheet} label={copyFor(language, 'Batch CSV', 'CSV متعدد السجلات')} />
-          <TabBtn active={tab === 'fields'} onClick={() => setTab('fields')} icon={Layers} label={copyFor(language, 'Field-to-Field', 'من حقل إلى حقل')} />
+    <CalculatorShell
+      icon={Compass}
+      title={TITLE}
+      description={DESC}
+      badge="WGS84 Geodesic"
+      accent="sky"
+      actions={[
+        {
+          icon: Copy,
+          label: { en: 'Copy Summary', ar: 'نسخ التقرير', fr: 'Copier' },
+          onClick: handleCopySummary,
+          variant: 'primary',
+          showCheck: copied,
+        },
+        {
+          icon: RotateCcw,
+          label: { en: 'Reset', ar: 'إعادة', fr: 'Réinitialiser' },
+          onClick: handleReset,
+        },
+      ]}
+    >
+      <div className="lg:col-span-12 space-y-4">
+        {/* Tab Switcher Bar */}
+        <div className="grid grid-cols-2 gap-1 rounded-xl bg-muted/50 p-1 sm:grid-cols-4">
+          <TabBtn active={tab === 'point'} onClick={() => setTab('point')} icon={Navigation} label={tr(TAB_LABELS.point.en, TAB_LABELS.point.ar, TAB_LABELS.point.fr)} />
+          <TabBtn active={tab === 'destination'} onClick={() => setTab('destination')} icon={Globe2} label={tr(TAB_LABELS.destination.en, TAB_LABELS.destination.ar, TAB_LABELS.destination.fr)} />
+          <TabBtn active={tab === 'batch'} onClick={() => setTab('batch')} icon={FileSpreadsheet} label={tr(TAB_LABELS.batch.en, TAB_LABELS.batch.ar, TAB_LABELS.batch.fr)} />
+          <TabBtn active={tab === 'fields'} onClick={() => setTab('fields')} icon={Layers} label={tr(TAB_LABELS.fields.en, TAB_LABELS.fields.ar, TAB_LABELS.fields.fr)} />
         </div>
-      </CardHeader>
-      <CardContent className="p-4 sm:p-5">
+
+        {/* Tab Body */}
         {tab === 'point' && <PointToPoint />}
         {tab === 'destination' && <Destination />}
         {tab === 'batch' && <BatchCsv />}
         {tab === 'fields' && <FieldToField />}
-      </CardContent>
-    </Card>
+      </div>
+    </CalculatorShell>
   );
 }
 
@@ -80,6 +135,7 @@ export function DistanceBearingCalculator() {
 
 function PointToPoint() {
   const { language } = useTranslation();
+  const tr = (en: string, ar: string, fr?: string) => copyFor(language, en, ar, fr);
   const [aLat, setALat] = useState('37.77');
   const [aLng, setALng] = useState('-122.42');
   const [bLat, setBLat] = useState('37.78');
@@ -106,10 +162,10 @@ function PointToPoint() {
   const summary = useMemo(() => {
     if (!result) return '';
     return [
-      copyFor(language, `Distance: ${formatDistance(result.distance)} (${result.distance.toFixed(2)} m)`, `المسافة: ${formatDistance(result.distance)} (${result.distance.toFixed(2)} م)`),
-      copyFor(language, `Initial bearing: ${result.initialBearing.toFixed(2)}° (${compass16(result.initialBearing)})`, `الاتجاه الابتدائي: ${result.initialBearing.toFixed(2)}° (${compass16(result.initialBearing)})`),
-      copyFor(language, `Final bearing: ${result.finalBearing.toFixed(2)}° (${compass16(result.finalBearing)})`, `الاتجاه النهائي: ${result.finalBearing.toFixed(2)}° (${compass16(result.finalBearing)})`),
-      mid ? copyFor(language, `Midpoint: ${mid.lat.toFixed(6)}, ${mid.lng.toFixed(6)}`, `نقطة المنتصف: ${mid.lat.toFixed(6)}, ${mid.lng.toFixed(6)}`) : '',
+      tr(`Distance: ${formatDistance(result.distance)} (${result.distance.toFixed(2)} m)`, `المسافة: ${formatDistance(result.distance)} (${result.distance.toFixed(2)} م)`),
+      tr(`Initial bearing: ${result.initialBearing.toFixed(2)}° (${compass16(result.initialBearing)})`, `الاتجاه الابتدائي: ${result.initialBearing.toFixed(2)}° (${compass16(result.initialBearing)})`),
+      tr(`Final bearing: ${result.finalBearing.toFixed(2)}° (${compass16(result.finalBearing)})`, `الاتجاه النهائي: ${result.finalBearing.toFixed(2)}° (${compass16(result.finalBearing)})`),
+      mid ? tr(`Midpoint: ${mid.lat.toFixed(6)}, ${mid.lng.toFixed(6)}`, `نقطة المنتصف: ${mid.lat.toFixed(6)}, ${mid.lng.toFixed(6)}`) : '',
     ].filter(Boolean).join('\n');
   }, [language, result, mid]);
 
@@ -119,24 +175,24 @@ function PointToPoint() {
     <div className="space-y-3">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="space-y-2 rounded-xl border border-cyan-200/70 bg-cyan-50/30 p-3 dark:border-cyan-950/70 dark:bg-cyan-950/10">
-          <div className="text-[10px] font-semibold uppercase tracking-wide text-cyan-700 dark:text-cyan-300">{copyFor(language, 'Point A (from)', 'النقطة أ (من)')}</div>
+          <div className="text-[10px] font-semibold uppercase tracking-wide text-cyan-700 dark:text-cyan-300">{tr('Point A (from)', 'النقطة أ (من)')}</div>
           <div>
-            <Label className="text-[10px]">{copyFor(language, 'Latitude', 'خط العرض')}</Label>
+            <Label className="text-[10px]">{tr('Latitude', 'خط العرض')}</Label>
             <Input value={aLat} onChange={e => setALat(e.target.value)} type="number" step="0.000001" className="mt-1 h-10 text-xs sm:h-8" />
           </div>
           <div>
-            <Label className="text-[10px]">{copyFor(language, 'Longitude', 'خط الطول')}</Label>
+            <Label className="text-[10px]">{tr('Longitude', 'خط الطول')}</Label>
             <Input value={aLng} onChange={e => setALng(e.target.value)} type="number" step="0.000001" className="mt-1 h-10 text-xs sm:h-8" />
           </div>
         </div>
         <div className="space-y-2 rounded-xl border border-emerald-200/70 bg-emerald-50/30 p-3 dark:border-emerald-950/70 dark:bg-emerald-950/10">
-          <div className="text-[10px] font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">{copyFor(language, 'Point B (to)', 'النقطة ب (إلى)')}</div>
+          <div className="text-[10px] font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">{tr('Point B (to)', 'النقطة ب (إلى)')}</div>
           <div>
-            <Label className="text-[10px]">{copyFor(language, 'Latitude', 'خط العرض')}</Label>
+            <Label className="text-[10px]">{tr('Latitude', 'خط العرض')}</Label>
             <Input value={bLat} onChange={e => setBLat(e.target.value)} type="number" step="0.000001" className="mt-1 h-10 text-xs sm:h-8" />
           </div>
           <div>
-            <Label className="text-[10px]">{copyFor(language, 'Longitude', 'خط الطول')}</Label>
+            <Label className="text-[10px]">{tr('Longitude', 'خط الطول')}</Label>
             <Input value={bLng} onChange={e => setBLng(e.target.value)} type="number" step="0.000001" className="mt-1 h-10 text-xs sm:h-8" />
           </div>
         </div>
@@ -145,31 +201,31 @@ function PointToPoint() {
       {result && (
         <>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            <Metric label={copyFor(language, 'Distance', 'المسافة')} value={formatDistance(result.distance)} sub={`${result.distance.toFixed(1)} m`} accent="cyan" />
-            <Metric label={copyFor(language, 'Initial Bearing', 'الاتجاه الابتدائي')} value={`${result.initialBearing.toFixed(1)}°`} sub={compass16(result.initialBearing)} accent="emerald" />
+            <Metric label={tr('Distance', 'المسافة')} value={formatDistance(result.distance)} sub={`${result.distance.toFixed(1)} m`} accent="cyan" />
+            <Metric label={tr('Initial Bearing', 'الاتجاه الابتدائي')} value={`${result.initialBearing.toFixed(1)}°`} sub={compass16(result.initialBearing)} accent="emerald" />
           </div>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            <Metric label={copyFor(language, 'Final Bearing', 'الاتجاه النهائي')} value={`${result.finalBearing.toFixed(1)}°`} sub={compass16(result.finalBearing)} accent="indigo" />
+            <Metric label={tr('Final Bearing', 'الاتجاه النهائي')} value={`${result.finalBearing.toFixed(1)}°`} sub={compass16(result.finalBearing)} accent="indigo" />
             {mid && (
-              <Metric label={copyFor(language, 'Midpoint', 'نقطة المنتصف')} value={`${mid.lat.toFixed(5)}, ${mid.lng.toFixed(5)}`} sub="lat, lng" accent="amber" />
+              <Metric label={tr('Midpoint', 'نقطة المنتصف')} value={`${mid.lat.toFixed(5)}, ${mid.lng.toFixed(5)}`} sub="lat, lng" accent="amber" />
             )}
           </div>
           {!result.converged && (
             <div className="rounded-md border border-amber-200 dark:border-amber-900 bg-amber-50/60 dark:bg-amber-950/20 p-2 text-[10px] text-amber-700 dark:text-amber-400 flex items-start gap-1.5">
               <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-              <span>{copyFor(language, 'Vincenty did not converge (likely near-antipodal points). Falling back to haversine — accuracy < 0.5%.', 'لم تتقارب خوارزمية فينسنتي (غالباً بسبب نقاط متقابلة تقريباً). تم الرجوع إلى هافرسين — دقة أقل من 0.5%.')}</span>
+              <span>{tr('Vincenty did not converge (likely near-antipodal points). Falling back to haversine — accuracy < 0.5%.', 'لم تتقارب خوارزمية فينسنتي (غالباً بسبب نقاط متقابلة تقريباً). تم الرجوع إلى هافرسين — دقة أقل من 0.5%.')}</span>
             </div>
           )}
           <div className="flex gap-2">
             <Button size="sm" variant="outline" onClick={copy} className="gap-1.5 text-xs flex-1">
-              {copied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />} {copyFor(language, 'Copy Summary', 'نسخ الملخص')}
+              {copied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />} {tr('Copy Summary', 'نسخ الملخص')}
             </Button>
           </div>
         </>
       )}
 
       <div className="rounded-xl border border-border/70 bg-muted/20 p-3 text-[10px] leading-relaxed text-muted-foreground">
-        {copyFor(language, 'Vincenty inverse formula on the WGS84 ellipsoid gives millimetre-level accuracy — far better than haversine for surveyor-grade work. Bearing is initial (at A); final bearing differs slightly due to meridian convergence.', 'تعطي صيغة فينسنتي العكسية على مجسم WGS84 دقة بمستوى المليمتر، وهي أدق كثيراً من هافرسين لأعمال المساحة. الاتجاه ابتدائي (عند أ)، وقد يختلف الاتجاه النهائي قليلاً بسبب تقارب خطوط الطول.')}
+        {tr('Vincenty inverse formula on the WGS84 ellipsoid gives millimetre-level accuracy — far better than haversine for surveyor-grade work. Bearing is initial (at A); final bearing differs slightly due to meridian convergence.', 'تعطي صيغة فينسنتي العكسية على مجسم WGS84 دقة بمستوى المليمتر، وهي أدق كثيراً من هافرسين لأعمال المساحة. الاتجاه ابتدائي (عند أ)، وقد يختلف الاتجاه النهائي قليلاً بسبب تقارب خطوط الطول.')}
       </div>
     </div>
   );
@@ -181,6 +237,7 @@ function PointToPoint() {
 
 function Destination() {
   const { language } = useTranslation();
+  const tr = (en: string, ar: string, fr?: string) => copyFor(language, en, ar, fr);
   const [lat, setLat] = useState('37.77');
   const [lng, setLng] = useState('-122.42');
   const [bearing, setBearing] = useState('45');
@@ -200,11 +257,11 @@ function Destination() {
   const summary = useMemo(() => {
     if (!result) return '';
     return [
-      copyFor(language, `Start: ${lat}, ${lng}`, `البداية: ${lat}, ${lng}`),
-      copyFor(language, `Bearing: ${bearing}° (${compass16(parseFloat(bearing))})`, `الاتجاه: ${bearing}° (${compass16(parseFloat(bearing))})`),
-      copyFor(language, `Distance: ${distance} m (${formatDistance(parseFloat(distance))})`, `المسافة: ${distance} م (${formatDistance(parseFloat(distance))})`),
-      copyFor(language, `Destination: ${result.point.lat.toFixed(6)}, ${result.point.lng.toFixed(6)}`, `الوجهة: ${result.point.lat.toFixed(6)}, ${result.point.lng.toFixed(6)}`),
-      copyFor(language, `Final bearing: ${result.finalBearing.toFixed(2)}°`, `الاتجاه النهائي: ${result.finalBearing.toFixed(2)}°`),
+      tr(`Start: ${lat}, ${lng}`, `البداية: ${lat}, ${lng}`),
+      tr(`Bearing: ${bearing}° (${compass16(parseFloat(bearing))})`, `الاتجاه: ${bearing}° (${compass16(parseFloat(bearing))})`),
+      tr(`Distance: ${distance} m (${formatDistance(parseFloat(distance))})`, `المسافة: ${distance} م (${formatDistance(parseFloat(distance))})`),
+      tr(`Destination: ${result.point.lat.toFixed(6)}, ${result.point.lng.toFixed(6)}`, `الوجهة: ${result.point.lat.toFixed(6)}, ${result.point.lng.toFixed(6)}`),
+      tr(`Final bearing: ${result.finalBearing.toFixed(2)}°`, `الاتجاه النهائي: ${result.finalBearing.toFixed(2)}°`),
     ].join('\n');
   }, [bearing, distance, language, lat, lng, result]);
 
@@ -214,21 +271,21 @@ function Destination() {
     <div className="space-y-3">
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <div>
-          <Label className="text-[10px]">{copyFor(language, 'Start Latitude', 'خط عرض البداية')}</Label>
+          <Label className="text-[10px]">{tr('Start Latitude', 'خط عرض البداية')}</Label>
           <Input value={lat} onChange={e => setLat(e.target.value)} type="number" step="0.000001" className="mt-1 h-10 text-xs sm:h-8" />
         </div>
         <div>
-          <Label className="text-[10px]">{copyFor(language, 'Start Longitude', 'خط طول البداية')}</Label>
+          <Label className="text-[10px]">{tr('Start Longitude', 'خط طول البداية')}</Label>
           <Input value={lng} onChange={e => setLng(e.target.value)} type="number" step="0.000001" className="mt-1 h-10 text-xs sm:h-8" />
         </div>
       </div>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <div>
-          <Label className="text-[10px]">{copyFor(language, 'Bearing (° clockwise from N)', 'الاتجاه (° باتجاه عقارب الساعة من الشمال)')}</Label>
+          <Label className="text-[10px]">{tr('Bearing (° clockwise from N)', 'الاتجاه (° باتجاه عقارب الساعة من الشمال)')}</Label>
           <Input value={bearing} onChange={e => setBearing(e.target.value)} type="number" step="0.1" className="mt-1 h-10 text-xs sm:h-8" />
         </div>
         <div>
-          <Label className="text-[10px]">{copyFor(language, 'Distance (m)', 'المسافة (م)')}</Label>
+          <Label className="text-[10px]">{tr('Distance (m)', 'المسافة (م)')}</Label>
           <Input value={distance} onChange={e => setDistance(e.target.value)} type="number" step="0.01" className="mt-1 h-10 text-xs sm:h-8" />
         </div>
       </div>
@@ -238,13 +295,13 @@ function Destination() {
           <div className="rounded-lg border border-cyan-200 dark:border-cyan-900 bg-cyan-50/40 dark:bg-cyan-950/20 p-3 space-y-2">
             <div className="flex items-center gap-2">
               <MapPin className="h-3.5 w-3.5 text-cyan-600" />
-              <span className="text-[10px] uppercase tracking-wide text-muted-foreground">{copyFor(language, 'Destination Point', 'نقطة الوجهة')}</span>
+              <span className="text-[10px] uppercase tracking-wide text-muted-foreground">{tr('Destination Point', 'نقطة الوجهة')}</span>
             </div>
             <div className="text-lg font-bold font-mono text-cyan-700 dark:text-cyan-300">
               {result.point.lat.toFixed(6)}, {result.point.lng.toFixed(6)}
             </div>
             <div className="text-[10px] text-muted-foreground">
-              {copyFor(language, 'Final bearing on arrival:', 'الاتجاه النهائي عند الوصول:')} <strong className="font-mono">{result.finalBearing.toFixed(2)}°</strong> ({compass16(result.finalBearing)})
+              {tr('Final bearing on arrival:', 'الاتجاه النهائي عند الوصول:')} <strong className="font-mono">{result.finalBearing.toFixed(2)}°</strong> ({compass16(result.finalBearing)})
             </div>
           </div>
 
@@ -254,13 +311,13 @@ function Destination() {
           </div>
 
           <Button size="sm" variant="outline" onClick={copy} className="gap-1.5 text-xs w-full">
-            {copied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />} {copyFor(language, 'Copy Summary', 'نسخ الملخص')}
+            {copied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />} {tr('Copy Summary', 'نسخ الملخص')}
           </Button>
         </>
       )}
 
       <div className="rounded-xl border border-border/70 bg-muted/20 p-3 text-[10px] leading-relaxed text-muted-foreground">
-        {copyFor(language, 'Useful for "where will I end up if I walk 500 m NE from the barn?" or for laying out sample points at known offsets along a transect.', 'مفيد للإجابة عن سؤال «أين أصل إذا مشيت 500 م شمال شرق الحظيرة؟» أو لتخطيط نقاط عينات بإزاحات معلومة على طول مسار.')}
+        {tr('Useful for "where will I end up if I walk 500 m NE from the barn?" or for laying out sample points at known offsets along a transect.', 'مفيد للإجابة عن سؤال «أين أصل إذا مشيت 500 م شمال شرق الحظيرة؟» أو لتخطيط نقاط عينات بإزاحات معلومة على طول مسار.')}
       </div>
     </div>
   );
@@ -276,6 +333,7 @@ type BatchResult =
 
 function BatchCsv() {
   const { language } = useTranslation();
+  const tr = (en: string, ar: string, fr?: string) => copyFor(language, en, ar, fr);
   const [originLat, setOriginLat] = useState('37.77');
   const [originLng, setOriginLng] = useState('-122.42');
   const [csvInput, setCsvInput] = useState(
@@ -338,24 +396,24 @@ function BatchCsv() {
     <div className="space-y-3">
       <div className="grid grid-cols-2 gap-2 rounded-lg border border-cyan-200 dark:border-cyan-900 bg-cyan-50/40 dark:bg-cyan-950/20 p-3">
         <div>
-          <Label className="text-[10px]">{copyFor(language, 'Origin Latitude', 'خط عرض نقطة الأصل')}</Label>
+          <Label className="text-[10px]">{tr('Origin Latitude', 'خط عرض نقطة الأصل')}</Label>
           <Input value={originLat} onChange={e => setOriginLat(e.target.value)} type="number" step="0.000001" className="mt-1 h-10 text-xs sm:h-8" />
         </div>
         <div>
-          <Label className="text-[10px]">{copyFor(language, 'Origin Longitude', 'خط طول نقطة الأصل')}</Label>
+          <Label className="text-[10px]">{tr('Origin Longitude', 'خط طول نقطة الأصل')}</Label>
           <Input value={originLng} onChange={e => setOriginLng(e.target.value)} type="number" step="0.000001" className="mt-1 h-10 text-xs sm:h-8" />
         </div>
       </div>
 
       <div>
-        <Label className="text-[10px]">{copyFor(language, 'Destinations CSV (header must include latitude + longitude; name optional)', 'CSV للوجهات (يجب أن يتضمن العنوان خط العرض وخط الطول؛ والاسم اختياري)')}</Label>
+        <Label className="text-[10px]">{tr('Destinations CSV (header must include latitude + longitude; name optional)', 'CSV للوجهات (يجب أن يتضمن العنوان خط العرض وخط الطول؛ والاسم اختياري)')}</Label>
         <Textarea value={csvInput} onChange={e => setCsvInput(e.target.value)} className="text-xs font-mono mt-0.5 min-h-[100px]" />
       </div>
 
       {result && result.error !== null && (
         <div className="rounded-md border border-rose-200 dark:border-rose-900 bg-rose-50/50 dark:bg-rose-950/20 p-2 text-xs text-rose-700 dark:text-rose-300 flex items-start gap-1.5">
           <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-          <span className="font-mono">{copyFor(language, result.error, 'يتطلب ملف CSV عنواناً وصفاً واحداً صالحاً على الأقل، مع أعمدة خط العرض وخط الطول.')}</span>
+          <span className="font-mono">{tr(result.error, 'يتطلب ملف CSV عنواناً وصفاً واحداً صالحاً على الأقل، مع أعمدة خط العرض وخط الطول.')}</span>
         </div>
       )}
 
@@ -364,14 +422,14 @@ function BatchCsv() {
           <div className="rounded-lg border border-emerald-200 dark:border-emerald-900 bg-emerald-50/40 dark:bg-emerald-950/20 p-2 text-xs">
             <div className="flex items-center gap-1.5">
               <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-              <span className="font-medium">{copyFor(language, `${result.rows.length} destination${result.rows.length > 1 ? 's' : ''} computed`, `تم حساب ${result.rows.length} وجهة`)}</span>
+              <span className="font-medium">{tr(`${result.rows.length} destination${result.rows.length > 1 ? 's' : ''} computed`, `تم حساب ${result.rows.length} وجهة`)}</span>
             </div>
             <div className="text-muted-foreground mt-0.5 text-[10px]">
-              {copyFor(language, 'Total path (origin → all):', 'إجمالي المسار (الأصل ← الكل):')} {formatDistance(result.rows.reduce((s, r) => s + r.distance, 0))}
+              {tr('Total path (origin → all):', 'إجمالي المسار (الأصل ← الكل):')} {formatDistance(result.rows.reduce((s, r) => s + r.distance, 0))}
               {' · '}
-              {copyFor(language, 'Closest:', 'الأقرب:')} {formatDistance(Math.min(...result.rows.map(r => r.distance)))}
+              {tr('Closest:', 'الأقرب:')} {formatDistance(Math.min(...result.rows.map(r => r.distance)))}
               {' · '}
-              {copyFor(language, 'Farthest:', 'الأبعد:')} {formatDistance(Math.max(...result.rows.map(r => r.distance)))}
+              {tr('Farthest:', 'الأبعد:')} {formatDistance(Math.max(...result.rows.map(r => r.distance)))}
             </div>
           </div>
 
@@ -379,10 +437,10 @@ function BatchCsv() {
             <table className="w-full text-xs">
               <thead className="sticky top-0 bg-muted/80 backdrop-blur">
                 <tr className="text-left text-[10px] text-muted-foreground uppercase">
-                  <th className="px-2 py-1">{copyFor(language, 'Name', 'الاسم')}</th>
+                  <th className="px-2 py-1">{tr('Name', 'الاسم')}</th>
                   <th className="px-2 py-1">Distance</th>
-                  <th className="px-2 py-1">{copyFor(language, 'Bearing', 'الاتجاه')}</th>
-                  <th className="px-2 py-1">{copyFor(language, 'Compass', 'البوصلة')}</th>
+                  <th className="px-2 py-1">{tr('Bearing', 'الاتجاه')}</th>
+                  <th className="px-2 py-1">{tr('Compass', 'البوصلة')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -400,17 +458,17 @@ function BatchCsv() {
 
           <div className="flex gap-2">
             <Button size="sm" variant="outline" onClick={copy} className="gap-1.5 text-xs flex-1">
-              {copied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />} {copyFor(language, 'Copy CSV', 'نسخ CSV')}
+              {copied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />} {tr('Copy CSV', 'نسخ CSV')}
             </Button>
             <Button size="sm" onClick={download} className="gap-1.5 text-xs flex-1">
-              <Download className="h-3.5 w-3.5" /> {copyFor(language, 'Download CSV', 'تنزيل CSV')}
+              <Download className="h-3.5 w-3.5" /> {tr('Download CSV', 'تنزيل CSV')}
             </Button>
           </div>
         </>
       )}
 
       <div className="rounded-xl border border-border/70 bg-muted/20 p-3 text-[10px] leading-relaxed text-muted-foreground">
-        {copyFor(language, 'Useful for "from the barn, how far is each field?" or for laying out irrigation mainline runs. Paste a CSV from Excel or from the Coordinate Converter\'s batch output.', 'مفيد للإجابة عن «كم يبعد كل حقل عن الحظيرة؟» أو لتخطيط خطوط الري الرئيسية. الصق ملف CSV من Excel أو من مخرجات محول الإحداثيات المتعددة.')}
+        {tr('Useful for "from the barn, how far is each field?" or for laying out irrigation mainline runs. Paste a CSV from Excel or from the Coordinate Converter\'s batch output.', 'مفيد للإجابة عن «كم يبعد كل حقل عن الحظيرة؟» أو لتخطيط خطوط الري الرئيسية. الصق ملف CSV من Excel أو من مخرجات محول الإحداثيات المتعددة.')}
       </div>
     </div>
   );
@@ -439,6 +497,7 @@ type FieldToFieldResult =
 
 function FieldToField() {
   const { language } = useTranslation();
+  const tr = (en: string, ar: string, fr?: string) => copyFor(language, en, ar, fr);
   const [aText, setAText] = useState('{"type":"Feature","properties":{"name":"Field A"},"geometry":{"type":"Polygon","coordinates":[[[-122.42,37.77],[-122.41,37.77],[-122.41,37.78],[-122.42,37.78],[-122.42,37.77]]]}}');
   const [bText, setBText] = useState('{"type":"Feature","properties":{"name":"Field B"},"geometry":{"type":"Polygon","coordinates":[[[-122.40,37.79],[-122.39,37.79],[-122.39,37.80],[-122.40,37.80],[-122.40,37.79]]]}}');
 
@@ -513,11 +572,11 @@ function FieldToField() {
     <div className="space-y-3">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <div>
-          <Label className="text-[10px]">{copyFor(language, 'Field A (paste GeoJSON / KML / WKT / CSV)', 'الحقل أ (الصق GeoJSON / KML / WKT / CSV)')}</Label>
+          <Label className="text-[10px]">{tr('Field A (paste GeoJSON / KML / WKT / CSV)', 'الحقل أ (الصق GeoJSON / KML / WKT / CSV)')}</Label>
           <Textarea value={aText} onChange={e => setAText(e.target.value)} className="text-xs font-mono mt-0.5 min-h-[80px]" />
         </div>
         <div>
-          <Label className="text-[10px]">{copyFor(language, 'Field B (paste GeoJSON / KML / WKT / CSV)', 'الحقل ب (الصق GeoJSON / KML / WKT / CSV)')}</Label>
+          <Label className="text-[10px]">{tr('Field B (paste GeoJSON / KML / WKT / CSV)', 'الحقل ب (الصق GeoJSON / KML / WKT / CSV)')}</Label>
           <Textarea value={bText} onChange={e => setBText(e.target.value)} className="text-xs font-mono mt-0.5 min-h-[80px]" />
         </div>
       </div>
@@ -525,7 +584,7 @@ function FieldToField() {
       {result.error !== null && (
         <div className="rounded-md border border-rose-200 dark:border-rose-900 bg-rose-50/50 dark:bg-rose-950/20 p-2 text-xs text-rose-700 dark:text-rose-300 flex items-start gap-1.5">
           <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-          <span className="font-mono">{copyFor(language, result.error, 'تعذر تحليل حدود الحقل. راجع صحة بيانات GeoJSON أو KML أو WKT أو CSV.')}</span>
+          <span className="font-mono">{tr(result.error, 'تعذر تحليل حدود الحقل. راجع صحة بيانات GeoJSON أو KML أو WKT أو CSV.')}</span>
         </div>
       )}
 
@@ -538,34 +597,34 @@ function FieldToField() {
               <Badge variant="secondary" className="text-[10px]">{result.bName}</Badge>
             </div>
             <div className="grid grid-cols-2 gap-2 text-xs">
-              <Metric label={copyFor(language, 'Centroid Distance', 'مسافة المركز')} value={formatDistance(result.centroidDistance)} sub={`${result.centroidDistance.toFixed(1)} m`} accent="cyan" />
-              <Metric label={copyFor(language, 'Bearing A→B', 'الاتجاه أ←ب')} value={`${result.centroidBearing.toFixed(1)}°`} sub={result.centroidCompass} accent="emerald" />
+              <Metric label={tr('Centroid Distance', 'مسافة المركز')} value={formatDistance(result.centroidDistance)} sub={`${result.centroidDistance.toFixed(1)} m`} accent="cyan" />
+              <Metric label={tr('Bearing A→B', 'الاتجاه أ←ب')} value={`${result.centroidBearing.toFixed(1)}°`} sub={result.centroidCompass} accent="emerald" />
             </div>
             <div className="grid grid-cols-2 gap-2 text-xs">
-              <Metric label={copyFor(language, 'Edge-to-Edge (min)', 'من حافة إلى حافة (الأدنى)')} value={formatDistance(result.edgeDistance)} sub={`${result.edgeDistance.toFixed(1)} m`} accent="indigo" />
-              <Metric label={copyFor(language, 'Combined Area', 'المساحة المجمعة')} value={formatDistance(result.aArea + result.bArea)} sub={`${((result.aArea + result.bArea) / 10000).toFixed(2)} ha`} accent="amber" />
+              <Metric label={tr('Edge-to-Edge (min)', 'من حافة إلى حافة (الأدنى)')} value={formatDistance(result.edgeDistance)} sub={`${result.edgeDistance.toFixed(1)} m`} accent="indigo" />
+              <Metric label={tr('Combined Area', 'المساحة المجمعة')} value={formatDistance(result.aArea + result.bArea)} sub={`${((result.aArea + result.bArea) / 10000).toFixed(2)} ha`} accent="amber" />
             </div>
             {result.closestPair && (
               <div className="text-[10px] text-muted-foreground font-mono pt-1 border-t border-cyan-200/50 dark:border-cyan-900/50">
-                {copyFor(language, 'Nearest points: A', 'أقرب النقاط: أ')} ({result.closestPair.a[1].toFixed(5)}, {result.closestPair.a[0].toFixed(5)}) ↔ {copyFor(language, 'B', 'ب')} ({result.closestPair.b[1].toFixed(5)}, {result.closestPair.b[0].toFixed(5)})
+                {tr('Nearest points: A', 'أقرب النقاط: أ')} ({result.closestPair.a[1].toFixed(5)}, {result.closestPair.a[0].toFixed(5)}) ↔ {tr('B', 'ب')} ({result.closestPair.b[1].toFixed(5)}, {result.closestPair.b[0].toFixed(5)})
               </div>
             )}
           </div>
           <div className="grid grid-cols-2 gap-2 text-[10px]">
             <div className="rounded-md border bg-muted/20 p-2">
-              <div className="font-medium text-muted-foreground uppercase tracking-wide">{copyFor(language, 'Field A', 'الحقل أ')}</div>
-              <div>{(result.aArea / 10000).toFixed(2)} {copyFor(language, 'ha', 'هكتار')} · {result.aVertices} {copyFor(language, 'verts', 'رؤوس')}</div>
+              <div className="font-medium text-muted-foreground uppercase tracking-wide">{tr('Field A', 'الحقل أ')}</div>
+              <div>{(result.aArea / 10000).toFixed(2)} {tr('ha', 'هكتار')} · {result.aVertices} {tr('verts', 'رؤوس')}</div>
             </div>
             <div className="rounded-md border bg-muted/20 p-2">
-              <div className="font-medium text-muted-foreground uppercase tracking-wide">{copyFor(language, 'Field B', 'الحقل ب')}</div>
-              <div>{(result.bArea / 10000).toFixed(2)} {copyFor(language, 'ha', 'هكتار')} · {result.bVertices} {copyFor(language, 'verts', 'رؤوس')}</div>
+              <div className="font-medium text-muted-foreground uppercase tracking-wide">{tr('Field B', 'الحقل ب')}</div>
+              <div>{(result.bArea / 10000).toFixed(2)} {tr('ha', 'هكتار')} · {result.bVertices} {tr('verts', 'رؤوس')}</div>
             </div>
           </div>
         </div>
       )}
 
       <div className="rounded-xl border border-border/70 bg-muted/20 p-3 text-[10px] leading-relaxed text-muted-foreground">
-        {copyFor(language, 'Paste boundaries from the Field Boundary Importer (#2). Centroid distance is for planning travel routes; edge-to-edge minimum is for shared-fence / irrigation-line / spray-buffer calculations.', 'الصق الحدود من مستورد حدود الحقول (#2). تستخدم مسافة المركز لتخطيط مسارات التنقل، بينما يستخدم الحد الأدنى بين الحافتين لحسابات السياج المشترك أو خطوط الري أو مناطق حواجز الرش.')}
+        {tr('Paste boundaries from the Field Boundary Importer (#2). Centroid distance is for planning travel routes; edge-to-edge minimum is for shared-fence / irrigation-line / spray-buffer calculations.', 'الصق الحدود من مستورد حدود الحقول (#2). تستخدم مسافة المركز لتخطيط مسارات التنقل، بينما يستخدم الحد الأدنى بين الحافتين لحسابات السياج المشترك أو خطوط الري أو مناطق حواجز الرش.')}
       </div>
     </div>
   );

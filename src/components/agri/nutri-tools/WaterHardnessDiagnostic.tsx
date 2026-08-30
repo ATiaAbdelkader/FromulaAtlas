@@ -1,19 +1,16 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Droplets,
-  Waves,
   FlaskConical,
   Scale,
-  Sparkles,
   Zap,
   AlertTriangle,
   CheckCircle2,
@@ -24,9 +21,6 @@ import {
   ShieldCheck,
   Info,
   Layers,
-  ArrowRight,
-  TrendingDown,
-  Activity,
   Beaker,
   Share2,
 } from 'lucide-react';
@@ -44,6 +38,22 @@ import { SendToMenu } from './SendToMenu';
 import { sendToBridge } from '@/lib/tool-bridge';
 import { useTranslation, copyFor } from '@/lib/language-store';
 import { toast } from '@/hooks/use-toast';
+import {
+  CalculatorShell,
+  type TrilingualString,
+} from '@/components/agri/nutri-tools/CalculatorShell';
+
+const TITLE: TrilingualString = {
+  en: 'Water Hardness Diagnostic & Acid Dosing Engine',
+  ar: 'تشخيص عسورة المياه وحاسبة معادلة القلوية والأحماض',
+  fr: 'Diagnostic de Dureté de l\'Eau & Neutralisation Acide',
+};
+
+const DESC: TrilingualString = {
+  en: 'Accurately calculate Total Hardness (CaCO₃) from Ca²⁺ and Mg²⁺ lab assays, convert across international hardness scales, compute precise acid injections for bicarbonate neutralization, and prevent drip emitter scaling with Langelier saturation modeling.',
+  ar: 'حساب العسورة الكلية (CaCO₃) بدقة من تحاليل الكالسيوم والماغنيسيوم، والتحويل بين درجات العسورة الدولية، وحساب جرعات الأحماض لمعادلة البيكربونات مع نمذجة مؤشر لانجلييه لمنع انسداد شبكات الري.',
+  fr: 'Calculez la dureté totale (CaCO₃), convertissez en degrés français et allemands, et dosez précisément les acides pour neutraliser les bicarbonates et éviter le colmatage.',
+};
 
 interface WaterSamplePreset {
   id: string;
@@ -115,7 +125,7 @@ const HARDNESS_PRESETS: WaterSamplePreset[] = [
 ];
 
 export function WaterHardnessDiagnostic() {
-  const { language, isRTL } = useTranslation();
+  const { language } = useTranslation();
   const isAr = language === 'ar';
   const isFr = language === 'fr';
   const tr = (en: string, ar: string, fr?: string) => copyFor(language, en, ar, fr);
@@ -354,102 +364,54 @@ Langelier Saturation Index (LSI): ${lsiEstimate.lsi.toFixed(2)} (${lsiEstimate.s
   };
 
   return (
-    <div className="w-full space-y-6 max-w-7xl mx-auto" dir={isRTL ? 'rtl' : 'ltr'}>
-      {/* Signature Hero Header Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-950 via-indigo-900 to-cyan-950 text-white p-6 shadow-xl border border-blue-700/40">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2">
-              <span className="p-2.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 shadow-inner">
-                <Droplets className="h-6 w-6 text-cyan-300" />
-              </span>
-              <div>
-                <h2 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-                  {tr(
-                    'Water Hardness Diagnostic & Acid Dosing Engine',
-                    'تشخيص عسورة المياه وحاسبة معادلة القلوية والأحماض',
-                    'Diagnostic de Dureté de l’Eau & Neutralisation Acide'
-                  )}
-                  <Badge variant="outline" className="bg-cyan-500/20 text-cyan-200 border-cyan-400/40 text-[10px] uppercase tracking-wider">
-                    LSI & Carbonate Equilibrium
-                  </Badge>
-                </h2>
-              </div>
-            </div>
-            <p className="text-sm text-cyan-100/90 max-w-3xl leading-relaxed">
-              {tr(
-                'Accurately calculate Total Hardness (CaCO₃) from Ca²⁺ and Mg²⁺ lab assays, convert across international hardness scales (°dH, °fH, °e, meq/L), compute precise acid injections for bicarbonate neutralization, and prevent drip emitter scaling with Langelier saturation modeling.',
-                'حساب العسورة الكلية (CaCO₃) بدقة من تحاليل الكالسيوم والماغنيسيوم، والتحويل بين درجات العسورة الدولية (°dH, °fH, meq/L)، وحساب جرعات الأحماض لمعادلة البيكربونات مع نمذجة مؤشر لانجلييه لمنع انسداد شبكات الري.',
-                'Calculez la dureté totale (CaCO₃), convertissez en degrés français et allemands, et dosez précisément les acides pour neutraliser les bicarbonates et éviter le colmatage.'
-              )}
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              onClick={handleCopyReport}
-              variant="outline"
-              size="sm"
-              className="bg-white/15 hover:bg-white/25 text-white border-white/25 backdrop-blur font-semibold shadow-sm"
-            >
-              {copied ? (
-                <>
-                  <Check className="h-4 w-4 mr-1 text-emerald-300" />
-                  {tr('Copied!', 'تم النسخ!', 'Copié !')}
-                </>
-              ) : (
-                <>
-                  <Copy className="h-4 w-4 mr-1 text-cyan-300" />
-                  {tr('Copy Report', 'نسخ التقرير', 'Copier')}
-                </>
-              )}
-            </Button>
-            <Button
-              onClick={handleSendToHydro}
-              variant="outline"
-              size="sm"
-              className="bg-white/15 hover:bg-white/25 text-white border-white/25 backdrop-blur font-semibold shadow-sm"
-            >
-              <Share2 className="h-4 w-4 mr-1 text-teal-300" />
-              {tr('Send to Hydro Designer', 'إرسال للمحلول المغذي', 'Vers Hydroponie')}
-            </Button>
-            <Button
-              onClick={() => {
-                applyPreset(HARDNESS_PRESETS[0]);
-              }}
-              variant="outline"
-              size="sm"
-              className="bg-white/10 hover:bg-white/20 text-white border-white/20 backdrop-blur"
-            >
-              <RotateCcw className="h-4 w-4 mr-1 text-stone-300" />
-              {tr('Reset', 'إعادة تعيين', 'Réinitialiser')}
-            </Button>
-          </div>
-        </div>
-
-        {/* Presets Pill Bar */}
-        <div className="mt-5 pt-4 border-t border-white/15 flex flex-wrap items-center gap-2">
-          <span className="text-xs text-cyan-200/80 font-medium mr-1">
-            {tr('Quick Water Presets:', 'نماذج مياه جاهزة:', 'Échantillons types :')}
-          </span>
-          {HARDNESS_PRESETS.map((p) => (
-            <button
-              key={p.id}
-              onClick={() => applyPreset(p)}
-              className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all ${
-                activePresetId === p.id
-                  ? 'bg-cyan-400 text-blue-950 shadow-md font-bold'
-                  : 'bg-white/10 hover:bg-white/20 text-cyan-100'
-              }`}
-            >
-              {isAr ? p.name_ar : isFr ? p.name_fr : p.name}
-            </button>
-          ))}
-        </div>
+    <CalculatorShell
+      icon={Droplets}
+      title={TITLE}
+      description={DESC}
+      badge="LSI & Carbonate"
+      accent="sky"
+      actions={[
+        {
+          icon: Copy,
+          label: { en: 'Copy Report', ar: 'نسخ التقرير', fr: 'Copier' },
+          onClick: handleCopyReport,
+          variant: 'primary',
+          showCheck: copied,
+        },
+        {
+          icon: Share2,
+          label: { en: 'Send to Hydro', ar: 'إرسال للمحلول المغذي', fr: 'Vers Hydroponie' },
+          onClick: handleSendToHydro,
+        },
+        {
+          icon: RotateCcw,
+          label: { en: 'Reset', ar: 'إعادة تعيين', fr: 'Réinitialiser' },
+          onClick: () => applyPreset(HARDNESS_PRESETS[0]),
+        },
+      ]}
+    >
+      {/* Presets Pill Bar */}
+      <div className="lg:col-span-12 flex flex-wrap items-center gap-2 p-3.5 rounded-2xl border bg-card shadow-xs">
+        <span className="text-xs text-muted-foreground font-medium me-1">
+          {tr('Quick Water Presets:', 'نماذج مياه جاهزة:', 'Échantillons types :')}
+        </span>
+        {HARDNESS_PRESETS.map((p) => (
+          <button
+            key={p.id}
+            onClick={() => applyPreset(p)}
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+              activePresetId === p.id
+                ? 'bg-sky-500 text-white shadow-md font-bold'
+                : 'bg-muted hover:bg-muted/70 text-foreground'
+            }`}
+          >
+            {isAr ? p.name_ar : isFr ? p.name_fr : p.name}
+          </button>
+        ))}
       </div>
 
       {/* Vital Metric Indicators */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="lg:col-span-12 grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="p-4 rounded-2xl border bg-card shadow-xs space-y-1">
           <div className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider flex items-center justify-between">
             <span>{tr('Total Hardness (TH)', 'العسورة الكلية (TH)', 'Dureté Totale (TH)')}</span>
@@ -505,7 +467,7 @@ Langelier Saturation Index (LSI): ${lsiEstimate.lsi.toFixed(2)} (${lsiEstimate.s
       </div>
 
       {/* Navigation Tabs */}
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="lg:col-span-12 w-full">
         <TabsList className="grid grid-cols-4 w-full h-11 p-1 bg-muted/60 rounded-xl">
           <TabsTrigger value="calc" className="rounded-lg text-xs font-bold gap-1.5">
             <Scale className="h-3.5 w-3.5 text-blue-600" />
@@ -1041,6 +1003,6 @@ Langelier Saturation Index (LSI): ${lsiEstimate.lsi.toFixed(2)} (${lsiEstimate.s
           </div>
         </TabsContent>
       </Tabs>
-    </div>
+    </CalculatorShell>
   );
 }
