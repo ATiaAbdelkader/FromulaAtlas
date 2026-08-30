@@ -17,7 +17,6 @@
  */
 
 import { useState, useMemo, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -25,15 +24,41 @@ import { Badge } from '@/components/ui/badge';
 import {
   Sprout, FlaskConical, Download, Calendar, Beaker, Activity,
   TrendingUp, AlertTriangle, CheckCircle2, MapPin,
+  Copy, RotateCcw,
 } from 'lucide-react';
 import { copyFor, useTranslation } from '@/lib/language-store';
+import { toast } from '@/hooks/use-toast';
+import {
+  CalculatorShell,
+  type TrilingualString,
+} from '@/components/agri/nutri-tools/CalculatorShell';
 import {
   CROP_LIFECYCLES, getCropLifecycle, stageForDay,
   type CropLifecycle, type FertilizationApplication,
 } from '@/lib/crop-lifecycle';
 
+const TITLE: TrilingualString = {
+  en: 'Fertilization Generator',
+  ar: 'مولّد التسميد',
+  fr: 'Générateur de Fertilisation',
+};
+
+const DESC: TrilingualString = {
+  en: 'FAO-56 + extension service plans · 20 crops · week-by-week schedule with sources',
+  ar: 'خطط FAO-56 والإرشاد الزراعي · 20 محصولاً · جدول أسبوعي مع المصادر',
+  fr: 'Plans FAO-56 + vulgarisation · 20 cultures · calendrier hebdomadaire avec sources',
+};
+
+const PROTOCOL_NOTE: TrilingualString = {
+  en: 'Rates are research-based defaults; always adjust to local soil test results. Climate, variety, and yield target influence uptake — split applications to minimize losses.',
+  ar: 'المعدلات افتراضية مبنية على الأبحاث؛ اضبطها دائماً وفق نتائج تحليل التربة المحلي. تؤثر المنطقة والأصناف والهدف الإنتاجي على الامتصاص — قسّم التطبيقات لتقليل الفاقد.',
+  fr: 'Les doses sont des valeurs de recherche ; ajustez toujours selon les analyses de sol locales. Climat, variété et objectif de rendement influencent l’absorption — fractionner les apports pour limiter les pertes.',
+};
+
 export function FertilizationGenerator() {
   const { language } = useTranslation();
+  const tr = (en: string, ar: string, fr?: string) => copyFor(language, en, ar, fr);
+  const [copied, setCopied] = useState(false);
   const [cropId, setCropId] = useState<string>('maize');
   const [areaHa, setAreaHa] = useState<number>(1);
   const [plantingDate, setPlantingDate] = useState<string>(
@@ -159,15 +184,60 @@ export function FertilizationGenerator() {
     setTimeout(() => win.print(), 300);
   }, [crop, areaHa, plantingDate, scaledApps, totals, language]);
 
+  const handleCopy = useCallback(() => {
+    const lines = [
+      '=== FERTILIZATION PLAN ===',
+      `${crop.emoji} ${crop.name}`,
+      `Field area: ${areaHa} ha`,
+      `Planting date: ${plantingDate}`,
+      `Season: ${crop.seasonLength} days (${crop.stages.length} stages)`,
+      '',
+      `Season totals (${areaHa} ha):`,
+      `N: ${totals.n.toFixed(1)} kg`,
+      `P: ${totals.p.toFixed(1)} kg`,
+      `K: ${totals.k.toFixed(1)} kg`,
+      `Ca: ${totals.ca.toFixed(1)} kg`,
+      `Mg: ${totals.mg.toFixed(1)} kg`,
+      `S: ${totals.s.toFixed(1)} kg`,
+      `Applications: ${scaledApps.length}`,
+    ];
+    navigator.clipboard.writeText(lines.join('\n'));
+    setCopied(true);
+    toast({ title: tr('Summary Copied!', 'تم النسخ!', 'Copié !') });
+    setTimeout(() => setCopied(false), 3000);
+  }, [crop, areaHa, plantingDate, totals, scaledApps, language]);
+
+  const handleReset = useCallback(() => {
+    setCropId('maize');
+    setAreaHa(1);
+    setPlantingDate(new Date().toISOString().slice(0, 10));
+    toast({ title: tr('Reset to defaults', 'تمت إعادة التعيين', 'Réinitialisé') });
+  }, [language]);
+
   return (
-    <Card className="overflow-hidden border-emerald-200/60 shadow-sm dark:border-emerald-900/60">
-      <CardHeader className="border-b bg-gradient-to-r from-emerald-50 via-background to-lime-50/60 pb-4 dark:from-emerald-950/30 dark:via-background dark:to-lime-950/20">
-        <CardTitle className="text-base flex items-center gap-2">
-          <FlaskConical className="h-4 w-4 text-emerald-600" /> {copyFor(language, 'Fertilization Generator', 'مولّد التسميد')}
-        </CardTitle>
-        <p className="text-xs leading-relaxed text-muted-foreground">{copyFor(language, 'FAO-56 + extension service plans · 20 crops · week-by-week schedule with sources', 'خطط FAO-56 والإرشاد الزراعي · 20 محصولاً · جدول أسبوعي مع المصادر')}</p>
-      </CardHeader>
-      <CardContent className="space-y-5 p-4 sm:p-5">
+    <CalculatorShell
+      icon={FlaskConical}
+      title={TITLE}
+      description={DESC}
+      badge="FAO-56 · 20 crops"
+      accent="amber"
+      actions={[
+        {
+          icon: Copy,
+          label: { en: 'Copy Summary', ar: 'نسخ التقرير', fr: 'Copier' },
+          onClick: handleCopy,
+          variant: 'primary',
+          showCheck: copied,
+        },
+        {
+          icon: RotateCcw,
+          label: { en: 'Reset', ar: 'إعادة تعيين', fr: 'Réinitialiser' },
+          onClick: handleReset,
+        },
+      ]}
+      protocolNote={PROTOCOL_NOTE}
+    >
+      <div className="lg:col-span-12 space-y-5">
         {/* Inputs */}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
@@ -305,15 +375,15 @@ export function FertilizationGenerator() {
 
         {/* Export + general notes */}
         <Button size="sm" onClick={exportPdf} className="h-11 w-full gap-2">
-          <Download className="h-3.5 w-3.5" /> {copyFor(language, 'Export fertilization plan (PDF)', 'تصدير خطة التسميد (PDF)')}
+          <Download className="h-3.5 w-3.5" /> {copyFor(language, 'Export fertilization plan (PDF)', 'تصدير خطة التسميد (PDF)', 'Exporter le plan de fertilisation (PDF)')}
         </Button>
 
         <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50/40 p-3 text-xs leading-relaxed text-amber-800 dark:border-amber-900 dark:bg-amber-950/20 dark:text-amber-300">
           <AlertTriangle className="h-3 w-3 mt-0.5 shrink-0" />
           <div>{crop.notes}</div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </CalculatorShell>
   );
 }
 

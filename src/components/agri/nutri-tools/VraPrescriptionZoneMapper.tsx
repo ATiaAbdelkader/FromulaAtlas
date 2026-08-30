@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -29,9 +28,15 @@ import {
   Activity,
   Maximize2,
   Percent,
+  Copy,
+  RotateCcw,
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useTranslation, copyFor } from '@/lib/language-store';
+import {
+  CalculatorShell,
+  type TrilingualString,
+} from '@/components/agri/nutri-tools/CalculatorShell';
 
 export interface ManagementZone {
   id: string;
@@ -50,6 +55,85 @@ export interface ManagementZone {
   prescribedK2O: number;
   prescribedLime: number; // kg/ha
 }
+
+const TITLE: TrilingualString = {
+  en: 'Variable Rate Application (VRA) Prescription & Zone Mapper',
+  ar: 'خريطة التسميد المتغير حسب المناطق (VRA Prescription Mapper)',
+  fr: 'Cartographie & Prescription à Taux Variable (VRA)',
+};
+
+const DESC: TrilingualString = {
+  en: 'Segment parcels into NDVI vigor and soil texture zones, calculate variable N-P-K doses, and quantify ROI vs uniform application.',
+  ar: 'تقسيم الحقل إلى مناطق تجانس حسب مؤشر الغطاء النباتي (NDVI) وخصائص التربة لتطبيق جرعات متغيرة وتوفير التكاليف وحماية البيئة.',
+  fr: 'Zonage intra-parcellaire, modulation de dose N-P-K et calcul du retour sur investissement.',
+};
+
+const DEFAULT_ZONES: ManagementZone[] = [
+  {
+    id: 'z1',
+    name: 'Zone 1: High Vigor & Deep Silt Loam',
+    name_ar: 'المنطقة 1: نشاط خضري مرتفع وتربة عميقة خصبة',
+    name_fr: 'Zone 1 : Haute Vigueur & Limon Profond',
+    color: '#16a34a',
+    areaHa: 16.5,
+    ndvi: 0.82,
+    soilOM: 3.4,
+    soilCEC: 22,
+    targetYieldTPerHa: 9.5,
+    prescribedN: 195,
+    prescribedP2O5: 50,
+    prescribedK2O: 90,
+    prescribedLime: 0,
+  },
+  {
+    id: 'z2',
+    name: 'Zone 2: Moderate Vigor / Average Texture',
+    name_ar: 'المنطقة 2: نمو متوسط وقوام طيني متوسط',
+    name_fr: 'Zone 2 : Vigueur Moyenne / Texture Équilibrée',
+    color: '#3b82f6',
+    areaHa: 19.0,
+    ndvi: 0.65,
+    soilOM: 2.3,
+    soilCEC: 16,
+    targetYieldTPerHa: 7.8,
+    prescribedN: 170,
+    prescribedP2O5: 75,
+    prescribedK2O: 120,
+    prescribedLime: 500,
+  },
+  {
+    id: 'z3',
+    name: 'Zone 3: Sandy Ridge / Low OM (Leaching Risk)',
+    name_ar: 'المنطقة 3: مرتفع رملي فقير في المادة العضوية (معرض للغسيل)',
+    name_fr: 'Zone 3 : Crête Sableuse / Faible MO',
+    color: '#f59e0b',
+    areaHa: 8.5,
+    ndvi: 0.44,
+    soilOM: 1.2,
+    soilCEC: 9,
+    targetYieldTPerHa: 5.2,
+    prescribedN: 130,
+    prescribedP2O5: 90,
+    prescribedK2O: 150,
+    prescribedLime: 1200,
+  },
+  {
+    id: 'z4',
+    name: 'Zone 4: Heavy Clay Depression / Compaction',
+    name_ar: 'المنطقة 4: منخفض طيني ثقيل مع اندماج في التربة',
+    name_fr: 'Zone 4 : Bas-fond Argileux / Compacté',
+    color: '#8b5cf6',
+    areaHa: 4.0,
+    ndvi: 0.52,
+    soilOM: 2.8,
+    soilCEC: 26,
+    targetYieldTPerHa: 6.5,
+    prescribedN: 150,
+    prescribedP2O5: 60,
+    prescribedK2O: 100,
+    prescribedLime: 800,
+  },
+];
 
 export function VraPrescriptionZoneMapper() {
   const { language } = useTranslation();
@@ -71,72 +155,8 @@ export function VraPrescriptionZoneMapper() {
   const [flatRateK, setFlatRateK] = useState<number>(120); // kg K2O/ha
 
   // Management Zones
-  const [zones, setZones] = useState<ManagementZone[]>([
-    {
-      id: 'z1',
-      name: 'Zone 1: High Vigor & Deep Silt Loam',
-      name_ar: 'المنطقة 1: نشاط خضري مرتفع وتربة عميقة خصبة',
-      name_fr: 'Zone 1 : Haute Vigueur & Limon Profond',
-      color: '#16a34a', // Emerald
-      areaHa: 16.5,
-      ndvi: 0.82,
-      soilOM: 3.4,
-      soilCEC: 22,
-      targetYieldTPerHa: 9.5,
-      prescribedN: 195,
-      prescribedP2O5: 50,
-      prescribedK2O: 90,
-      prescribedLime: 0,
-    },
-    {
-      id: 'z2',
-      name: 'Zone 2: Moderate Vigor / Average Texture',
-      name_ar: 'المنطقة 2: نمو متوسط وقوام طيني متوسط',
-      name_fr: 'Zone 2 : Vigueur Moyenne / Texture Équilibrée',
-      color: '#3b82f6', // Blue
-      areaHa: 19.0,
-      ndvi: 0.65,
-      soilOM: 2.3,
-      soilCEC: 16,
-      targetYieldTPerHa: 7.8,
-      prescribedN: 170,
-      prescribedP2O5: 75,
-      prescribedK2O: 120,
-      prescribedLime: 500,
-    },
-    {
-      id: 'z3',
-      name: 'Zone 3: Sandy Ridge / Low OM (Leaching Risk)',
-      name_ar: 'المنطقة 3: مرتفع رملي فقير في المادة العضوية (معرض للغسيل)',
-      name_fr: 'Zone 3 : Crête Sableuse / Faible MO',
-      color: '#f59e0b', // Amber
-      areaHa: 8.5,
-      ndvi: 0.44,
-      soilOM: 1.2,
-      soilCEC: 9,
-      targetYieldTPerHa: 5.2,
-      prescribedN: 130, // Reduced to prevent leaching
-      prescribedP2O5: 90, // Higher starter P
-      prescribedK2O: 150,
-      prescribedLime: 1200,
-    },
-    {
-      id: 'z4',
-      name: 'Zone 4: Heavy Clay Depression / Compaction',
-      name_ar: 'المنطقة 4: منخفض طيني ثقيل مع اندماج في التربة',
-      name_fr: 'Zone 4 : Bas-fond Argileux / Compacté',
-      color: '#8b5cf6', // Purple
-      areaHa: 4.0,
-      ndvi: 0.52,
-      soilOM: 2.8,
-      soilCEC: 26,
-      targetYieldTPerHa: 6.5,
-      prescribedN: 150,
-      prescribedP2O5: 60,
-      prescribedK2O: 100,
-      prescribedLime: 800,
-    },
-  ]);
+  const [zones, setZones] = useState<ManagementZone[]>(DEFAULT_ZONES.map(z => ({ ...z })));
+  const [copied, setCopied] = useState(false);
 
   // Update a zone parameter
   const handleUpdateZone = (id: string, field: keyof ManagementZone, value: any) => {
@@ -236,82 +256,95 @@ export function VraPrescriptionZoneMapper() {
     });
   };
 
+  const handleCopy = () => {
+    const lines = [
+      '=== VRA PRESCRIPTION ===',
+      `Field: ${fieldName} (${totalFieldAreaHa} Ha)`,
+      `Crop: ${crop}`,
+      `Flat Rate N: ${flatRateN} kg/ha`,
+      '',
+      `Cost Savings: $${comparisonStats.netCostSavings.toLocaleString()}`,
+      `N Saved: ${comparisonStats.nSavingsKg.toLocaleString()} kg (${comparisonStats.nSavingsPct}%)`,
+      `CO₂e Avoided: ${(comparisonStats.co2eAvoidedKg / 1000).toFixed(1)} t`,
+      `ROI: +$${(comparisonStats.netCostSavings / totalFieldAreaHa).toFixed(1)}/Ha`,
+      '',
+      `Zones (${zones.length}):`,
+      ...zones.map(z => `  ${z.id}: ${z.areaHa} Ha · N${z.prescribedN} P${z.prescribedP2O5} K${z.prescribedK2O} Lime${z.prescribedLime}`),
+    ];
+    navigator.clipboard.writeText(lines.join('\n'));
+    setCopied(true);
+    toast({ title: tr('Summary Copied!', 'تم النسخ!', 'Copié !') });
+    setTimeout(() => setCopied(false), 3000);
+  };
+
+  const handleReset = () => {
+    setZones(DEFAULT_ZONES.map(z => ({ ...z })));
+    setFieldName('Pivot 04 - Sector West (48.0 Ha)');
+    setTotalFieldAreaHa(48.0);
+    setCrop('Wheat / Maize Rotation');
+    setFlatRateN(180);
+    setFlatRateP(80);
+    setFlatRateK(120);
+    toast({ title: tr('Zones reset to defaults', 'تمت إعادة التعيين', 'Réinitialisé') });
+  };
+
   return (
-    <div className="space-y-6">
-      {/* Header Card */}
-      <Card className="border-border shadow-xs bg-gradient-to-r from-purple-50/70 via-background to-emerald-50/70 dark:from-purple-950/20 dark:via-background dark:to-emerald-950/20">
-        <CardHeader className="pb-3">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <div className="p-2 rounded-xl bg-purple-600 text-white shadow-xs">
-                <Map className="h-5 w-5" />
-              </div>
-              <div>
-                <CardTitle className="text-lg font-black text-foreground">
-                  {tr(
-                    'Variable Rate Application (VRA) Prescription & Zone Mapper',
-                    'خريطة التسميد المتغير حسب المناطق (VRA Prescription Mapper)',
-                    'Cartographie & Prescription à Taux Variable (VRA)'
-                  )}
-                </CardTitle>
-                <CardDescription className="text-xs">
-                  {tr(
-                    'Segment parcels into NDVI vigor and soil texture zones, calculate variable N-P-K doses, and quantify ROI vs uniform application.',
-                    'تقسيم الحقل إلى مناطق تجانس حسب مؤشر الغطاء النباتي (NDVI) وخصائص التربة لتطبيق جرعات متغيرة وتوفير التكاليف وحماية البيئة.',
-                    'Zonage intra-parcellaire, modulation de dose N-P-K et calcul du retour sur investissement.'
-                  )}
-                </CardDescription>
-              </div>
-            </div>
-
-            <Button
-              onClick={handleExportCSV}
-              className="h-9 gap-1.5 text-xs font-bold bg-slate-800 hover:bg-slate-900 text-white shadow-xs"
-            >
-              <Download className="h-4 w-4" />
-              {tr('Export Tractor Prescription (CSV)', 'تصدير خريطة التسميد (CSV)', 'Exporter Prescription')}
-            </Button>
+    <CalculatorShell
+      icon={Map}
+      title={TITLE}
+      description={DESC}
+      badge="VRA · Precision Ag"
+      accent="violet"
+      actions={[
+        {
+          icon: Copy,
+          label: { en: 'Copy Summary', ar: 'نسخ التقرير', fr: 'Copier' },
+          onClick: handleCopy,
+          variant: 'primary',
+          showCheck: copied,
+        },
+        {
+          icon: RotateCcw,
+          label: { en: 'Reset Zones', ar: 'إعادة التعيين', fr: 'Réinitialiser' },
+          onClick: handleReset,
+        },
+      ]}
+    >
+      <div className="lg:col-span-12 space-y-6">
+        {/* Machine & Field Metadata */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3 rounded-xl bg-card border text-xs">
+          <div>
+            <Label className="text-[10px] text-muted-foreground">{tr('Field / Parcel', 'الحقل / القطعة', 'Parcelle')}</Label>
+            <Input value={fieldName} onChange={(e) => setFieldName(e.target.value)} className="h-8 text-xs font-bold mt-0.5" />
           </div>
-        </CardHeader>
-
-        <CardContent className="pt-0">
-          {/* Machine & Field Metadata */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3 rounded-xl bg-card border text-xs">
-            <div>
-              <Label className="text-[10px] text-muted-foreground">{tr('Field / Parcel', 'الحقل / القطعة', 'Parcelle')}</Label>
-              <Input value={fieldName} onChange={(e) => setFieldName(e.target.value)} className="h-8 text-xs font-bold mt-0.5" />
-            </div>
-            <div>
-              <Label className="text-[10px] text-muted-foreground">{tr('Total Parcel Area (Ha)', 'المساحة الكلية (هكتار)', 'Surface Totale (Ha)')}</Label>
-              <Input
-                type="number"
-                step="0.5"
-                value={totalFieldAreaHa}
-                onChange={(e) => setTotalFieldAreaHa(Number(e.target.value) || 40)}
-                className="h-8 text-xs font-mono font-bold mt-0.5"
-              />
-            </div>
-            <div>
-              <Label className="text-[10px] text-muted-foreground">{tr('Target Crop', 'المحصول', 'Culture')}</Label>
-              <Input value={crop} onChange={(e) => setCrop(e.target.value)} className="h-8 text-xs mt-0.5" />
-            </div>
-            <div>
-              <Label className="text-[10px] text-muted-foreground">{tr('Flat Rate N Benchmark (kg/ha)', 'معدل النيتروجين الثابت للمقارنة', 'Dose N Uniforme')}</Label>
-              <Input
-                type="number"
-                value={flatRateN}
-                onChange={(e) => setFlatRateN(Number(e.target.value) || 180)}
-                className="h-8 text-xs font-mono font-bold mt-0.5"
-              />
-            </div>
+          <div>
+            <Label className="text-[10px] text-muted-foreground">{tr('Total Parcel Area (Ha)', 'المساحة الكلية (هكتار)', 'Surface Totale (Ha)')}</Label>
+            <Input
+              type="number"
+              step="0.5"
+              value={totalFieldAreaHa}
+              onChange={(e) => setTotalFieldAreaHa(Number(e.target.value) || 40)}
+              className="h-8 text-xs font-mono font-bold mt-0.5"
+            />
           </div>
-        </CardContent>
-      </Card>
+          <div>
+            <Label className="text-[10px] text-muted-foreground">{tr('Target Crop', 'المحصول', 'Culture')}</Label>
+            <Input value={crop} onChange={(e) => setCrop(e.target.value)} className="h-8 text-xs mt-0.5" />
+          </div>
+          <div>
+            <Label className="text-[10px] text-muted-foreground">{tr('Flat Rate N Benchmark (kg/ha)', 'معدل النيتروجين الثابت للمقارنة', 'Dose N Uniforme')}</Label>
+            <Input
+              type="number"
+              value={flatRateN}
+              onChange={(e) => setFlatRateN(Number(e.target.value) || 180)}
+              className="h-8 text-xs font-mono font-bold mt-0.5"
+            />
+          </div>
+        </div>
 
-      {/* ROI & Savings Hero Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <Card className="border shadow-xs bg-emerald-50/70 dark:bg-emerald-950/20 border-emerald-200">
-          <CardContent className="p-4 space-y-1">
+        {/* ROI & Savings Hero Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="border shadow-xs bg-emerald-50/70 dark:bg-emerald-950/20 border-emerald-200 p-4 rounded-xl space-y-1">
             <div className="text-xs font-semibold text-emerald-900 dark:text-emerald-300 flex items-center justify-between">
               <span>{tr('Total Input Cost Savings', 'صافي الوفر المالي للتسميد', 'Économie Financière')}</span>
               <DollarSign className="h-4 w-4 text-emerald-600" />
@@ -322,41 +355,35 @@ export function VraPrescriptionZoneMapper() {
             <div className="text-[10px] text-muted-foreground">
               {tr('Across', 'على كامل مساحة', 'Sur')} {totalFieldAreaHa} Ha vs {tr('Flat Uniform Rate', 'التطبيق الثابت', 'Taux fixe')}
             </div>
-          </CardContent>
-        </Card>
+          </div>
 
-        <Card className="border shadow-xs bg-blue-50/70 dark:bg-blue-950/20 border-blue-200">
-          <CardContent className="p-4 space-y-1">
-            <div className="text-xs font-semibold text-blue-900 dark:text-blue-300 flex items-center justify-between">
+          <div className="border shadow-xs bg-sky-50/70 dark:bg-sky-950/20 border-sky-200 p-4 rounded-xl space-y-1">
+            <div className="text-xs font-semibold text-sky-900 dark:text-sky-300 flex items-center justify-between">
               <span>{tr('Nitrogen Fertilizer Saved', 'النيتروجين الموفر', 'N Économisé')}</span>
-              <TrendingDown className="h-4 w-4 text-blue-600" />
+              <TrendingDown className="h-4 w-4 text-sky-600" />
             </div>
-            <div className="text-2xl font-black font-mono text-blue-700 dark:text-blue-400">
+            <div className="text-2xl font-black font-mono text-sky-700 dark:text-sky-400">
               {comparisonStats.nSavingsKg.toLocaleString()} <span className="text-xs font-normal">kg N</span>
             </div>
             <div className="text-[10px] text-muted-foreground">
               {comparisonStats.nSavingsPct}% {tr('reduction in over-fertilization', 'تقليل في الهدر والتسميد الزائد', 'de réduction')}
             </div>
-          </CardContent>
-        </Card>
+          </div>
 
-        <Card className="border shadow-xs bg-purple-50/70 dark:bg-purple-950/20 border-purple-200">
-          <CardContent className="p-4 space-y-1">
-            <div className="text-xs font-semibold text-purple-900 dark:text-purple-300 flex items-center justify-between">
+          <div className="border shadow-xs bg-violet-50/70 dark:bg-violet-950/20 border-violet-200 p-4 rounded-xl space-y-1">
+            <div className="text-xs font-semibold text-violet-900 dark:text-violet-300 flex items-center justify-between">
               <span>{tr('CO₂e Emissions Avoided', 'انبعاثات الكربون المتجنبة', 'CO₂e Évité')}</span>
-              <Leaf className="h-4 w-4 text-purple-600" />
+              <Leaf className="h-4 w-4 text-violet-600" />
             </div>
-            <div className="text-2xl font-black font-mono text-purple-700 dark:text-purple-400">
+            <div className="text-2xl font-black font-mono text-violet-700 dark:text-violet-400">
               {(comparisonStats.co2eAvoidedKg / 1000).toFixed(1)} <span className="text-xs font-normal">t CO₂e</span>
             </div>
             <div className="text-[10px] text-muted-foreground">
               {tr('Reduced Haber-Bosch synthesis footprint', 'خفض البصمة الكربونية للتصنيع الكيميائي', 'Empreinte synthèse réduite')}
             </div>
-          </CardContent>
-        </Card>
+          </div>
 
-        <Card className="border shadow-xs bg-amber-50/70 dark:bg-amber-950/20 border-amber-200">
-          <CardContent className="p-4 space-y-1">
+          <div className="border shadow-xs bg-amber-50/70 dark:bg-amber-950/20 border-amber-200 p-4 rounded-xl space-y-1">
             <div className="text-xs font-semibold text-amber-900 dark:text-amber-300 flex items-center justify-between">
               <span>{tr('Precision Agronomic ROI', 'العائد الاستثماري للدقة', 'ROI Modulation')}</span>
               <Activity className="h-4 w-4 text-amber-600" />
@@ -367,22 +394,20 @@ export function VraPrescriptionZoneMapper() {
             <div className="text-[10px] text-muted-foreground">
               {tr('Net gain per hectare', 'ربح إضافي صافٍ لكل هكتار', 'Gain net par hectare')}
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </div>
 
-      {/* Spatial Management Zones Map & Table */}
-      <Card className="border shadow-xs">
-        <CardHeader className="p-4 border-b">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        {/* Spatial Management Zones Map & Table */}
+        <div className="border shadow-xs rounded-xl overflow-hidden bg-card">
+          <div className="p-4 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
-              <CardTitle className="text-sm font-bold flex items-center gap-2">
+              <div className="text-sm font-bold flex items-center gap-2">
                 <Layers className="h-4 w-4 text-purple-600" />
                 {tr('Intra-Parcel Management Zones Prescription Matrix', 'مصفوفة التسميد المتغير حسب مناطق التجانس الحقلية', 'Prescriptions par Zone')}
-              </CardTitle>
-              <CardDescription className="text-xs">
+              </div>
+              <div className="text-xs text-muted-foreground mt-0.5">
                 {tr('Configure variable N-P-K doses according to soil CEC, OM%, and NDVI vigor.', 'تعديل الجرعات بحسب السعة التبادلية ونسبة المادة العضوية ونشاط النبات.', 'Ajustez les doses par zone.')}
-              </CardDescription>
+              </div>
             </div>
 
             {/* Visual Zone Proportion Bar */}
@@ -396,9 +421,7 @@ export function VraPrescriptionZoneMapper() {
               ))}
             </div>
           </div>
-        </CardHeader>
 
-        <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-xs text-left">
               <thead className="bg-muted/70 text-[11px] text-muted-foreground border-b">
@@ -475,8 +498,17 @@ export function VraPrescriptionZoneMapper() {
               </tbody>
             </table>
           </div>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+
+        {/* Export Tractor Prescription */}
+        <Button
+          onClick={handleExportCSV}
+          className="h-9 gap-1.5 text-xs font-bold bg-slate-800 hover:bg-slate-900 text-white shadow-xs"
+        >
+          <Download className="h-4 w-4" />
+          {tr('Export Tractor Prescription (CSV)', 'تصدير خريطة التسميد (CSV)', 'Exporter Prescription')}
+        </Button>
+      </div>
+    </CalculatorShell>
   );
 }

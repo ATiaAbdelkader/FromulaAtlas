@@ -17,7 +17,6 @@
  */
 
 import { useState, useMemo, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -25,12 +24,36 @@ import { Badge } from '@/components/ui/badge';
 import {
   CalendarDays, Users, Download, AlertTriangle, CheckCircle2,
   Wrench, Clock, TrendingUp, Activity, MapPin, Briefcase,
+  Copy, RotateCcw,
 } from 'lucide-react';
 import {
   CROP_LIFECYCLES, getCropLifecycle, stageForDay, totalLaborDays, peakLaborWeek,
   type CropLifecycle, type LaborOperation, type LaborType,
 } from '@/lib/crop-lifecycle';
 import { copyFor, useTranslation } from '@/lib/language-store';
+import { toast } from '@/hooks/use-toast';
+import {
+  CalculatorShell,
+  type TrilingualString,
+} from '@/components/agri/nutri-tools/CalculatorShell';
+
+const TITLE: TrilingualString = {
+  en: 'Labor Calendar',
+  ar: 'تقويم العمالة',
+  fr: 'Calendrier de Main d’œuvre',
+};
+
+const DESC: TrilingualString = {
+  en: 'Phenology-driven field operations · 20 crops · person-days/ha estimates + peak week detection',
+  ar: 'عمليات حقلية حسب مراحل النمو · 20 محصولاً · تقديرات أيام العمل/هكتار + تحديد أسبوع الذروة',
+  fr: 'Opérations de campagne par stade phénologique · 20 cultures · estimations en jours-homme/ha + pic de main d’œuvre',
+};
+
+const PROTOCOL_NOTE: TrilingualString = {
+  en: 'Labor requirements assume smallholder-to-medium mechanization. Highly mechanized farms should reduce estimates by 40–70%. Stagger plantings 1–2 weeks apart to spread peak labor demand.',
+  ar: 'تفترض متطلبات العمالة مستوى ميكنة من المزارع الصغيرة إلى المتوسطة. ينبغي للمزارع عالية الميكنة خفض التقديرات بنسبة 40–70%. وزّع مواعيد الزراعة بفاصل أسبوع إلى أسبوعين لتخفيف ذروة الطلب على العمالة.',
+  fr: 'Les besoins en main d’œuvre supposent une mécanisation petite à moyenne. Les fermes très mécanisées doivent réduire les estimations de 40–70 %. Décalez les semis de 1–2 semaines pour répartir le pic de main d’œuvre.',
+};
 
 const LABOR_TYPE_INFO: Record<LaborType, { label: string; color: string; icon: string }> = {
   land_prep:     { label: 'Land Preparation', color: '#92400e', icon: '🚜' },
@@ -80,6 +103,8 @@ function skillLabel(language: Parameters<typeof copyFor>[0], skill: keyof typeof
 
 export function LaborCalendar() {
   const { language } = useTranslation();
+  const tr = (en: string, ar: string, fr?: string) => copyFor(language, en, ar, fr);
+  const [copied, setCopied] = useState(false);
   const [cropId, setCropId] = useState<string>('maize');
   const [areaHa, setAreaHa] = useState<number>(1);
   const [plantingDate, setPlantingDate] = useState<string>(
@@ -217,15 +242,57 @@ export function LaborCalendar() {
     setTimeout(() => win.print(), 300);
   }, [crop, areaHa, plantingDate, opsWithWeek, stats, totalWeeks, language]);
 
+  const handleCopy = useCallback(() => {
+    const lines = [
+      '=== LABOR CALENDAR ===',
+      `${crop.emoji} ${crop.name}`,
+      `Field area: ${areaHa} ha`,
+      `Planting date: ${plantingDate}`,
+      `Season: ${crop.seasonLength} days (${totalWeeks} weeks)`,
+      '',
+      `Total labor: ${stats.total.toFixed(1)} person-days`,
+      `Peak week: ${stats.peak.week} (${stats.peak.laborDays.toFixed(1)} d)`,
+      `Critical operations: ${stats.critical}`,
+      `Total operations: ${opsWithWeek.length}`,
+    ];
+    navigator.clipboard.writeText(lines.join('\n'));
+    setCopied(true);
+    toast({ title: tr('Summary Copied!', 'تم النسخ!', 'Copié !') });
+    setTimeout(() => setCopied(false), 3000);
+  }, [crop, areaHa, plantingDate, stats, totalWeeks, opsWithWeek, language]);
+
+  const handleReset = useCallback(() => {
+    setCropId('maize');
+    setAreaHa(1);
+    setPlantingDate(new Date().toISOString().slice(0, 10));
+    setFilterType('all');
+    toast({ title: tr('Reset to defaults', 'تمت إعادة التعيين', 'Réinitialisé') });
+  }, [language]);
+
   return (
-    <Card className="overflow-hidden border-cyan-200/60 shadow-sm dark:border-cyan-900/60">
-      <CardHeader className="border-b bg-gradient-to-r from-cyan-50 via-background to-sky-50/60 pb-4 dark:from-cyan-950/30 dark:via-background dark:to-sky-950/20">
-        <CardTitle className="text-base flex items-center gap-2">
-          <CalendarDays className="h-4 w-4 text-cyan-600" /> {copyFor(language, 'Labor Calendar', 'تقويم العمالة')}
-        </CardTitle>
-        <p className="text-xs leading-relaxed text-muted-foreground">{copyFor(language, 'Phenology-driven field operations · 20 crops · person-days/ha estimates + peak week detection', 'عمليات حقلية حسب مراحل النمو · 20 محصولاً · تقديرات أيام العمل/هكتار + تحديد أسبوع الذروة')}</p>
-      </CardHeader>
-      <CardContent className="space-y-5 p-4 sm:p-5">
+    <CalculatorShell
+      icon={CalendarDays}
+      title={TITLE}
+      description={DESC}
+      badge="Phenology-driven"
+      accent="amber"
+      actions={[
+        {
+          icon: Copy,
+          label: { en: 'Copy Summary', ar: 'نسخ التقرير', fr: 'Copier' },
+          onClick: handleCopy,
+          variant: 'primary',
+          showCheck: copied,
+        },
+        {
+          icon: RotateCcw,
+          label: { en: 'Reset', ar: 'إعادة تعيين', fr: 'Réinitialiser' },
+          onClick: handleReset,
+        },
+      ]}
+      protocolNote={PROTOCOL_NOTE}
+    >
+      <div className="lg:col-span-12 space-y-5">
         {/* Inputs */}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
@@ -382,14 +449,14 @@ export function LaborCalendar() {
 
         {/* Export */}
         <Button size="sm" onClick={exportPdf} className="h-11 w-full gap-2">
-          <Download className="h-3.5 w-3.5" /> {copyFor(language, 'Export labor calendar (PDF)', 'تصدير تقويم العمالة (PDF)')}
+          <Download className="h-3.5 w-3.5" /> {copyFor(language, 'Export labor calendar (PDF)', 'تصدير تقويم العمالة (PDF)', 'Exporter le calendrier de main d’œuvre (PDF)')}
         </Button>
 
         <div className="rounded-xl border bg-muted/20 p-3 text-xs leading-relaxed text-muted-foreground">
-          💡 {copyFor(language, 'Labor requirements assume smallholder-to-medium mechanization. Highly mechanized farms should reduce estimates by 40–70%. Stagger plantings 1–2 weeks apart to spread peak labor demand.', 'تفترض متطلبات العمالة مستوى ميكنة من المزارع الصغيرة إلى المتوسطة. ينبغي للمزارع عالية الميكنة خفض التقديرات بنسبة 40–70%. وزّع مواعيد الزراعة بفاصل أسبوع إلى أسبوعين لتخفيف ذروة الطلب على العمالة.')}
+          💡 {copyFor(language, 'Labor requirements assume smallholder-to-medium mechanization. Highly mechanized farms should reduce estimates by 40–70%. Stagger plantings 1–2 weeks apart to spread peak labor demand.', 'تفترض متطلبات العمالة مستوى ميكنة من المزارع الصغيرة إلى المتوسطة. ينبغي للمزارع عالية الميكنة خفض التقديرات بنسبة 40–70%. وزّع مواعيد الزراعة بفاصل أسبوع إلى أسبوعين لتخفيف ذروة الطلب على العمالة.', 'Les besoins en main d’œuvre supposent une mécanisation petite à moyenne. Les fermes très mécanisées doivent réduire les estimations de 40–70 %. Décalez les semis de 1–2 semaines pour répartir le pic de main d’œuvre.')}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </CalculatorShell>
   );
 }
 

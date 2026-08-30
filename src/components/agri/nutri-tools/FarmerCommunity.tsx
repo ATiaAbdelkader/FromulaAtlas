@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -10,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import {
   Users, MessageCircle, Heart, Share2, Pin, Star, TrendingUp,
   Award, Plus, Send, ThumbsUp, Globe, MapPin, Search, X,
+  RotateCcw,
 } from 'lucide-react';
 import {
   getPosts, savePost, toggleLike, addReply, getProfile, saveProfile,
@@ -17,6 +17,11 @@ import {
   type Post, type Reply, type UserProfile, type PostType, type BenchmarkEntry,
 } from '@/lib/community-store';
 import { useTranslation, type Language } from '@/lib/language-store';
+import { toast } from '@/hooks/use-toast';
+import {
+  CalculatorShell,
+  type TrilingualString,
+} from '@/components/agri/nutri-tools/CalculatorShell';
 
 const POST_TYPE_CONFIG: Record<PostType, { label: string; label_fr: string; label_ar: string; color: string; icon: string }> = {
   question:      { label: 'Question',       label_fr: 'Question',       label_ar: 'سؤال',           color: '#3b82f6', icon: '❓' },
@@ -40,6 +45,18 @@ function cropLabel(crop: string, language: Language): string {
   return language === 'ar' ? BENCHMARK_CROP_LABELS[crop] ?? crop : crop;
 }
 
+const TITLE: TrilingualString = {
+  en: 'Farmer Community',
+  ar: 'مجتمع المزارعين',
+  fr: 'Communauté des Agriculteurs',
+};
+
+const DESC: TrilingualString = {
+  en: 'Share experiences, ask questions, benchmark your yields against the community, and build your farmer profile.',
+  ar: 'شارك تجاربك، اطرح أسئلتك، قارن إنتاجك مع المجتمع، وابنِ ملف المزارع الخاص بك.',
+  fr: 'Partagez vos expériences, posez vos questions, comparez vos rendements et créez votre profil d’agriculteur.',
+};
+
 function roleLabel(role: string, language: Language): string {
   const labels: Record<string, string> = {
     grower: copyFor(language, 'Grower', 'Producteur', 'مزارع'),
@@ -61,6 +78,7 @@ export function FarmerCommunity() {
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
   const { language } = useTranslation();
+  const tr = (en: string, ar: string, fr: string) => copyFor(language, en, fr, ar);
   const typeLabel = (t: PostType) => language === 'ar' ? POST_TYPE_CONFIG[t].label_ar : language === 'fr' ? POST_TYPE_CONFIG[t].label_fr : POST_TYPE_CONFIG[t].label;
 
   // New post form
@@ -142,6 +160,19 @@ export function FarmerCommunity() {
 
   const benchmark = getBenchmarkForCrop(benchCrop);
   const userBench = benchmark.user;
+
+  const handleReset = () => {
+    setTab('feed');
+    setFilterType('all');
+    setSearchQuery('');
+    setShowNewPost(false);
+    setReplyingTo(null);
+    setReplyText('');
+    setNewPost({ type: 'question', title: '', body: '', crop: '', region: '', tags: '' });
+    setBenchCrop('Tomato');
+    setBenchYield(''); setBenchNue(''); setBenchWp(''); setBenchRegion('');
+    toast({ title: tr('View reset', 'تمت إعادة التعيين', 'Réinitialisé') });
+  };
   const timeAgo = (ts: number) => {
     const d = Math.floor((Date.now() - ts) / 86400000);
     if (language === 'ar') {
@@ -166,7 +197,19 @@ export function FarmerCommunity() {
   };
 
   return (
-    <Card>
+    <CalculatorShell
+      icon={Users}
+      title={TITLE}
+      description={DESC}
+      badge="Community"
+      accent="emerald"
+      actions={[{
+        icon: RotateCcw,
+        label: { en: 'Reset View', ar: 'إعادة التعيين', fr: 'Réinitialiser' },
+        onClick: handleReset,
+      }]}
+    >
+      <div className="lg:col-span-12">
       {/* Tab bar */}
       <div className="flex gap-1 border-b border-border">
         <TabBtn active={tab === 'feed'} onClick={() => setTab('feed')} icon={MessageCircle} label={copyFor(language, 'Community Feed', 'Fil de la communauté', 'المجتمع')} />
@@ -422,7 +465,8 @@ export function FarmerCommunity() {
           <div className="text-[10px] text-muted-foreground text-center pt-2">{copyFor(language, 'Your profile is stored locally and attached to your community posts.', 'Votre profil est stocké localement et associé à vos publications communautaires.', 'ملفك مخزّن محلياً ومرفق بمنشوراتك في المجتمع.')}</div>
         </div>
       )}
-    </Card>
+      </div>
+    </CalculatorShell>
   );
 }
 

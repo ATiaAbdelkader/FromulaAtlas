@@ -25,6 +25,23 @@ import {
 import { copyFor, useTranslation } from '@/lib/language-store';
 import { useFarmStore } from '@/lib/farm-store';
 import { useWeatherStore, weatherCodeToText } from '@/lib/weather-store';
+import { toast } from '@/hooks/use-toast';
+import {
+  CalculatorShell,
+  type TrilingualString,
+} from '@/components/agri/nutri-tools/CalculatorShell';
+
+const TITLE: TrilingualString = {
+  en: 'AI Agronomy Specialists',
+  ar: 'متخصصو الذكاء الاصطناعي الزراعي',
+  fr: 'Spécialistes IA en Agronomie',
+};
+
+const DESC: TrilingualString = {
+  en: 'Chat with 10 specialized AI agents — crop scouting, irrigation, fertilization, pests, machinery, and more. Context-aware with your saved farm and weather data.',
+  ar: 'تحدّث مع 10 وكلاء ذكاء اصطناعي تخصصيين — كشافة المحاصيل، الري، التسميد، الآفات، الميكنة، والمزيد. يستفيد من بيانات مزرعتك والطقس المحفوظة.',
+  fr: 'Discutez avec 10 agents IA spécialisés — scouting, irrigation, fertilisation, ravageurs, machinisme et plus. Contextualisé avec votre ferme et la météo enregistrées.',
+};
 
 interface Message {
   role: 'user' | 'assistant';
@@ -54,6 +71,7 @@ export function AgriAgentChat() {
   const [showAgentPicker, setShowAgentPicker] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const tr = (en: string, ar: string, fr?: string) => copyFor(language, en, ar, fr);
 
   // Load conversations from localStorage on mount
   useEffect(() => {
@@ -188,7 +206,22 @@ export function AgriAgentChat() {
   };
 
   return (
-    <div className="space-y-3">
+    <CalculatorShell
+      icon={MessageCircle}
+      title={TITLE}
+      description={DESC}
+      badge={`${AI_AGENTS.length} Specialists`}
+      accent="violet"
+      actions={currentConversation.length > 0 ? [{
+        icon: RotateCcw,
+        label: { en: 'Clear Chat', ar: 'مسح المحادثة', fr: 'Effacer' },
+        onClick: () => {
+          clearConversation();
+          toast({ title: tr('Chat cleared', 'تم مسح المحادثة', 'Conversation effacée') });
+        },
+      }] : []}
+    >
+      <div className="lg:col-span-12 space-y-3">
       {/* Agent picker bar */}
       <div className="rounded-lg border bg-gradient-to-br from-indigo-50/60 to-violet-50/40 dark:from-indigo-950/20 dark:to-violet-950/10 p-3">
         <div className="flex items-center gap-2 mb-2">
@@ -377,7 +410,8 @@ export function AgriAgentChat() {
         {copyFor(language, 'Ask in English, Arabic, or French. The agent uses your active FormulaAtlas language and may use your saved farm and weather context when available. Verify local labels, registrations, and professional advice before acting.', 'اسأل بالإنجليزية أو العربية أو الفرنسية. يستخدم الوكيل لغة FormulaAtlas الحالية ويمكنه الاستفادة من سياق المزرعة والطقس المحفوظ عند توفره. تحقّق من الملصقات والتسجيلات المحلية واستشر المختصين قبل التنفيذ.', 'Posez votre question en anglais, arabe ou français. L’agent utilise la langue active de FormulaAtlas et peut employer le contexte enregistré de votre ferme et de la météo lorsqu’il est disponible. Vérifiez les étiquettes, homologations locales et l’avis d’un professionnel avant d’agir.')}
 
       </div>
-    </div>
+      </div>
+    </CalculatorShell>
   );
 }
 

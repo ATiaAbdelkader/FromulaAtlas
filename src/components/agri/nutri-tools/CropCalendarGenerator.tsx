@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -10,8 +9,14 @@ import { Textarea } from '@/components/ui/textarea';
 import {
   CalendarDays, Sparkles, Download, Edit3, Check, Plus, Trash2,
   Sprout, Droplets, FlaskConical, Bug, Users, FileText, BookOpen,
+  Copy, RotateCcw,
 } from 'lucide-react';
 import { copyFor, useTranslation } from '@/lib/language-store';
+import { toast } from '@/hooks/use-toast';
+import {
+  CalculatorShell,
+  type TrilingualString,
+} from '@/components/agri/nutri-tools/CalculatorShell';
 import {
   CROP_LIFECYCLES,
 } from '@/lib/crop-lifecycle';
@@ -29,8 +34,27 @@ import {
   type EnrichedPhytoProduct,
 } from '@/lib/phyto-enriched';
 
+const TITLE: TrilingualString = {
+  en: 'Crop Calendar Generator',
+  ar: 'مولّد تقويم المحصول',
+  fr: 'Générateur de Calendrier Cultural',
+};
+
+const DESC: TrilingualString = {
+  en: 'One-click complete farm calendar: planting + fertilization + irrigation + pest control + labor · editable · PDF export',
+  ar: 'تقويم زراعي كامل بنقرة واحدة: الزراعة + التسميد + الري + مكافحة الآفات + العمالة · قابل للتعديل · تصدير PDF',
+  fr: 'Calendrier cultural complet en un clic : semis + fertilisation + irrigation + protection phytosanitaire + main d’œuvre · éditable · export PDF',
+};
+
+const PROTOCOL_NOTE: TrilingualString = {
+  en: 'Combines FAO-56 crop coefficients, INPV 2017 pest control data, NRC 2021 feed standards, and crop lifecycle phenology. Click ✏️ on any row to add custom notes — adjust notes before exporting to PDF.',
+  ar: 'يجمع التقويم معاملات المحصول من FAO-56 وبيانات مكافحة الآفات من INPV 2017 ومعايير الأعلاف من NRC 2021 ومراحل نمو المحصول. اضغط على ✏️ في أي صف لإضافة ملاحظات مخصصة — عدّل الملاحظات قبل التصدير إلى PDF.',
+  fr: 'Combine les coefficients culturaux FAO-56, les données INPV 2017 de protection phytosanitaire, les normes NRC 2021 et la phénologie des cultures. Cliquez sur ✏️ pour ajouter des notes — ajustez-les avant l’export PDF.',
+};
+
 export function CropCalendarGenerator() {
   const { language } = useTranslation();
+  const tr = (en: string, ar: string, fr?: string) => copyFor(language, en, ar, fr);
   const [cropId, setCropId] = useState('maize');
   const [plantingDate, setPlantingDate] = useState(new Date().toISOString().slice(0, 10));
   const [area, setArea] = useState('1');
@@ -39,6 +63,7 @@ export function CropCalendarGenerator() {
   const [result, setResult] = useState<CropCalendarResult | null>(null);
   const [editingWeek, setEditingWeek] = useState<number | null>(null);
   const [customNotes, setCustomNotes] = useState<Record<number, string>>({});
+  const [copied, setCopied] = useState(false);
   const fertialOptions = useMemo(() => getFertialCropOptions(), []);
   const [fertialCropId, setFertialCropId] = useState('wheat');
   const fertialReference = useMemo(() => getFertialGuidance(fertialCropId) ?? null, [fertialCropId]);
@@ -74,6 +99,35 @@ export function CropCalendarGenerator() {
     setEditingWeek(null);
     setCustomNotes({});
   }, [cropId, plantingDate, area, irrigationSystem, avgET0]);
+
+  const handleCopy = useCallback(() => {
+    if (!result) return;
+    const lines = [
+      '=== CROP CALENDAR ===',
+      `${result.crop.emoji} ${result.crop.name}`,
+      `Planting: ${result.plantingDate}`,
+      `Area: ${result.area} ha · Irrigation: ${result.irrigationSystem} (η ${(result.irrigationEfficiency * 100).toFixed(0)}%)`,
+      `Avg ET₀: ${avgET0} mm/day`,
+      '',
+      `Season: ${result.weeks.length} weeks · ${result.crop.seasonLength} days`,
+      `Seed: ${result.seedRate.kgPerHa.toFixed(0)} kg/ha · ${result.seedRate.plantsPerM2.toFixed(0)} plants/m²`,
+      `Spacing: ${result.seedRate.plantSpacing.toFixed(1)}cm × ${result.seedRate.rowSpacing}cm`,
+      `N-P-K: ${result.totalSeason.n.toFixed(0)}-${result.totalSeason.p.toFixed(0)}-${result.totalSeason.k.toFixed(0)} kg/ha`,
+      `Irrigation total: ${result.totalSeason.irrigationM3.toFixed(0)} m³`,
+      `Labor: ${result.totalSeason.laborDays.toFixed(0)} days`,
+    ];
+    navigator.clipboard.writeText(lines.join('\n'));
+    setCopied(true);
+    toast({ title: tr('Summary Copied!', 'تم النسخ!', 'Copié !') });
+    setTimeout(() => setCopied(false), 3000);
+  }, [result, avgET0, language]);
+
+  const handleReset = useCallback(() => {
+    setResult(null);
+    setCustomNotes({});
+    setEditingWeek(null);
+    toast({ title: tr('Calendar cleared', 'تم مسح التقويم', 'Calendrier effacé') });
+  }, [language]);
 
   const exportPDF = useCallback(() => {
     if (!result) return;
@@ -157,14 +211,29 @@ export function CropCalendarGenerator() {
   }, [result, customNotes, avgET0, language]);
 
   return (
-    <Card className="overflow-hidden border-emerald-200/60 shadow-sm dark:border-emerald-900/60">
-      <CardHeader className="border-b bg-gradient-to-r from-emerald-50 via-background to-teal-50/50 pb-4 dark:from-emerald-950/30 dark:via-background dark:to-teal-950/20">
-        <CardTitle className="text-base flex items-center gap-2">
-          <CalendarDays className="h-4 w-4 text-emerald-600" /> {copyFor(language, 'Crop Calendar Generator', 'مولّد تقويم المحصول')}
-        </CardTitle>
-        <p className="text-xs leading-relaxed text-muted-foreground">{copyFor(language, 'One-click complete farm calendar: planting + fertilization + irrigation + pest control + labor · editable · PDF export', 'تقويم زراعي كامل بنقرة واحدة: الزراعة + التسميد + الري + مكافحة الآفات + العمالة · قابل للتعديل · تصدير PDF')}</p>
-      </CardHeader>
-      <CardContent className="space-y-5 p-4 sm:p-5">
+    <CalculatorShell
+      icon={CalendarDays}
+      title={TITLE}
+      description={DESC}
+      badge="FAO-56 · INPV 2017"
+      accent="emerald"
+      actions={[
+        {
+          icon: Copy,
+          label: { en: 'Copy Summary', ar: 'نسخ التقرير', fr: 'Copier' },
+          onClick: handleCopy,
+          variant: 'primary',
+          showCheck: copied,
+        },
+        {
+          icon: RotateCcw,
+          label: { en: 'Reset', ar: 'إعادة تعيين', fr: 'Réinitialiser' },
+          onClick: handleReset,
+        },
+      ]}
+      protocolNote={PROTOCOL_NOTE}
+    >
+      <div className="lg:col-span-12 space-y-5">
         {/* Inputs */}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
@@ -296,16 +365,12 @@ export function CropCalendarGenerator() {
 
             {/* Export */}
             <Button size="sm" onClick={exportPDF} className="h-11 w-full gap-2">
-              <FileText className="h-3.5 w-3.5" /> {copyFor(language, 'Export Complete Calendar (PDF)', 'تصدير التقويم الكامل (PDF)')}
+              <FileText className="h-3.5 w-3.5" /> {copyFor(language, 'Export Complete Calendar (PDF)', 'تصدير التقويم الكامل (PDF)', 'Exporter le Calendrier Complet (PDF)')}
             </Button>
-
-            <div className="rounded-xl border bg-muted/20 p-3 text-xs leading-relaxed text-muted-foreground">
-              💡 {copyFor(language, 'Click ✏️ on any row to add custom notes. The calendar combines FAO-56 crop coefficients, INPV 2017 pest control data, NRC 2021 feed standards, and crop lifecycle phenology. Edit notes before exporting to PDF.', 'اضغط على ✏️ في أي صف لإضافة ملاحظات مخصصة. يجمع التقويم معاملات المحصول من FAO-56 وبيانات مكافحة الآفات من INPV 2017 ومعايير الأعلاف من NRC 2021 ومراحل نمو المحصول. عدّل الملاحظات قبل التصدير إلى PDF.')}
-            </div>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </CalculatorShell>
   );
 }
 
