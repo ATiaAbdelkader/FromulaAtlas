@@ -1,17 +1,55 @@
 'use client';
+
 import { useState, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Droplets, CheckCircle2, AlertTriangle } from 'lucide-react';
+import {
+  Recycle,
+  Copy,
+  RotateCcw,
+  CheckCircle2,
+  AlertTriangle,
+} from 'lucide-react';
+import {
+  CalculatorShell,
+  type CalculatorPill,
+} from '@/components/agri/nutri-tools/CalculatorShell';
 import { copyFor, useTranslation } from '@/lib/language-store';
+import { toast } from '@/hooks/use-toast';
 
-const MANURE_AR: Record<string, string> = { dairy_solid: 'روث صلب للأبقار الحلوب', dairy_liquid: 'روث سائل للأبقار الحلوب', beef_solid: 'روث صلب للأبقار اللحمية', poultry: 'روث دجاج بياض', swine: 'روث خنازير سائل', composted: 'روث مُكمَّر' };
-const INCORPORATION_AR: Record<string, string> = { immediate: 'فوراً', hours12: 'خلال 12 ساعة', days1: 'خلال يوم واحد', days7: 'خلال 7 أيام', none: 'غير مدمج' };
-type UiLanguage = Parameters<typeof copyFor>[0];
+const MANURE_AR: Record<string, string> = {
+  dairy_solid: 'روث صلب للأبقار الحلوب',
+  dairy_liquid: 'روث سائل للأبقار الحلوب',
+  beef_solid: 'روث صلب للأبقار اللحمية',
+  poultry: 'روث دجاج بياض',
+  swine: 'روث خنازير سائل',
+  composted: 'روث مُكمَّر',
+};
+const MANURE_FR: Record<string, string> = {
+  dairy_solid: 'Fumier solide laitier',
+  dairy_liquid: 'Lisier laitier',
+  beef_solid: 'Fumier solide viande',
+  poultry: 'Fiente de volaille',
+  swine: 'Lisier porcin',
+  composted: 'Fumier composté',
+};
+const INCORPORATION_AR: Record<string, string> = {
+  immediate: 'فوراً',
+  hours12: 'خلال 12 ساعة',
+  days1: 'خلال يوم واحد',
+  days7: 'خلال 7 أيام',
+  none: 'غير مدمج',
+};
+const INCORPORATION_FR: Record<string, string> = {
+  immediate: 'Immédiat',
+  hours12: 'Sous 12 h',
+  days1: 'Sous 1 jour',
+  days7: 'Sous 7 jours',
+  none: 'Non incorporé',
+};
 
-const MANURE_TYPES: Record<string, { name: string; n: number; p: number; k: number; dm: number }> = {
+const MANURE_TYPES: Record<
+  string,
+  { name: string; n: number; p: number; k: number; dm: number }
+> = {
   dairy_solid: { name: 'Dairy solid', n: 10, p: 5, k: 10, dm: 25 },
   dairy_liquid: { name: 'Dairy liquid', n: 5, p: 2.5, k: 5, dm: 8 },
   beef_solid: { name: 'Beef solid', n: 11, p: 7, k: 12, dm: 25 },
@@ -20,63 +58,358 @@ const MANURE_TYPES: Record<string, { name: string; n: number; p: number; k: numb
   composted: { name: 'Composted manure', n: 8, p: 6, k: 8, dm: 40 },
 };
 
+const INCORPORATION_OPTIONS: { key: string; nAvail: number }[] = [
+  { key: 'immediate', nAvail: 0.4 },
+  { key: 'hours12', nAvail: 0.3 },
+  { key: 'days1', nAvail: 0.2 },
+  { key: 'days7', nAvail: 0.1 },
+  { key: 'none', nAvail: 0.05 },
+];
+
 export function ManureManagementPlanner() {
   const { language } = useTranslation();
+  const tr = (en: string, ar: string, fr?: string) => copyFor(language, en, ar, fr);
+
   const [manureType, setManureType] = useState('dairy_solid');
   const [rate, setRate] = useState('40');
   const [area, setArea] = useState('10');
   const [incorporation, setIncorporation] = useState('immediate');
   const [slope, setSlope] = useState('3');
   const [nearestWater, setNearestWater] = useState('50');
+  const [copied, setCopied] = useState(false);
 
   const result = useMemo(() => {
     const m = MANURE_TYPES[manureType];
-    const r = parseFloat(rate), a = parseFloat(area), s = parseFloat(slope), nw = parseFloat(nearestWater);
+    const r = parseFloat(rate),
+      a = parseFloat(area),
+      s = parseFloat(slope),
+      nw = parseFloat(nearestWater);
     if (!Number.isFinite(r)) return null;
     // N availability: Year 1 depends on incorporation
-    const nAvail: Record<string, number> = { immediate: 0.40, hours12: 0.30, days1: 0.20, days7: 0.10, none: 0.05 };
+    const nAvail: Record<string, number> = {
+      immediate: 0.4,
+      hours12: 0.3,
+      days1: 0.2,
+      days7: 0.1,
+      none: 0.05,
+    };
     const nY1 = r * m.n * (nAvail[incorporation] ?? 0.3);
     const pY1 = r * m.p * 0.6; // P availability Year 1
     const kY1 = r * m.k * 0.9; // K availability Year 1
     // Buffer requirement
     const minBuffer = s > 5 ? 30 : s > 2 ? 20 : 10;
     const bufferOK = nw >= minBuffer;
-    return { m, nY1, pY1, kY1, totalN: r * m.n, totalP: r * m.p, totalK: r * m.k, minBuffer, bufferOK };
+    return {
+      m,
+      nY1,
+      pY1,
+      kY1,
+      totalN: r * m.n,
+      totalP: r * m.p,
+      totalK: r * m.k,
+      totalApplied: r * a,
+      minBuffer,
+      bufferOK,
+      nAvailPct: ((nAvail[incorporation] ?? 0.3) * 100),
+    };
   }, [manureType, rate, area, incorporation, slope, nearestWater]);
 
+  const handleReset = () => {
+    setManureType('dairy_solid');
+    setRate('40');
+    setArea('10');
+    setIncorporation('immediate');
+    setSlope('3');
+    setNearestWater('50');
+    toast({
+      title: tr(
+        'Reset to Defaults',
+        'تمت استعادة القيم الافتراضية',
+        'Valeurs réinitialisées',
+      ),
+    });
+  };
+
+  const handleCopy = () => {
+    if (!result) return;
+    const text = `
+=== MANURE MANAGEMENT REPORT ===
+Manure type: ${result.m.name} (N:${result.m.n} P:${result.m.p} K:${result.m.k} kg/t)
+Application rate: ${rate} t/ha  |  Field area: ${area} ha
+Total manure applied: ${result.totalApplied.toFixed(0)} t
+
+Year-1 available nutrients (kg/ha):
+• N: ${result.nY1.toFixed(0)}  (${result.nAvailPct.toFixed(0)}% of total)
+• P: ${result.pY1.toFixed(0)}
+• K: ${result.kY1.toFixed(0)}
+
+Total nutrients applied (kg/ha):
+• N: ${result.totalN.toFixed(0)}
+• P: ${result.totalP.toFixed(0)}
+• K: ${result.totalK.toFixed(0)}
+
+Buffer zone: ${result.bufferOK ? 'Compliant' : 'Violation'} (min ${result.minBuffer}m, you have ${nearestWater}m)
+    `.trim();
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    toast({
+      title: tr('Summary Copied!', 'تم نسخ التقرير!', 'Résumé copié !'),
+      description: tr(
+        'Manure management report copied to clipboard.',
+        'تم نسخ تقرير إدارة الروث إلى الحافظة.',
+        'Rapport copié dans le presse-papiers.',
+      ),
+    });
+    setTimeout(() => setCopied(false), 3000);
+  };
+
+  const pills: CalculatorPill[] = Object.keys(MANURE_TYPES).map(k => ({
+    key: k,
+    label: tr(
+      MANURE_TYPES[k].name,
+      MANURE_AR[k] ?? MANURE_TYPES[k].name,
+      MANURE_FR[k] ?? MANURE_TYPES[k].name,
+    ),
+  }));
+
   return (
-    <Card className="overflow-hidden border-violet-100 shadow-sm dark:border-violet-900/60">
-      <CardHeader className="border-b border-border/60 bg-violet-50/50 pb-4 dark:bg-violet-950/10"><CardTitle className="flex items-center gap-2 text-base"><span className="rounded-lg bg-violet-100 p-2 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300"><Droplets className="h-4 w-4" /></span> {copyFor(language, 'Manure Management Planner', 'مخطط إدارة الروث')}</CardTitle><p className="text-[10px] text-muted-foreground">{copyFor(language, 'N-P-K value · application timing · buffer zone compliance', 'قيمة N-P-K · توقيت التطبيق · الالتزام بمنطقة العزل')}</p></CardHeader>
-      <CardContent className="space-y-3">
-        <div className="grid grid-cols-1 gap-3 rounded-xl border border-violet-200/70 bg-violet-50/30 p-3 sm:grid-cols-2 dark:border-violet-900/60 dark:bg-violet-950/10">
-          <div><Label className="text-xs font-medium">{copyFor(language, 'Manure type', 'نوع الروث')}</Label><select aria-label={copyFor(language, 'Manure type', 'نوع الروث')} value={manureType} onChange={e => setManureType(e.target.value)} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm">{Object.entries(MANURE_TYPES).map(([k, v]) => <option key={k} value={k}>{copyFor(language, v.name, MANURE_AR[k])} (N:{v.n} P:{v.p} K:{v.k})</option>)}</select></div>
-          <div><Label className="text-xs font-medium">{copyFor(language, 'Application rate (t/ha)', 'معدل التطبيق (طن/هكتار)')}</Label><Input aria-label={copyFor(language, 'Application rate in tonnes per hectare', 'معدل التطبيق بالطن لكل هكتار')} value={rate} onChange={e => setRate(e.target.value)} type="number" step="5" className="mt-1 h-10 text-sm" /></div>
+    <CalculatorShell
+      icon={Recycle}
+      accent="emerald"
+      title={{
+        en: 'Manure Management Planner',
+        ar: 'مخطط إدارة الروث',
+        fr: 'Planificateur de Gestion du Fumier',
+      }}
+      description={{
+        en: 'N-P-K value · application timing · buffer zone compliance',
+        ar: 'قيمة N-P-K · توقيت التطبيق · الالتزام بمنطقة العزل',
+        fr: 'Valeur N-P-K · timing d’épandage · conformité zone tampon',
+      }}
+      badge="Nutrient Standard"
+      pills={pills}
+      activePill={manureType}
+      onPillClick={setManureType}
+      pillLabel={{ en: 'Manure type:', ar: 'نوع الروث:', fr: 'Type de fumier :' }}
+      actions={[
+        {
+          icon: Copy,
+          label: { en: 'Copy Summary', ar: 'نسخ التقرير', fr: 'Copier' },
+          onClick: handleCopy,
+          variant: 'primary',
+          showCheck: copied,
+        },
+        {
+          icon: RotateCcw,
+          label: { en: 'Reset', ar: 'إعادة تعيين', fr: 'Réinitialiser' },
+          onClick: handleReset,
+        },
+      ]}
+      protocolNote={{
+        en: 'Incorporate within 12 hr to save 30% of N (ammonia volatilization). Don\'t exceed crop N needs — soil test first. Year 2 releases additional 20-30% of total N.',
+        ar: 'ادمج الروث خلال 12 ساعة للحفاظ على 30% من N (تطاير الأمونيا). لا تتجاوز احتياجات المحصول من N — أجرِ اختباراً للتربة أولاً. تطلق السنة الثانية 20–30% إضافية من إجمالي N.',
+        fr: 'Incorporez sous 12 h pour sauver 30% de N (volatilisation de l’ammoniac). Ne pas dépasser les besoins de la culture — analyse de sol d’abord. L’année 2 libère 20-30% supplémentaires du N total.',
+      }}
+    >
+      <CalculatorShell.Inputs>
+        <CalculatorShell.InputField
+          label={tr(
+            'Application rate (t/ha)',
+            'معدل التطبيق (طن/هكتار)',
+            "Taux d’épandage (t/ha)",
+          )}
+          value={rate}
+          onChange={setRate}
+          step="5"
+          helper={tr(
+            'Wet-weight tonnes applied per hectare',
+            'الطن الرطب لكل هكتار',
+            'Tonnes poids humide par hectare',
+          )}
+        />
+        <CalculatorShell.InputField
+          label={tr('Field area (ha)', 'مساحة الحقل (هكتار)', 'Surface (ha)')}
+          value={area}
+          onChange={setArea}
+          step="0.5"
+          helper={tr(
+            'Total spread area',
+            'إجمالي المساحة المخصصة للرش',
+            'Surface totale d’épandage',
+          )}
+        />
+        <div className="p-3 rounded-xl border bg-card space-y-1">
+          <label className="text-xs font-bold text-foreground">
+            {tr('Incorporation timing', 'توقيت الدمج', 'Incorporation')}
+          </label>
+          <select
+            aria-label={tr('Incorporation timing', 'توقيت الدمج', 'Incorporation')}
+            value={incorporation}
+            onChange={e => setIncorporation(e.target.value)}
+            className="h-9 w-full rounded-md border border-input bg-background px-3 text-xs font-mono font-bold"
+          >
+            {INCORPORATION_OPTIONS.map(opt => (
+              <option key={opt.key} value={opt.key}>
+                {tr(
+                  opt.key === 'immediate'
+                    ? 'Immediate'
+                    : opt.key === 'hours12'
+                      ? 'Within 12 hr'
+                      : opt.key === 'days1'
+                        ? 'Within 1 day'
+                        : opt.key === 'days7'
+                          ? 'Within 7 days'
+                          : 'Not incorporated',
+                  INCORPORATION_AR[opt.key],
+                  INCORPORATION_FR[opt.key],
+                )}{' '}
+                ({(opt.nAvail * 100).toFixed(0)}% N)
+              </option>
+            ))}
+          </select>
+          <div className="text-[10px] text-muted-foreground">
+            {tr(
+              'Year-1 N availability factor',
+              'معامل توفر N في السنة الأولى',
+              "Facteur de disponibilité N année 1",
+            )}
+          </div>
         </div>
-        <div className="grid grid-cols-1 gap-3 rounded-xl border border-border/70 bg-muted/20 p-3 sm:grid-cols-3">
-          <div><Label className="text-xs font-medium">{copyFor(language, 'Incorporation timing', 'توقيت الدمج')}</Label><select aria-label={copyFor(language, 'Incorporation timing', 'توقيت الدمج')} value={incorporation} onChange={e => setIncorporation(e.target.value)} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="immediate">{copyFor(language, 'Immediate', INCORPORATION_AR.immediate)}</option><option value="hours12">{copyFor(language, 'Within 12 hr', INCORPORATION_AR.hours12)}</option><option value="days1">{copyFor(language, 'Within 1 day', INCORPORATION_AR.days1)}</option><option value="days7">{copyFor(language, 'Within 7 days', INCORPORATION_AR.days7)}</option><option value="none">{copyFor(language, 'Not incorporated', INCORPORATION_AR.none)}</option></select></div>
-          <div><Label className="text-xs font-medium">{copyFor(language, 'Field slope (%)', 'انحدار الحقل (%)')}</Label><Input aria-label={copyFor(language, 'Field slope percentage', 'نسبة انحدار الحقل')} value={slope} onChange={e => setSlope(e.target.value)} type="number" step="0.5" className="mt-1 h-10 text-sm" /></div>
-          <div><Label className="text-xs font-medium">{copyFor(language, 'Nearest waterway (m)', 'أقرب مجرى مائي (م)')}</Label><Input aria-label={copyFor(language, 'Distance to nearest waterway in meters', 'المسافة إلى أقرب مجرى مائي بالمتر')} value={nearestWater} onChange={e => setNearestWater(e.target.value)} type="number" step="5" className="mt-1 h-10 text-sm" /></div>
-        </div>
-        {result && (
-          <div className="space-y-2">
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-3 text-center shadow-sm"><div className="text-[9px] text-muted-foreground uppercase">N ({copyFor(language, 'Yr 1', 'السنة 1')})</div><div className="font-mono text-lg font-bold text-emerald-700">{result.nY1.toFixed(0)}</div><div className="text-[9px] text-muted-foreground">{copyFor(language, 'kg/ha', 'كغ/هكتار')}</div></div>
-              <div className="rounded-xl border border-cyan-200 bg-cyan-50/40 p-3 text-center shadow-sm"><div className="text-[9px] text-muted-foreground uppercase">P ({copyFor(language, 'Yr 1', 'السنة 1')})</div><div className="font-mono text-lg font-bold text-cyan-700">{result.pY1.toFixed(0)}</div><div className="text-[9px] text-muted-foreground">{copyFor(language, 'kg/ha', 'كغ/هكتار')}</div></div>
-              <div className="rounded-xl border border-amber-200 bg-amber-50/40 p-3 text-center shadow-sm"><div className="text-[9px] text-muted-foreground uppercase">K ({copyFor(language, 'Yr 1', 'السنة 1')})</div><div className="font-mono text-lg font-bold text-amber-700">{result.kY1.toFixed(0)}</div><div className="text-[9px] text-muted-foreground">{copyFor(language, 'kg/ha', 'كغ/هكتار')}</div></div>
+        <CalculatorShell.InputField
+          label={tr('Field slope (%)', 'انحدار الحقل (%)', 'Pente (%)')}
+          value={slope}
+          onChange={setSlope}
+          step="0.5"
+          helper={tr(
+            'Affects minimum buffer width',
+            'يؤثر على الحد الأدنى لمنطقة العزل',
+            'Détermine la largeur minimale de la zone tampon',
+          )}
+        />
+        <CalculatorShell.InputField
+          label={tr(
+            'Nearest waterway (m)',
+            'أقرب مجرى مائي (م)',
+            'Cours d’eau le plus proche (m)',
+          )}
+          value={nearestWater}
+          onChange={setNearestWater}
+          step="5"
+          helper={tr(
+            'Distance to any stream / pond / well',
+            'المسافة إلى أي مجرى مائي / بركة / بئر',
+            'Distance vers tout cours d’eau / étang / puits',
+          )}
+        />
+      </CalculatorShell.Inputs>
+      <CalculatorShell.Results>
+        {result ? (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <CalculatorShell.MetricTile
+                label={`N · ${tr('Yr 1', 'السنة 1', 'An 1')}`}
+                value={result.nY1.toFixed(0)}
+                unit={tr('kg/ha', 'كغ/هكتار', 'kg/ha')}
+                color="emerald"
+                helper={tr(
+                  `${result.nAvailPct.toFixed(0)}% of total N available`,
+                  `${result.nAvailPct.toFixed(0)}% من إجمالي N متاح`,
+                  `${result.nAvailPct.toFixed(0)}% du N total disponible`,
+                )}
+              />
+              <CalculatorShell.MetricTile
+                label={`P · ${tr('Yr 1', 'السنة 1', 'An 1')}`}
+                value={result.pY1.toFixed(0)}
+                unit={tr('kg/ha', 'كغ/هكتار', 'kg/ha')}
+                color="teal"
+                helper={tr('60% of total P', '60% من إجمالي P', '60% du P total')}
+              />
+              <CalculatorShell.MetricTile
+                label={`K · ${tr('Yr 1', 'السنة 1', 'An 1')}`}
+                value={result.kY1.toFixed(0)}
+                unit={tr('kg/ha', 'كغ/هكتار', 'kg/ha')}
+                color="amber"
+                helper={tr('90% of total K', '90% من إجمالي K', '90% du K total')}
+              />
             </div>
-            <div className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-2">
-              <div className="rounded-lg border bg-background/60 p-3"><span className="text-muted-foreground">{copyFor(language, 'Total N applied:', 'إجمالي N المطبق:')}</span> <strong className="font-mono">{result.totalN.toFixed(0)} kg/ha</strong></div>
-              <div className="rounded-lg border bg-background/60 p-3"><span className="text-muted-foreground">{copyFor(language, 'N availability:', 'توفر N:')}</span> <strong>{((result.nY1 / result.totalN) * 100).toFixed(0)}% {copyFor(language, 'Yr 1', 'السنة 1')}</strong></div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <CalculatorShell.MetricTile
+                label={tr(
+                  'Total N applied',
+                  'إجمالي N المطبق',
+                  'N total appliqué',
+                )}
+                value={result.totalN.toFixed(0)}
+                unit={tr('kg/ha', 'كغ/هكتار', 'kg/ha')}
+                color="default"
+              />
+              <CalculatorShell.MetricTile
+                label={tr(
+                  'Total manure applied',
+                  'إجمالي الروث المطبق',
+                  'Fumier total appliqué',
+                )}
+                value={result.totalApplied.toFixed(0)}
+                unit="t"
+                color="default"
+                helper={`${area} ha × ${rate} t/ha`}
+              />
             </div>
             {result.bufferOK ? (
-              <div className="rounded-xl border border-emerald-200 dark:border-emerald-900 bg-emerald-50/60 p-3 text-xs text-emerald-700 dark:text-emerald-300 flex items-start gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 mt-0.5 shrink-0" /><span><strong>{copyFor(language, 'Buffer zone compliant.', 'منطقة العزل مطابقة.')}</strong> {copyFor(language, `${nearestWater}m to nearest waterway exceeds ${result.minBuffer}m minimum.`, `المسافة ${nearestWater}م إلى أقرب مجرى مائي تتجاوز الحد الأدنى ${result.minBuffer}م.`)}</span></div>
+              <div className="flex items-start gap-2 rounded-xl border border-emerald-200 dark:border-emerald-900 bg-emerald-50/60 p-3 text-xs text-emerald-700 dark:text-emerald-300">
+                <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                <span>
+                  <strong>
+                    {tr(
+                      'Buffer zone compliant.',
+                      'منطقة العزل مطابقة.',
+                      'Zone tampon conforme.',
+                    )}
+                  </strong>{' '}
+                  {tr(
+                    `${nearestWater}m to nearest waterway exceeds ${result.minBuffer}m minimum.`,
+                    `المسافة ${nearestWater}م إلى أقرب مجرى مائي تتجاوز الحد الأدنى ${result.minBuffer}م.`,
+                    `${nearestWater}m au cours d’eau le plus proche dépasse le minimum de ${result.minBuffer}m.`,
+                  )}
+                </span>
+              </div>
             ) : (
-              <div className="rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50/60 p-3 text-xs text-rose-700 dark:text-rose-300 flex items-start gap-1.5"><AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" /><span><strong>{copyFor(language, 'Buffer zone violation!', 'مخالفة لمنطقة العزل!')}</strong> {copyFor(language, `Need ${result.minBuffer}m minimum (you have ${nearestWater}m). Do not apply — move setback or use buffer strip.`, `يلزم حد أدنى ${result.minBuffer}م (المتاح ${nearestWater}م). لا تطبق — زد مسافة الارتداد أو استخدم شريطاً عازلاً.`)}</span></div>
+              <div className="flex items-start gap-2 rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50/60 p-3 text-xs text-rose-700 dark:text-rose-300">
+                <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                <span>
+                  <strong>
+                    {tr(
+                      'Buffer zone violation!',
+                      'مخالفة لمنطقة العزل!',
+                      'Violation de zone tampon !',
+                    )}
+                  </strong>{' '}
+                  {tr(
+                    `Need ${result.minBuffer}m minimum (you have ${nearestWater}m). Do not apply — move setback or use buffer strip.`,
+                    `يلزم حد أدنى ${result.minBuffer}م (المتاح ${nearestWater}م). لا تطبق — زد مسافة الارتداد أو استخدم شريطاً عازلاً.`,
+                    `Minimum requis ${result.minBuffer}m (vous avez ${nearestWater}m). N’épandez pas — reculez ou installez une bande tampon.`,
+                  )}
+                </span>
+              </div>
             )}
-            <div className="rounded-lg bg-muted/30 p-3 text-xs leading-relaxed text-muted-foreground">💡 {copyFor(language, 'Incorporate within 12 hr to save 30% of N (ammonia volatilization). Don\'t exceed crop N needs — soil test first. Year 2 releases additional 20-30% of total N.', 'ادمج الروث خلال 12 ساعة للحفاظ على 30% من N (تطاير الأمونيا). لا تتجاوز احتياجات المحصول من N — أجرِ اختباراً للتربة أولاً. تطلق السنة الثانية 20–30% إضافية من إجمالي N.')}</div>
-          </div>
+          </>
+        ) : (
+          <CalculatorShell.MetricTile
+            label={tr(
+              'Available nutrients',
+              'العناصر المتاحة',
+              'Nutriments disponibles',
+            )}
+            value="—"
+            color="default"
+            helper={tr(
+              'Enter application rate to calculate',
+              'أدخل معدل التطبيق للحساب',
+              'Saisissez le taux d’épandage',
+            )}
+          />
         )}
-      </CardContent>
-    </Card>
+      </CalculatorShell.Results>
+    </CalculatorShell>
   );
 }
