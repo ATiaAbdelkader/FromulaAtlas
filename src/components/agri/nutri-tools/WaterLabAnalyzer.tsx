@@ -2,7 +2,6 @@
 
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
@@ -16,27 +15,40 @@ import {
 } from '@/components/ui/select';
 import {
   Droplets,
-  Waves,
+  Beaker,
   AlertTriangle,
   CheckCircle2,
-  Sliders,
-  Sparkles,
-  RefreshCw,
-  Download,
-  Info,
   ShieldCheck,
   ShieldAlert,
-  ArrowRight,
   Split,
-  Zap,
   Activity,
   Layers,
   Copy,
   Check,
-  FileSpreadsheet,
+  RotateCcw,
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useTranslation, copyFor } from '@/lib/language-store';
+import {
+  CalculatorShell,
+  type TrilingualString,
+} from '@/components/agri/nutri-tools/CalculatorShell';
+
+// ============================================================================
+// CalculatorShell metadata (trilingual)
+// ============================================================================
+
+const TITLE: TrilingualString = {
+  en: 'Smart Irrigation Water Quality & Dual-Source Blending Analyzer',
+  ar: 'محلل جودة مياه الري وحاسبة خلط المصادر المائية (USSL / SAR / IWQI)',
+  fr: 'Diagnostic Qualité Eau d’Irrigation & Mélange Multi-Sources',
+};
+
+const DESC: TrilingualString = {
+  en: 'Laboratory hydrochemical diagnostics, US Salinity Lab C-S diagram, SAR/Infiltration risks, and 2-source blending solver.',
+  ar: 'تحليل كيميائي متقدم لمياه الآبار والمصادر، وتصنيف المخاطر الملحية والصودية، وحاسبة الخلط التناسبي لتحقيق حدود تحمل المحصول.',
+  fr: 'Classification FAO/USSL (C-S), SAR ajusté, risque d’infiltration et solveur de coupage d’eau pour sécuriser les cultures.',
+};
 
 // ============================================================================
 // Types & Presets
@@ -263,7 +275,7 @@ export const CROP_SALINITY_DATABASE: CropSalinityTolerance[] = [
 // ============================================================================
 
 export function WaterLabAnalyzer() {
-  const { language, isRTL } = useTranslation();
+  const { language } = useTranslation();
   const tr = (en: string, ar: string, fr: string) => copyFor(language, en, ar, fr);
   const isAr = language === 'ar';
   const isFr = language === 'fr';
@@ -338,6 +350,30 @@ Charge Balance Error: ${diagnostics.chargeBalanceErrorPct}% (${diagnostics.isCha
       description: tr('Full hydrochemical summary copied to clipboard.', 'تم نسخ ملخص التحليل الهيدروكيميائي إلى الحافظة.', 'Rapport copié dans le presse-papier.'),
     });
     setTimeout(() => setCopiedReport(false), 3000);
+  };
+
+  const handleReset = () => {
+    setPh(7.6);
+    setEc(2.4);
+    setTds(1536);
+    setCa(140);
+    setMg(55);
+    setNa(280);
+    setK(12);
+    setHco3(220);
+    setCo3(0);
+    setCl(410);
+    setSo4(510);
+    setNo3(25);
+    setBoron(0.8);
+    setBlendSource2EC(0.3);
+    setBlendTargetEC(1.5);
+    setSelectedCropId('tomato');
+    setActiveTab('diagnosis');
+    toast({
+      title: tr('Reset Complete', 'تمت إعادة التعيين', 'Réinitialisation terminée'),
+      description: tr('All lab parameters restored to default values.', 'تم استرجاع جميع المعطيات إلى القيم الافتراضية.', 'Tous les paramètres ont été réinitialisés.'),
+    });
   };
 
   // Load Preset
@@ -586,92 +622,59 @@ Charge Balance Error: ${diagnostics.chargeBalanceErrorPct}% (${diagnostics.isCha
   }, [ec, blendSource2EC, blendTargetEC, cl, na, diagnostics.sar]);
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto" dir={isRTL ? 'rtl' : 'ltr'}>
-      {/* Hero Header Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-950 via-cyan-950 to-teal-950 text-white p-6 shadow-xl border border-blue-700/40">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2">
-              <span className="p-2.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 shadow-inner">
-                <Waves className="h-6 w-6 text-cyan-300" />
-              </span>
-              <div>
-                <h2 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-                  {tr(
-                    'Smart Irrigation Water Quality & Dual-Source Blending Analyzer',
-                    'محلل جودة مياه الري وحاسبة خلط المصادر المائية (USSL / SAR / IWQI)',
-                    'Diagnostic Qualité Eau d’Irrigation & Mélange Multi-Sources'
-                  )}
-                  <Badge variant="outline" className="bg-cyan-500/20 text-cyan-200 border-cyan-400/40 text-[10px] uppercase tracking-wider">
-                    USSL & FAO 29
-                  </Badge>
-                </h2>
-              </div>
-            </div>
-            <p className="text-sm text-cyan-100/90 max-w-3xl leading-relaxed">
-              {tr(
-                'Laboratory hydrochemical diagnostics, US Salinity Lab C-S diagram, SAR/Infiltration risks, and 2-source blending solver.',
-                'تحليل كيميائي متقدم لمياه الآبار والمصادر، وتصنيف المخاطر الملحية والصودية، وحاسبة الخلط التناسبي لتحقيق حدود تحمل المحصول.',
-                'Classification FAO/USSL (C-S), SAR ajusté, risque d’infiltration et solveur de coupage d’eau pour sécuriser les cultures.'
-              )}
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              onClick={handleCopyReport}
-              variant="outline"
-              size="sm"
-              className="bg-white/15 hover:bg-white/25 text-white border-white/25 backdrop-blur font-semibold shadow-sm"
-            >
-              {copiedReport ? (
-                <>
-                  <Check className="h-4 w-4 mr-1 text-emerald-300" />
-                  {tr('Copied!', 'تم النسخ!', 'Copié !')}
-                </>
-              ) : (
-                <>
-                  <Copy className="h-4 w-4 mr-1 text-cyan-300" />
-                  {tr('Copy Summary', 'نسخ التقرير', 'Copier')}
-                </>
-              )}
-            </Button>
-          </div>
+    <CalculatorShell
+      icon={Beaker}
+      title={TITLE}
+      description={DESC}
+      badge="USSL & FAO 29"
+      accent="sky"
+      actions={[
+        {
+          icon: Copy,
+          label: { en: 'Copy Summary', ar: 'نسخ التقرير', fr: 'Copier' },
+          onClick: handleCopyReport,
+          variant: 'primary',
+          showCheck: copiedReport,
+        },
+        {
+          icon: RotateCcw,
+          label: { en: 'Reset', ar: 'إعادة تعيين', fr: 'Réinitialiser' },
+          onClick: handleReset,
+        },
+      ]}
+    >
+      {/* Quick Preset Toolbar */}
+      <div className="lg:col-span-12 p-3.5 rounded-2xl border bg-card shadow-xs flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs text-muted-foreground font-medium">
+            {tr('Load Water Preset:', 'اختر نموذج مياه مرجعي:', 'Charger eau type :')}
+          </span>
+          <Select onValueChange={handleLoadPreset} defaultValue="biskra-saharan-deep">
+            <SelectTrigger className="h-8 w-[260px] text-xs font-semibold">
+              <SelectValue placeholder={tr('Load Water Preset...', 'اختر نموذج مياه...', 'Charger eau type...')} />
+            </SelectTrigger>
+            <SelectContent>
+              {WATER_PRESETS.map((preset) => (
+                <SelectItem key={preset.id} value={preset.id} className="text-xs">
+                  {isAr ? preset.name_ar : isFr ? preset.name_fr : preset.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
-        {/* Quick Toolbar */}
-        <div className="mt-5 pt-4 border-t border-white/15 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs text-cyan-200/80 font-medium">
-              {tr('Load Water Preset:', 'اختر نموذج مياه مرجعي:', 'Charger eau type :')}
-            </span>
-            <Select onValueChange={handleLoadPreset} defaultValue="biskra-saharan-deep">
-              <SelectTrigger className="h-8 w-[240px] text-xs font-semibold bg-white/10 text-white border-white/20 backdrop-blur">
-                <SelectValue placeholder={tr('Load Water Preset...', 'اختر نموذج مياه...', 'Charger eau type...')} />
-              </SelectTrigger>
-              <SelectContent>
-                {WATER_PRESETS.map((preset) => (
-                  <SelectItem key={preset.id} value={preset.id} className="text-xs">
-                    {isAr ? preset.name_ar : isFr ? preset.name_fr : preset.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex items-center gap-2 text-xs text-cyan-200/80">
-            <ShieldCheck className="h-4 w-4 text-cyan-300" />
-            <span>{tr('Standard: USSL C-S Diagram & Ayers-Westcot', 'المعايير: تصنيف مختبر الملوحة الأمريكي وفاو 29', 'Normes : Diagramme USSL & FAO 29')}</span>
-          </div>
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <ShieldCheck className="h-4 w-4 text-sky-600" />
+          <span>{tr('Standard: USSL C-S Diagram & Ayers-Westcot', 'المعايير: تصنيف مختبر الملوحة الأمريكي وفاو 29', 'Normes : Diagramme USSL & FAO 29')}</span>
         </div>
       </div>
 
       {/* Lab Parameters Card */}
-      <Card className="border-border shadow-xs">
+      <Card className="lg:col-span-12 border-border shadow-xs">
         <CardHeader className="py-3 px-4 bg-muted/30 border-b">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm font-bold flex items-center gap-2">
-              <Droplets className="h-4 w-4 text-cyan-600" />
+              <Droplets className="h-4 w-4 text-sky-600" />
               {tr('Primary Laboratory Measurements (Cations & Anions)', 'القياسات المخبرية الأساسية (الكاتيونات والأنيونات)', 'Mesures de Laboratoire (Cations & Anions)')}
             </CardTitle>
             <Badge variant="outline" className="text-[10px] text-muted-foreground font-mono">
@@ -753,7 +756,7 @@ Charge Balance Error: ${diagnostics.chargeBalanceErrorPct}% (${diagnostics.isCha
       </Card>
 
       {/* Analytical Charge Balance Pill */}
-      <div className="p-3 rounded-xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs bg-muted/40">
+      <div className="lg:col-span-12 p-3 rounded-xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs bg-muted/40">
         <div className="flex items-center gap-2">
           {diagnostics.isChargeBalanced ? (
             <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
@@ -783,10 +786,10 @@ Charge Balance Error: ${diagnostics.chargeBalanceErrorPct}% (${diagnostics.isCha
       </div>
 
       {/* Tabs Navigation */}
-      <Tabs value={activeTab} onValueChange={(val: any) => setActiveTab(val)} className="w-full">
+      <Tabs value={activeTab} onValueChange={(val: any) => setActiveTab(val)} className="lg:col-span-12 w-full">
         <TabsList className="grid grid-cols-2 sm:grid-cols-4 w-full h-auto p-1 bg-muted/80 rounded-xl border">
           <TabsTrigger value="diagnosis" className="py-2 text-xs font-semibold flex items-center gap-1.5">
-            <Activity className="h-3.5 w-3.5 text-blue-600" />
+            <Activity className="h-3.5 w-3.5 text-sky-600" />
             <span>{tr('USSL & SAR Classification', 'تصنيف USSL والـ SAR', 'Classification USSL')}</span>
           </TabsTrigger>
           <TabsTrigger value="crops" className="py-2 text-xs font-semibold flex items-center gap-1.5">
@@ -807,7 +810,7 @@ Charge Balance Error: ${diagnostics.chargeBalanceErrorPct}% (${diagnostics.isCha
         <TabsContent value="diagnosis" className="space-y-4 pt-3">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* USSL Code Hero Card */}
-            <Card className="border shadow-xs bg-gradient-to-br from-blue-600 to-indigo-800 text-white">
+            <Card className="border shadow-xs bg-gradient-to-br from-sky-600 to-indigo-800 text-white">
               <CardContent className="p-5 flex flex-col justify-between h-full space-y-4">
                 <div>
                   <span className="text-xs uppercase tracking-wider font-semibold opacity-90">
@@ -850,7 +853,7 @@ Charge Balance Error: ${diagnostics.chargeBalanceErrorPct}% (${diagnostics.isCha
                     <tr className="hover:bg-muted/30">
                       <td className="p-2.5 font-sans font-medium">Calcium (Ca²⁺)</td>
                       <td className="p-2.5 text-right">{ca} mg/L</td>
-                      <td className="p-2.5 text-right font-bold text-blue-600">{diagnostics.ca_meq} meq/L</td>
+                      <td className="p-2.5 text-right font-bold text-sky-600">{diagnostics.ca_meq} meq/L</td>
                     </tr>
                     <tr className="hover:bg-muted/30">
                       <td className="p-2.5 font-sans font-medium">Magnesium (Mg²⁺)</td>
@@ -901,7 +904,7 @@ Charge Balance Error: ${diagnostics.chargeBalanceErrorPct}% (${diagnostics.isCha
                     <tr className="hover:bg-muted/30">
                       <td className="p-2.5 font-sans font-medium">Nitrate (NO₃⁻)</td>
                       <td className="p-2.5 text-right">{no3} mg/L</td>
-                      <td className="p-2.5 text-right font-bold text-blue-600">{diagnostics.no3_meq} meq/L</td>
+                      <td className="p-2.5 text-right font-bold text-sky-600">{diagnostics.no3_meq} meq/L</td>
                     </tr>
                   </tbody>
                 </table>
@@ -1088,7 +1091,7 @@ Charge Balance Error: ${diagnostics.chargeBalanceErrorPct}% (${diagnostics.isCha
                   <span className="font-bold text-xs text-foreground">
                     {tr('Source 1 (Current Saline Well)', 'المصدر 1 (البئر المالح الحالي)', 'Source 1 (Puits Salin)')}
                   </span>
-                  <div className="text-xl font-black font-mono text-blue-600">{ec} dS/m</div>
+                  <div className="text-xl font-black font-mono text-sky-600">{ec} dS/m</div>
                   <p className="text-[10px] text-muted-foreground">Cl: {cl} mg/L, Na: {na} mg/L</p>
                 </div>
 
@@ -1123,7 +1126,7 @@ Charge Balance Error: ${diagnostics.chargeBalanceErrorPct}% (${diagnostics.isCha
 
               {/* Blending Solution Result */}
               {blendingSolver.isValid && (
-                <div className="p-5 rounded-2xl border bg-gradient-to-r from-blue-50/80 via-emerald-50/80 to-blue-50/80 dark:from-blue-950/30 dark:via-emerald-950/30 dark:to-blue-950/30 space-y-4">
+                <div className="p-5 rounded-2xl border bg-gradient-to-r from-sky-50/80 via-emerald-50/80 to-sky-50/80 dark:from-sky-950/30 dark:via-emerald-950/30 dark:to-sky-950/30 space-y-4">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
                       <div className="text-xs uppercase tracking-wider font-bold text-emerald-800 dark:text-emerald-300">
@@ -1144,7 +1147,7 @@ Charge Balance Error: ${diagnostics.chargeBalanceErrorPct}% (${diagnostics.isCha
                     <div className="h-4 w-full rounded-full overflow-hidden flex bg-muted">
                       <div
                         style={{ width: `${blendingSolver.source1Pct}%` }}
-                        className="bg-blue-600 h-full flex items-center justify-center text-[10px] text-white font-bold"
+                        className="bg-sky-600 h-full flex items-center justify-center text-[10px] text-white font-bold"
                       >
                         {blendingSolver.source1Pct}%
                       </div>
@@ -1218,7 +1221,7 @@ Charge Balance Error: ${diagnostics.chargeBalanceErrorPct}% (${diagnostics.isCha
             <Card className="border shadow-xs">
               <CardHeader className="p-4 pb-2 border-b">
                 <CardTitle className="text-xs font-bold flex items-center gap-1.5">
-                  <Droplets className="h-4 w-4 text-blue-600" />
+                  <Droplets className="h-4 w-4 text-sky-600" />
                   {tr('Water Hardness & Calcium Carbonate Scale Index', 'عسر المياه والترسبات الجيرية في شبكات الري', 'Dureté & Entartrage')}
                 </CardTitle>
               </CardHeader>
@@ -1258,6 +1261,6 @@ Charge Balance Error: ${diagnostics.chargeBalanceErrorPct}% (${diagnostics.isCha
           </div>
         </TabsContent>
       </Tabs>
-    </div>
+    </CalculatorShell>
   );
 }
