@@ -16,17 +16,13 @@ import {
   Microscope,
   Search,
   Sprout,
-  Tractor,
   TrendingUp,
   Users,
   Wrench,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FarmStats } from '@/components/agri/farm-stats';
 import { HomeDashboard } from '@/components/agri/home-dashboard';
-import { TodayTasks } from '@/components/agri/today-tasks';
 import { useTranslation } from '@/lib/language-store';
 import { getUserLevelOption, localizedUserLevelCopy, type UserLevel, type TabId } from '@/lib/user-level';
 import { FarmProfileWizard, needsFarmProfileSetup } from '@/components/agri/farm-profile-wizard';
@@ -160,27 +156,6 @@ function FarmerHome({ onOpenTool, onOpenSearch }: Pick<LevelHomeProps, 'onOpenTo
         <ActionCard icon={DollarSign} color="#f59e0b" title={copy(language, 'Will I make money?', 'Serai-je rentable ?', 'هل سأربح؟')} description={copy(language, 'Run a real-world crop scenario in DZD with costs, yield, price, and risks.', 'Simuler une culture en DZD avec coûts, rendement, prix et risques.', 'حاك محصولاً بالدينار مع التكاليف والإنتاج والسعر والمخاطر.')} onClick={() => onOpenTool('simulator')} />
         <ActionCard icon={BookOpen} color="#047857" title={copy(language, 'Record an activity', 'Enregistrer une activité', 'سجل نشاطاً')} description={copy(language, 'Keep one traceable record for inputs, irrigation, scouting, and harvest.', 'Conserver une trace des intrants, du pompage, de la prospection et de la récolte.', 'احتفظ بسجل للمدخلات والري والكشف والحصاد.')} onClick={() => onOpenTool('farm', 'collapse_field_records')} />
       </section>
-
-      <div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
-        <Card id="farmer-today-tasks">
-          <CardHeader className="pb-3"><CardTitle className="flex items-center gap-2 text-sm"><CheckCircle2 className="h-4 w-4 text-emerald-600" />{copy(language, 'Today on your farm', 'Aujourd’hui dans votre ferme', 'اليوم في مزرعتك')}</CardTitle></CardHeader>
-          <CardContent><TodayTasks key={profileVersion} level="farmer" onOpenTool={onOpenTool} /></CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center justify-between gap-2 text-sm">
-              <span className="flex items-center gap-2"><Tractor className="h-4 w-4 text-emerald-600" />{copy(language, 'Farm at a glance', 'Votre ferme en un coup d’œil', 'مزرعتك في لمحة')}</span>
-              {hasProfile && (
-                <Button size="sm" variant="ghost" className="h-7 px-2 text-[10px] gap-1" onClick={() => setWizardOpen(true)}>
-                  <Sprout className="h-3 w-3" />
-                  {copy(language, 'Edit', 'Modifier', 'تعديل')}
-                </Button>
-              )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent><FarmStats key={profileVersion} /></CardContent>
-        </Card>
-      </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-emerald-300 bg-emerald-50/60 p-4 dark:bg-emerald-950/20">
         <div><p className="text-sm font-semibold">{copy(language, 'Need a different tool?', 'Besoin d’un autre outil ?', 'هل تحتاج أداة أخرى؟')}</p><p className="text-xs text-muted-foreground">{copy(language, 'Search the full library when you are ready. Advanced tools stay available.', 'Recherchez dans toute la bibliothèque quand vous êtes prêt. Les outils avancés restent disponibles.', 'ابحث في المكتبة الكاملة عندما تكون مستعداً. الأدوات المتقدمة ما زالت متاحة.')}</p></div>
