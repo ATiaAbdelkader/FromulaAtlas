@@ -24,14 +24,21 @@ import {
   Sprout,
   Compass,
   FileSpreadsheet,
+  Copy,
+  Check,
+  RotateCcw,
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { useTranslation, copyFor } from '@/lib/language-store';
+import { toast } from '@/hooks/use-toast';
+import {
+  CalculatorShell,
+  type TrilingualString,
+} from '@/components/agri/nutri-tools/CalculatorShell';
 import {
   DETAILED_IONS,
   DetailedIonSpec,
@@ -45,16 +52,34 @@ import { PH_NUTRIENTS } from '@/lib/nutri-tools-data';
 import { PlantDeficiencyVisualizer } from './PlantDeficiencyVisualizer';
 import { TomatoDiseaseVisualizer } from './TomatoDiseaseVisualizer';
 
+// ---------------------------------------------------------------------------
+// Trilingual constants for the CalculatorShell hero header
+// ---------------------------------------------------------------------------
+
+const TITLE: TrilingualString = {
+  en: 'Nutrient Interactions, Mobility & Uptake Suite',
+  ar: 'منظومة تفاعلات وحركية وامتصاص العناصر المغذية',
+  fr: 'Suite Interactions, Mobilité & Cinétique des Nutriments',
+};
+
+const DESC: TrilingualString = {
+  en: "Advanced Mulder's diagram, 16×16 conflict matrix, environmental root kinetics, phloem translocation & cation balance",
+  ar: 'مخطط مولدر التفاعلي، مصفوفة التضاد 16×16، ديناميكا الامتصاص الجذري، حركية اللحاء وتوازن الكاتيونات',
+  fr: 'Diagramme de Mulder interactif, matrice 16×16, cinétique racinaire, translocation et équilibre des cations',
+};
+
+const PROTOCOL_NOTE: TrilingualString = {
+  en: "Mulder (1953) cation-anion antagonism & synergy wheel · 16×16 cross-reference matrix · Barber (1995) nutrient uptake kinetics (Mass Flow / Diffusion / Root Interception) · Troug-Lucas pH availability curves · BCSR base-cation saturation ratios (Albrecht / Kinsey).",
+  ar: 'عجلة مولدر (1953) للتضاد والتآزر الكاتيوني-الأنيوني · مصفوفة 16×16 · ديناميكا امتصاص باربر (1995): التدفق الكتلي / الانتشار / الاعتراض الجذري · منحنيات تروغ-لوكاس لتوفر العناصر حسب pH · نسب تشبع الكاتيونات BCSR (ألبريشت / كينسي).',
+  fr: "Roue de Mulder (1953) antagonismes & synergies cation-anion · matrice 16×16 · cinétique d'absorption de Barber (1995) (flux de masse / diffusion / interception racinaire) · courbes de disponibilité Troug-Lucas · ratios de saturation BCSR (Albrecht / Kinsey).",
+};
+
 export function NutrientInteractions() {
   const { language } = useTranslation();
   const isAr = language === 'ar';
   const isFr = language === 'fr';
 
-  const tr = (enText: string, arText: string, frText?: string) => {
-    if (isAr) return arText;
-    if (isFr && frText) return frText;
-    return enText;
-  };
+  const tr = (en: string, ar: string, fr?: string) => copyFor(language, en, ar, fr);
 
   // Active Main Tab
   const [activeTab, setActiveTab] = useState<'mulder' | 'matrix' | 'arrival' | 'mobility' | 'ph' | 'cation' | 'plant-deficiency' | 'tomato-diseases'>('mulder');
@@ -295,49 +320,123 @@ export function NutrientInteractions() {
     return calculateCationBalance(soilCa, soilMg, soilK, soilNa, soilNh4);
   }, [soilCa, soilMg, soilK, soilNa, soilNh4]);
 
+  // ===========================================================================
+  // Hero action handlers: Copy Summary & Reset
+  // ===========================================================================
+  const [copied, setCopied] = useState<boolean>(false);
+
+  const handleReset = () => {
+    setSelectedIonId('k');
+    setInteractionFilter('all');
+    setCategoryFilter('all');
+    setIsConflictSimOpen(false);
+    setSimSelectedIons(['k', 'nh4', 'ca']);
+    setSelectedKineticId('h2po4');
+    setSoilMoisturePct(75);
+    setSoilTempC(20);
+    setRootHealthState('standard');
+    setTranspirationDemand('normal');
+    setSelectedZoneId('lower');
+    setWizardLocation('all');
+    setWizardPattern('all');
+    setSelectedDiagNodeId('mg-def');
+    setCurrentPh(6.5);
+    setSelectedPhNutrientId('P');
+    setSoilCa(12.5);
+    setSoilMg(2.4);
+    setSoilK(0.85);
+    setSoilNa(0.3);
+    setSoilNh4(0.2);
+    toast({ title: tr('Reset', 'إعادة', 'Réinitialiser') });
+  };
+
+  const handleCopy = () => {
+    const lines: string[] = ['=== NUTRIENT INTERACTIONS SUITE ==='];
+    lines.push(`Active Tab: ${activeTab}`);
+
+    if (activeTab === 'mulder') {
+      lines.push(`Selected Ion: ${selectedIon.ion} — ${selectedIon.name}`);
+      lines.push(`Category: ${selectedIon.category} (${selectedIon.charge})`);
+      lines.push(`Antagonists: ${selectedIon.antagonists.length} | Synergists: ${selectedIon.synergists.length}`);
+      if (isConflictSimOpen) {
+        lines.push('');
+        lines.push('-- Tank/Soil Blend Simulator --');
+        lines.push(`Selected ions: ${simSelectedIons.join(', ')}`);
+        lines.push(`Conflicts detected: ${simConflicts.length}`);
+        simConflicts.forEach((c) => {
+          lines.push(`  • ${c.ionA} ⇄ ${c.ionB}: ${c.type} (${c.severity}) — ${c.mechanism}`);
+        });
+      }
+    } else if (activeTab === 'matrix') {
+      lines.push(`Selected Target Element: ${selectedIon.ion} — ${selectedIon.name}`);
+    } else if (activeTab === 'arrival') {
+      lines.push(`Nutrient: ${currentDynamicNutrient.symbol} — ${currentDynamicNutrient.name}`);
+      lines.push(`Soil moisture: ${soilMoisturePct}% | Temperature: ${soilTempC}°C`);
+      lines.push(`Root state: ${rootHealthState} | Transpiration: ${transpirationDemand}`);
+      lines.push(`Delivery efficiency: ${currentDynamicNutrient.deliveryEfficiency}%`);
+      lines.push(`  Mass flow: ${currentDynamicNutrient.currentMassFlowPct}%`);
+      lines.push(`  Diffusion: ${currentDynamicNutrient.currentDiffusionPct}%`);
+      lines.push(`  Interception: ${currentDynamicNutrient.currentInterceptionPct}%`);
+    } else if (activeTab === 'mobility') {
+      lines.push(`Selected zone: ${selectedZoneId}`);
+      lines.push(`Selected diagnosis: ${selectedDiagNode.name} (${selectedDiagNode.matchingNutrient})`);
+    } else if (activeTab === 'ph') {
+      lines.push(`Current pH: ${currentPh.toFixed(1)}`);
+      lines.push(`Nutrient: ${selectedPhInfo.lab} — ${selectedPhInfo.name}`);
+      const avail = phAvailabilityMap.get(selectedPhInfo.id) ?? 0.5;
+      lines.push(`Relative availability: ${Math.round(avail * 100)}%`);
+    } else if (activeTab === 'cation') {
+      lines.push(`Ca: ${soilCa} cmol(+)/kg`);
+      lines.push(`Mg: ${soilMg} cmol(+)/kg`);
+      lines.push(`K: ${soilK} cmol(+)/kg`);
+      lines.push(`Na: ${soilNa} cmol(+)/kg`);
+      lines.push(`NH4: ${soilNh4} cmol(+)/kg`);
+      lines.push(`Total bases: ${cationResult.totalBasesMeq} cmol(+)/kg`);
+      lines.push(`K:Mg ratio: ${cationResult.kToMgRatio} : 1`);
+      lines.push(`Ca:Mg ratio: ${cationResult.caToMgRatio} : 1`);
+      lines.push(`Antagonism index: ${cationResult.antagonismIndex}`);
+      lines.push(`ESP: ${cationResult.naPct}%`);
+      lines.push(`Status: ${cationResult.status}`);
+    }
+
+    navigator.clipboard.writeText(lines.join('\n'));
+    setCopied(true);
+    toast({ title: tr('Copied!', 'تم النسخ!', 'Copié !') });
+    setTimeout(() => setCopied(false), 3000);
+  };
+
+  const heroActions = [
+    {
+      icon: Copy,
+      label: { en: 'Copy Summary', ar: 'نسخ الملخص', fr: 'Copier le résumé' },
+      onClick: handleCopy,
+      variant: 'primary' as const,
+      showCheck: copied,
+    },
+    {
+      icon: RotateCcw,
+      label: { en: 'Reset', ar: 'إعادة', fr: 'Réinitialiser' },
+      onClick: handleReset,
+    },
+    {
+      icon: Printer,
+      label: { en: 'Print / Export PDF', ar: 'طباعة / تصدير PDF', fr: 'Imprimer / PDF' },
+      onClick: () => window.print(),
+    },
+  ];
+
   return (
-    <Card className="w-full shadow-md border-border/80">
-      <CardHeader className="pb-4 border-b bg-muted/20">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-          <div>
-            <div className="flex items-center gap-2">
-              <div className="p-2 rounded-lg bg-emerald-600/10 text-emerald-600 dark:text-emerald-400">
-                <Network className="h-5 w-5" />
-              </div>
-              <div>
-                <CardTitle className="text-lg md:text-xl font-bold">
-                  {tr(
-                    'Nutrient Interactions, Mobility & Uptake Suite',
-                    'منظومة تفاعلات وحركية وامتصاص العناصر المغذية',
-                    'Suite Interactions, Mobilité & Cinétique des Nutriments'
-                  )}
-                </CardTitle>
-                <CardDescription className="text-xs">
-                  {tr(
-                    'Advanced Mulder’s diagram, 16×16 conflict matrix, environmental root kinetics, phloem translocation & cation balance',
-                    'مخطط مولدر التفاعلي، مصفوفة التضاد 16×16، ديناميكا الامتصاص الجذري، حركية اللحاء وتوازن الكاتيونات',
-                    'Diagramme de Mulder interactif, matrice 16×16, cinétique racinaire, translocation et équilibre des cations'
-                  )}
-                </CardDescription>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 flex-wrap">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => window.print()}
-              className="gap-1.5 text-xs h-8"
-            >
-              <Printer className="h-3.5 w-3.5" />
-              <span>{tr('Print / Export PDF', 'طباعة / تصدير PDF', 'Imprimer / PDF')}</span>
-            </Button>
-          </div>
-        </div>
-
-        {/* Navigation Tabs */}
+    <CalculatorShell
+      icon={Network}
+      title={TITLE}
+      description={DESC}
+      badge={tr('Mulder · BCSR', 'مولدر · BCSR', 'Mulder · BCSR')}
+      accent="emerald"
+      actions={heroActions}
+      protocolNote={PROTOCOL_NOTE}
+    >
+      {/* Navigation Tabs — full width */}
+      <div className="lg:col-span-12">
         <div className="flex items-center gap-1.5 overflow-x-auto pt-3 pb-1 no-scrollbar">
           {[
             { id: 'mulder', label: tr('Mulder Interaction Chord', 'مخطط مولدر التفاعلي', 'Diagramme de Mulder'), icon: Network },
@@ -368,9 +467,10 @@ export function NutrientInteractions() {
             );
           })}
         </div>
-      </CardHeader>
+      </div>
 
-      <CardContent className="p-4 md:p-6 space-y-6">
+      {/* Tab Content — full width */}
+      <div className="lg:col-span-12 space-y-6">
         {/* ========================================================================= */}
         {/* TAB 1: MULDER DIAGRAM & FERTILIZER TANK BLEND SIMULATOR                    */}
         {/* ========================================================================= */}
@@ -1653,7 +1753,7 @@ export function NutrientInteractions() {
             <TomatoDiseaseVisualizer />
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </CalculatorShell>
   );
 }
