@@ -33,8 +33,10 @@ import {
   Bug,
   Satellite,
   Maximize2,
+  Copy,
+  Check,
 } from 'lucide-react';
-import { useLanguageStore, type Language } from '@/lib/language-store';
+import { useLanguageStore, copyFor, type Language } from '@/lib/language-store';
 import {
   ALGERIA_AGRO_ZONES_CONFIG,
   SOIL_CLASSES_INFO,
@@ -70,6 +72,8 @@ import AlgeriaAdvancedGISTools from '@/components/agri/soil/AlgeriaAdvancedGISTo
 import AlgeriaRegionalStatsPopup from '@/components/agri/soil/AlgeriaRegionalStatsPopup';
 import AlgeriaMapDynamicLegend from '@/components/agri/soil/AlgeriaMapDynamicLegend';
 import { type DrawnPlot, type PlotVertex, type PlotShapeType } from '@/components/agri/soil/AlgeriaPlotDrawerModal';
+import { CalculatorShell, type TrilingualString } from '@/components/agri/nutri-tools/CalculatorShell';
+import { toast } from '@/hooks/use-toast';
 
 type MapViewLayer =
   | 'agro_zones'
@@ -87,6 +91,36 @@ type MapViewLayer =
   | 'satellite_ndvi';
 
 type BaseMapTheme = 'vector' | 'topographic' | 'satellite_tone';
+
+const TITLE: TrilingualString = {
+  en: 'Algeria Interactive Agricultural Map — Soils, Dams, Pivots & Silos',
+  ar: 'خريطة الجزائر التفاعلية للتربة، السدود، الرشاشات المحورية والصوامع',
+  fr: 'Atlas & Carte Interactive des Sols, Barrages, Pivots et Silos d’Algérie',
+};
+
+const DESCRIPTION: TrilingualString = {
+  en: 'Comprehensive GIS coverage of all 58 Wilayas: ANBT dam networks, Saharan mega-pivots, CCLS grain silos, locust radar, and Sentinel-2 satellite sensing.',
+  ar: 'تغطية شاملة لـ 58 ولاية: السدود (ANBT)، الرشاشات المحورية بالجنوب، صوامع ديوان الحبوب (CCLS)، رادار الجراد، والاستشعار الفضائي (Sentinel-2).',
+  fr: 'Exploration exhaustive des 58 Wilayas : Réseaux hydrauliques ANBT, méga-pivots sahariens, silos CCLS, radar acridien et grille biophysique satellite.',
+};
+
+const COPY_SUMMARY_LABEL: TrilingualString = {
+  en: 'Copy Summary',
+  ar: 'نسخ الملخص',
+  fr: 'Copier le Résumé',
+};
+
+const RESET_VIEW_LABEL: TrilingualString = {
+  en: 'Reset View',
+  ar: 'إعادة التعيين',
+  fr: 'Réinitialiser',
+};
+
+const PROTOCOL_NOTE: TrilingualString = {
+  en: 'Data sources: ANBT (Agence Nationale des Barrages & Transferts), CCLS (Office Algérien Interprofessionnel des Céréales), INPV locust surveillance radar, and Sentinel-2 (ESA) NDVI biophysical grid. Wilaya polygons use geographic projection (lat/lng → SVG viewBox 800×800).',
+  ar: 'المصادر: الوكالة الوطنية للسدود والتحويلات (ANBT)، الديوان الجزائري المهني للحبوب (CCLS)، رادار مراقبة الجراد التابع للمعهد الوطني للوقاية النباتية، وشبكة Sentinel-2 الفضائية لمؤشر NDVI. مضلعات الولايات تستخدم إسقاطاً جغرافياً (خط العرض/الطول ← SVG viewBox 800×800).',
+  fr: 'Sources : ANBT (Agence Nationale des Barrages & Transferts), CCLS (Office Algérien Interprofessionnel des Céréales), radar acridien INPV, grille biophysique NDVI Sentinel-2 (ESA). Les polygones des wilayas utilisent une projection géographique (lat/lng → SVG viewBox 800×800).',
+};
 
 export default function AlgeriaAgriMap() {
   const { language } = useLanguageStore();
@@ -166,6 +200,7 @@ export default function AlgeriaAgriMap() {
   const [showWilayaLabels, setShowWilayaLabels] = useState<boolean>(true);
   const [showMacroBands, setShowMacroBands] = useState<boolean>(false);
   const [hoveredPolygonCode, setHoveredPolygonCode] = useState<number | null>(null);
+  const [copied, setCopied] = useState<boolean>(false);
 
   // Pre-computed vector geometry
   const nationalPath = useMemo(() => getAlgeriaNationalPath(), []);
@@ -474,43 +509,112 @@ export default function AlgeriaAgriMap() {
     setIsRegionalPopupOpen(true);
   };
 
+  // Trilingual copy helper
+  const tr = (en: string, ar: string, fr: string) => copyFor(lang, en, ar, fr);
+
+  // Copy map summary to clipboard
+  const handleCopySummary = async () => {
+    const w = selectedWilaya;
+    const overlays: string[] = [];
+    if (showDamsOverlay) overlays.push('Dams (ANBT)');
+    if (showPivotsOverlay) overlays.push('Saharan Pivots');
+    if (showCclsOverlay) overlays.push('CCLS Silos');
+    if (showLocustOverlay) overlays.push('Locust Radar');
+    if (showSatelliteGridOverlay) overlays.push('Satellite NDVI Grid');
+    const summary = [
+      '=== ALGERIA AGRI MAP — SUMMARY ===',
+      `Active Layer: ${activeLayer}`,
+      `Selected Wilaya: ${w.codeStr} - ${w.nameFr} (${w.nameAr})`,
+      `  Zone: ${w.zone.replace('_', ' ')}`,
+      `  Soil: ${w.soilNameFr}`,
+      `  Rainfall: ${w.rainfallMm} mm/year`,
+      `  Bioclimate: ${w.bioclimate}`,
+      `  pH: ${w.ph}`,
+      `  Salinity Risk: ${w.salinityRisk}`,
+      `  Dam/Basin: ${w.damOrBasinFr}`,
+      `Active Overlays: ${overlays.join(', ') || 'None'}`,
+      `Base Map: ${baseMapTheme}`,
+      `Drawn Plots: ${drawnPlots.length}`,
+      weatherData.current
+        ? `Weather: ${Math.round(weatherData.current.temperature)}°C, Humidity ${weatherData.current.relativeHumidity}%, Wind ${weatherData.current.windSpeed10m} km/h`
+        : 'Weather: unavailable',
+      '===================================',
+    ].join('\n');
+    try {
+      await navigator.clipboard.writeText(summary);
+      setCopied(true);
+      toast({
+        title: tr('Summary Copied', 'تم نسخ الملخص', 'Résumé Copié'),
+        description: tr(
+          'Map state copied to clipboard',
+          'تم نسخ حالة الخريطة إلى الحافظة',
+          'État de la carte copié dans le presse-papiers',
+        ),
+      });
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      toast({
+        title: tr('Copy Failed', 'فشل النسخ', 'Échec de la Copie'),
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // Reset all layers, filters, and view to defaults
+  const handleResetAll = () => {
+    setActiveLayer('agro_zones');
+    setSelectedWilayaCode(7);
+    setSelectedCropId('wheat_durum');
+    setSearchQuery('');
+    setFilterZone('all');
+    setFilterSoil('all');
+    setBaseMapTheme('vector');
+    setShowDamsOverlay(true);
+    setShowPivotsOverlay(true);
+    setShowCclsOverlay(false);
+    setShowLocustOverlay(false);
+    setShowSatelliteGridOverlay(false);
+    setShowWilayaPolygons(true);
+    setShowTopography(true);
+    setShowWilayaLabels(true);
+    setShowMacroBands(false);
+    setZoomLevel(1);
+    setPanOffset({ x: 0, y: 0 });
+    toast({
+      title: tr('View Reset', 'إعادة التعيين', 'Réinitialisé'),
+      description: tr(
+        'All layers and filters restored to defaults',
+        'تمت استعادة جميع الطبقات والمرشحات إلى الإعدادات الافتراضية',
+        'Toutes les couches et filtres réinitialisés',
+      ),
+    });
+  };
+
   return (
-    <div className="space-y-6">
-      {/* Top Hero Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-900 via-teal-950 to-slate-950 p-6 text-white shadow-xl">
-        <div className="relative z-10 flex flex-wrap items-center justify-between gap-4">
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2">
-              <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-400 font-bold text-xs">
-                🇩🇿
-              </span>
-              <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">
-                {lang === 'ar' ? 'نظام المعلومات الجغرافية الفلاحي الوطني (SIG-AGRI)' : 'Système d’Information Géographique Agricole (SIG-AGRI)'}
-              </span>
-            </div>
-            <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">
-              {lang === 'ar'
-                ? 'خريطة الجزائر التفاعلية للتربة، السدود، الرشاشات المحورية والصوامع'
-                : 'Atlas & Carte Interactive des Sols, Barrages, Pivots et Silos d’Algérie'}
-            </h1>
-            <p className="max-w-2xl text-xs text-slate-300 sm:text-sm">
-              {lang === 'ar'
-                ? 'تغطية شاملة لـ 58 ولاية: السدود (ANBT)، الرشاشات المحورية بالجنوب، صوامع ديوان الحبوب (CCLS)، رادار الجراد، والاستشعار الفضائي (Sentinel-2).'
-                : 'Exploration exhaustive des 58 Wilayas : Réseaux hydrauliques ANBT, méga-pivots sahariens, silos CCLS, radar acridien et grille biophysique satellite.'}
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-emerald-500/20 px-3 py-2 text-center border border-emerald-400/30">
-              <span className="block text-lg font-bold leading-none text-emerald-300">58</span>
-              <span className="text-[10px] text-emerald-200/80 uppercase font-medium">
-                {lang === 'ar' ? 'ولاية فلاحية' : 'Wilayas'}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
+    <CalculatorShell
+      icon={MapPin}
+      title={TITLE}
+      description={DESCRIPTION}
+      badge="SIG-AGRI"
+      accent="emerald"
+      actions={[
+        {
+          icon: Copy,
+          label: COPY_SUMMARY_LABEL,
+          onClick: handleCopySummary,
+          variant: 'primary',
+          showCheck: copied,
+        },
+        {
+          icon: RotateCcw,
+          label: RESET_VIEW_LABEL,
+          onClick: handleResetAll,
+          variant: 'ghost',
+        },
+      ]}
+      protocolNote={PROTOCOL_NOTE}
+    >
+      <div className="lg:col-span-12 space-y-6">
       {/* Primary Layer Navigation Tabs */}
       <div className="flex flex-wrap items-center gap-2 rounded-2xl bg-slate-100 p-2 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
         <div className="flex items-center gap-1.5 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
@@ -1726,6 +1830,7 @@ export default function AlgeriaAgriMap() {
         isDrawingMode={isDrawingMode}
         setIsDrawingMode={setIsDrawingMode}
       />
+      </div>
 
       {/* Regional & Pedological Statistics Popup Modal */}
       <AlgeriaRegionalStatsPopup
@@ -1743,6 +1848,6 @@ export default function AlgeriaAgriMap() {
         }}
         weatherData={weatherData}
       />
-    </div>
+    </CalculatorShell>
   );
 }
