@@ -1,14 +1,38 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Flame, Zap, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { Flame, Calculator, Sparkles, Copy, RotateCcw, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { copyFor, useTranslation } from '@/lib/language-store';
+import { toast } from '@/hooks/use-toast';
+import {
+  CalculatorShell,
+  type TrilingualString,
+  type CalculatorPill,
+} from '@/components/agri/nutri-tools/CalculatorShell';
 
-const SUBSTRATE_AR: Record<string, string> = { dairy_manure: 'روث الأبقار الحلوب', poultry_manure: 'روث الدواجن', food_waste: 'مخلفات الطعام', crop_residue: 'مخلفات المحاصيل (قش)', grass: 'قصاصات الأعشاب' };
+const TITLE: TrilingualString = {
+  en: 'Biogas Digester Calculator',
+  ar: 'حاسبة هاضم الغاز الحيوي',
+  fr: 'Calculateur de Digesteur Biogaz',
+};
+
+const DESC: TrilingualString = {
+  en: 'Biogas yield · digester sizing · energy + revenue · 5 substrates',
+  ar: 'إنتاج الغاز الحيوي · تحديد حجم الهاضم · الطاقة + الإيرادات · 5 مواد أولية',
+  fr: 'Production de biogaz · dimensionnement · énergie + revenus · 5 substrats',
+};
+
+const PILL_LABEL: TrilingualString = {
+  en: 'Substrate:',
+  ar: 'المادة الأولية:',
+  fr: 'Substrat :',
+};
+
+const PROTOCOL_NOTE: TrilingualString = {
+  en: 'Use CHP (combined heat + power) for 85% efficiency: 35% electricity + 50% heat. Digestate is excellent organic fertilizer — NPK retains 80-90% of feed value.',
+  ar: 'استخدم التوليد المشترك للحرارة والكهرباء (CHP) بكفاءة 85%: كهرباء 35% + حرارة 50%. المخلفات السائلة للهضم سماد عضوي ممتاز — يحتفظ NPK بنسبة 80–90% من قيمة التغذية.',
+  fr: 'Utilisez la cogénération (CHP) pour 85% d’efficacité : 35% électricité + 50% chaleur. Le digestat est un excellent engrais organique — la NPK y est conservée à 80–90%.',
+};
 
 const SUBSTRATES: Record<string, { name: string; emoji: string; vs: number; bmp: number; cn: number }> = {
   dairy_manure: { name: 'Dairy manure', emoji: '🐄', vs: 80, bmp: 250, cn: 18 },
@@ -18,13 +42,24 @@ const SUBSTRATES: Record<string, { name: string; emoji: string; vs: number; bmp:
   grass: { name: 'Grass clippings', emoji: '🌿', vs: 85, bmp: 400, cn: 15 },
 };
 
+const SUBSTRATE_LABELS: Record<string, TrilingualString> = {
+  dairy_manure: { en: 'Dairy manure', ar: 'روث الأبقار الحلوب', fr: 'Fumier bovin laitier' },
+  poultry_manure: { en: 'Poultry manure', ar: 'روث الدواجن', fr: 'Fiente de volaille' },
+  food_waste: { en: 'Food waste', ar: 'مخلفات الطعام', fr: 'Déchets alimentaires' },
+  crop_residue: { en: 'Crop residue (straw)', ar: 'مخلفات المحاصيل (قش)', fr: 'Résidus de culture (paille)' },
+  grass: { en: 'Grass clippings', ar: 'قصاصات الأعشاب', fr: 'Tonture de gazon' },
+};
+
 export function BiogasDigesterCalculator() {
   const { language } = useTranslation();
+  const tr = (en: string, ar: string, fr?: string) => copyFor(language, en, ar, fr);
+
   const [substrate, setSubstrate] = useState('dairy_manure');
   const [dailyFeed, setDailyFeed] = useState('50');
   const [hrt, setHrt] = useState('25');
   const [methanePct, setMethanePct] = useState('60');
   const [electricityPrice, setElectricityPrice] = useState('0.12');
+  const [copied, setCopied] = useState<boolean>(false);
 
   const result = useMemo(() => {
     const sub = SUBSTRATES[substrate];
@@ -48,52 +83,219 @@ export function BiogasDigesterCalculator() {
     return { sub, vsPerDay, biogasPerDay, ch4PerDay, energyPerDay, electricityPerDay, dailyRevenue, digesterVolume, annualBiogas, annualRevenue, cn };
   }, [substrate, dailyFeed, hrt, methanePct, electricityPrice]);
 
-  return (
-    <Card className="overflow-hidden border-orange-100 shadow-sm dark:border-orange-900/60">
-      <CardHeader className="border-b border-border/60 bg-orange-50/50 pb-4 dark:bg-orange-950/10"><CardTitle className="flex items-center gap-2 text-base"><span className="rounded-lg bg-orange-100 p-2 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300"><Flame className="h-4 w-4" /></span> {copyFor(language, 'Biogas Digester Calculator', 'حاسبة هاضم الغاز الحيوي')}</CardTitle><p className="mt-1 text-xs leading-relaxed text-muted-foreground">{copyFor(language, 'Biogas yield · digester sizing · energy + revenue · 5 substrates', 'إنتاج الغاز الحيوي · تحديد حجم الهاضم · الطاقة + الإيرادات · 5 مواد أولية')}</p></CardHeader>
-      <CardContent className="space-y-3">
-        <div className="grid grid-cols-1 gap-3 rounded-xl border border-orange-200/70 bg-orange-50/30 p-3 dark:border-orange-900/60 dark:bg-orange-950/10 sm:grid-cols-2">
-          <div><Label className="text-xs font-medium">{copyFor(language, 'Substrate', 'المادة الأولية')}</Label><select aria-label={copyFor(language, 'Digester substrate', 'مادة الهاضم الأولية')} value={substrate} onChange={e => setSubstrate(e.target.value)} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{Object.entries(SUBSTRATES).map(([k, v]) => <option key={k} value={k}>{v.emoji} {copyFor(language, v.name, SUBSTRATE_AR[k])}</option>)}</select></div>
-          <div><Label className="text-xs font-medium">{copyFor(language, 'Daily feed (kg/day)', 'التغذية اليومية (كغ/يوم)')}</Label><Input aria-label={copyFor(language, 'Daily feed quantity', 'كمية التغذية اليومية')} value={dailyFeed} onChange={e => setDailyFeed(e.target.value)} type="number" step="5" className="mt-1 h-10 text-sm" /></div>
-        </div>
-        <div className="grid grid-cols-1 gap-3 rounded-xl border border-border/70 bg-muted/20 p-3 sm:grid-cols-3">
-          <div><Label className="text-xs font-medium">{copyFor(language, 'HRT (days)', 'زمن الاحتجاز الهيدروليكي (يوم)')}</Label><Input aria-label={copyFor(language, 'Hydraulic retention time', 'زمن الاحتجاز الهيدروليكي')} value={hrt} onChange={e => setHrt(e.target.value)} type="number" step="5" className="mt-1 h-10 text-sm" /></div>
-          <div><Label className="text-xs font-medium">{copyFor(language, 'CH₄ content (%)', 'محتوى الميثان (%)')}</Label><Input aria-label={copyFor(language, 'Methane content', 'محتوى الميثان')} value={methanePct} onChange={e => setMethanePct(e.target.value)} type="number" step="5" className="mt-1 h-10 text-sm" /></div>
-          <div><Label className="text-xs font-medium">{copyFor(language, 'Electricity ($/kWh)', 'الكهرباء (دولار/ك.و.س)')}</Label><Input aria-label={copyFor(language, 'Electricity price', 'سعر الكهرباء')} value={electricityPrice} onChange={e => setElectricityPrice(e.target.value)} type="number" step="0.01" className="mt-1 h-10 text-sm" /></div>
-        </div>
-        {result && (
-          <div className="space-y-2">
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              <Metric label={copyFor(language, 'Daily biogas', 'الغاز الحيوي اليومي')} value={`${result.biogasPerDay.toFixed(1)} m³`} color="orange" />
-              <Metric label={copyFor(language, 'CH₄ energy', 'طاقة CH₄')} value={`${result.energyPerDay.toFixed(1)} kWh`} color="amber" />
-              <Metric label={copyFor(language, 'Electricity', 'الكهرباء')} value={`${result.electricityPerDay.toFixed(1)} kWh`} color="cyan" />
-              <Metric label={copyFor(language, 'Daily revenue', 'الإيراد اليومي')} value={`$${result.dailyRevenue.toFixed(2)}`} color="emerald" />
-            </div>
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="rounded-xl border border-border/70 bg-muted/20 p-3"><span className="block text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{copyFor(language, 'Digester volume', 'حجم الهاضم')}</span><strong className="mt-1 block font-mono text-base">{result.digesterVolume.toFixed(1)} m³</strong></div>
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-3 dark:border-emerald-900 dark:bg-emerald-950/20"><span className="block text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{copyFor(language, 'Annual revenue', 'الإيراد السنوي')}</span><strong className="mt-1 block font-mono text-base text-emerald-600 dark:text-emerald-300">${result.annualRevenue.toFixed(0)}</strong></div>
-            </div>
-            {result.cn < 15 ? (
-              <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50/60 p-3 text-xs leading-relaxed text-amber-700 dark:border-amber-900 dark:text-amber-300"><AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" /><span><strong>{copyFor(language, `C:N = ${result.cn}:1 — too low.`, `C:N = ${result.cn}:1 — منخفض جداً.`)}</strong> {copyFor(language, 'Add carbon-rich co-substrate (straw, crop residue) to reach 20-30:1 for optimal digestion.', 'أضف مادة مساعدة غنية بالكربون (القش أو مخلفات المحاصيل) للوصول إلى 20–30:1 وتحقيق الهضم الأمثل.')}</span></div>
-            ) : result.cn > 35 ? (
-              <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50/60 p-3 text-xs leading-relaxed text-amber-700 dark:border-amber-900 dark:text-amber-300"><AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" /><span><strong>{copyFor(language, `C:N = ${result.cn}:1 — too high.`, `C:N = ${result.cn}:1 — مرتفع جداً.`)}</strong> {copyFor(language, 'Add nitrogen-rich co-substrate (manure, food waste) to reach 20-30:1.', 'أضف مادة مساعدة غنية بالنيتروجين (الروث أو مخلفات الطعام) للوصول إلى 20–30:1.')}</span></div>
-            ) : (
-              <div className="flex items-start gap-2 rounded-xl border border-emerald-200 bg-emerald-50/60 p-3 text-xs leading-relaxed text-emerald-700 dark:border-emerald-900 dark:text-emerald-300"><CheckCircle2 className="h-3.5 w-3.5 mt-0.5 shrink-0" /><span><strong>{copyFor(language, `C:N = ${result.cn}:1 — optimal.`, `C:N = ${result.cn}:1 — مثالي.`)}</strong> {copyFor(language, `Mesophilic digester (35°C) with ${result.digesterVolume.toFixed(0)} m³ working volume.`, `هاضم متوسط الحرارة (35°م) بحجم تشغيل ${result.digesterVolume.toFixed(0)} م³.`)}</span></div>
-            )}
-            <div className="rounded-lg bg-muted/30 p-3 text-xs leading-relaxed text-muted-foreground">💡 {copyFor(language, 'Use CHP (combined heat + power) for 85% efficiency: 35% electricity + 50% heat. Digestate is excellent organic fertilizer — NPK retains 80-90% of feed value.', 'استخدم التوليد المشترك للحرارة والكهرباء (CHP) بكفاءة 85%: كهرباء 35% + حرارة 50%. المخلفات السائلة للهضم سماد عضوي ممتاز — يحتفظ NPK بنسبة 80–90% من قيمة التغذية.')}</div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
+  const handleReset = () => {
+    setSubstrate('dairy_manure');
+    setDailyFeed('50');
+    setHrt('25');
+    setMethanePct('60');
+    setElectricityPrice('0.12');
+    toast({
+      title: tr('Reset to Defaults', 'تمت استعادة القيم الافتراضية', 'Valeurs par défaut rétablies'),
+    });
+  };
 
-const ACCENT: Record<string, string> = {
-  cyan: 'border-cyan-200 dark:border-cyan-900 bg-cyan-50/40 dark:bg-cyan-950/20',
-  emerald: 'border-emerald-200 dark:border-emerald-900 bg-emerald-50/40 dark:bg-emerald-950/20',
-  amber: 'border-amber-200 dark:border-amber-900 bg-amber-50/40 dark:bg-amber-950/20',
-  orange: 'border-orange-200 dark:border-orange-900 bg-orange-50/40 dark:bg-orange-950/20',
-};
-function Metric({ label, value, color }: { label: string; value: string; color: keyof typeof ACCENT }) {
-  return <div className={`rounded-xl border p-3 shadow-sm ${ACCENT[color]}`}><div className="text-[9px] font-medium uppercase tracking-wide text-muted-foreground">{label}</div><div className="mt-1 font-mono text-base font-semibold">{value}</div></div>;
+  const handleCopySummary = () => {
+    if (!result) return;
+    const text = `
+=== BIOGAS DIGESTER ANALYSIS ===
+Substrate: ${result.sub.emoji} ${tr(SUBSTRATE_LABELS[substrate].en, SUBSTRATE_LABELS[substrate].ar, SUBSTRATE_LABELS[substrate].fr)}
+
+Feedstock:
+• Daily feed: ${parseFloat(dailyFeed)} kg/day
+• HRT: ${parseFloat(hrt)} days
+• CH₄ content: ${parseFloat(methanePct)}%
+• Electricity price: $${parseFloat(electricityPrice)}/kWh
+
+Daily Output:
+• Biogas: ${result.biogasPerDay.toFixed(1)} m³/day
+• CH₄ energy: ${result.energyPerDay.toFixed(1)} kWh/day
+• Electricity (35% eff.): ${result.electricityPerDay.toFixed(1)} kWh/day
+• Daily revenue: $${result.dailyRevenue.toFixed(2)}
+
+Sizing:
+• Digester volume: ${result.digesterVolume.toFixed(1)} m³
+• Annual revenue: $${result.annualRevenue.toFixed(0)}
+• C:N ratio: ${result.cn}:1
+    `.trim();
+
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    toast({
+      title: tr('Summary Copied!', 'تم نسخ التقرير!', 'Résumé copié !'),
+      description: tr('Biogas analysis report copied to clipboard.', 'تم نسخ تقرير تحليل الغاز الحيوي إلى الحافظة.', 'Rapport copié dans le presse-papiers.'),
+    });
+    setTimeout(() => setCopied(false), 3000);
+  };
+
+  const pills: CalculatorPill[] = Object.entries(SUBSTRATES).map(([k, v]) => {
+    const labels = SUBSTRATE_LABELS[k];
+    return {
+      key: k,
+      emoji: v.emoji,
+      label: tr(labels.en, labels.ar, labels.fr),
+    };
+  });
+
+  const activeLabel = SUBSTRATE_LABELS[substrate];
+
+  return (
+    <CalculatorShell
+      icon={Flame}
+      title={TITLE}
+      description={DESC}
+      badge="Renewable Energy"
+      accent="amber"
+      actions={[
+        {
+          icon: Copy,
+          label: { en: 'Copy Summary', ar: 'نسخ التقرير', fr: 'Copier' },
+          onClick: handleCopySummary,
+          variant: 'primary',
+          showCheck: copied,
+        },
+        {
+          icon: RotateCcw,
+          label: { en: 'Reset Defaults', ar: 'إعادة تعيين', fr: 'Réinitialiser' },
+          onClick: handleReset,
+        },
+      ]}
+      pills={pills}
+      activePill={substrate}
+      onPillClick={(k) => setSubstrate(k)}
+      pillLabel={PILL_LABEL}
+      protocolNote={PROTOCOL_NOTE}
+    >
+      <CalculatorShell.Inputs>
+        <div className="p-4 rounded-2xl border bg-card shadow-xs space-y-4">
+          <div className="flex items-center justify-between border-b pb-3">
+            <span className="text-base font-bold flex items-center gap-2">
+              <Calculator className="h-4 w-4 text-amber-600" />
+              {tr('Digester Operating Parameters', 'مدخلات تشغيل الهاضم', 'Paramètres de fonctionnement du digesteur')}
+            </span>
+            <span className="text-xs font-bold bg-amber-50 dark:bg-amber-950 text-amber-800 dark:text-amber-200 border border-amber-300 rounded-lg px-2 py-0.5">
+              {SUBSTRATES[substrate].emoji} {tr(activeLabel.en, activeLabel.ar, activeLabel.fr)}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <CalculatorShell.InputField
+              label={tr('Daily feed (kg/day)', 'التغذية اليومية (كغ/يوم)', 'Alimentation quotidienne (kg/j)')}
+              value={dailyFeed}
+              onChange={setDailyFeed}
+              step="5"
+              helper={tr('Organic substrate mass fed per day', 'كتلة المادة العضوية المُدخلة يومياً', 'Masse de substrat apportée par jour')}
+            />
+            <CalculatorShell.InputField
+              label={tr('HRT (days)', 'زمن الاحتجز الهيدروليكي (يوم)', 'Temps de rétention (jours)')}
+              value={hrt}
+              onChange={setHrt}
+              step="5"
+              helper={tr('Hydraulic retention time', 'زمن الاحتجاز الهيدروليكي', 'Temps de séjour hydraulique')}
+            />
+            <CalculatorShell.InputField
+              label={tr('CH₄ content (%)', 'محتوى الميثان (%)', 'Teneur CH₄ (%)')}
+              value={methanePct}
+              onChange={setMethanePct}
+              step="5"
+              helper={tr('Methane fraction in biogas', 'نسبة الميثان في الغاز الحيوي', 'Fraction de méthane dans le biogaz')}
+            />
+            <CalculatorShell.InputField
+              label={tr('Electricity ($/kWh)', 'الكهرباء (دولار/ك.و.س)', 'Électricité ($/kWh)')}
+              value={electricityPrice}
+              onChange={setElectricityPrice}
+              step="0.01"
+              helper={tr('Sale tariff for electricity', 'تعريفة بيع الكهرباء', 'Tarif de vente de l’électricité')}
+            />
+          </div>
+        </div>
+      </CalculatorShell.Inputs>
+
+      <CalculatorShell.Results>
+        <div className="p-4 rounded-2xl border bg-card shadow-xs h-full space-y-4">
+          <div className="flex items-center justify-between border-b pb-3 bg-gradient-to-r from-amber-50 via-transparent to-orange-50/50 dark:from-amber-950/30 dark:to-orange-950/20 -mx-4 -mt-4 px-4 pt-4 rounded-t-2xl">
+            <span className="text-base font-bold flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-amber-600" />
+              {tr('Energy & Revenue Output', 'مخرجات الطاقة والإيرادات', 'Production d’énergie et revenus')}
+            </span>
+            {result && (
+              <span className="font-mono text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 rounded-lg px-2 py-0.5">
+                {result.biogasPerDay.toFixed(1)} m³/d
+              </span>
+            )}
+          </div>
+
+          {result && (
+            <>
+              <div className="grid grid-cols-2 gap-3">
+                <CalculatorShell.MetricTile
+                  label={tr('Daily Biogas', 'الغاز الحيوي اليومي', 'Biogaz quotidien')}
+                  value={result.biogasPerDay.toFixed(1)}
+                  unit="m³/d"
+                  color="amber"
+                />
+                <CalculatorShell.MetricTile
+                  label={tr('CH₄ Energy', 'طاقة CH₄', 'Énergie CH₄')}
+                  value={result.energyPerDay.toFixed(1)}
+                  unit="kWh/d"
+                  color="amber"
+                />
+                <CalculatorShell.MetricTile
+                  label={tr('Electricity', 'الكهرباء', 'Électricité')}
+                  value={result.electricityPerDay.toFixed(1)}
+                  unit="kWh/d"
+                  color="emerald"
+                />
+                <CalculatorShell.MetricTile
+                  label={tr('Daily Revenue', 'الإيراد اليومي', 'Revenu quotidien')}
+                  value={`$${result.dailyRevenue.toFixed(2)}`}
+                  color="emerald"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <CalculatorShell.MetricTile
+                  label={tr('Digester Volume', 'حجم الهاضم', 'Volume du digesteur')}
+                  value={result.digesterVolume.toFixed(1)}
+                  unit="m³"
+                  color="default"
+                />
+                <CalculatorShell.MetricTile
+                  label={tr('Annual Revenue', 'الإيراد السنوي', 'Revenu annuel')}
+                  value={`$${result.annualRevenue.toFixed(0)}`}
+                  unit="/yr"
+                  color="emerald"
+                />
+              </div>
+
+              {result.cn < 15 ? (
+                <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50/60 p-3 text-xs leading-relaxed text-amber-700 dark:border-amber-900 dark:text-amber-300">
+                  <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                  <span>
+                    <strong>{tr(`C:N = ${result.cn}:1 — too low.`, `C:N = ${result.cn}:1 — منخفض جداً.`, `C:N = ${result.cn}:1 — trop bas.`)}</strong>{' '}
+                    {tr('Add carbon-rich co-substrate (straw, crop residue) to reach 20-30:1 for optimal digestion.', 'أضف مادة مساعدة غنية بالكربون (القش أو مخلفات المحاصيل) للوصول إلى 20–30:1 وتحقيق الهضم الأمثل.', 'Ajoutez un co-substrat riche en carbone (paille, résidus) pour atteindre 20–30:1.')}
+                  </span>
+                </div>
+              ) : result.cn > 35 ? (
+                <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50/60 p-3 text-xs leading-relaxed text-amber-700 dark:border-amber-900 dark:text-amber-300">
+                  <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                  <span>
+                    <strong>{tr(`C:N = ${result.cn}:1 — too high.`, `C:N = ${result.cn}:1 — مرتفع جداً.`, `C:N = ${result.cn}:1 — trop élevé.`)}</strong>{' '}
+                    {tr('Add nitrogen-rich co-substrate (manure, food waste) to reach 20-30:1.', 'أضف مادة مساعدة غنية بالنيتروجين (الروث أو مخلفات الطعام) للوصول إلى 20–30:1.', 'Ajoutez un co-substrat riche en azote (fumier, déchets alimentaires) pour atteindre 20–30:1.')}
+                  </span>
+                </div>
+              ) : (
+                <div className="flex items-start gap-2 rounded-xl border border-emerald-200 bg-emerald-50/60 p-3 text-xs leading-relaxed text-emerald-700 dark:border-emerald-900 dark:text-emerald-300">
+                  <CheckCircle2 className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                  <span>
+                    <strong>{tr(`C:N = ${result.cn}:1 — optimal.`, `C:N = ${result.cn}:1 — مثالي.`, `C:N = ${result.cn}:1 — optimal.`)}</strong>{' '}
+                    {tr(`Mesophilic digester (35°C) with ${result.digesterVolume.toFixed(0)} m³ working volume.`, `هاضم متوسط الحرارة (35°م) بحجم تشغيل ${result.digesterVolume.toFixed(0)} م³.`, `Digesteur mésophile (35°C) — volume utile ${result.digesterVolume.toFixed(0)} m³.`)}
+                  </span>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </CalculatorShell.Results>
+    </CalculatorShell>
+  );
 }

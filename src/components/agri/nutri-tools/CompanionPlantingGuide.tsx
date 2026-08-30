@@ -1,12 +1,31 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Sprout, Search } from 'lucide-react';
+import { Sprout, Search, Calculator } from 'lucide-react';
 import { copyFor, useTranslation } from '@/lib/language-store';
+import { Badge } from '@/components/ui/badge';
+import {
+  CalculatorShell,
+  type TrilingualString,
+} from '@/components/agri/nutri-tools/CalculatorShell';
+
+const TITLE: TrilingualString = {
+  en: 'Companion Planting Guide',
+  ar: 'دليل الزراعة المصاحبة',
+  fr: 'Guide des Associations Végétales',
+};
+
+const DESC: TrilingualString = {
+  en: '20 crops · 100+ pairings · synergy (✓) · antagonism (✗) · search any crop',
+  ar: '20 محصولاً · أكثر من 100 علاقة · توافق (✓) · تعارض (✗) · ابحث عن أي محصول',
+  fr: '20 cultures · 100+ associations · synergie (✓) · antagonisme (✗) · recherche',
+};
+
+const PROTOCOL_NOTE: TrilingualString = {
+  en: 'Companion planting uses plant synergies (pest repulsion, N fixation, pollinator attraction) + avoids antagonisms (allelopathy, shared pests, nutrient competition).',
+  ar: 'تستفيد الزراعة المصاحبة من تكامل النباتات (طرد الآفات وتثبيت النيتروجين وجذب الملقحات) وتتجنب التعارضات (الأليلوباثي والآفات المشتركة والتنافس على العناصر الغذائية).',
+  fr: 'Les associations végétales exploitent les synergies (répulsion des ravageurs, fixation d’azote, pollinisation) et évitent les antagonismes (allélopathie, ravageurs partagés, compétition nutriment).',
+};
 
 const PLANT_AR: Record<string, string> = {
   Tomato: 'طماطم', Basil: 'ريحان', Asparagus: 'هليون', Carrot: 'جزر', Parsley: 'بقدونس',
@@ -48,6 +67,7 @@ const COMPANIONS: { crop: string; emoji: string; helps: string[]; helpedBy: stri
 
 export function CompanionPlantingGuide() {
   const { language } = useTranslation();
+  const tr = (en: string, ar: string, fr?: string) => copyFor(language, en, ar, fr);
   const [search, setSearch] = useState('');
 
   const filtered = useMemo(() => {
@@ -57,64 +77,108 @@ export function CompanionPlantingGuide() {
   }, [search]);
 
   return (
-    <Card className="overflow-hidden border-lime-200/60 shadow-sm dark:border-lime-900/60">
-      <CardHeader className="border-b bg-gradient-to-r from-lime-50 via-background to-emerald-50/50 pb-4 dark:from-lime-950/30 dark:via-background dark:to-emerald-950/20">
-        <CardTitle className="text-base flex items-center gap-2">
-          <Sprout className="h-4 w-4 text-emerald-600" /> {copyFor(language, 'Companion Planting Guide', 'دليل الزراعة المصاحبة')}
-        </CardTitle>
-        <p className="text-xs leading-relaxed text-muted-foreground">{copyFor(language, '20 crops · 100+ pairings · synergy (✓) · antagonism (✗) · search any crop', '20 محصولاً · أكثر من 100 علاقة · توافق (✓) · تعارض (✗) · ابحث عن أي محصول')}</p>
-      </CardHeader>
-      <CardContent className="space-y-4 p-4 sm:p-5">
-        <div className="space-y-2">
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input aria-label={copyFor(language, 'Search crop or companion', 'ابحث عن محصول أو نبات مصاحب')} value={search} onChange={e => setSearch(e.target.value)} placeholder={copyFor(language, 'Search crop or companion…', 'ابحث عن محصول أو نبات مصاحب…')} className="h-10 pl-9 text-sm" />
+    <CalculatorShell
+      icon={Sprout}
+      title={TITLE}
+      description={DESC}
+      badge="Synergy Atlas"
+      accent="emerald"
+      protocolNote={PROTOCOL_NOTE}
+    >
+      <CalculatorShell.Inputs>
+        <div className="p-4 rounded-2xl border bg-card shadow-xs space-y-4">
+          <div className="flex items-center justify-between border-b pb-3">
+            <span className="text-base font-bold flex items-center gap-2">
+              <Calculator className="h-4 w-4 text-emerald-600" />
+              {tr('Search Companion Crops', 'ابحث عن المحاصيل المصاحبة', 'Rechercher cultures associées')}
+            </span>
+            <Badge variant="secondary" className="shrink-0">
+              {filtered.length} {tr('of', 'من', 'sur')} {COMPANIONS.length}
+            </Badge>
           </div>
-          <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
-            <span>{search ? copyFor(language, `Showing matches for “${search}”`, `نتائج البحث عن “${search}”`) : copyFor(language, 'Browse all crop relationships', 'تصفح جميع علاقات المحاصيل')}</span>
-            <Badge variant="secondary" className="shrink-0">{filtered.length} {copyFor(language, 'of', 'من')} {COMPANIONS.length}</Badge>
+
+          <div className="space-y-2">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <input
+                aria-label={tr('Search crop or companion', 'ابحث عن محصول أو نبات مصاحب', 'Rechercher culture ou compagne')}
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder={tr('Search crop or companion…', 'ابحث عن محصول أو نبات مصاحب…', 'Rechercher culture ou compagne…')}
+                className="h-10 w-full rounded-md border border-input bg-background pl-9 pr-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              />
+            </div>
+            <div className="text-xs text-muted-foreground">
+              {search
+                ? tr(`Showing matches for “${search}”`, `نتائج البحث عن “${search}”`, `Résultats pour « ${search} »`)
+                : tr('Browse all crop relationships', 'تصفح جميع علاقات المحاصيل', 'Parcourir toutes les associations')}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+            <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 text-[9px] border-0">{tr('Helps ✓', 'يفيد ✓', 'Aide ✓')}</Badge>
+            <span>{tr('beneficial for the listed crops', 'مفيد للمحاصيل المذكورة', 'bénéfique pour les cultures listées')}</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+            <Badge className="bg-cyan-100 text-cyan-700 dark:bg-cyan-950/40 dark:text-cyan-300 text-[9px] border-0">{tr('Helped by ↑', 'يفيده ↑', 'Aidé par ↑')}</Badge>
+            <span>{tr('receives benefits from these crops', 'يتلقى الفائدة من هذه المحاصيل', 'reçoit les bienfaits de ces cultures')}</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+            <Badge className="bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 text-[9px] border-0">{tr('Avoid ✗', 'تجنّب ✗', 'À éviter ✗')}</Badge>
+            <span>{tr('antagonistic — keep apart', 'تعارض — أبعد بينهما', 'antagonisme — séparer')}</span>
           </div>
         </div>
-        <div className="max-h-[460px] space-y-2 overflow-y-auto pr-1">
-          {filtered.length === 0 && (
-            <div className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
-              {copyFor(language, 'No crop or companion matches. Try a different name.', 'لا توجد نتائج لمحصول أو نبات مصاحب. جرّب اسماً مختلفاً.')}
-            </div>
-          )}
-          {filtered.map(c => (
-            <div key={c.crop} className="rounded-xl border bg-background p-3 shadow-sm transition-colors hover:border-lime-300 dark:hover:border-lime-800">
-              <div className="mb-2 flex items-center gap-2">
-                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-lime-50 text-lg dark:bg-lime-950/30">{c.emoji}</span>
-                <div>
-                  <div className="text-sm font-semibold">{plantLabel(language, c.crop)}</div>
-                  <div className="text-[10px] text-muted-foreground">{copyFor(language, 'Companion relationships', 'علاقات النباتات المصاحبة')}</div>
-                </div>
+      </CalculatorShell.Inputs>
+
+      <CalculatorShell.Results>
+        <div className="p-4 rounded-2xl border bg-card shadow-xs h-full space-y-4">
+          <div className="flex items-center justify-between border-b pb-3 bg-gradient-to-r from-emerald-50 via-transparent to-teal-50/50 dark:from-emerald-950/30 dark:to-teal-950/20 -mx-4 -mt-4 px-4 pt-4 rounded-t-2xl">
+            <span className="text-base font-bold flex items-center gap-2">
+              ✨ {tr('Crop Relationships', 'علاقات المحاصيل', 'Associations de cultures')}
+            </span>
+            <span className="font-mono text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 rounded-lg px-2 py-0.5">
+              {filtered.length} {tr('crops', 'محصول', 'cultures')}
+            </span>
+          </div>
+
+          <div className="max-h-[460px] space-y-2 overflow-y-auto pr-1">
+            {filtered.length === 0 && (
+              <div className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
+                {tr('No crop or companion matches. Try a different name.', 'لا توجد نتائج لمحصول أو نبات مصاحب. جرّب اسماً مختلفاً.', 'Aucune culture ou compagne ne correspond. Essayez un autre nom.')}
               </div>
-              {c.helps.length > 0 && (
-                <div className="flex items-center gap-1.5 text-[10px] mb-1">
-                  <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 text-[9px] border-0">{copyFor(language, 'Helps ✓', 'يفيد ✓')}</Badge>
-                  <span className="leading-relaxed text-muted-foreground">{c.helps.map(name => plantLabel(language, name)).join(', ')}</span>
+            )}
+            {filtered.map(c => (
+              <div key={c.crop} className="rounded-xl border bg-background p-3 shadow-sm transition-colors hover:border-emerald-300 dark:hover:border-emerald-800">
+                <div className="mb-2 flex items-center gap-2">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-50 text-lg dark:bg-emerald-950/30">{c.emoji}</span>
+                  <div>
+                    <div className="text-sm font-semibold">{plantLabel(language, c.crop)}</div>
+                    <div className="text-[10px] text-muted-foreground">{tr('Companion relationships', 'علاقات النباتات المصاحبة', 'Relations d’association')}</div>
+                  </div>
                 </div>
-              )}
-              {c.helpedBy.length > 0 && (
-                <div className="flex items-center gap-1.5 text-[10px] mb-1">
-                  <Badge className="bg-cyan-100 text-cyan-700 dark:bg-cyan-950/40 dark:text-cyan-300 text-[9px] border-0">{copyFor(language, 'Helped by ↑', 'يفيده ↑')}</Badge>
-                  <span className="leading-relaxed text-muted-foreground">{c.helpedBy.map(name => plantLabel(language, name)).join(', ')}</span>
-                </div>
-              )}
-              {c.avoid.length > 0 && (
-                <div className="flex items-center gap-1.5 text-[10px]">
-                  <Badge className="bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 text-[9px] border-0">{copyFor(language, 'Avoid ✗', 'تجنّب ✗')}</Badge>
-                  <span className="leading-relaxed text-muted-foreground">{c.avoid.map(name => plantLabel(language, name)).join(', ')}</span>
-                </div>
-              )}
-            </div>
-          ))}
+                {c.helps.length > 0 && (
+                  <div className="flex items-center gap-1.5 text-[10px] mb-1">
+                    <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 text-[9px] border-0">{tr('Helps ✓', 'يفيد ✓', 'Aide ✓')}</Badge>
+                    <span className="leading-relaxed text-muted-foreground">{c.helps.map(name => plantLabel(language, name)).join(', ')}</span>
+                  </div>
+                )}
+                {c.helpedBy.length > 0 && (
+                  <div className="flex items-center gap-1.5 text-[10px] mb-1">
+                    <Badge className="bg-cyan-100 text-cyan-700 dark:bg-cyan-950/40 dark:text-cyan-300 text-[9px] border-0">{tr('Helped by ↑', 'يفيده ↑', 'Aidé par ↑')}</Badge>
+                    <span className="leading-relaxed text-muted-foreground">{c.helpedBy.map(name => plantLabel(language, name)).join(', ')}</span>
+                  </div>
+                )}
+                {c.avoid.length > 0 && (
+                  <div className="flex items-center gap-1.5 text-[10px]">
+                    <Badge className="bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 text-[9px] border-0">{tr('Avoid ✗', 'تجنّب ✗', 'À éviter ✗')}</Badge>
+                    <span className="leading-relaxed text-muted-foreground">{c.avoid.map(name => plantLabel(language, name)).join(', ')}</span>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="rounded-xl border bg-muted/20 p-3 text-xs leading-relaxed text-muted-foreground">
-          💡 {copyFor(language, 'Companion planting uses plant synergies (pest repulsion, N fixation, pollinator attraction) + avoids antagonisms (allelopathy, shared pests, nutrient competition).', 'تستفيد الزراعة المصاحبة من تكامل النباتات (طرد الآفات وتثبيت النيتروجين وجذب الملقحات) وتتجنب التعارضات (الأليلوباثي والآفات المشتركة والتنافس على العناصر الغذائية).')}
-        </div>
-      </CardContent>
-    </Card>
+      </CalculatorShell.Results>
+    </CalculatorShell>
   );
 }
