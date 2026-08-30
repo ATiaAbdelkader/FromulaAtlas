@@ -2,30 +2,29 @@
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import * as d3 from 'd3';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
   TrendingUp,
-  TrendingDown,
-  Minus,
   Sparkles,
   Leaf,
   Activity,
   Layers,
   Download,
-  Info,
-  Sliders,
-  CheckCircle2,
-  AlertTriangle,
-  Maximize2,
   Calendar,
   Sprout,
-  ArrowRight,
   ShieldCheck,
+  Copy,
+  RotateCcw,
 } from 'lucide-react';
 import { type SoilTestEntry } from '@/lib/soil-history-store';
 import { useTranslation, copyFor } from '@/lib/language-store';
+import {
+  CalculatorShell,
+  type TrilingualString,
+  type CalculatorAction,
+} from '@/components/agri/nutri-tools/CalculatorShell';
+import { toast } from '@/hooks/use-toast';
 
 export interface SoilMultiYearTrendsChartProps {
   entries: SoilTestEntry[];
@@ -103,6 +102,18 @@ const METRIC_CONFIGS: Record<'ph' | 'om' | 'cec', MetricConfig> = {
   },
 };
 
+const TITLE: TrilingualString = {
+  en: 'Multi-Year Soil Health Trajectory (D3.js Visualization)',
+  ar: 'مخطط المسار الزمني المتعدد السنوات لصحة التربة (D3.js)',
+  fr: 'Trajectoire Pluriannuelle de la Santé du Sol (D3.js)',
+};
+
+const DESC: TrilingualString = {
+  en: 'Long-term progression of pH, Organic Matter (OM %), and Cation Exchange Capacity (CEC) over multi-year rotations.',
+  ar: 'متابعة تطور الحموضة والمادة العضوية والسعة التبادلية الكاتيونية عبر الدورات الزراعية المتعاقبة.',
+  fr: 'Évolution à long terme du pH, de la matière organique et de la CEC sur les rotations culturales.',
+};
+
 export function SoilMultiYearTrendsChart({
   entries,
   selectedField,
@@ -128,6 +139,7 @@ export function SoilMultiYearTrendsChart({
   const [hoveredTest, setHoveredTest] = useState<SoilTestEntry | null>(null);
   const [hoverPosition, setHoverPosition] = useState<{ x: number; y: number } | null>(null);
   const [containerWidth, setContainerWidth] = useState<number>(750);
+  const [copied, setCopied] = useState(false);
 
   // Filter & sort data chronologically
   const sortedTests = useMemo(() => {
@@ -899,39 +911,98 @@ export function SoilMultiYearTrendsChart({
     img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString)));
   };
 
-  return (
-    <Card className={`overflow-hidden border border-emerald-200/80 shadow-xs dark:border-emerald-900/60 ${className}`}>
-      {/* Header with Title and Mode Switcher */}
-      <CardHeader className="p-4 pb-3 border-b border-border/50 bg-gradient-to-r from-emerald-50/70 via-background to-teal-50/40 dark:from-emerald-950/20 dark:to-teal-950/10">
-        <div className="flex items-start justify-between gap-3 flex-wrap">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-emerald-600 text-white shadow-xs">
-              <TrendingUp className="h-4 w-4" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <CardTitle className="text-sm font-bold text-foreground">
-                  {tr(
-                    'Multi-Year Soil Health Trajectory (D3.js Visualization)',
-                    'مخطط المسار الزمني المتعدد السنوات لصحة التربة (D3.js)',
-                    'Trajectoire Pluriannuelle de la Santé du Sol (D3.js)'
-                  )}
-                </CardTitle>
-                <Badge variant="outline" className="text-[10px] bg-emerald-100/60 text-emerald-800 border-emerald-300 dark:bg-emerald-950/40 dark:text-emerald-300">
-                  {sortedTests.length} {tr('Lab Records', 'تحاليل مخبرية', 'Analyses')}
-                </Badge>
-              </div>
-              <CardDescription className="text-[11px] text-muted-foreground mt-0.5">
-                {tr(
-                  'Long-term progression of pH, Organic Matter (OM %), and Cation Exchange Capacity (CEC) over multi-year rotations.',
-                  'متابعة تطور الحموضة والمادة العضوية والسعة التبادلية الكاتيونية عبر الدورات الزراعية المتعاقبة.',
-                  'Évolution à long terme du pH, de la matière organique et de la CEC sur les rotations culturales.'
-                )}
-              </CardDescription>
-            </div>
-          </div>
+  // Copy a textual summary of the chart's analytics
+  const handleCopy = () => {
+    const lines: string[] = [
+      '=== MULTI-YEAR SOIL HEALTH TRAJECTORY ===',
+      `Field: ${selectedField}`,
+      `Lab records: ${sortedTests.length}`,
+    ];
 
-          <div className="flex items-center gap-1.5 flex-wrap">
+    if (metricsAnalytics) {
+      lines.push(
+        '',
+        `Period: ${metricsAnalytics.firstYear} → ${metricsAnalytics.latestYear} (${metricsAnalytics.yearsSpan} years)`,
+        '',
+        `Organic Matter: ${metricsAnalytics.om.first}% → ${metricsAnalytics.om.latest}% (Δ ${metricsAnalytics.om.delta > 0 ? '+' : ''}${metricsAnalytics.om.delta}%, ${metricsAnalytics.om.deltaPct > 0 ? '+' : ''}${metricsAnalytics.om.deltaPct}%)`,
+        `  Annual rate: ${metricsAnalytics.om.annualRate > 0 ? '+' : ''}${metricsAnalytics.om.annualRate}%/year — ${metricsAnalytics.om.direction}`,
+        '',
+        `CEC: ${metricsAnalytics.cec.first} → ${metricsAnalytics.cec.latest} meq/100g (Δ ${metricsAnalytics.cec.delta > 0 ? '+' : ''}${metricsAnalytics.cec.delta}) — ${metricsAnalytics.cec.direction}`,
+        '',
+        `pH: ${metricsAnalytics.ph.first} → ${metricsAnalytics.ph.latest} (Δ ${metricsAnalytics.ph.delta > 0 ? '+' : ''}${metricsAnalytics.ph.delta}) — ${metricsAnalytics.ph.direction}`,
+        '',
+        `Carbon sequestered: ${metricsAnalytics.carbonDeltaTon > 0 ? '+' : ''}${metricsAnalytics.carbonDeltaTon} t C/ha`,
+        `CO₂e sequestered: ${metricsAnalytics.co2eDeltaTon > 0 ? '+' : ''}${metricsAnalytics.co2eDeltaTon} t/ha (IPCC Tier 1, 0-30cm)`,
+      );
+    }
+
+    navigator.clipboard.writeText(lines.join('\n'));
+    setCopied(true);
+    toast({ title: tr('Summary Copied!', 'تم النسخ!', 'Copié !') });
+    setTimeout(() => setCopied(false), 3000);
+  };
+
+  // Reset every view toggle & layout back to defaults
+  const handleReset = () => {
+    setLayoutMode('combined');
+    setActiveMetrics({ ph: true, om: true, cec: true });
+    setShowProjection(true);
+    setShowOptimalBands(true);
+    setShowCropLabels(true);
+    toast({ title: tr('View Reset', 'تمت الإعادة', 'Réinitialisé') });
+  };
+
+  const actions: CalculatorAction[] = [
+    {
+      icon: Copy,
+      label: { en: 'Copy Summary', ar: 'نسخ التقرير', fr: 'Copier' },
+      onClick: handleCopy,
+      variant: 'primary',
+      showCheck: copied,
+    },
+    {
+      icon: Download,
+      label: { en: 'Export PNG', ar: 'تصدير PNG', fr: 'Exporter' },
+      onClick: handleExportPNG,
+    },
+    {
+      icon: RotateCcw,
+      label: { en: 'Reset View', ar: 'إعادة العرض', fr: 'Réinitialiser' },
+      onClick: handleReset,
+    },
+  ];
+
+  return (
+    <div className={className}>
+      <CalculatorShell
+        icon={TrendingUp}
+        title={TITLE}
+        description={DESC}
+        badge={`${sortedTests.length} ${tr('Lab Records', 'تحاليل مخبرية', 'Analyses')}`}
+        accent="emerald"
+        actions={actions}
+      >
+        <div className="lg:col-span-12 space-y-4">
+          {/* Top Controls Bar: Layout Switcher */}
+          <div className="flex items-center justify-between gap-3 flex-wrap p-3.5 rounded-2xl border bg-card shadow-xs">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-xl bg-emerald-600 text-white shadow-xs">
+                <TrendingUp className="h-4 w-4" />
+              </div>
+              <div>
+                <div className="text-xs font-bold text-foreground">
+                  {tr('Visualization Layout', 'تخطيط العرض', 'Disposition du Graphique')}
+                </div>
+                <div className="text-[10px] text-muted-foreground">
+                  {tr(
+                    'Toggle between combined multi-axis view or 3-panel trellis layout.',
+                    'التبديل بين العرض الموحد متعدد المحاور أو العرض المنفصل في 3 لوحات.',
+                    'Basculez entre la vue combinée multi-axes ou la vue à 3 panneaux.'
+                  )}
+                </div>
+              </div>
+            </div>
+
             {/* View Mode Controls */}
             <div className="flex items-center bg-muted/70 p-0.5 rounded-lg border text-xs">
               <button
@@ -955,268 +1026,261 @@ export function SoilMultiYearTrendsChart({
                 {tr('3-Panel Trellis', '3 لوحات منفصلة', '3 Panneaux')}
               </button>
             </div>
-
-            <Button size="sm" variant="outline" onClick={handleExportPNG} className="h-8 gap-1 px-2.5 text-xs">
-              <Download className="h-3 w-3 text-emerald-600" />
-              <span className="hidden sm:inline">{tr('Export PNG', 'تصدير PNG', 'Exporter')}</span>
-            </Button>
           </div>
-        </div>
 
-        {/* Top Metric Summary Cards (Live Delta & Carbon Sequestration) */}
-        {metricsAnalytics && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-3 pt-3 border-t border-border/50">
-            {/* Organic Matter Trajectory */}
-            <div className="p-2.5 rounded-xl bg-card border border-emerald-200/60 dark:border-emerald-900/40 shadow-2xs">
-              <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                <span className="flex items-center gap-1 font-semibold text-emerald-700 dark:text-emerald-400">
-                  <Leaf className="h-3 w-3" />
-                  {tr('Organic Matter', 'المادة العضوية', 'Matière Organique')}
-                </span>
-                <span className="font-mono text-[10px]">{metricsAnalytics.firstYear} → {metricsAnalytics.latestYear}</span>
-              </div>
-              <div className="flex items-baseline justify-between mt-1">
-                <div className="text-base font-black font-mono text-foreground">
-                  {metricsAnalytics.om.latest}%
-                </div>
-                <div className="flex items-center gap-0.5 text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400">
-                  {metricsAnalytics.om.delta > 0 ? '+' : ''}{metricsAnalytics.om.delta}%
-                  <span className="text-[10px] font-normal text-muted-foreground">
-                    ({metricsAnalytics.om.deltaPct > 0 ? '+' : ''}{metricsAnalytics.om.deltaPct}%)
+          {/* Top Metric Summary Cards (Live Delta & Carbon Sequestration) */}
+          {metricsAnalytics && (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              {/* Organic Matter Trajectory */}
+              <div className="p-2.5 rounded-xl bg-card border border-emerald-200/60 dark:border-emerald-900/40 shadow-2xs">
+                <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                  <span className="flex items-center gap-1 font-semibold text-emerald-700 dark:text-emerald-400">
+                    <Leaf className="h-3 w-3" />
+                    {tr('Organic Matter', 'المادة العضوية', 'Matière Organique')}
                   </span>
+                  <span className="font-mono text-[10px]">{metricsAnalytics.firstYear} → {metricsAnalytics.latestYear}</span>
+                </div>
+                <div className="flex items-baseline justify-between mt-1">
+                  <div className="text-base font-black font-mono text-foreground">
+                    {metricsAnalytics.om.latest}%
+                  </div>
+                  <div className="flex items-center gap-0.5 text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                    {metricsAnalytics.om.delta > 0 ? '+' : ''}{metricsAnalytics.om.delta}%
+                    <span className="text-[10px] font-normal text-muted-foreground">
+                      ({metricsAnalytics.om.deltaPct > 0 ? '+' : ''}{metricsAnalytics.om.deltaPct}%)
+                    </span>
+                  </div>
+                </div>
+                <div className="text-[9.5px] text-muted-foreground mt-0.5">
+                  {metricsAnalytics.om.annualRate > 0 ? '+' : ''}{metricsAnalytics.om.annualRate}% {tr('/ year velocity', '/ سنة معدل التحسن', '/ an')}
                 </div>
               </div>
-              <div className="text-[9.5px] text-muted-foreground mt-0.5">
-                {metricsAnalytics.om.annualRate > 0 ? '+' : ''}{metricsAnalytics.om.annualRate}% {tr('/ year velocity', '/ سنة معدل التحسن', '/ an')}
-              </div>
-            </div>
 
-            {/* CEC Holding Capacity */}
-            <div className="p-2.5 rounded-xl bg-card border border-amber-200/60 dark:border-amber-900/40 shadow-2xs">
-              <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                <span className="flex items-center gap-1 font-semibold text-amber-700 dark:text-amber-400">
-                  <Layers className="h-3 w-3" />
-                  {tr('CEC Capacity', 'السعة التبادلية CEC', 'Capacité CEC')}
-                </span>
-                <span className="font-mono text-[10px]">{metricsAnalytics.first.cec} → {metricsAnalytics.latest.cec}</span>
-              </div>
-              <div className="flex items-baseline justify-between mt-1">
-                <div className="text-base font-black font-mono text-foreground">
-                  {metricsAnalytics.cec.latest} <span className="text-[10px] font-normal text-muted-foreground">meq</span>
-                </div>
-                <div className="flex items-center gap-0.5 text-xs font-mono font-bold text-amber-600 dark:text-amber-400">
-                  {metricsAnalytics.cec.delta > 0 ? '+' : ''}{metricsAnalytics.cec.delta}
-                  <span className="text-[10px] font-normal text-muted-foreground">
-                    ({metricsAnalytics.cec.deltaPct > 0 ? '+' : ''}{metricsAnalytics.cec.deltaPct}%)
+              {/* CEC Holding Capacity */}
+              <div className="p-2.5 rounded-xl bg-card border border-amber-200/60 dark:border-amber-900/40 shadow-2xs">
+                <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                  <span className="flex items-center gap-1 font-semibold text-amber-700 dark:text-amber-400">
+                    <Layers className="h-3 w-3" />
+                    {tr('CEC Capacity', 'السعة التبادلية CEC', 'Capacité CEC')}
                   </span>
+                  <span className="font-mono text-[10px]">{metricsAnalytics.first.cec} → {metricsAnalytics.latest.cec}</span>
+                </div>
+                <div className="flex items-baseline justify-between mt-1">
+                  <div className="text-base font-black font-mono text-foreground">
+                    {metricsAnalytics.cec.latest} <span className="text-[10px] font-normal text-muted-foreground">meq</span>
+                  </div>
+                  <div className="flex items-center gap-0.5 text-xs font-mono font-bold text-amber-600 dark:text-amber-400">
+                    {metricsAnalytics.cec.delta > 0 ? '+' : ''}{metricsAnalytics.cec.delta}
+                    <span className="text-[10px] font-normal text-muted-foreground">
+                      ({metricsAnalytics.cec.deltaPct > 0 ? '+' : ''}{metricsAnalytics.cec.deltaPct}%)
+                    </span>
+                  </div>
+                </div>
+                <div className="text-[9.5px] text-muted-foreground mt-0.5">
+                  {metricsAnalytics.cec.latest >= 15 ? tr('High nutrient buffer', 'سعة تخزين عالية للعناصر', 'Forte rétention nutritive') : tr('Moderate buffer', 'سعة تخزين متوسطة', 'Rétention moyenne')}
                 </div>
               </div>
-              <div className="text-[9.5px] text-muted-foreground mt-0.5">
-                {metricsAnalytics.cec.latest >= 15 ? tr('High nutrient buffer', 'سعة تخزين عالية للعناصر', 'Forte rétention nutritive') : tr('Moderate buffer', 'سعة تخزين متوسطة', 'Rétention moyenne')}
-              </div>
-            </div>
 
-            {/* pH Regulation */}
-            <div className="p-2.5 rounded-xl bg-card border border-blue-200/60 dark:border-blue-900/40 shadow-2xs">
-              <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                <span className="flex items-center gap-1 font-semibold text-blue-700 dark:text-blue-400">
-                  <Activity className="h-3 w-3" />
-                  {tr('Soil pH', 'حموضة التربة', 'pH du Sol')}
-                </span>
-                <span className="font-mono text-[10px]">{metricsAnalytics.first.ph} → {metricsAnalytics.latest.ph}</span>
-              </div>
-              <div className="flex items-baseline justify-between mt-1">
-                <div className="text-base font-black font-mono text-foreground">
-                  {metricsAnalytics.ph.latest}
+              {/* pH Regulation */}
+              <div className="p-2.5 rounded-xl bg-card border border-blue-200/60 dark:border-blue-900/40 shadow-2xs">
+                <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                  <span className="flex items-center gap-1 font-semibold text-blue-700 dark:text-blue-400">
+                    <Activity className="h-3 w-3" />
+                    {tr('Soil pH', 'حموضة التربة', 'pH du Sol')}
+                  </span>
+                  <span className="font-mono text-[10px]">{metricsAnalytics.first.ph} → {metricsAnalytics.latest.ph}</span>
                 </div>
-                <div className="flex items-center gap-0.5 text-xs font-mono font-bold text-blue-600 dark:text-blue-400">
-                  {metricsAnalytics.ph.delta > 0 ? '+' : ''}{metricsAnalytics.ph.delta}
+                <div className="flex items-baseline justify-between mt-1">
+                  <div className="text-base font-black font-mono text-foreground">
+                    {metricsAnalytics.ph.latest}
+                  </div>
+                  <div className="flex items-center gap-0.5 text-xs font-mono font-bold text-blue-600 dark:text-blue-400">
+                    {metricsAnalytics.ph.delta > 0 ? '+' : ''}{metricsAnalytics.ph.delta}
+                  </div>
+                </div>
+                <div className="text-[9.5px] text-muted-foreground mt-0.5">
+                  {metricsAnalytics.ph.latest >= 6.2 && metricsAnalytics.ph.latest <= 7.3
+                    ? tr('Optimal agronomic range', 'في النطاق الزراعي المثالي', 'Optimal agronomique')
+                    : metricsAnalytics.ph.latest < 6.2
+                    ? tr('Acidic — lime needed', 'حامضية — تحتاج جير', 'Acide — chaulage requis')
+                    : tr('Alkaline — sulfur needed', 'قلوية — تحتاج كبريت', 'Alcalin — soufre requis')}
                 </div>
               </div>
-              <div className="text-[9.5px] text-muted-foreground mt-0.5">
-                {metricsAnalytics.ph.latest >= 6.2 && metricsAnalytics.ph.latest <= 7.3
-                  ? tr('Optimal agronomic range', 'في النطاق الزراعي المثالي', 'Optimal agronomique')
-                  : metricsAnalytics.ph.latest < 6.2
-                  ? tr('Acidic — lime needed', 'حامضية — تحتاج جير', 'Acide — chaulage requis')
-                  : tr('Alkaline — sulfur needed', 'قلوية — تحتاج كبريت', 'Alcalin — soufre requis')}
-              </div>
-            </div>
 
-            {/* Atmospheric Carbon Sequestration */}
-            <div className="p-2.5 rounded-xl bg-card border border-teal-200/60 dark:border-teal-900/40 shadow-2xs bg-gradient-to-br from-teal-50/40 to-emerald-50/20 dark:from-teal-950/20">
-              <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                <span className="flex items-center gap-1 font-semibold text-teal-800 dark:text-teal-300">
-                  <Sparkles className="h-3 w-3" />
-                  {tr('CO₂e Sequestered', 'مكافئ CO₂ المحتجز', 'CO₂e Séquestré')}
-                </span>
-                <Badge variant="secondary" className="text-[9px] px-1.5 py-0 bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200">
-                  SOC
-                </Badge>
-              </div>
-              <div className="flex items-baseline justify-between mt-1">
-                <div className="text-base font-black font-mono text-teal-700 dark:text-teal-300">
-                  {metricsAnalytics.co2eDeltaTon > 0 ? '+' : ''}{metricsAnalytics.co2eDeltaTon} <span className="text-[10px] font-normal">t/ha</span>
+              {/* Atmospheric Carbon Sequestration */}
+              <div className="p-2.5 rounded-xl bg-card border border-teal-200/60 dark:border-teal-900/40 shadow-2xs bg-gradient-to-br from-teal-50/40 to-emerald-50/20 dark:from-teal-950/20">
+                <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                  <span className="flex items-center gap-1 font-semibold text-teal-800 dark:text-teal-300">
+                    <Sparkles className="h-3 w-3" />
+                    {tr('CO₂e Sequestered', 'مكافئ CO₂ المحتجز', 'CO₂e Séquestré')}
+                  </span>
+                  <Badge variant="secondary" className="text-[9px] px-1.5 py-0 bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200">
+                    SOC
+                  </Badge>
                 </div>
-                <div className="text-[10px] font-mono text-muted-foreground">
-                  +{metricsAnalytics.carbonDeltaTon} t C/ha
+                <div className="flex items-baseline justify-between mt-1">
+                  <div className="text-base font-black font-mono text-teal-700 dark:text-teal-300">
+                    {metricsAnalytics.co2eDeltaTon > 0 ? '+' : ''}{metricsAnalytics.co2eDeltaTon} <span className="text-[10px] font-normal">t/ha</span>
+                  </div>
+                  <div className="text-[10px] font-mono text-muted-foreground">
+                    +{metricsAnalytics.carbonDeltaTon} t C/ha
+                  </div>
+                </div>
+                <div className="text-[9.5px] text-muted-foreground mt-0.5 truncate">
+                  {tr('IPCC Tier 1 (0-30cm)', 'معايير IPCC الدولية 0-30سم', 'Méthode GIEC Tier 1')}
                 </div>
               </div>
-              <div className="text-[9.5px] text-muted-foreground mt-0.5 truncate">
-                {tr('IPCC Tier 1 (0-30cm)', 'معايير IPCC الدولية 0-30سم', 'Méthode GIEC Tier 1')}
-              </div>
-            </div>
-          </div>
-        )}
-      </CardHeader>
-
-      <CardContent className="p-4 space-y-3">
-        {/* Interactive Controls Bar */}
-        <div className="flex items-center justify-between gap-2 flex-wrap text-xs">
-          {/* Metric Toggle Chips (Combined Mode Only) */}
-          {layoutMode === 'combined' && (
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-[11px] font-semibold text-muted-foreground mr-1">
-                {tr('Series:', 'السلاسل:', 'Séries :')}
-              </span>
-              {(['om', 'ph', 'cec'] as const).map((key) => {
-                const cfg = METRIC_CONFIGS[key];
-                const isActive = activeMetrics[key];
-                return (
-                  <button
-                    key={key}
-                    onClick={() => setActiveMetrics((prev) => ({ ...prev, [key]: !prev[key] }))}
-                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border transition-all ${
-                      isActive
-                        ? 'border-transparent text-white shadow-2xs'
-                        : 'bg-muted/40 text-muted-foreground border-border hover:bg-muted'
-                    }`}
-                    style={{
-                      backgroundColor: isActive ? cfg.color : undefined,
-                    }}
-                  >
-                    <span
-                      className="w-2 h-2 rounded-full"
-                      style={{ backgroundColor: isActive ? '#ffffff' : cfg.color }}
-                    />
-                    {isAr ? cfg.label_ar : isFr ? cfg.label_fr : cfg.label}
-                  </button>
-                );
-              })}
             </div>
           )}
 
-          {/* Visualization Options Toggle Switches */}
-          <div className="flex items-center gap-2 ml-auto flex-wrap text-[11px]">
-            <button
-              onClick={() => setShowOptimalBands(!showOptimalBands)}
-              className={`px-2 py-0.5 rounded-md border transition-all ${
-                showOptimalBands
-                  ? 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950 dark:text-emerald-300'
-                  : 'bg-muted/40 text-muted-foreground border-border'
-              }`}
-            >
-              {tr('Optimal Shaded Bands', 'نطاقات المستويات المثالية', 'Zones Idéales')}
-            </button>
-
-            <button
-              onClick={() => setShowProjection(!showProjection)}
-              className={`px-2 py-0.5 rounded-md border transition-all ${
-                showProjection
-                  ? 'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-950 dark:text-blue-300'
-                  : 'bg-muted/40 text-muted-foreground border-border'
-              }`}
-            >
-              {tr('2-Year Trajectory Forecast', 'توقعات المسار المستقبلي', 'Projection 2 Ans')}
-            </button>
-
-            <button
-              onClick={() => setShowCropLabels(!showCropLabels)}
-              className={`px-2 py-0.5 rounded-md border transition-all ${
-                showCropLabels
-                  ? 'bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-950 dark:text-purple-300'
-                  : 'bg-muted/40 text-muted-foreground border-border'
-              }`}
-            >
-              {tr('Crop Rotation Badges', 'محاصيل الدورات الزراعية', 'Cultures')}
-            </button>
-          </div>
-        </div>
-
-        {/* D3 SVG Chart Container */}
-        <div ref={containerRef} className="relative w-full rounded-xl bg-card border shadow-2xs overflow-hidden">
-          <svg ref={svgRef} className="w-full select-none" />
-
-          {/* Interactive Floating Tooltip */}
-          {hoveredTest && hoverPosition && (
-            <div
-              className="absolute z-20 pointer-events-none p-3 rounded-xl bg-popover/95 text-popover-foreground shadow-lg border border-border backdrop-blur-md text-xs space-y-1.5 min-w-56"
-              style={{
-                left: `${Math.min(containerWidth - 230, Math.max(10, hoverPosition.x - 110))}px`,
-                top: `${Math.max(10, hoverPosition.y - 140)}px`,
-              }}
-            >
-              <div className="flex items-center justify-between border-b pb-1.5 font-bold">
-                <span className="flex items-center gap-1 text-emerald-600">
-                  <Calendar className="h-3.5 w-3.5" />
-                  {hoveredTest.date}
+          {/* Interactive Controls Bar */}
+          <div className="flex items-center justify-between gap-2 flex-wrap text-xs p-3.5 rounded-2xl border bg-card shadow-xs">
+            {/* Metric Toggle Chips (Combined Mode Only) */}
+            {layoutMode === 'combined' && (
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-[11px] font-semibold text-muted-foreground mr-1">
+                  {tr('Series:', 'السلاسل:', 'Séries :')}
                 </span>
-                {hoveredTest.cropGrown && (
-                  <Badge variant="secondary" className="text-[10px] font-semibold">
-                    <Sprout className="h-2.5 w-2.5 mr-1 text-emerald-600" />
-                    {hoveredTest.cropGrown}
-                  </Badge>
+                {(['om', 'ph', 'cec'] as const).map((key) => {
+                  const cfg = METRIC_CONFIGS[key];
+                  const isActive = activeMetrics[key];
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => setActiveMetrics((prev) => ({ ...prev, [key]: !prev[key] }))}
+                      className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border transition-all ${
+                        isActive
+                          ? 'border-transparent text-white shadow-2xs'
+                          : 'bg-muted/40 text-muted-foreground border-border hover:bg-muted'
+                      }`}
+                      style={{
+                        backgroundColor: isActive ? cfg.color : undefined,
+                      }}
+                    >
+                      <span
+                        className="w-2 h-2 rounded-full"
+                        style={{ backgroundColor: isActive ? '#ffffff' : cfg.color }}
+                      />
+                      {isAr ? cfg.label_ar : isFr ? cfg.label_fr : cfg.label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Visualization Options Toggle Switches */}
+            <div className="flex items-center gap-2 ml-auto flex-wrap text-[11px]">
+              <button
+                onClick={() => setShowOptimalBands(!showOptimalBands)}
+                className={`px-2 py-0.5 rounded-md border transition-all ${
+                  showOptimalBands
+                    ? 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950 dark:text-emerald-300'
+                    : 'bg-muted/40 text-muted-foreground border-border'
+                }`}
+              >
+                {tr('Optimal Shaded Bands', 'نطاقات المستويات المثالية', 'Zones Idéales')}
+              </button>
+
+              <button
+                onClick={() => setShowProjection(!showProjection)}
+                className={`px-2 py-0.5 rounded-md border transition-all ${
+                  showProjection
+                    ? 'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-950 dark:text-blue-300'
+                    : 'bg-muted/40 text-muted-foreground border-border'
+                }`}
+              >
+                {tr('2-Year Trajectory Forecast', 'توقعات المسار المستقبلي', 'Projection 2 Ans')}
+              </button>
+
+              <button
+                onClick={() => setShowCropLabels(!showCropLabels)}
+                className={`px-2 py-0.5 rounded-md border transition-all ${
+                  showCropLabels
+                    ? 'bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-950 dark:text-purple-300'
+                    : 'bg-muted/40 text-muted-foreground border-border'
+                }`}
+              >
+                {tr('Crop Rotation Badges', 'محاصيل الدورات الزراعية', 'Cultures')}
+              </button>
+            </div>
+          </div>
+
+          {/* D3 SVG Chart Container */}
+          <div ref={containerRef} className="relative w-full rounded-xl bg-card border shadow-2xs overflow-hidden">
+            <svg ref={svgRef} className="w-full select-none" />
+
+            {/* Interactive Floating Tooltip */}
+            {hoveredTest && hoverPosition && (
+              <div
+                className="absolute z-20 pointer-events-none p-3 rounded-xl bg-popover/95 text-popover-foreground shadow-lg border border-border backdrop-blur-md text-xs space-y-1.5 min-w-56"
+                style={{
+                  left: `${Math.min(containerWidth - 230, Math.max(10, hoverPosition.x - 110))}px`,
+                  top: `${Math.max(10, hoverPosition.y - 140)}px`,
+                }}
+              >
+                <div className="flex items-center justify-between border-b pb-1.5 font-bold">
+                  <span className="flex items-center gap-1 text-emerald-600">
+                    <Calendar className="h-3.5 w-3.5" />
+                    {hoveredTest.date}
+                  </span>
+                  {hoveredTest.cropGrown && (
+                    <Badge variant="secondary" className="text-[10px] font-semibold">
+                      <Sprout className="h-2.5 w-2.5 mr-1 text-emerald-600" />
+                      {hoveredTest.cropGrown}
+                    </Badge>
+                  )}
+                </div>
+
+                <div className="space-y-1 font-mono text-[11px] pt-0.5">
+                  <div className="flex justify-between items-center text-emerald-600 dark:text-emerald-400">
+                    <span className="font-sans text-muted-foreground">{tr('Organic Matter:', 'المادة العضوية:', 'Matière Organique :')}</span>
+                    <span className="font-bold">{hoveredTest.om}%</span>
+                  </div>
+                  <div className="flex justify-between items-center text-blue-600 dark:text-blue-400">
+                    <span className="font-sans text-muted-foreground">Soil pH (1:2.5):</span>
+                    <span className="font-bold">{hoveredTest.ph}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-amber-600 dark:text-amber-400">
+                    <span className="font-sans text-muted-foreground">CEC:</span>
+                    <span className="font-bold">{hoveredTest.cec} meq/100g</span>
+                  </div>
+                  <div className="flex justify-between items-center text-muted-foreground text-[10px]">
+                    <span className="font-sans">P / K Reserve:</span>
+                    <span>{hoveredTest.p} ppm / {hoveredTest.k} meq</span>
+                  </div>
+                </div>
+
+                {hoveredTest.notes && (
+                  <div className="text-[10px] text-muted-foreground border-t pt-1 italic truncate max-w-56">
+                    {hoveredTest.notes}
+                  </div>
                 )}
               </div>
-
-              <div className="space-y-1 font-mono text-[11px] pt-0.5">
-                <div className="flex justify-between items-center text-emerald-600 dark:text-emerald-400">
-                  <span className="font-sans text-muted-foreground">{tr('Organic Matter:', 'المادة العضوية:', 'Matière Organique :')}</span>
-                  <span className="font-bold">{hoveredTest.om}%</span>
-                </div>
-                <div className="flex justify-between items-center text-blue-600 dark:text-blue-400">
-                  <span className="font-sans text-muted-foreground">Soil pH (1:2.5):</span>
-                  <span className="font-bold">{hoveredTest.ph}</span>
-                </div>
-                <div className="flex justify-between items-center text-amber-600 dark:text-amber-400">
-                  <span className="font-sans text-muted-foreground">CEC:</span>
-                  <span className="font-bold">{hoveredTest.cec} meq/100g</span>
-                </div>
-                <div className="flex justify-between items-center text-muted-foreground text-[10px]">
-                  <span className="font-sans">P / K Reserve:</span>
-                  <span>{hoveredTest.p} ppm / {hoveredTest.k} meq</span>
-                </div>
-              </div>
-
-              {hoveredTest.notes && (
-                <div className="text-[10px] text-muted-foreground border-t pt-1 italic truncate max-w-56">
-                  {hoveredTest.notes}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Agronomic Regeneration Guidance Box */}
-        <div className="p-3 rounded-xl bg-muted/40 border text-xs space-y-1 text-muted-foreground leading-relaxed">
-          <div className="font-bold text-foreground flex items-center gap-1.5">
-            <ShieldCheck className="h-4 w-4 text-emerald-600" />
-            <span>
-              {tr(
-                'Agronomic Interpretation & Soil Health Velocity',
-                'التفسير الزراعي ومعدل سرعة تجديد صحة التربة',
-                'Interprétation Agronomique & Régénération des Sols'
-              )}
-            </span>
-          </div>
-          <p className="text-[11px]">
-            {tr(
-              'A healthy living soil requires synchronized management of Organic Matter, pH, and CEC. Increasing Organic Matter by 0.1% per year enhances soil cation retention (CEC) by ~0.3-0.5 meq/100g, buffers the rootzone against sudden pH shifts, and improves available water holding capacity by up to 35,000 litres per hectare.',
-              'تتطلب التربة الحية المتجددة إدارة متزامنة للمادة العضوية والحموضة والسعة التبادلية. كل زيادة بنسبة 0.1% سنوياً في المادة العضوية ترفع سعة احتجاز العناصر (CEC) بنحو 0.3-0.5 meq/100غ، وتحمي الجذور من صدمات الحموضة، وترفع السعة الحقلية لتخزين المياه بما يصل إلى 35,000 لتر لكل هكتار.',
-              'Un sol vivant et régénératif requiert la gestion synchronisée de la matière organique, du pH et de la CEC. +0.1% de MO par an augmente la CEC de ~0.3-0.5 meq/100g et améliore la réserve utile en eau jusqu’à 35 000 L/ha.'
             )}
-          </p>
+          </div>
+
+          {/* Agronomic Regeneration Guidance Box */}
+          <div className="p-3 rounded-xl bg-muted/40 border text-xs space-y-1 text-muted-foreground leading-relaxed">
+            <div className="font-bold text-foreground flex items-center gap-1.5">
+              <ShieldCheck className="h-4 w-4 text-emerald-600" />
+              <span>
+                {tr(
+                  'Agronomic Interpretation & Soil Health Velocity',
+                  'التفسير الزراعي ومعدل سرعة تجديد صحة التربة',
+                  'Interprétation Agronomique & Régénération des Sols'
+                )}
+              </span>
+            </div>
+            <p className="text-[11px]">
+              {tr(
+                'A healthy living soil requires synchronized management of Organic Matter, pH, and CEC. Increasing Organic Matter by 0.1% per year enhances soil cation retention (CEC) by ~0.3-0.5 meq/100g, buffers the rootzone against sudden pH shifts, and improves available water holding capacity by up to 35,000 litres per hectare.',
+                'تتطلب التربة الحية المتجددة إدارة متزامنة للمادة العضوية والحموضة والسعة التبادلية. كل زيادة بنسبة 0.1% سنوياً في المادة العضوية ترفع سعة احتجاز العناصر (CEC) بنحو 0.3-0.5 meq/100غ، وتحمي الجذور من صدمات الحموضة، وترفع السعة الحقلية لتخزين المياه بما يصل إلى 35,000 لتر لكل هكتار.',
+                'Un sol vivant et régénératif requiert la gestion synchronisée de la matière organique, du pH et de la CEC. +0.1% de MO par an augmente la CEC de ~0.3-0.5 meq/100g et améliore la réserve utile en eau jusqu’à 35 000 L/ha.'
+              )}
+            </p>
+          </div>
         </div>
-      </CardContent>
-    </Card>
+      </CalculatorShell>
+    </div>
   );
 }
