@@ -1,37 +1,71 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Home, Sun, Wind, Snowflake, Zap, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { Home, Copy, RotateCcw } from 'lucide-react';
 import { copyFor, useTranslation } from '@/lib/language-store';
+import { toast } from '@/hooks/use-toast';
+import {
+  CalculatorShell,
+  type TrilingualString,
+  type CalculatorPill,
+} from '@/components/agri/nutri-tools/CalculatorShell';
 
 type Tab = 'heating' | 'ventilation' | 'co2';
-type UiLanguage = Parameters<typeof copyFor>[0];
-const GLAZING_AR: Record<string, string> = { single_glass: 'زجاج مفرد', double_poly: 'بولي كربونات مزدوج', twin_wall_pc: 'بولي كربونات بجدارين', triple_wall: 'بولي كربونات بثلاثة جدران' };
+
+const GLAZING_LABELS: Record<string, { en: string; ar: string; fr: string }> = {
+  single_glass: { en: 'Single glass', ar: 'زجاج مفرد', fr: 'Verre simple' },
+  double_poly: { en: 'Double poly', ar: 'بولي كربونات مزدوج', fr: 'Poly double' },
+  twin_wall_pc: { en: 'Twin-wall polycarbonate', ar: 'بولي كربونات بجدارين', fr: 'Polycarbonate double paroi' },
+  triple_wall: { en: 'Triple-wall polycarbonate', ar: 'بولي كربونات بثلاثة جدران', fr: 'Polycarbonate triple paroi' },
+};
+
+const glazingU: Record<string, number> = {
+  single_glass: 6.5,
+  double_poly: 3.5,
+  twin_wall_pc: 2.5,
+  triple_wall: 1.8,
+};
+
+const TITLE: TrilingualString = {
+  en: 'Greenhouse Climate Designer',
+  ar: 'مصمم مناخ الدفيئة',
+  fr: 'Concepteur de climat de serre',
+};
+
+const DESC: TrilingualString = {
+  en: 'Heating load · Ventilation rate · CO₂ enrichment sizing',
+  ar: 'حمل التدفئة · معدل التهوية · تحجيم إثراء CO₂',
+  fr: 'Charge de chauffage · Taux de ventilation · Dimensionnement CO₂',
+};
+
+const PILL_LABEL: TrilingualString = {
+  en: 'Mode:',
+  ar: 'الوضع:',
+  fr: 'Mode :',
+};
+
+const PROTOCOL_NOTE: TrilingualString = {
+  en: 'Heating uses U·A·ΔT with 15% infiltration. Ventilation is based on solar load and 5°C allowed rise. CO₂ assumes 0.5 ACH and a 1000 ppm target.',
+  ar: 'تستخدم التدفئة U·A·ΔT مع 15% تسرب. تعتمد التهوية على الحمل الشمسي وارتفاع 5°م مسموح به. يفترض معدل CO₂ 0.5 ACH وهدفاً 1000 جزء بالمليون.',
+  fr: 'Chauffage : U·A·ΔT avec 15% d\'infiltration. Ventilation basée sur la charge solaire et 5°C de hausse. CO₂ suppose 0.5 ACH et 1000 ppm cible.',
+};
 
 export function GreenhouseClimateDesigner() {
   const { language } = useTranslation();
+  const tr = (en: string, ar: string, fr?: string) => copyFor(language, en, ar, fr);
+
   const [tab, setTab] = useState<Tab>('heating');
   const [area, setArea] = useState('500');
   const [height, setHeight] = useState('4');
   const [glazing, setGlazing] = useState('double_poly');
   const [insideT, setInsideT] = useState('18');
   const [outsideT, setOutsideT] = useState('-5');
-
-  const glazingU: Record<string, { u: number; label: string }> = {
-    single_glass: { u: 6.5, label: 'Single glass' },
-    double_poly: { u: 3.5, label: 'Double poly' },
-    twin_wall_pc: { u: 2.5, label: 'Twin-wall polycarbonate' },
-    triple_wall: { u: 1.8, label: 'Triple-wall polycarbonate' },
-  };
+  const [copied, setCopied] = useState(false);
 
   const result = useMemo(() => {
     const A = parseFloat(area), H = parseFloat(height);
     const Ti = parseFloat(insideT), To = parseFloat(outsideT);
-    const U = glazingU[glazing].u;
+    const U = glazingU[glazing];
     if (!Number.isFinite(A) || !Number.isFinite(Ti)) return null;
     const surfaceArea = A * 2 + 2 * Math.sqrt(A) * H * 0.5; // approx wall + roof
     const dT = Ti - To;
@@ -49,112 +83,233 @@ export function GreenhouseClimateDesigner() {
     return { Q_heating, Q_heating_btuh, V_vent, cfm, co2Rate, surfaceArea, solarLoad };
   }, [area, height, glazing, insideT, outsideT]);
 
-  return (
-    <Card className="overflow-hidden border-emerald-100 shadow-sm dark:border-emerald-900/60">
-      <CardHeader className="border-b border-border/60 bg-emerald-50/50 pb-4 dark:bg-emerald-950/10">
-        <CardTitle className="flex items-center gap-2 text-base"><span className="rounded-lg bg-emerald-100 p-2 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"><Home className="h-4 w-4" /></span> {copyFor(language, 'Greenhouse Climate Designer', 'مصمم مناخ الدفيئة')}
-        </CardTitle>
-        <p className="text-[10px] text-muted-foreground">{copyFor(language, 'Heating load · Ventilation rate · CO₂ enrichment sizing', 'حمل التدفئة · معدل التهوية · تحجيم إثراء CO₂')}</p>
-        <div className="mt-3 grid grid-cols-1 gap-1 rounded-xl bg-emerald-100/70 p-1 dark:bg-emerald-950/30 sm:grid-cols-3">
-          <TabBtn active={tab === 'heating'} onClick={() => setTab('heating')} icon={Snowflake} label={copyFor(language, 'Heating', 'التدفئة')} />
-          <TabBtn active={tab === 'ventilation'} onClick={() => setTab('ventilation')} icon={Wind} label={copyFor(language, 'Ventilation', 'التهوية')} />
-          <TabBtn active={tab === 'co2'} onClick={() => setTab('co2')} icon={Zap} label="CO₂" />
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <div className="grid grid-cols-1 gap-3 rounded-xl border border-emerald-200/70 bg-emerald-50/30 p-3 sm:grid-cols-2 dark:border-emerald-900/60 dark:bg-emerald-950/10">
-          <div>
-            <Label className="text-[11px] font-medium">{copyFor(language, 'Greenhouse area (m²)', 'مساحة الدفيئة (م²)')}</Label>
-            <Input value={area} onChange={e => setArea(e.target.value)} type="number" step="10" className="mt-1 h-10 text-sm" />
-          </div>
-          <div>
-            <Label className="text-[11px] font-medium">{copyFor(language, 'Wall height (m)', 'ارتفاع الجدار (م)')}</Label>
-            <Input value={height} onChange={e => setHeight(e.target.value)} type="number" step="0.5" className="mt-1 h-10 text-sm" />
-          </div>
-        </div>
-        <div className="grid grid-cols-1 gap-3 rounded-xl border border-emerald-200/70 bg-emerald-50/30 p-3 sm:grid-cols-2 dark:border-emerald-900/60 dark:bg-emerald-950/10">
-          <div>
-            <Label className="text-[11px] font-medium">{copyFor(language, 'Glazing type', 'نوع التغطية')}</Label>
-            <select value={glazing} onChange={e => setGlazing(e.target.value)} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
-              {Object.entries(glazingU).map(([k, v]) => <option key={k} value={k}>{copyFor(language, v.label, GLAZING_AR[k])} (U={v.u})</option>)}
-            </select>
-          </div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div>
-              <Label className="text-[11px] font-medium">{copyFor(language, 'Inside (°C)', 'الداخل (°م)')}</Label>
-              <Input value={insideT} onChange={e => setInsideT(e.target.value)} type="number" className="mt-1 h-10 text-sm" />
-            </div>
-            <div>
-              <Label className="text-[11px] font-medium">{copyFor(language, 'Outside (°C)', 'الخارج (°م)')}</Label>
-              <Input value={outsideT} onChange={e => setOutsideT(e.target.value)} type="number" className="mt-1 h-10 text-sm" />
-            </div>
-          </div>
-        </div>
+  const pills: CalculatorPill[] = [
+    { key: 'heating', label: tr('Heating', 'التدفئة', 'Chauffage'), emoji: '❄️' },
+    { key: 'ventilation', label: tr('Ventilation', 'التهوية', 'Ventilation'), emoji: '💨' },
+    { key: 'co2', label: 'CO₂', emoji: '⚡' },
+  ];
 
+  const handleReset = () => {
+    setArea('500'); setHeight('4'); setGlazing('double_poly');
+    setInsideT('18'); setOutsideT('-5'); setTab('heating');
+    toast({ title: tr('Reset', 'إعادة', 'Réinitialiser') });
+  };
+
+  const handleCopy = () => {
+    if (!result) return;
+    const lines = [
+      '=== GREENHOUSE CLIMATE DESIGNER ===',
+      `Area: ${area} m² · Height: ${height} m · Glazing: ${GLAZING_LABELS[glazing].en} (U=${glazingU[glazing]})`,
+      `Inside: ${insideT}°C · Outside: ${outsideT}°C`,
+      '',
+      '-- Heating --',
+      `Heating load: ${result.Q_heating.toFixed(1)} kW (${result.Q_heating_btuh.toFixed(0)} BTU/hr)`,
+      `Surface area: ${result.surfaceArea.toFixed(0)} m²`,
+      `With 20% safety: ${(result.Q_heating * 1.2).toFixed(1)} kW`,
+      '',
+      '-- Ventilation --',
+      `Rate: ${result.V_vent.toFixed(1)} m³/s (${result.cfm.toFixed(0)} CFM)`,
+      `Solar load: ${(result.solarLoad / 1000).toFixed(1)} kW`,
+      `Recommended fans: ${Math.ceil(result.cfm / 25000) * 25000} CFM total`,
+      '',
+      '-- CO2 --',
+      `CO2 rate: ${result.co2Rate.toFixed(2)} kg/hr`,
+      `Volume: ${(parseFloat(area) * parseFloat(height)).toFixed(0)} m³`,
+    ];
+    navigator.clipboard?.writeText(lines.join('\n'));
+    setCopied(true);
+    toast({ title: tr('Copied!', 'تم النسخ!', 'Copié !') });
+    setTimeout(() => setCopied(false), 3000);
+  };
+
+  return (
+    <CalculatorShell
+      icon={Home}
+      title={TITLE}
+      description={DESC}
+      accent="teal"
+      actions={[
+        {
+          icon: Copy,
+          label: { en: 'Copy Summary', ar: 'نسخ التقرير', fr: 'Copier' },
+          onClick: handleCopy,
+          variant: 'primary',
+          showCheck: copied,
+        },
+        {
+          icon: RotateCcw,
+          label: { en: 'Reset', ar: 'إعادة', fr: 'Réinitialiser' },
+          onClick: handleReset,
+        },
+      ]}
+      pills={pills}
+      activePill={tab}
+      onPillClick={(k) => setTab(k as Tab)}
+      pillLabel={PILL_LABEL}
+      protocolNote={PROTOCOL_NOTE}
+    >
+      <CalculatorShell.Inputs>
+        <div className="p-4 rounded-2xl border bg-card shadow-xs space-y-4">
+          <div className="flex items-center justify-between border-b pb-3">
+            <span className="text-base font-bold flex items-center gap-2">
+              <Home className="h-4 w-4 text-teal-600" />
+              {tr('Greenhouse Parameters', 'مدخلات الدفيئة', 'Paramètres de la serre')}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <CalculatorShell.InputField
+              label={tr('Greenhouse area (m²)', 'مساحة الدفيئة (م²)', 'Surface de la serre (m²)')}
+              value={area}
+              onChange={setArea}
+              step="10"
+              helper={tr('Floor footprint', 'البصمة الأرضية', 'Emprise au sol')}
+            />
+            <CalculatorShell.InputField
+              label={tr('Wall height (m)', 'ارتفاع الجدار (م)', 'Hauteur du mur (m)')}
+              value={height}
+              onChange={setHeight}
+              step="0.5"
+              helper={tr('Eave height', 'ارتفاع الرف', 'Hauteur d\'égout')}
+            />
+            <CalculatorShell.InputField
+              label={tr('Inside (°C)', 'الداخل (°م)', 'Intérieur (°C)')}
+              value={insideT}
+              onChange={setInsideT}
+              helper={tr('Target setpoint', 'النقطة المرجعية', 'Consigne cible')}
+            />
+            <CalculatorShell.InputField
+              label={tr('Outside (°C)', 'الخارج (°م)', 'Extérieur (°C)')}
+              value={outsideT}
+              onChange={setOutsideT}
+              helper={tr('Design temp', 'درجة التصميم', 'Température de dimensionnement')}
+            />
+          </div>
+
+          <div className="p-3 rounded-xl border bg-card space-y-1">
+            <span className="text-xs font-bold text-foreground">
+              {tr('Glazing type', 'نوع التغطية', 'Type de couverture')}
+            </span>
+            <select
+              value={glazing}
+              onChange={(e) => setGlazing(e.target.value)}
+              className="w-full h-9 rounded-md border border-input bg-background px-2 text-sm font-mono font-bold"
+            >
+              {Object.entries(glazingU).map(([k, u]) => {
+                const lbl = GLAZING_LABELS[k];
+                return (
+                  <option key={k} value={k}>
+                    {tr(lbl.en, lbl.ar, lbl.fr)} (U={u})
+                  </option>
+                );
+              })}
+            </select>
+            <div className="text-[10px] text-muted-foreground">
+              {tr('U-value in W/m²·K', 'قيمة U بوحدة W/m²·K', 'Valeur U en W/m²·K')}
+            </div>
+          </div>
+        </div>
+      </CalculatorShell.Inputs>
+
+      <CalculatorShell.Results>
         {result && (
-          <div className="space-y-2">
+          <div className="p-4 rounded-2xl border bg-card shadow-xs h-full space-y-4">
+            <div className="flex items-center justify-between border-b pb-3">
+              <span className="text-base font-bold flex items-center gap-2">
+                ✨ {tab === 'heating'
+                  ? tr('Heating Results', 'نتائج التدفئة', 'Résultats chauffage')
+                  : tab === 'ventilation'
+                    ? tr('Ventilation Results', 'نتائج التهوية', 'Résultats ventilation')
+                    : tr('CO₂ Results', 'نتائج CO₂', 'Résultats CO₂')}
+              </span>
+            </div>
+
             {tab === 'heating' && (
               <>
-                <div className="grid grid-cols-1 gap-3 rounded-xl border border-emerald-200/70 bg-emerald-50/30 p-3 sm:grid-cols-2 dark:border-emerald-900/60 dark:bg-emerald-950/10">
-                  <Metric label={copyFor(language, 'Heating load', 'حمل التدفئة')} value={`${result.Q_heating.toFixed(1)} kW`} sub={`${result.Q_heating_btuh.toFixed(0)} BTU/hr`} color="rose" />
-                  <Metric label={copyFor(language, 'Surface area', 'مساحة السطح')} value={`${result.surfaceArea.toFixed(0)} m²`} sub={copyFor(language, 'walls + roof', 'الجدران + السقف')} color="violet" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <CalculatorShell.MetricTile
+                    label={tr('Heating load', 'حمل التدفئة', 'Charge de chauffage')}
+                    value={result.Q_heating.toFixed(1)}
+                    unit="kW"
+                    helper={`${result.Q_heating_btuh.toFixed(0)} BTU/hr`}
+                    color="rose"
+                  />
+                  <CalculatorShell.MetricTile
+                    label={tr('Surface area', 'مساحة السطح', 'Surface enveloppe')}
+                    value={result.surfaceArea.toFixed(0)}
+                    unit="m²"
+                    helper={tr('walls + roof', 'الجدران + السقف', 'murs + toit')}
+                    color="teal"
+                  />
                 </div>
                 <div className="rounded-lg bg-muted/30 p-3 text-xs leading-relaxed text-muted-foreground">
-                  💡 {copyFor(language, `Add 20% safety factor → ${(result.Q_heating * 1.2).toFixed(1)} kW heater. Thermal screen saves 30-50%.`, `أضف معامل أمان 20% → مدفأة بقدرة ${(result.Q_heating * 1.2).toFixed(1)} ك.و. توفر الستارة الحرارية 30–50%.`)}
+                  💡 {tr(
+                    `Add 20% safety factor → ${(result.Q_heating * 1.2).toFixed(1)} kW heater. Thermal screen saves 30-50%.`,
+                    `أضف معامل أمان 20% → مدفأة بقدرة ${(result.Q_heating * 1.2).toFixed(1)} ك.و. توفر الستارة الحرارية 30–50%.`,
+                    `Ajoutez 20% de sécurité → radiateur de ${(result.Q_heating * 1.2).toFixed(1)} kW. L'écran thermique économise 30–50%.`,
+                  )}
                 </div>
               </>
             )}
+
             {tab === 'ventilation' && (
               <>
-                <div className="grid grid-cols-1 gap-3 rounded-xl border border-emerald-200/70 bg-emerald-50/30 p-3 sm:grid-cols-2 dark:border-emerald-900/60 dark:bg-emerald-950/10">
-                  <Metric label={copyFor(language, 'Ventilation rate', 'معدل التهوية')} value={`${result.V_vent.toFixed(1)} m³/s`} sub={`${result.cfm.toFixed(0)} CFM`} color="cyan" />
-                  <Metric label={copyFor(language, 'Solar load', 'الحمل الشمسي')} value={`${(result.solarLoad / 1000).toFixed(1)} kW`} sub={copyFor(language, '70% transmission', 'نفاذية 70%')} color="amber" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <CalculatorShell.MetricTile
+                    label={tr('Ventilation rate', 'معدل التهوية', 'Taux de ventilation')}
+                    value={result.V_vent.toFixed(1)}
+                    unit="m³/s"
+                    helper={`${result.cfm.toFixed(0)} CFM`}
+                    color="teal"
+                  />
+                  <CalculatorShell.MetricTile
+                    label={tr('Solar load', 'الحمل الشمسي', 'Charge solaire')}
+                    value={(result.solarLoad / 1000).toFixed(1)}
+                    unit="kW"
+                    helper={tr('70% transmission', 'نفاذية 70%', 'Transmission 70%')}
+                    color="amber"
+                  />
                 </div>
                 <div className="rounded-lg bg-muted/30 p-3 text-xs leading-relaxed text-muted-foreground">
-                  💡 {copyFor(language, `Use 2-3 fans totaling ${Math.ceil(result.cfm / 25000) * 25000} CFM. Add 15% for static pressure. HAF fans for mixing.`, `استخدم 2–3 مراوح بإجمالي ${Math.ceil(result.cfm / 25000) * 25000} CFM. أضف 15% للضغط الساكن. استخدم مراوح HAF للخلط.`)}
+                  💡 {tr(
+                    `Use 2-3 fans totaling ${Math.ceil(result.cfm / 25000) * 25000} CFM. Add 15% for static pressure. HAF fans for mixing.`,
+                    `استخدم 2–3 مراوح بإجمالي ${Math.ceil(result.cfm / 25000) * 25000} CFM. أضف 15% للضغط الساكن. استخدم مراوح HAF للخلط.`,
+                    `Utilisez 2–3 ventilateurs totalisant ${Math.ceil(result.cfm / 25000) * 25000} CFM. Ajoutez 15% pour la pression statique. Ventilateurs HAF pour mélange.`,
+                  )}
                 </div>
               </>
             )}
+
             {tab === 'co2' && (
               <>
-                <div className="grid grid-cols-1 gap-3 rounded-xl border border-emerald-200/70 bg-emerald-50/30 p-3 sm:grid-cols-2 dark:border-emerald-900/60 dark:bg-emerald-950/10">
-                  <Metric label={copyFor(language, 'CO₂ rate', 'معدل CO₂')} value={`${result.co2Rate.toFixed(2)} kg/hr`} sub={copyFor(language, 'at 1000 ppm', 'عند 1000 جزء بالمليون')} color="emerald" />
-                  <Metric label={copyFor(language, 'Greenhouse volume', 'حجم الدفيئة')} value={`${(parseFloat(area) * parseFloat(height)).toFixed(0)} m³`} sub={`${parseFloat(area)}×${parseFloat(height)}m`} color="violet" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <CalculatorShell.MetricTile
+                    label={tr('CO₂ rate', 'معدل CO₂', 'Taux de CO₂')}
+                    value={result.co2Rate.toFixed(2)}
+                    unit="kg/hr"
+                    helper={tr('at 1000 ppm', 'عند 1000 جزء بالمليون', 'à 1000 ppm')}
+                    color="emerald"
+                  />
+                  <CalculatorShell.MetricTile
+                    label={tr('Greenhouse volume', 'حجم الدفيئة', 'Volume de la serre')}
+                    value={(parseFloat(area) * parseFloat(height)).toFixed(0)}
+                    unit="m³"
+                    helper={`${parseFloat(area)}×${parseFloat(height)}m`}
+                    color="teal"
+                  />
                 </div>
                 <div className="rounded-lg bg-muted/30 p-3 text-xs leading-relaxed text-muted-foreground">
-                  💡 {copyFor(language, '1 L propane = 1.5 kg CO₂. Stop enrichment when vents open >10%. Only during daylight hours.', '1 لتر بروبان = 1.5 كغ CO₂. أوقف الإثراء عندما تفتح الفتحات أكثر من 10%. استخدمه خلال ساعات النهار فقط.')}
+                  💡 {tr(
+                    '1 L propane = 1.5 kg CO₂. Stop enrichment when vents open >10%. Only during daylight hours.',
+                    '1 لتر بروبان = 1.5 كغ CO₂. أوقف الإثراء عندما تفتح الفتحات أكثر من 10%. استخدمه خلال ساعات النهار فقط.',
+                    '1 L de propane = 1,5 kg CO₂. Arrêtez l\'enrichissement quand les ouvrants dépassent 10%. Lumière du jour uniquement.',
+                  )}
                 </div>
               </>
             )}
           </div>
         )}
-      </CardContent>
-    </Card>
-  );
-}
-
-const ACCENT: Record<string, string> = {
-  cyan: 'border-cyan-200 dark:border-cyan-900 bg-cyan-50/40 dark:bg-cyan-950/20',
-  emerald: 'border-emerald-200 dark:border-emerald-900 bg-emerald-50/40 dark:bg-emerald-950/20',
-  amber: 'border-amber-200 dark:border-amber-900 bg-amber-50/40 dark:bg-amber-950/20',
-  violet: 'border-violet-200 dark:border-violet-900 bg-violet-50/40 dark:bg-violet-950/20',
-  rose: 'border-rose-200 dark:border-rose-900 bg-rose-50/40 dark:bg-rose-950/20',
-};
-
-function Metric({ label, value, sub, color }: { label: string; value: string; sub?: string; color: keyof typeof ACCENT }) {
-  return (
-    <div className={`rounded-xl border p-3 shadow-sm ${ACCENT[color]}`}>
-      <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{label}</div>
-      <div className="font-mono text-sm font-semibold leading-tight">{value}</div>
-      {sub && <div className="text-[9px] text-muted-foreground">{sub}</div>}
-    </div>
-  );
-}
-
-function TabBtn({ active, onClick, icon: Icon, label }: { active: boolean; onClick: () => void; icon: typeof Sun; label: string }) {
-  return (
-    <button type="button" aria-pressed={active} onClick={onClick} className={`flex min-h-11 items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${active ? 'bg-background text-emerald-700 shadow-sm dark:text-emerald-300' : 'text-muted-foreground hover:text-foreground'}`}>
-      <Icon className="h-4 w-4" /><span>{label}</span>
-    </button>
+      </CalculatorShell.Results>
+    </CalculatorShell>
   );
 }
