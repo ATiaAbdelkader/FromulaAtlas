@@ -1,20 +1,67 @@
 'use client';
+
 import { useState, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Gauge, CheckCircle2, AlertTriangle } from 'lucide-react';
+import {
+  Gauge,
+  CheckCircle2,
+  AlertTriangle,
+  Copy,
+  RotateCcw,
+} from 'lucide-react';
 import { copyFor, useTranslation } from '@/lib/language-store';
+import { toast } from '@/hooks/use-toast';
+import {
+  CalculatorShell,
+  type TrilingualString,
+  type CalculatorPill,
+} from '@/components/agri/nutri-tools/CalculatorShell';
+
+// ---------------------------------------------------------------------------
+// Trilingual content
+// ---------------------------------------------------------------------------
+
+const TITLE: TrilingualString = {
+  en: 'Yield Monitor Calibrator',
+  ar: 'معاير مراقب الإنتاجية',
+  fr: 'Calibreur de moniteur de rendement',
+};
+
+const DESCRIPTION: TrilingualString = {
+  en: 'Moisture correction · flow calibration · test weight assessment for combine yield monitors.',
+  ar: 'تصحيح الرطوبة · معايرة التدفق · تقييم الوزن الاختباري لمراقبات الإنتاجية في الحصادات.',
+  fr: 'Correction humidité · calibrage débit · évaluation du poids spécifique.',
+};
+
+const PROTOCOL_NOTE: TrilingualString = {
+  en: 'Calibrate per crop + moisture range. Low test weight indicates immature or damaged grain — may affect pricing.',
+  ar: 'عاير كل محصول ولكل نطاق رطوبة. يشير الوزن الاختباري المنخفض إلى حبوب غير ناضجة أو متضررة — وقد يؤثر ذلك في التسعير.',
+  fr: "Calibrez par culture et par gamme d'humidité. Un poids spécifique bas indique un grain immature ou endommagé — peut impacter le prix.",
+};
+
+const CROP_PILLS: CalculatorPill[] = [
+  { key: 'wheat', label: '🌾 Wheat', emoji: '🌾' },
+  { key: 'corn', label: '🌽 Corn', emoji: '🌽' },
+  { key: 'soybean', label: '🫘 Soybean', emoji: '🫘' },
+  { key: 'barley', label: '🌾 Barley', emoji: '🌾' },
+];
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
 
 export function YieldMonitorCalibrator() {
   const { language } = useTranslation();
+  const tr = (en: string, ar: string, fr?: string) => copyFor(language, en, ar, fr);
+
   const [crop, setCrop] = useState('wheat');
   const [monitorWeight, setMonitorWeight] = useState('2500');
   const [actualWeight, setActualWeight] = useState('2400');
   const [monitorMoisture, setMonitorMoisture] = useState('14');
   const [standardMoisture, setStandardMoisture] = useState('13');
   const [testWeight, setTestWeight] = useState('75');
+  const [copied, setCopied] = useState(false);
 
+  // Calculation — UNCHANGED
   const result = useMemo(() => {
     const mw = parseFloat(monitorWeight), aw = parseFloat(actualWeight);
     const mm = parseFloat(monitorMoisture), sm = parseFloat(standardMoisture);
@@ -27,37 +74,179 @@ export function YieldMonitorCalibrator() {
     return { cfMoisture, cfFlow, correctedYield, twStatus };
   }, [crop, monitorWeight, actualWeight, monitorMoisture, standardMoisture, testWeight]);
 
+  const handleReset = () => {
+    setCrop('wheat');
+    setMonitorWeight('2500');
+    setActualWeight('2400');
+    setMonitorMoisture('14');
+    setStandardMoisture('13');
+    setTestWeight('75');
+    toast({
+      title: tr('Reset to Defaults', 'تمت استعادة القيم الافتراضية', 'Valeurs par défaut rétablies'),
+    });
+  };
+
+  const handleCopySummary = () => {
+    if (!result) return;
+    const text = `=== YIELD MONITOR CALIBRATION ===
+Crop: ${crop}
+Monitor weight: ${monitorWeight} kg | Actual weight: ${actualWeight} kg
+Moisture: monitor ${monitorMoisture}% | standard ${standardMoisture}%
+Test weight: ${testWeight} kg/hL
+
+Calibration factors:
+  Moisture CF: ${result.cfMoisture.toFixed(3)}
+  Flow CF:     ${result.cfFlow.toFixed(3)}
+  Corrected yield: ${result.correctedYield.toFixed(2)} t/ha
+  Test weight status: ${result.twStatus}
+${Math.abs(result.cfFlow - 1) < 0.05 ? 'Monitor is accurate (±5%).' : `Monitor off by ${((result.cfFlow - 1) * 100).toFixed(1)}% — recalibrate with 6–8 loads.`}
+    `.trim();
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    toast({
+      title: tr('Summary Copied!', 'تم نسخ التقرير!', 'Résumé copié !'),
+      description: tr('Calibration report copied to clipboard.', 'تم نسخ تقرير المعايرة إلى الحافظة.', 'Rapport copié dans le presse-papiers.'),
+    });
+    setTimeout(() => setCopied(false), 3000);
+  };
+
+  const actions = [
+    {
+      icon: Copy,
+      label: { en: 'Copy Summary', ar: 'نسخ التقرير', fr: 'Copier' },
+      onClick: handleCopySummary,
+      variant: 'primary' as const,
+      showCheck: copied,
+    },
+    {
+      icon: RotateCcw,
+      label: { en: 'Reset', ar: 'إعادة تعيين', fr: 'Réinitialiser' },
+      onClick: handleReset,
+      variant: 'ghost' as const,
+    },
+  ];
+
+  const twStatusLabel = result
+    ? tr(
+        result.twStatus,
+        result.twStatus === 'good' ? 'جيد' : result.twStatus === 'fair' ? 'مقبول' : result.twStatus === 'poor' ? 'ضعيف' : 'تحقق',
+        result.twStatus === 'good' ? 'Bon' : result.twStatus === 'fair' ? 'Acceptable' : result.twStatus === 'poor' ? 'Faible' : 'Vérifier',
+      )
+    : '';
+
+  const twColor = result?.twStatus === 'good' ? 'emerald' : result?.twStatus === 'fair' ? 'amber' : 'rose';
+
   return (
-    <Card className="overflow-hidden border-indigo-100 shadow-sm dark:border-indigo-900/60">
-      <CardHeader className="border-b border-border/60 bg-indigo-50/50 pb-4 dark:bg-indigo-950/10"><CardTitle className="flex items-center gap-2 text-base"><span className="rounded-lg bg-indigo-100 p-2 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300"><Gauge className="h-4 w-4" /></span> {copyFor(language, 'Yield Monitor Calibrator', 'معاير مراقب الإنتاجية')}</CardTitle><p className="text-[10px] text-muted-foreground">{copyFor(language, 'Moisture correction · flow calibration · test weight assessment', 'تصحيح الرطوبة · معايرة التدفق · تقييم الوزن الاختباري')}</p></CardHeader>
-      <CardContent className="space-y-3">
-        <div className="grid grid-cols-1 gap-3 rounded-xl border border-indigo-200/70 bg-indigo-50/30 p-3 sm:grid-cols-2 dark:border-indigo-900/60 dark:bg-indigo-950/10">
-          <div><Label className="text-xs font-medium">{copyFor(language, 'Crop', 'المحصول')}</Label><select aria-label={copyFor(language, 'Crop', 'المحصول')} value={crop} onChange={e => setCrop(e.target.value)} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="wheat">{copyFor(language, 'Wheat', 'قمح')} 🌾</option><option value="corn">{copyFor(language, 'Corn', 'ذرة')} 🌽</option><option value="soybean">{copyFor(language, 'Soybean', 'فول الصويا')} 🫘</option><option value="barley">{copyFor(language, 'Barley', 'شعير')} 🌾</option></select></div>
-          <div><Label className="text-xs font-medium">{copyFor(language, 'Test weight (kg/hL)', 'الوزن الاختباري (كغ/هكتولتر)')}</Label><Input aria-label={copyFor(language, 'Test weight', 'الوزن الاختباري')} value={testWeight} onChange={e => setTestWeight(e.target.value)} type="number" step="0.5" className="mt-1 h-10 text-sm" /></div>
+    <CalculatorShell
+      icon={Gauge}
+      title={TITLE}
+      description={DESCRIPTION}
+      badge="Precision Ag"
+      accent="emerald"
+      actions={actions}
+      pills={CROP_PILLS}
+      activePill={crop}
+      onPillClick={setCrop}
+      pillLabel={{ en: 'Select Crop:', ar: 'اختر المحصول:', fr: 'Culture :' }}
+      protocolNote={PROTOCOL_NOTE}
+    >
+      {/* ---------------- Inputs column ---------------- */}
+      <CalculatorShell.Inputs>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <CalculatorShell.InputField
+            label={tr('Monitor weight (kg)', 'وزن المراقب (كغ)', 'Poids moniteur (kg)')}
+            value={monitorWeight}
+            onChange={setMonitorWeight}
+            step="10"
+            helper={tr('Mass recorded by monitor', 'الكتلة المسجلة بواسطة المراقب', 'Masse enregistrée')}
+          />
+          <CalculatorShell.InputField
+            label={tr('Actual weight (kg)', 'الوزن الفعلي (كغ)', 'Poids réel (kg)')}
+            value={actualWeight}
+            onChange={setActualWeight}
+            step="10"
+            helper={tr('Calibrated scale weight', 'وزن الميزان المعاير', 'Poids balance calibrée')}
+          />
+          <CalculatorShell.InputField
+            label={tr('Monitor moisture (%)', 'رطوبة المراقب (%)', 'Humidité moniteur (%)')}
+            value={monitorMoisture}
+            onChange={setMonitorMoisture}
+            step="0.5"
+            helper={tr('As-measured moisture', 'الرطوبة المقاسة', 'Humidité mesurée')}
+          />
+          <CalculatorShell.InputField
+            label={tr('Standard moisture (%)', 'الرطوبة القياسية (%)', 'Humidité standard (%)')}
+            value={standardMoisture}
+            onChange={setStandardMoisture}
+            step="0.5"
+            helper={tr('Trade standard (e.g. 13%)', 'القياس التجاري (مثال 13%)', 'Standard commercial (ex. 13 %)')}
+          />
         </div>
-        <div className="grid grid-cols-1 gap-3 rounded-xl border border-border/70 bg-muted/20 p-3 sm:grid-cols-2">
-          <div><Label className="text-xs font-medium">{copyFor(language, 'Monitor weight (kg)', 'وزن المراقب (كغ)')}</Label><Input aria-label={copyFor(language, 'Monitor weight', 'وزن المراقب')} value={monitorWeight} onChange={e => setMonitorWeight(e.target.value)} type="number" step="10" className="mt-1 h-10 text-sm" /></div>
-          <div><Label className="text-xs font-medium">{copyFor(language, 'Actual weight (kg)', 'الوزن الفعلي (كغ)')}</Label><Input aria-label={copyFor(language, 'Actual measured weight', 'الوزن المقاس فعلياً')} value={actualWeight} onChange={e => setActualWeight(e.target.value)} type="number" step="10" className="mt-1 h-10 text-sm" /></div>
-        </div>
-        <div className="grid grid-cols-1 gap-3 rounded-xl border border-border/70 bg-muted/20 p-3 sm:grid-cols-2">
-          <div><Label className="text-xs font-medium">{copyFor(language, 'Monitor moisture (%)', 'رطوبة المراقب (%)')}</Label><Input aria-label={copyFor(language, 'Monitor moisture percentage', 'نسبة رطوبة المراقب')} value={monitorMoisture} onChange={e => setMonitorMoisture(e.target.value)} type="number" step="0.5" className="mt-1 h-10 text-sm" /></div>
-          <div><Label className="text-xs font-medium">{copyFor(language, 'Standard moisture (%)', 'الرطوبة القياسية (%)')}</Label><Input aria-label={copyFor(language, 'Standard moisture percentage', 'نسبة الرطوبة القياسية')} value={standardMoisture} onChange={e => setStandardMoisture(e.target.value)} type="number" step="0.5" className="mt-1 h-10 text-sm" /></div>
-        </div>
+
+        <CalculatorShell.InputField
+          label={tr('Test weight (kg/hL)', 'الوزن الاختباري (كغ/هكتولتر)', 'Poids spécifique (kg/hL)')}
+          value={testWeight}
+          onChange={setTestWeight}
+          step="0.5"
+          helper={tr('Bulk density of grain', 'الكثافة الظاهرية للحبوب', 'Densité apparente du grain')}
+        />
+      </CalculatorShell.Inputs>
+
+      {/* ---------------- Results column ---------------- */}
+      <CalculatorShell.Results>
         {result && (
-          <div className="space-y-2">
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-              <div className="rounded-xl border bg-background/70 p-3 text-center shadow-sm"><div className="text-[9px] text-muted-foreground uppercase">{copyFor(language, 'Moisture CF', 'معامل تصحيح الرطوبة')}</div><div className="font-mono text-sm font-bold">{result.cfMoisture.toFixed(3)}</div></div>
-              <div className="rounded-xl border bg-background/70 p-3 text-center shadow-sm"><div className="text-[9px] text-muted-foreground uppercase">{copyFor(language, 'Flow CF', 'معامل تصحيح التدفق')}</div><div className="font-mono text-sm font-bold">{result.cfFlow.toFixed(3)}</div></div>
-              <div className="rounded-xl border bg-background/70 p-3 text-center shadow-sm"><div className="text-[9px] text-muted-foreground uppercase">{copyFor(language, 'Test weight', 'الوزن الاختباري')}</div><div className={`font-mono text-sm font-bold ${result.twStatus === 'good' ? 'text-emerald-600' : result.twStatus === 'fair' ? 'text-amber-600' : 'text-rose-600'}`}>{copyFor(language, result.twStatus, result.twStatus === 'good' ? 'جيد' : result.twStatus === 'fair' ? 'مقبول' : result.twStatus === 'poor' ? 'ضعيف' : 'تحقق') }</div></div>
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <CalculatorShell.MetricTile
+                label={tr('Moisture CF', 'معامل تصحيح الرطوبة', 'Facteur humidité')}
+                value={result.cfMoisture.toFixed(3)}
+                color="emerald"
+              />
+              <CalculatorShell.MetricTile
+                label={tr('Flow CF', 'معامل تصحيح التدفق', 'Facteur débit')}
+                value={result.cfFlow.toFixed(3)}
+                color={Math.abs(result.cfFlow - 1) < 0.05 ? 'emerald' : 'amber'}
+              />
+              <CalculatorShell.MetricTile
+                label={tr('Test Weight', 'الوزن الاختباري', 'Poids spécifique')}
+                value={twStatusLabel}
+                color={twColor}
+              />
             </div>
-            <div className={`rounded-xl border p-3 text-xs leading-relaxed flex items-start gap-2 ${Math.abs(result.cfFlow - 1) < 0.05 ? 'border-emerald-200 bg-emerald-50/60 text-emerald-700' : 'border-amber-200 bg-amber-50/60 text-amber-700'}`}>
-              {Math.abs(result.cfFlow - 1) < 0.05 ? <CheckCircle2 className="h-3.5 w-3.5 mt-0.5 shrink-0" /> : <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />}
-              <span>{Math.abs(result.cfFlow - 1) < 0.05 ? <strong>{copyFor(language, 'Monitor is accurate (±5%).', 'المراقب دقيق (±5%).')}</strong> : <strong>{copyFor(language, `Monitor is off by ${((result.cfFlow - 1) * 100).toFixed(1)}%. Recalibrate with 6-8 loads spanning expected flow rates.`, `يختلف المراقب بنسبة ${((result.cfFlow - 1) * 100).toFixed(1)}%. أعد المعايرة باستخدام 6–8 حمولات تغطي معدلات التدفق المتوقعة.`)}</strong>}</span>
-            </div>
-            <div className="rounded-lg bg-muted/30 p-3 text-xs leading-relaxed text-muted-foreground">💡 {copyFor(language, 'Calibrate per crop + moisture range. Low test weight indicates immature or damaged grain — may affect pricing.', 'عاير كل محصول ولكل نطاق رطوبة. يشير الوزن الاختباري المنخفض إلى حبوب غير ناضجة أو متضررة — وقد يؤثر ذلك في التسعير.')}</div>
-          </div>
+
+            <CalculatorShell.MetricTile
+              label={tr('Corrected Yield', 'الإنتاجية المصححة', 'Rendement corrigé')}
+              value={result.correctedYield.toFixed(2)}
+              unit="t/ha"
+              color="emerald"
+              helper={tr('After moisture + flow calibration', 'بعد تصحيح الرطوبة والتدفق', 'Après correction humidité + débit')}
+            />
+
+            {/* Accuracy status banner */}
+            {Math.abs(result.cfFlow - 1) < 0.05 ? (
+              <div className="flex items-start gap-2 rounded-xl border border-emerald-200 bg-emerald-50/60 p-3 text-sm leading-relaxed text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/20 dark:text-emerald-300">
+                <CheckCircle2 className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                <span>
+                  <strong>{tr('Monitor is accurate (±5%).', 'المراقب دقيق (±5%).', 'Moniteur précis (±5 %).')}</strong>
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50/60 p-3 text-sm leading-relaxed text-amber-700 dark:border-amber-900 dark:bg-amber-950/20 dark:text-amber-300">
+                <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                <span>
+                  <strong>
+                    {tr(
+                      `Monitor is off by ${((result.cfFlow - 1) * 100).toFixed(1)}%. Recalibrate with 6-8 loads spanning expected flow rates.`,
+                      `يختلف المراقب بنسبة ${((result.cfFlow - 1) * 100).toFixed(1)}%. أعد المعايرة باستخدام 6–8 حمولات تغطي معدلات التدفق المتوقعة.`,
+                      `Moniteur décalé de ${((result.cfFlow - 1) * 100).toFixed(1)}%. Recalibrez avec 6–8 charges couvrant les débits attendus.`,
+                    )}
+                  </strong>
+                </span>
+              </div>
+            )}
+          </>
         )}
-      </CardContent>
-    </Card>
+      </CalculatorShell.Results>
+    </CalculatorShell>
   );
 }
