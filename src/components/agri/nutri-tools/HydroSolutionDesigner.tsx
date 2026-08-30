@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
@@ -38,6 +37,7 @@ import {
   HYDRO_CATION_LIMITS,
 } from '@/lib/nutri-tools-data';
 import { CropPresetDropdown } from './CropPresetDropdown';
+import { CalculatorShell } from './CalculatorShell';
 import type { CropPreset } from '@/lib/crop-presets';
 import { useBridgePayload } from '@/lib/use-bridge-payload';
 import { sendToBridge } from '@/lib/tool-bridge';
@@ -520,124 +520,85 @@ Total Tank B Salts: ${fertilizerRecipe.totalTankBKg.toFixed(2)} kg
     });
   };
 
+  const handleReset = () => {
+    setMeq({ ...EXTENDED_PRESETS[0].values });
+    setActivePresetId('steiner');
+    setPreset(null);
+    toast({ title: tr('Reset to Steiner Baseline', 'تمت استعادة محلول شتاينر', 'Réinitialisé à Steiner') });
+  };
+
+  // Quick preset pills for the CalculatorShell selector bar
+  const presetPills = useMemo(
+    () =>
+      EXTENDED_PRESETS.map((p) => ({
+        key: p.id,
+        label: isAr ? p.name_ar : isFr ? p.name_fr : p.name,
+      })),
+    [isAr, isFr],
+  );
+
   return (
-    <div className="w-full space-y-6 max-w-7xl mx-auto" dir={isRTL ? 'rtl' : 'ltr'}>
-      {/* Signature Hero Header Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-teal-950 via-emerald-900 to-cyan-950 text-white p-6 shadow-xl border border-teal-700/40">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2">
-              <span className="p-2.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 shadow-inner">
-                <FlaskConical className="h-6 w-6 text-teal-300" />
-              </span>
-              <div>
-                <h2 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-                  {tr(
-                    'Hydroponic Solution Designer & Tank Formulator',
-                    'مصمّم المحاليل المغذية المائية وخلطات الخزانات (A/B Tank Formulation)',
-                    'Concepteur de Solution Hydroponique & Cuves A/B'
-                  )}
-                  <Badge variant="outline" className="bg-teal-500/20 text-teal-200 border-teal-400/40 text-[10px] uppercase tracking-wider">
-                    Steiner & Hoagland Models
-                  </Badge>
-                </h2>
-              </div>
-            </div>
-            <p className="text-sm text-teal-100/90 max-w-3xl leading-relaxed">
-              {tr(
-                'Formulate precision soilless nutrient solutions in meq/L & ppm. Calculate electrical conductivity (EC), ionic equilibrium ratios, Steiner ternary polygons, and 2-tank (Tank A / Tank B) commercial fertilizer recipes.',
-                'تصميم محاليل التغذية الهيدروبونية بدقة (meq/L و ppm) وحساب الناقلية الكهربائية والتوازن الأيوني ومخطط شتاينر الثلاثي وجداول إذابة الأسمدة في الخزانين A و B.',
-                'Calculez la CE, l’équilibre ionique, les diagrammes ternaires de Steiner et les recettes de fertilisation en cuves A et B.'
-              )}
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              onClick={handleCopyReport}
-              variant="outline"
-              size="sm"
-              className="bg-white/15 hover:bg-white/25 text-white border-white/25 backdrop-blur font-semibold shadow-sm"
-            >
-              {copied ? (
-                <>
-                  <Check className="h-4 w-4 mr-1 text-emerald-300" />
-                  {tr('Copied!', 'تم النسخ!', 'Copié !')}
-                </>
-              ) : (
-                <>
-                  <Copy className="h-4 w-4 mr-1 text-teal-300" />
-                  {tr('Copy Recipe', 'نسخ الوصفة', 'Copier')}
-                </>
-              )}
-            </Button>
-            <Button
-              onClick={handleSendToWaterLab}
-              variant="outline"
-              size="sm"
-              className="bg-white/15 hover:bg-white/25 text-white border-white/25 backdrop-blur font-semibold shadow-sm"
-            >
-              <Share2 className="h-4 w-4 mr-1 text-cyan-300" />
-              {tr('Send to Water Lab', 'إرسال إلى محلل المياه', 'Vers Analyseur d’Eau')}
-            </Button>
-            <Button
-              onClick={() => {
-                setMeq({ ...EXTENDED_PRESETS[0].values });
-                setActivePresetId('steiner');
-                setPreset(null);
-                toast({ title: tr('Reset to Steiner Baseline', 'تمت استعادة محلول شتاينر', 'Réinitialisé à Steiner') });
-              }}
-              variant="outline"
-              size="sm"
-              className="bg-white/10 hover:bg-white/20 text-white border-white/20 backdrop-blur"
-            >
-              <RotateCcw className="h-4 w-4 mr-1 text-stone-300" />
-              {tr('Reset', 'إعادة تعيين', 'Réinitialiser')}
-            </Button>
-          </div>
-        </div>
-
-        {/* Quick Preset Selector Pill Bar */}
-        <div className="mt-5 pt-4 border-t border-white/15 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs text-teal-200/80 font-medium mr-1">
-              {tr('Quick Presets:', 'نماذج جاهزة:', 'Profils types :')}
-            </span>
-            {EXTENDED_PRESETS.map((p) => (
-              <button
-                key={p.id}
-                onClick={() => applyExtendedPreset(p)}
-                className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all ${
-                  activePresetId === p.id
-                    ? 'bg-teal-400 text-teal-950 shadow-md font-bold'
-                    : 'bg-white/10 hover:bg-white/20 text-teal-100'
-                }`}
-              >
-                {isAr ? p.name_ar : isFr ? p.name_fr : p.name}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-2">
-            <CropPresetDropdown onSelect={applyCropPreset} value={preset?.id ?? null} />
-          </div>
-        </div>
-
+    <CalculatorShell
+      icon={Droplets}
+      accent="teal"
+      badge="Steiner & Hoagland Models"
+      title={{
+        en: 'Hydroponic Solution Designer & Tank Formulator',
+        ar: 'مصمّم المحاليل المغذية المائية وخلطات الخزانات (A/B Tank Formulation)',
+        fr: 'Concepteur de Solution Hydroponique & Cuves A/B',
+      }}
+      description={{
+        en: 'Formulate precision soilless nutrient solutions in meq/L & ppm. Calculate electrical conductivity (EC), ionic equilibrium ratios, Steiner ternary polygons, and 2-tank (Tank A / Tank B) commercial fertilizer recipes.',
+        ar: 'تصميم محاليل التغذية الهيدروبونية بدقة (meq/L و ppm) وحساب الناقلية الكهربائية والتوازن الأيوني ومخطط شتاينر الثلاثي وجداول إذابة الأسمدة في الخزانين A و B.',
+        fr: 'Calculez la CE, l’équilibre ionique, les diagrammes ternaires de Steiner et les recettes de fertilisation en cuves A et B.',
+      }}
+      actions={[
+        {
+          icon: Copy,
+          label: { en: 'Copy Recipe', ar: 'نسخ الوصفة', fr: 'Copier' },
+          onClick: handleCopyReport,
+          variant: 'primary',
+          showCheck: copied,
+        },
+        {
+          icon: Share2,
+          label: { en: 'Send to Water Lab', ar: 'إرسال إلى محلل المياه', fr: 'Vers Analyseur d’Eau' },
+          onClick: handleSendToWaterLab,
+          variant: 'primary',
+        },
+        {
+          icon: RotateCcw,
+          label: { en: 'Reset', ar: 'إعادة تعيين', fr: 'Réinitialiser' },
+          onClick: handleReset,
+          variant: 'ghost',
+        },
+      ]}
+      pills={presetPills}
+      activePill={activePresetId}
+      onPillClick={(key) => {
+        const p = EXTENDED_PRESETS.find((p) => p.id === key);
+        if (p) applyExtendedPreset(p);
+      }}
+      pillLabel={{ en: 'Quick Presets:', ar: 'نماذج جاهزة:', fr: 'Profils types :' }}
+    >
+      {/* Crop Preset Dropdown + active preset info banner — full width */}
+      <div className="lg:col-span-12 flex flex-wrap items-center gap-3">
+        <CropPresetDropdown onSelect={applyCropPreset} value={preset?.id ?? null} />
         {preset && (
-          <div className="mt-3 text-xs rounded-xl border border-teal-400/40 bg-white/10 backdrop-blur px-3 py-2 text-teal-100 flex items-center justify-between">
+          <div className="flex-1 min-w-[280px] text-xs rounded-xl border border-teal-300 dark:border-teal-800 bg-teal-50/80 dark:bg-teal-950/40 px-3 py-2 text-teal-900 dark:text-teal-200 flex items-center justify-between gap-3">
             <div>
-              <strong className="text-white font-bold">{preset.emoji} {preset.name}:</strong> {preset.hydroSolution.notes}
+              <strong className="font-bold">{preset.emoji} {preset.name}:</strong> {preset.hydroSolution.notes}
             </div>
-            <Badge variant="outline" className="bg-teal-500/20 text-white border-teal-300/40 text-[10px]">
+            <Badge variant="outline" className="bg-teal-500/20 text-teal-900 dark:text-teal-200 border-teal-300/40 text-[10px]">
               {tr('Crop Database Linked', 'مرتبط بقاعدة المحاصيل', 'Lié à la base')}
             </Badge>
           </div>
         )}
       </div>
 
-      {/* Bridge Integration Banner if received from Water Diagnostic */}
+      {/* Bridge Integration Banner (received from Water Diagnostic) */}
       {bridgeBanner && (
-        <div className="p-3.5 rounded-2xl border border-teal-300 dark:border-teal-800 bg-teal-50/80 dark:bg-teal-950/40 text-xs text-teal-900 dark:text-teal-200 flex items-center justify-between gap-3 shadow-xs">
+        <div className="lg:col-span-12 p-3.5 rounded-2xl border border-teal-300 dark:border-teal-800 bg-teal-50/80 dark:bg-teal-950/40 text-xs text-teal-900 dark:text-teal-200 flex items-center justify-between gap-3 shadow-xs">
           <div className="flex items-center gap-2.5">
             <Check className="h-4 w-4 text-teal-600 dark:text-teal-400 shrink-0" />
             <span>
@@ -660,7 +621,7 @@ Total Tank B Salts: ${fertilizerRecipe.totalTankBKg.toFixed(2)} kg
       )}
 
       {/* Top Vital Solution Health Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="lg:col-span-12 grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="p-4 rounded-2xl border bg-card shadow-xs space-y-1">
           <div className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider flex items-center justify-between">
             <span>{tr('Estimated EC', 'الناقلية الكهربائية (EC)', 'Conductivité (CE)')}</span>
@@ -722,505 +683,507 @@ Total Tank B Salts: ${fertilizerRecipe.totalTankBKg.toFixed(2)} kg
         </div>
       </div>
 
-      {/* Navigation Tabs: Formulation Grid, Graphical Equilibrium Diagrams, Tank Dissolution Recipe, Diagnostics */}
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
-        <TabsList className="grid grid-cols-4 w-full h-11 p-1 bg-muted/60 rounded-xl">
-          <TabsTrigger value="editor" className="rounded-lg text-xs font-bold gap-1.5">
-            <FlaskConical className="h-3.5 w-3.5 text-teal-600" />
-            <span>{tr('Nutrient Input Grid', 'جدول تركيز الأيونات', 'Saisie des Éléments')}</span>
-          </TabsTrigger>
-          <TabsTrigger value="charts" className="rounded-lg text-xs font-bold gap-1.5">
-            <Atom className="h-3.5 w-3.5 text-purple-600" />
-            <span>{tr('Ternary Diagrams', 'مخططات شتاينر الثلاثية', 'Diagrammes de Steiner')}</span>
-          </TabsTrigger>
-          <TabsTrigger value="tanks" className="rounded-lg text-xs font-bold gap-1.5">
-            <Layers className="h-3.5 w-3.5 text-emerald-600" />
-            <span>{tr('Tank A / B Recipes', 'وصفة إذابة الخزانين A/B', 'Recette Cuves A/B')}</span>
-          </TabsTrigger>
-          <TabsTrigger value="diagnostics" className="rounded-lg text-xs font-bold gap-1.5">
-            <ShieldCheck className="h-3.5 w-3.5 text-blue-600" />
-            <span>{tr('Physiological Diagnostics', 'التشخيص الفسيولوجي', 'Diagnostic Physiologique')}</span>
-          </TabsTrigger>
-        </TabsList>
+      {/* Navigation Tabs — full width */}
+      <div className="lg:col-span-12">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
+          <TabsList className="grid grid-cols-4 w-full h-11 p-1 bg-muted/60 rounded-xl">
+            <TabsTrigger value="editor" className="rounded-lg text-xs font-bold gap-1.5">
+              <FlaskConical className="h-3.5 w-3.5 text-teal-600" />
+              <span>{tr('Nutrient Input Grid', 'جدول تركيز الأيونات', 'Saisie des Éléments')}</span>
+            </TabsTrigger>
+            <TabsTrigger value="charts" className="rounded-lg text-xs font-bold gap-1.5">
+              <Atom className="h-3.5 w-3.5 text-purple-600" />
+              <span>{tr('Ternary Diagrams', 'مخططات شتاينر الثلاثية', 'Diagrammes de Steiner')}</span>
+            </TabsTrigger>
+            <TabsTrigger value="tanks" className="rounded-lg text-xs font-bold gap-1.5">
+              <Layers className="h-3.5 w-3.5 text-emerald-600" />
+              <span>{tr('Tank A / B Recipes', 'وصفة إذابة الخزانين A/B', 'Recette Cuves A/B')}</span>
+            </TabsTrigger>
+            <TabsTrigger value="diagnostics" className="rounded-lg text-xs font-bold gap-1.5">
+              <ShieldCheck className="h-3.5 w-3.5 text-blue-600" />
+              <span>{tr('Physiological Diagnostics', 'التشخيص الفسيولوجي', 'Diagnostic Physiologique')}</span>
+            </TabsTrigger>
+          </TabsList>
 
-        {/* TAB 1: NUTRIENT INPUT GRID (meq/L <-> ppm) */}
-        <TabsContent value="editor" className="space-y-4 pt-2">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Anions Table */}
-            <div className="lg:col-span-6 space-y-3">
-              <Card className="rounded-2xl border shadow-xs overflow-hidden">
-                <CardHeader className="bg-blue-50/50 dark:bg-blue-950/20 py-3 px-4 border-b flex flex-row items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
-                    <CardTitle className="text-sm font-bold">
-                      {tr('Anions (Negative Charges −)', 'الأنيونات السالبة (Anions −)', 'Anions (Charges Négatives −)')}
-                    </CardTitle>
-                  </div>
-                  <Badge variant="outline" className="font-mono text-xs font-bold bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border-blue-300">
-                    Σ {sumAnions.toFixed(2)} meq/L
-                  </Badge>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-xs">
-                      <thead className="bg-muted/30 border-b">
-                        <tr className="text-muted-foreground font-semibold">
-                          <th className="py-2.5 px-3 text-left">{tr('Ion / Nutrient', 'الأيون / العنصر', 'Ion / Élément')}</th>
-                          <th className="py-2.5 px-3 text-right">{tr('meq / L', 'مكافئ/لتر (meq/L)', 'meq / L')}</th>
-                          <th className="py-2.5 px-3 text-right">{tr('Concentration (ppm / mg/L)', 'التركيز (ppm)', 'Concentration (ppm)')}</th>
-                          <th className="py-2.5 px-3 text-right">{tr('% of Anions', 'النسبة %', '% Anions')}</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y">
-                        {ANIONS.map((key) => {
-                          const lbl = HYDRO_NUTRIENT_LABELS[key];
-                          const w = HYDRO_EQ_WEIGHTS[key] || 1;
-                          const m = meq[key] || 0;
-                          const ppm = m * w;
-                          const pct = sumAnions > 0 ? (m / sumAnions) * 100 : 0;
-                          return (
-                            <tr key={key} className="hover:bg-muted/20 transition-colors">
-                              <td className="py-2.5 px-3">
-                                <div className="font-mono font-bold text-foreground">{lbl.ion}</div>
-                                <div className="text-[10px] text-muted-foreground">{lbl.name}</div>
-                              </td>
-                              <td className="py-2 px-2 text-right">
-                                <Input
-                                  type="number"
-                                  step="0.1"
-                                  min="0"
-                                  value={m || ''}
-                                  placeholder="0.0"
-                                  onChange={(e) => setMeqValue(key, parseFloat(e.target.value) || 0)}
-                                  className="h-8 w-20 text-right text-xs font-mono font-bold ml-auto"
-                                />
-                              </td>
-                              <td className="py-2 px-2 text-right">
-                                <Input
-                                  type="number"
-                                  step="1"
-                                  min="0"
-                                  value={ppm ? Number(ppm.toFixed(1)) : ''}
-                                  placeholder="0"
-                                  onChange={(e) => setPpmValue(key, parseFloat(e.target.value) || 0)}
-                                  className="h-8 w-24 text-right text-xs font-mono font-bold ml-auto"
-                                />
-                              </td>
-                              <td className="py-2.5 px-3 text-right font-mono font-semibold text-muted-foreground">
-                                {pct.toFixed(1)}%
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Cations Table */}
-            <div className="lg:col-span-6 space-y-3">
-              <Card className="rounded-2xl border shadow-xs overflow-hidden">
-                <CardHeader className="bg-amber-50/50 dark:bg-amber-950/20 py-3 px-4 border-b flex flex-row items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-                    <CardTitle className="text-sm font-bold">
-                      {tr('Cations (Positive Charges +)', 'الكاتيونات الموجبة (Cations +)', 'Cations (Charges Positives +)')}
-                    </CardTitle>
-                  </div>
-                  <Badge variant="outline" className="font-mono text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-300">
-                    Σ {sumCations.toFixed(2)} meq/L
-                  </Badge>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-xs">
-                      <thead className="bg-muted/30 border-b">
-                        <tr className="text-muted-foreground font-semibold">
-                          <th className="py-2.5 px-3 text-left">{tr('Ion / Nutrient', 'الأيون / العنصر', 'Ion / Élément')}</th>
-                          <th className="py-2.5 px-3 text-right">{tr('meq / L', 'مكافئ/لتر (meq/L)', 'meq / L')}</th>
-                          <th className="py-2.5 px-3 text-right">{tr('Concentration (ppm / mg/L)', 'التركيز (ppm)', 'Concentration (ppm)')}</th>
-                          <th className="py-2.5 px-3 text-right">{tr('% of Cations', 'النسبة %', '% Cations')}</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y">
-                        {CATIONS.map((key) => {
-                          const lbl = HYDRO_NUTRIENT_LABELS[key];
-                          const w = HYDRO_EQ_WEIGHTS[key] || 1;
-                          const m = meq[key] || 0;
-                          const ppm = m * w;
-                          const pct = sumCations > 0 ? (m / sumCations) * 100 : 0;
-                          return (
-                            <tr key={key} className="hover:bg-muted/20 transition-colors">
-                              <td className="py-2.5 px-3">
-                                <div className="font-mono font-bold text-foreground">{lbl.ion}</div>
-                                <div className="text-[10px] text-muted-foreground">{lbl.name}</div>
-                              </td>
-                              <td className="py-2 px-2 text-right">
-                                <Input
-                                  type="number"
-                                  step="0.1"
-                                  min="0"
-                                  value={m || ''}
-                                  placeholder="0.0"
-                                  onChange={(e) => setMeqValue(key, parseFloat(e.target.value) || 0)}
-                                  className="h-8 w-20 text-right text-xs font-mono font-bold ml-auto"
-                                />
-                              </td>
-                              <td className="py-2 px-2 text-right">
-                                <Input
-                                  type="number"
-                                  step="1"
-                                  min="0"
-                                  value={ppm ? Number(ppm.toFixed(1)) : ''}
-                                  placeholder="0"
-                                  onChange={(e) => setPpmValue(key, parseFloat(e.target.value) || 0)}
-                                  className="h-8 w-24 text-right text-xs font-mono font-bold ml-auto"
-                                />
-                              </td>
-                              <td className="py-2.5 px-3 text-right font-mono font-semibold text-muted-foreground">
-                                {pct.toFixed(1)}%
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-
-          {/* Quick Ratios & Chemical Rule Reference */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="p-3.5 rounded-xl border bg-card space-y-1 text-xs">
-              <div className="font-bold text-foreground flex items-center justify-between">
-                <span>{tr('K / Ca Ratio:', 'نسبة البوتاسيوم إلى الكالسيوم:', 'Ratio K / Ca :')}</span>
-                <span className="font-mono font-bold text-teal-600">{ratios.kCaRatio.toFixed(2)}</span>
-              </div>
-              <p className="text-[11px] text-muted-foreground leading-relaxed">
-                {tr(
-                  'Vegetative target: 0.8–1.0. Fruiting target: 1.2–1.6. Prevents blossom-end rot and marginal leaf tip necrosis.',
-                  'النمو الخضري: 0.8–1.0. الإثمار: 1.2–1.6. توازن ضروري لتفادي تعفن الطرف الزهري واحتراق الأطراف.',
-                  'Végétatif : 0.8–1.0. Fructification : 1.2–1.6. Prévient la nécrose apicale.'
-                )}
-              </p>
-            </div>
-
-            <div className="p-3.5 rounded-xl border bg-card space-y-1 text-xs">
-              <div className="font-bold text-foreground flex items-center justify-between">
-                <span>{tr('Ca / Mg Ratio:', 'نسبة الكالسيوم إلى الماغنيسيوم:', 'Ratio Ca / Mg :')}</span>
-                <span className="font-mono font-bold text-teal-600">{ratios.caMgRatio.toFixed(2)}</span>
-              </div>
-              <p className="text-[11px] text-muted-foreground leading-relaxed">
-                {tr(
-                  'Optimum range: 2.0–3.5. High magnesium competes with calcium transport to developing fruits.',
-                  'المجال الأمثل: 2.0–3.5. ارتفاع الماغنيسيوم ينافس الكالسيوم في الامتصاص ويؤدي للتشوهات.',
-                  'Plage optimale : 2.0–3.5. Évite la compétition sur l’absorption racinaire.'
-                )}
-              </p>
-            </div>
-
-            <div className="p-3.5 rounded-xl border bg-card space-y-1 text-xs">
-              <div className="font-bold text-foreground flex items-center justify-between">
-                <span>{tr('NH₄⁺ Fraction of Total N:', 'نسبة الأمونيوم من النيتروجين الكلي:', 'Fraction NH₄⁺ / N total :')}</span>
-                <span className={`font-mono font-bold ${ratios.nh4RatioPct > 15 ? 'text-rose-600' : 'text-emerald-600'}`}>
-                  {ratios.nh4RatioPct.toFixed(1)}%
-                </span>
-              </div>
-              <p className="text-[11px] text-muted-foreground leading-relaxed">
-                {tr(
-                  'Should remain < 10–15% in soilless systems to prevent root rhizosphere acidification and root burn.',
-                  'يجب ألا تتجاوز 10–15% لتفادي تحمض الجذور الشديد وانخفاض الأكسجين الجذري.',
-                  'Doit rester < 10–15% en hors-sol pour éviter l’acidification de la rhizosphère.'
-                )}
-              </p>
-            </div>
-          </div>
-        </TabsContent>
-
-        {/* TAB 2: TERNARY STEINER EQUILIBRIUM DIAGRAMS */}
-        <TabsContent value="charts" className="space-y-4 pt-2">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Anion Ternary Diagram */}
-            <Card className="rounded-2xl border shadow-xs overflow-hidden">
-              <CardHeader className="py-3 px-4 bg-muted/20 border-b flex flex-row items-center justify-between">
-                <CardTitle className="text-sm font-bold flex items-center gap-2">
-                  <Atom className="h-4 w-4 text-blue-600" />
-                  {tr('Steiner Anion Polygon (% meq)', 'مخطط شتاينر الثلاثي للأنيونات (% meq)', 'Triangle Anionique de Steiner')}
-                </CardTitle>
-                <Badge variant="outline" className="text-[10px] font-mono font-bold">
-                  NO₃ : H₂PO₄ : SO₄
-                </Badge>
-              </CardHeader>
-              <CardContent className="p-4 space-y-3">
-                <div className="relative w-full max-w-[280px] mx-auto">
-                  <svg viewBox="0 0 240 230" className="w-full h-auto drop-shadow-xs">
-                    {/* Background triangle */}
-                    <polygon points="120,20 20,200 220,200" fill="#f8fafc" stroke="#94a3b8" strokeWidth="1.5" />
-                    {/* Steiner recommended equilibrium polygon */}
-                    <polygon points={anionPolyPts} fill="#3b82f626" stroke="#2563eb" strokeWidth="1.5" strokeDasharray="3,2" />
-                    {/* Vertex Labels */}
-                    <text x="120" y="14" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#1e293b">
-                      NO₃ ({anionDist3.N_NO3.toFixed(0)}%)
-                    </text>
-                    <text x="12" y="215" textAnchor="start" fontSize="10" fontWeight="bold" fill="#1e293b">
-                      H₂PO₄ ({anionDist3.P.toFixed(0)}%)
-                    </text>
-                    <text x="228" y="215" textAnchor="end" fontSize="10" fontWeight="bold" fill="#1e293b">
-                      SO₄ ({anionDist3.S.toFixed(0)}%)
-                    </text>
-                    {/* Active Marker */}
-                    <circle cx={anionMarker.x} cy={anionMarker.y} r="6" fill="#ef4444" stroke="#ffffff" strokeWidth="2" />
-                  </svg>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2 pt-2 border-t text-center text-xs">
-                  <div className="p-2 rounded-lg bg-muted/40">
-                    <div className="text-[10px] text-muted-foreground">NO₃⁻</div>
-                    <div className="font-mono font-bold text-foreground">{anionDist3.N_NO3.toFixed(1)}%</div>
-                  </div>
-                  <div className="p-2 rounded-lg bg-muted/40">
-                    <div className="text-[10px] text-muted-foreground">H₂PO₄⁻</div>
-                    <div className="font-mono font-bold text-foreground">{anionDist3.P.toFixed(1)}%</div>
-                  </div>
-                  <div className="p-2 rounded-lg bg-muted/40">
-                    <div className="text-[10px] text-muted-foreground">SO₄²⁻</div>
-                    <div className="font-mono font-bold text-foreground">{anionDist3.S.toFixed(1)}%</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Cation Ternary Diagram */}
-            <Card className="rounded-2xl border shadow-xs overflow-hidden">
-              <CardHeader className="py-3 px-4 bg-muted/20 border-b flex flex-row items-center justify-between">
-                <CardTitle className="text-sm font-bold flex items-center gap-2">
-                  <Atom className="h-4 w-4 text-amber-600" />
-                  {tr('Steiner Cation Polygon (% meq)', 'مخطط شتاينر الثلاثي للكاتيونات (% meq)', 'Triangle Cationique de Steiner')}
-                </CardTitle>
-                <Badge variant="outline" className="text-[10px] font-mono font-bold">
-                  Ca : K : Mg
-                </Badge>
-              </CardHeader>
-              <CardContent className="p-4 space-y-3">
-                <div className="relative w-full max-w-[280px] mx-auto">
-                  <svg viewBox="0 0 240 230" className="w-full h-auto drop-shadow-xs">
-                    {/* Background triangle */}
-                    <polygon points="120,20 20,200 220,200" fill="#f8fafc" stroke="#94a3b8" strokeWidth="1.5" />
-                    {/* Steiner recommended equilibrium polygon */}
-                    <polygon points={cationPolyPts} fill="#f59e0b26" stroke="#d97706" strokeWidth="1.5" strokeDasharray="3,2" />
-                    {/* Vertex Labels */}
-                    <text x="120" y="14" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#1e293b">
-                      Ca²⁺ ({cationDist3.Ca.toFixed(0)}%)
-                    </text>
-                    <text x="12" y="215" textAnchor="start" fontSize="10" fontWeight="bold" fill="#1e293b">
-                      K⁺ ({cationDist3.K.toFixed(0)}%)
-                    </text>
-                    <text x="228" y="215" textAnchor="end" fontSize="10" fontWeight="bold" fill="#1e293b">
-                      Mg²⁺ ({cationDist3.Mg.toFixed(0)}%)
-                    </text>
-                    {/* Active Marker */}
-                    <circle cx={cationMarker.x} cy={cationMarker.y} r="6" fill="#10b981" stroke="#ffffff" strokeWidth="2" />
-                  </svg>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2 pt-2 border-t text-center text-xs">
-                  <div className="p-2 rounded-lg bg-muted/40">
-                    <div className="text-[10px] text-muted-foreground">Ca²⁺</div>
-                    <div className="font-mono font-bold text-foreground">{cationDist3.Ca.toFixed(1)}%</div>
-                  </div>
-                  <div className="p-2 rounded-lg bg-muted/40">
-                    <div className="text-[10px] text-muted-foreground">K⁺</div>
-                    <div className="font-mono font-bold text-foreground">{cationDist3.K.toFixed(1)}%</div>
-                  </div>
-                  <div className="p-2 rounded-lg bg-muted/40">
-                    <div className="text-[10px] text-muted-foreground">Mg²⁺</div>
-                    <div className="font-mono font-bold text-foreground">{cationDist3.Mg.toFixed(1)}%</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        {/* TAB 3: TWO-TANK COMMERCIAL FERTILIZER FORMULATION RECIPE */}
-        <TabsContent value="tanks" className="space-y-4 pt-2">
-          {/* Mixing Parameters Control Bar */}
-          <div className="p-4 rounded-2xl border bg-card shadow-xs flex flex-wrap items-center justify-between gap-4">
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="space-y-1">
-                <Label className="text-xs font-bold text-foreground">
-                  {tr('Target Irrigation Volume (Liters)', 'حجم مياه الري الكلي (لتر)', 'Volume d’irrigation cible (Litres)')}
-                </Label>
-                <Input
-                  type="number"
-                  step="500"
-                  min="100"
-                  value={targetVolumeLiters}
-                  onChange={(e) => setTargetVolumeLiters(Math.max(10, parseFloat(e.target.value) || 1000))}
-                  className="h-9 w-36 text-xs font-mono font-bold"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <Label className="text-xs font-bold text-foreground">
-                  {tr('Stock Concentrate Factor (1:X)', 'معامل تركيز خزان الأمهات (1:X)', 'Facteur de concentration stock')}
-                </Label>
-                <Input
-                  type="number"
-                  step="10"
-                  min="1"
-                  value={concentrateFactor}
-                  onChange={(e) => setConcentrateFactor(Math.max(1, parseFloat(e.target.value) || 100))}
-                  className="h-9 w-32 text-xs font-mono font-bold"
-                />
-              </div>
-            </div>
-
-            <div className="text-right text-xs">
-              <div className="text-muted-foreground">{tr('Stock Tanks Volume:', 'حجم كل خزان مركز:', 'Volume de chaque cuve mère :')}</div>
-              <div className="text-lg font-black text-teal-600 font-mono">
-                {fertilizerRecipe.stockTankVolL.toFixed(1)} Liters / Tank
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* TANK A (Calcium + Nitrates + Iron Chelate) */}
-            <Card className="rounded-2xl border border-teal-200 dark:border-teal-800/60 shadow-xs overflow-hidden">
-              <CardHeader className="bg-teal-50 dark:bg-teal-950/30 py-3.5 px-4 border-b flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle className="text-sm font-bold text-teal-900 dark:text-teal-200 flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded-md bg-teal-600 text-white font-mono text-xs font-bold">Tank A</span>
-                    <span>{tr('Calcium, Nitrates & Chelates', 'الكالسيوم والنترات ومخلب الحديد', 'Calcium, Nitrates & Chélates')}</span>
-                  </CardTitle>
-                  <CardDescription className="text-[11px] text-teal-700 dark:text-teal-300">
-                    {tr('Do NOT mix with phosphates or sulfates (prevents CaSO₄ & CaHPO₄ precipitation)', 'لا يخلط أبداً مع الفوسفات أو الكبريتات لتفادي الترسيب', 'Ne jamais mélanger avec phosphates/sulfates')}
-                  </CardDescription>
-                </div>
-                <Badge variant="outline" className="font-mono text-xs font-bold bg-white text-teal-900 border-teal-300">
-                  {fertilizerRecipe.totalTankAKg.toFixed(2)} kg
-                </Badge>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="divide-y">
-                  {fertilizerRecipe.tankASalts.map((s, idx) => (
-                    <div key={idx} className="p-3.5 flex items-center justify-between hover:bg-muted/20 transition-colors">
-                      <div className="space-y-0.5">
-                        <div className="font-bold text-xs text-foreground">{s.name}</div>
-                        <div className="text-[10px] font-mono text-muted-foreground">{s.formula}</div>
-                        <div className="text-[10px] text-teal-700 dark:text-teal-400 font-medium">{s.supplies}</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-mono font-black text-sm text-foreground">{s.totalKg.toFixed(2)} kg</div>
-                        <div className="text-[10px] text-muted-foreground">{s.gPerM3.toFixed(1)} g/m³</div>
-                      </div>
+          {/* TAB 1: NUTRIENT INPUT GRID (meq/L <-> ppm) */}
+          <TabsContent value="editor" className="space-y-4 pt-2">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              {/* Anions Table */}
+              <div className="lg:col-span-6 space-y-3">
+                <Card className="rounded-2xl border shadow-xs overflow-hidden">
+                  <CardHeader className="bg-blue-50/50 dark:bg-blue-950/20 py-3 px-4 border-b flex flex-row items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+                      <CardTitle className="text-sm font-bold">
+                        {tr('Anions (Negative Charges −)', 'الأنيونات السالبة (Anions −)', 'Anions (Charges Négatives −)')}
+                      </CardTitle>
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* TANK B (Phosphates + Sulfates + Magnesium) */}
-            <Card className="rounded-2xl border border-blue-200 dark:border-blue-800/60 shadow-xs overflow-hidden">
-              <CardHeader className="bg-blue-50 dark:bg-blue-950/30 py-3.5 px-4 border-b flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle className="text-sm font-bold text-blue-900 dark:text-blue-200 flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded-md bg-blue-600 text-white font-mono text-xs font-bold">Tank B</span>
-                    <span>{tr('Phosphates, Sulfates & Magnesium', 'الفوسفات والكبريتات والماغنيسيوم', 'Phosphates, Sulfates & Magnésium')}</span>
-                  </CardTitle>
-                  <CardDescription className="text-[11px] text-blue-700 dark:text-blue-300">
-                    {tr('Contains MKP, SOP, Epsom salt and soluble micronutrient complexes', 'يحتوي على الـ MKP وسلفات البوتاسيوم وسلفات الماغنيسيوم والعناصر الصغرى', 'Contient MKP, sulfate de potasse, sulfate de Mg')}
-                  </CardDescription>
-                </div>
-                <Badge variant="outline" className="font-mono text-xs font-bold bg-white text-blue-900 border-blue-300">
-                  {fertilizerRecipe.totalTankBKg.toFixed(2)} kg
-                </Badge>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="divide-y">
-                  {fertilizerRecipe.tankBSalts.map((s, idx) => (
-                    <div key={idx} className="p-3.5 flex items-center justify-between hover:bg-muted/20 transition-colors">
-                      <div className="space-y-0.5">
-                        <div className="font-bold text-xs text-foreground">{s.name}</div>
-                        <div className="text-[10px] font-mono text-muted-foreground">{s.formula}</div>
-                        <div className="text-[10px] text-blue-700 dark:text-blue-400 font-medium">{s.supplies}</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-mono font-black text-sm text-foreground">{s.totalKg.toFixed(2)} kg</div>
-                        <div className="text-[10px] text-muted-foreground">{s.gPerM3.toFixed(1)} g/m³</div>
-                      </div>
+                    <Badge variant="outline" className="font-mono text-xs font-bold bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border-blue-300">
+                      Σ {sumAnions.toFixed(2)} meq/L
+                    </Badge>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-xs">
+                        <thead className="bg-muted/30 border-b">
+                          <tr className="text-muted-foreground font-semibold">
+                            <th className="py-2.5 px-3 text-left">{tr('Ion / Nutrient', 'الأيون / العنصر', 'Ion / Élément')}</th>
+                            <th className="py-2.5 px-3 text-right">{tr('meq / L', 'مكافئ/لتر (meq/L)', 'meq / L')}</th>
+                            <th className="py-2.5 px-3 text-right">{tr('Concentration (ppm / mg/L)', 'التركيز (ppm)', 'Concentration (ppm)')}</th>
+                            <th className="py-2.5 px-3 text-right">{tr('% of Anions', 'النسبة %', '% Anions')}</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y">
+                          {ANIONS.map((key) => {
+                            const lbl = HYDRO_NUTRIENT_LABELS[key];
+                            const w = HYDRO_EQ_WEIGHTS[key] || 1;
+                            const m = meq[key] || 0;
+                            const ppm = m * w;
+                            const pct = sumAnions > 0 ? (m / sumAnions) * 100 : 0;
+                            return (
+                              <tr key={key} className="hover:bg-muted/20 transition-colors">
+                                <td className="py-2.5 px-3">
+                                  <div className="font-mono font-bold text-foreground">{lbl.ion}</div>
+                                  <div className="text-[10px] text-muted-foreground">{lbl.name}</div>
+                                </td>
+                                <td className="py-2 px-2 text-right">
+                                  <Input
+                                    type="number"
+                                    step="0.1"
+                                    min="0"
+                                    value={m || ''}
+                                    placeholder="0.0"
+                                    onChange={(e) => setMeqValue(key, parseFloat(e.target.value) || 0)}
+                                    className="h-8 w-20 text-right text-xs font-mono font-bold ml-auto"
+                                  />
+                                </td>
+                                <td className="py-2 px-2 text-right">
+                                  <Input
+                                    type="number"
+                                    step="1"
+                                    min="0"
+                                    value={ppm ? Number(ppm.toFixed(1)) : ''}
+                                    placeholder="0"
+                                    onChange={(e) => setPpmValue(key, parseFloat(e.target.value) || 0)}
+                                    className="h-8 w-24 text-right text-xs font-mono font-bold ml-auto"
+                                  />
+                                </td>
+                                <td className="py-2.5 px-3 text-right font-mono font-semibold text-muted-foreground">
+                                  {pct.toFixed(1)}%
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        {/* TAB 4: PHYSIOLOGICAL DIAGNOSTICS & AGRONOMIC RULES */}
-        <TabsContent value="diagnostics" className="space-y-4 pt-2">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card className="rounded-2xl border shadow-xs p-4 space-y-3">
-              <div className="font-bold text-sm text-foreground flex items-center gap-2">
-                <ShieldCheck className="h-4 w-4 text-emerald-600" />
-                <span>{tr('Solution Safety & Precipitation Risk Matrix', 'مصفوفة أمان المحلول ومخاطر الترسيب', 'Sécurité et risques de précipitation')}</span>
+                  </CardContent>
+                </Card>
               </div>
-              <div className="space-y-2 text-xs">
-                <div className="p-2.5 rounded-xl border bg-muted/20 flex items-start gap-2">
-                  <Check className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
-                  <div>
-                    <strong className="text-foreground">{tr('Gypsum Precipitation (CaSO₄):', 'ترسيب كبريتات الكالسيوم:', 'Précipitation CaSO₄ :')}</strong>{' '}
-                    <span className="text-muted-foreground">
-                      {tr(
-                        'Keep (Ca²⁺ meq × SO₄²⁻ meq) product below limits in concentrated stock tanks by strictly separating Ca into Tank A and SO₄ into Tank B.',
-                        'احرص على فصل الكالسيوم في الخزان A والكبريتات في الخزان B لتفادي انسداد النقاطات بالجبس.',
-                        'Séparer strictement le Ca dans la cuve A et le SO₄ dans la cuve B.'
-                      )}
-                    </span>
-                  </div>
-                </div>
 
-                <div className="p-2.5 rounded-xl border bg-muted/20 flex items-start gap-2">
-                  <Check className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
-                  <div>
-                    <strong className="text-foreground">{tr('Dicalcium Phosphate (CaHPO₄):', 'ترسيب فوسفات ثنائي الكالسيوم:', 'Précipitation CaHPO₄ :')}</strong>{' '}
-                    <span className="text-muted-foreground">
-                      {tr(
-                        'Occurs when pH > 6.5 in the presence of free calcium and phosphate. Maintain dripper line pH at 5.6–6.0 using Nitric / Phosphoric acid.',
-                        'يحدث عند ارتفاع الـ pH فوق 6.5 بوجود الكالسيوم والفوسفور. حافظ على درجة حموضة 5.6–6.0 باستعمال حمض النيتريك.',
-                        'Maintenir le pH entre 5.6 et 6.0 pour éviter le blocage du phosphore.'
-                      )}
-                    </span>
-                  </div>
-                </div>
+              {/* Cations Table */}
+              <div className="lg:col-span-6 space-y-3">
+                <Card className="rounded-2xl border shadow-xs overflow-hidden">
+                  <CardHeader className="bg-amber-50/50 dark:bg-amber-950/20 py-3 px-4 border-b flex flex-row items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                      <CardTitle className="text-sm font-bold">
+                        {tr('Cations (Positive Charges +)', 'الكاتيونات الموجبة (Cations +)', 'Cations (Charges Positives +)')}
+                      </CardTitle>
+                    </div>
+                    <Badge variant="outline" className="font-mono text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-300">
+                      Σ {sumCations.toFixed(2)} meq/L
+                    </Badge>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-xs">
+                        <thead className="bg-muted/30 border-b">
+                          <tr className="text-muted-foreground font-semibold">
+                            <th className="py-2.5 px-3 text-left">{tr('Ion / Nutrient', 'الأيون / العنصر', 'Ion / Élément')}</th>
+                            <th className="py-2.5 px-3 text-right">{tr('meq / L', 'مكافئ/لتر (meq/L)', 'meq / L')}</th>
+                            <th className="py-2.5 px-3 text-right">{tr('Concentration (ppm / mg/L)', 'التركيز (ppm)', 'Concentration (ppm)')}</th>
+                            <th className="py-2.5 px-3 text-right">{tr('% of Cations', 'النسبة %', '% Cations')}</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y">
+                          {CATIONS.map((key) => {
+                            const lbl = HYDRO_NUTRIENT_LABELS[key];
+                            const w = HYDRO_EQ_WEIGHTS[key] || 1;
+                            const m = meq[key] || 0;
+                            const ppm = m * w;
+                            const pct = sumCations > 0 ? (m / sumCations) * 100 : 0;
+                            return (
+                              <tr key={key} className="hover:bg-muted/20 transition-colors">
+                                <td className="py-2.5 px-3">
+                                  <div className="font-mono font-bold text-foreground">{lbl.ion}</div>
+                                  <div className="text-[10px] text-muted-foreground">{lbl.name}</div>
+                                </td>
+                                <td className="py-2 px-2 text-right">
+                                  <Input
+                                    type="number"
+                                    step="0.1"
+                                    min="0"
+                                    value={m || ''}
+                                    placeholder="0.0"
+                                    onChange={(e) => setMeqValue(key, parseFloat(e.target.value) || 0)}
+                                    className="h-8 w-20 text-right text-xs font-mono font-bold ml-auto"
+                                  />
+                                </td>
+                                <td className="py-2 px-2 text-right">
+                                  <Input
+                                    type="number"
+                                    step="1"
+                                    min="0"
+                                    value={ppm ? Number(ppm.toFixed(1)) : ''}
+                                    placeholder="0"
+                                    onChange={(e) => setPpmValue(key, parseFloat(e.target.value) || 0)}
+                                    className="h-8 w-24 text-right text-xs font-mono font-bold ml-auto"
+                                  />
+                                </td>
+                                <td className="py-2.5 px-3 text-right font-mono font-semibold text-muted-foreground">
+                                  {pct.toFixed(1)}%
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
-            </Card>
+            </div>
 
-            <Card className="rounded-2xl border shadow-xs p-4 space-y-3">
-              <div className="font-bold text-sm text-foreground flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-teal-600" />
-                <span>{tr('pH Buffering & Acid Dosing Guide', 'دليل تعديل الحموضة (pH) وحقن الأحماض', 'Régulation du pH et injection d’acide')}</span>
-              </div>
-              <div className="space-y-2 text-xs text-muted-foreground leading-relaxed">
-                <p>
+            {/* Quick Ratios & Chemical Rule Reference */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="p-3.5 rounded-xl border bg-card space-y-1 text-xs">
+                <div className="font-bold text-foreground flex items-center justify-between">
+                  <span>{tr('K / Ca Ratio:', 'نسبة البوتاسيوم إلى الكالسيوم:', 'Ratio K / Ca :')}</span>
+                  <span className="font-mono font-bold text-teal-600">{ratios.kCaRatio.toFixed(2)}</span>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
                   {tr(
-                    'When raw water contains HCO₃⁻ > 1.5 meq/L (90 ppm), inject 58% Nitric Acid (HNO₃) or 75% Phosphoric Acid (H₃PO₄) to neutralize excess bicarbonate down to 0.5 meq/L.',
-                    'عندما تحتوي المياه الخام على بيكربونات > 1.5 meq/L، قم بحقن حمض النيتريك 58% أو الفوسفوريك 75% لمعادلة القلوية والوصول إلى 0.5 meq/L متبقية كعازل منظم.',
-                    'Si l’eau brute contient HCO₃⁻ > 1.5 meq/L, injecter de l’acide nitrique ou phosphorique pour stabiliser le pH.'
+                    'Vegetative target: 0.8–1.0. Fruiting target: 1.2–1.6. Prevents blossom-end rot and marginal leaf tip necrosis.',
+                    'النمو الخضري: 0.8–1.0. الإثمار: 1.2–1.6. توازن ضروري لتفادي تعفن الطرف الزهري واحتراق الأطراف.',
+                    'Végétatif : 0.8–1.0. Fructification : 1.2–1.6. Prévient la nécrose apicale.'
                   )}
                 </p>
-                <div className="p-2.5 rounded-xl bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800 text-[11px] text-teal-900 dark:text-teal-200 font-mono">
-                  1 meq/L HNO₃ (63 g/m³ pure) neutralizes 1 meq/L HCO₃⁻ and adds 14 ppm N-NO₃⁻.
+              </div>
+
+              <div className="p-3.5 rounded-xl border bg-card space-y-1 text-xs">
+                <div className="font-bold text-foreground flex items-center justify-between">
+                  <span>{tr('Ca / Mg Ratio:', 'نسبة الكالسيوم إلى الماغنيسيوم:', 'Ratio Ca / Mg :')}</span>
+                  <span className="font-mono font-bold text-teal-600">{ratios.caMgRatio.toFixed(2)}</span>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  {tr(
+                    'Optimum range: 2.0–3.5. High magnesium competes with calcium transport to developing fruits.',
+                    'المجال الأمثل: 2.0–3.5. ارتفاع الماغنيسيوم ينافس الكالسيوم في الامتصاص ويؤدي للتشوهات.',
+                    'Plage optimale : 2.0–3.5. Évite la compétition sur l’absorption racinaire.'
+                  )}
+                </p>
+              </div>
+
+              <div className="p-3.5 rounded-xl border bg-card space-y-1 text-xs">
+                <div className="font-bold text-foreground flex items-center justify-between">
+                  <span>{tr('NH₄⁺ Fraction of Total N:', 'نسبة الأمونيوم من النيتروجين الكلي:', 'Fraction NH₄⁺ / N total :')}</span>
+                  <span className={`font-mono font-bold ${ratios.nh4RatioPct > 15 ? 'text-rose-600' : 'text-emerald-600'}`}>
+                    {ratios.nh4RatioPct.toFixed(1)}%
+                  </span>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  {tr(
+                    'Should remain < 10–15% in soilless systems to prevent root rhizosphere acidification and root burn.',
+                    'يجب ألا تتجاوز 10–15% لتفادي تحمض الجذور الشديد وانخفاض الأكسجين الجذري.',
+                    'Doit rester < 10–15% en hors-sol pour éviter l’acidification de la rhizosphère.'
+                  )}
+                </p>
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* TAB 2: TERNARY STEINER EQUILIBRIUM DIAGRAMS */}
+          <TabsContent value="charts" className="space-y-4 pt-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Anion Ternary Diagram */}
+              <Card className="rounded-2xl border shadow-xs overflow-hidden">
+                <CardHeader className="py-3 px-4 bg-muted/20 border-b flex flex-row items-center justify-between">
+                  <CardTitle className="text-sm font-bold flex items-center gap-2">
+                    <Atom className="h-4 w-4 text-blue-600" />
+                    {tr('Steiner Anion Polygon (% meq)', 'مخطط شتاينر الثلاثي للأنيونات (% meq)', 'Triangle Anionique de Steiner')}
+                  </CardTitle>
+                  <Badge variant="outline" className="text-[10px] font-mono font-bold">
+                    NO₃ : H₂PO₄ : SO₄
+                  </Badge>
+                </CardHeader>
+                <CardContent className="p-4 space-y-3">
+                  <div className="relative w-full max-w-[280px] mx-auto">
+                    <svg viewBox="0 0 240 230" className="w-full h-auto drop-shadow-xs">
+                      {/* Background triangle */}
+                      <polygon points="120,20 20,200 220,200" fill="#f8fafc" stroke="#94a3b8" strokeWidth="1.5" />
+                      {/* Steiner recommended equilibrium polygon */}
+                      <polygon points={anionPolyPts} fill="#3b82f626" stroke="#2563eb" strokeWidth="1.5" strokeDasharray="3,2" />
+                      {/* Vertex Labels */}
+                      <text x="120" y="14" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#1e293b">
+                        NO₃ ({anionDist3.N_NO3.toFixed(0)}%)
+                      </text>
+                      <text x="12" y="215" textAnchor="start" fontSize="10" fontWeight="bold" fill="#1e293b">
+                        H₂PO₄ ({anionDist3.P.toFixed(0)}%)
+                      </text>
+                      <text x="228" y="215" textAnchor="end" fontSize="10" fontWeight="bold" fill="#1e293b">
+                        SO₄ ({anionDist3.S.toFixed(0)}%)
+                      </text>
+                      {/* Active Marker */}
+                      <circle cx={anionMarker.x} cy={anionMarker.y} r="6" fill="#ef4444" stroke="#ffffff" strokeWidth="2" />
+                    </svg>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 pt-2 border-t text-center text-xs">
+                    <div className="p-2 rounded-lg bg-muted/40">
+                      <div className="text-[10px] text-muted-foreground">NO₃⁻</div>
+                      <div className="font-mono font-bold text-foreground">{anionDist3.N_NO3.toFixed(1)}%</div>
+                    </div>
+                    <div className="p-2 rounded-lg bg-muted/40">
+                      <div className="text-[10px] text-muted-foreground">H₂PO₄⁻</div>
+                      <div className="font-mono font-bold text-foreground">{anionDist3.P.toFixed(1)}%</div>
+                    </div>
+                    <div className="p-2 rounded-lg bg-muted/40">
+                      <div className="text-[10px] text-muted-foreground">SO₄²⁻</div>
+                      <div className="font-mono font-bold text-foreground">{anionDist3.S.toFixed(1)}%</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Cation Ternary Diagram */}
+              <Card className="rounded-2xl border shadow-xs overflow-hidden">
+                <CardHeader className="py-3 px-4 bg-muted/20 border-b flex flex-row items-center justify-between">
+                  <CardTitle className="text-sm font-bold flex items-center gap-2">
+                    <Atom className="h-4 w-4 text-amber-600" />
+                    {tr('Steiner Cation Polygon (% meq)', 'مخطط شتاينر الثلاثي للكاتيونات (% meq)', 'Triangle Cationique de Steiner')}
+                  </CardTitle>
+                  <Badge variant="outline" className="text-[10px] font-mono font-bold">
+                    Ca : K : Mg
+                  </Badge>
+                </CardHeader>
+                <CardContent className="p-4 space-y-3">
+                  <div className="relative w-full max-w-[280px] mx-auto">
+                    <svg viewBox="0 0 240 230" className="w-full h-auto drop-shadow-xs">
+                      {/* Background triangle */}
+                      <polygon points="120,20 20,200 220,200" fill="#f8fafc" stroke="#94a3b8" strokeWidth="1.5" />
+                      {/* Steiner recommended equilibrium polygon */}
+                      <polygon points={cationPolyPts} fill="#f59e0b26" stroke="#d97706" strokeWidth="1.5" strokeDasharray="3,2" />
+                      {/* Vertex Labels */}
+                      <text x="120" y="14" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#1e293b">
+                        Ca²⁺ ({cationDist3.Ca.toFixed(0)}%)
+                      </text>
+                      <text x="12" y="215" textAnchor="start" fontSize="10" fontWeight="bold" fill="#1e293b">
+                        K⁺ ({cationDist3.K.toFixed(0)}%)
+                      </text>
+                      <text x="228" y="215" textAnchor="end" fontSize="10" fontWeight="bold" fill="#1e293b">
+                        Mg²⁺ ({cationDist3.Mg.toFixed(0)}%)
+                      </text>
+                      {/* Active Marker */}
+                      <circle cx={cationMarker.x} cy={cationMarker.y} r="6" fill="#10b981" stroke="#ffffff" strokeWidth="2" />
+                    </svg>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 pt-2 border-t text-center text-xs">
+                    <div className="p-2 rounded-lg bg-muted/40">
+                      <div className="text-[10px] text-muted-foreground">Ca²⁺</div>
+                      <div className="font-mono font-bold text-foreground">{cationDist3.Ca.toFixed(1)}%</div>
+                    </div>
+                    <div className="p-2 rounded-lg bg-muted/40">
+                      <div className="text-[10px] text-muted-foreground">K⁺</div>
+                      <div className="font-mono font-bold text-foreground">{cationDist3.K.toFixed(1)}%</div>
+                    </div>
+                    <div className="p-2 rounded-lg bg-muted/40">
+                      <div className="text-[10px] text-muted-foreground">Mg²⁺</div>
+                      <div className="font-mono font-bold text-foreground">{cationDist3.Mg.toFixed(1)}%</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* TAB 3: TWO-TANK COMMERCIAL FERTILIZER FORMULATION RECIPE */}
+          <TabsContent value="tanks" className="space-y-4 pt-2">
+            {/* Mixing Parameters Control Bar */}
+            <div className="p-4 rounded-2xl border bg-card shadow-xs flex flex-wrap items-center justify-between gap-4">
+              <div className="flex flex-wrap items-center gap-4">
+                <div className="space-y-1">
+                  <Label className="text-xs font-bold text-foreground">
+                    {tr('Target Irrigation Volume (Liters)', 'حجم مياه الري الكلي (لتر)', 'Volume d’irrigation cible (Litres)')}
+                  </Label>
+                  <Input
+                    type="number"
+                    step="500"
+                    min="100"
+                    value={targetVolumeLiters}
+                    onChange={(e) => setTargetVolumeLiters(Math.max(10, parseFloat(e.target.value) || 1000))}
+                    className="h-9 w-36 text-xs font-mono font-bold"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <Label className="text-xs font-bold text-foreground">
+                    {tr('Stock Concentrate Factor (1:X)', 'معامل تركيز خزان الأمهات (1:X)', 'Facteur de concentration stock')}
+                  </Label>
+                  <Input
+                    type="number"
+                    step="10"
+                    min="1"
+                    value={concentrateFactor}
+                    onChange={(e) => setConcentrateFactor(Math.max(1, parseFloat(e.target.value) || 100))}
+                    className="h-9 w-32 text-xs font-mono font-bold"
+                  />
                 </div>
               </div>
-            </Card>
-          </div>
-        </TabsContent>
-      </Tabs>
-    </div>
+
+              <div className="text-right text-xs">
+                <div className="text-muted-foreground">{tr('Stock Tanks Volume:', 'حجم كل خزان مركز:', 'Volume de chaque cuve mère :')}</div>
+                <div className="text-lg font-black text-teal-600 font-mono">
+                  {fertilizerRecipe.stockTankVolL.toFixed(1)} Liters / Tank
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* TANK A (Calcium + Nitrates + Iron Chelate) */}
+              <Card className="rounded-2xl border border-teal-200 dark:border-teal-800/60 shadow-xs overflow-hidden">
+                <CardHeader className="bg-teal-50 dark:bg-teal-950/30 py-3.5 px-4 border-b flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle className="text-sm font-bold text-teal-900 dark:text-teal-200 flex items-center gap-2">
+                      <span className="px-2 py-0.5 rounded-md bg-teal-600 text-white font-mono text-xs font-bold">Tank A</span>
+                      <span>{tr('Calcium, Nitrates & Chelates', 'الكالسيوم والنترات ومخلب الحديد', 'Calcium, Nitrates & Chélates')}</span>
+                    </CardTitle>
+                    <CardDescription className="text-[11px] text-teal-700 dark:text-teal-300">
+                      {tr('Do NOT mix with phosphates or sulfates (prevents CaSO₄ & CaHPO₄ precipitation)', 'لا يخلط أبداً مع الفوسفات أو الكبريتات لتفادي الترسيب', 'Ne jamais mélanger avec phosphates/sulfates')}
+                    </CardDescription>
+                  </div>
+                  <Badge variant="outline" className="font-mono text-xs font-bold bg-white text-teal-900 border-teal-300">
+                    {fertilizerRecipe.totalTankAKg.toFixed(2)} kg
+                  </Badge>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="divide-y">
+                    {fertilizerRecipe.tankASalts.map((s, idx) => (
+                      <div key={idx} className="p-3.5 flex items-center justify-between hover:bg-muted/20 transition-colors">
+                        <div className="space-y-0.5">
+                          <div className="font-bold text-xs text-foreground">{s.name}</div>
+                          <div className="text-[10px] font-mono text-muted-foreground">{s.formula}</div>
+                          <div className="text-[10px] text-teal-700 dark:text-teal-400 font-medium">{s.supplies}</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-mono font-black text-sm text-foreground">{s.totalKg.toFixed(2)} kg</div>
+                          <div className="text-[10px] text-muted-foreground">{s.gPerM3.toFixed(1)} g/m³</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* TANK B (Phosphates + Sulfates + Magnesium) */}
+              <Card className="rounded-2xl border border-blue-200 dark:border-blue-800/60 shadow-xs overflow-hidden">
+                <CardHeader className="bg-blue-50 dark:bg-blue-950/30 py-3.5 px-4 border-b flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle className="text-sm font-bold text-blue-900 dark:text-blue-200 flex items-center gap-2">
+                      <span className="px-2 py-0.5 rounded-md bg-blue-600 text-white font-mono text-xs font-bold">Tank B</span>
+                      <span>{tr('Phosphates, Sulfates & Magnesium', 'الفوسفات والكبريتات والماغنيسيوم', 'Phosphates, Sulfates & Magnésium')}</span>
+                    </CardTitle>
+                    <CardDescription className="text-[11px] text-blue-700 dark:text-blue-300">
+                      {tr('Contains MKP, SOP, Epsom salt and soluble micronutrient complexes', 'يحتوي على الـ MKP وسلفات البوتاسيوم وسلفات الماغنيسيوم والعناصر الصغرى', 'Contient MKP, sulfate de potasse, sulfate de Mg')}
+                    </CardDescription>
+                  </div>
+                  <Badge variant="outline" className="font-mono text-xs font-bold bg-white text-blue-900 border-blue-300">
+                    {fertilizerRecipe.totalTankBKg.toFixed(2)} kg
+                  </Badge>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="divide-y">
+                    {fertilizerRecipe.tankBSalts.map((s, idx) => (
+                      <div key={idx} className="p-3.5 flex items-center justify-between hover:bg-muted/20 transition-colors">
+                        <div className="space-y-0.5">
+                          <div className="font-bold text-xs text-foreground">{s.name}</div>
+                          <div className="text-[10px] font-mono text-muted-foreground">{s.formula}</div>
+                          <div className="text-[10px] text-blue-700 dark:text-blue-400 font-medium">{s.supplies}</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-mono font-black text-sm text-foreground">{s.totalKg.toFixed(2)} kg</div>
+                          <div className="text-[10px] text-muted-foreground">{s.gPerM3.toFixed(1)} g/m³</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* TAB 4: PHYSIOLOGICAL DIAGNOSTICS & AGRONOMIC RULES */}
+          <TabsContent value="diagnostics" className="space-y-4 pt-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card className="rounded-2xl border shadow-xs p-4 space-y-3">
+                <div className="font-bold text-sm text-foreground flex items-center gap-2">
+                  <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                  <span>{tr('Solution Safety & Precipitation Risk Matrix', 'مصفوفة أمان المحلول ومخاطر الترسيب', 'Sécurité et risques de précipitation')}</span>
+                </div>
+                <div className="space-y-2 text-xs">
+                  <div className="p-2.5 rounded-xl border bg-muted/20 flex items-start gap-2">
+                    <Check className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
+                    <div>
+                      <strong className="text-foreground">{tr('Gypsum Precipitation (CaSO₄):', 'ترسيب كبريتات الكالسيوم:', 'Précipitation CaSO₄ :')}</strong>{' '}
+                      <span className="text-muted-foreground">
+                        {tr(
+                          'Keep (Ca²⁺ meq × SO₄²⁻ meq) product below limits in concentrated stock tanks by strictly separating Ca into Tank A and SO₄ into Tank B.',
+                          'احرص على فصل الكالسيوم في الخزان A والكبريتات في الخزان B لتفادي انسداد النقاطات بالجبس.',
+                          'Séparer strictement le Ca dans la cuve A et le SO₄ dans la cuve B.'
+                        )}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="p-2.5 rounded-xl border bg-muted/20 flex items-start gap-2">
+                    <Check className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
+                    <div>
+                      <strong className="text-foreground">{tr('Dicalcium Phosphate (CaHPO₄):', 'ترسيب فوسفات ثنائي الكالسيوم:', 'Précipitation CaHPO₄ :')}</strong>{' '}
+                      <span className="text-muted-foreground">
+                        {tr(
+                          'Occurs when pH > 6.5 in the presence of free calcium and phosphate. Maintain dripper line pH at 5.6–6.0 using Nitric / Phosphoric acid.',
+                          'يحدث عند ارتفاع الـ pH فوق 6.5 بوجود الكالسيوم والفوسفور. حافظ على درجة حموضة 5.6–6.0 باستعمال حمض النيتريك.',
+                          'Maintenir le pH entre 5.6 et 6.0 pour éviter le blocage du phosphore.'
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+
+              <Card className="rounded-2xl border shadow-xs p-4 space-y-3">
+                <div className="font-bold text-sm text-foreground flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-teal-600" />
+                  <span>{tr('pH Buffering & Acid Dosing Guide', 'دليل تعديل الحموضة (pH) وحقن الأحماض', 'Régulation du pH et injection d’acide')}</span>
+                </div>
+                <div className="space-y-2 text-xs text-muted-foreground leading-relaxed">
+                  <p>
+                    {tr(
+                      'When raw water contains HCO₃⁻ > 1.5 meq/L (90 ppm), inject 58% Nitric Acid (HNO₃) or 75% Phosphoric Acid (H₃PO₄) to neutralize excess bicarbonate down to 0.5 meq/L.',
+                      'عندما تحتوي المياه الخام على بيكربونات > 1.5 meq/L، قم بحقن حمض النيتريك 58% أو الفوسفوريك 75% لمعادلة القلوية والوصول إلى 0.5 meq/L متبقية كعازل منظم.',
+                      'Si l’eau brute contient HCO₃⁻ > 1.5 meq/L, injecter de l’acide nitrique ou phosphorique pour stabiliser le pH.'
+                    )}
+                  </p>
+                  <div className="p-2.5 rounded-xl bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800 text-[11px] text-teal-900 dark:text-teal-200 font-mono">
+                    1 meq/L HNO₃ (63 g/m³ pure) neutralizes 1 meq/L HCO₃⁻ and adds 14 ppm N-NO₃⁻.
+                  </div>
+                </div>
+              </Card>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </CalculatorShell>
   );
 }
