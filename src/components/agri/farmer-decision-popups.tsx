@@ -36,6 +36,8 @@ import { useTranslation, copyFor } from '@/lib/language-store';
 import { useFarmProfile } from '@/components/agri/farm-profile-wizard';
 import { getForecast, type ForecastResult } from '@/lib/open-meteo';
 import { CROP_LIFECYCLES, stageForDay, type CropLifecycle } from '@/lib/crop-lifecycle';
+import { localizedStageName, localizedStageDescription } from '@/lib/crop-lifecycle-i18n';
+import { localizedCropName } from '@/lib/crop-localization';
 import { ALL_58_WILAYAS } from '@/lib/algeria-wilayas-58';
 import { mapLifecycleIdToFarmPilotId } from '@/components/agri/farmpilot-decision-card';
 import { getCropById } from '@/lib/farmpilot-engine';
@@ -85,6 +87,12 @@ interface FarmDecisionContext {
   dayOfSeason: number | null;
   stageName: string | null;
   stageDescription: string | null;
+  /** Stage name localized to the current UI language. */
+  localizedStageName: string | null;
+  /** Stage description localized to the current UI language. */
+  localizedStageDescription: string | null;
+  /** Crop name localized to the current UI language. */
+  localizedCropName: string | null;
   daysRemaining: number | null;
   percent: number | null;
 }
@@ -176,14 +184,21 @@ function useFarmDecisionContext(active: boolean): FarmDecisionContext {
     const dayOfSeason = Math.floor((Date.now() - planting.getTime()) / 86400000) + 1;
     if (dayOfSeason < 1 || dayOfSeason > lifecycle.seasonLength) return null;
     const stage = stageForDay(lifecycle, dayOfSeason);
+    const stageNameEn = stage?.name ?? null;
+    const stageDescEn = stage?.description ?? null;
     return {
       dayOfSeason,
-      stageName: stage?.name ?? null,
-      stageDescription: stage?.description ?? null,
+      // Keep English for keyword matching (todayActivities + activeFarmPilotStage)
+      stageName: stageNameEn,
+      stageDescription: stageDescEn,
+      // Localized versions for display
+      localizedStageName: stageNameEn ? localizedStageName(stageNameEn, language) : null,
+      localizedStageDescription: stageDescEn ? localizedStageDescription(stageDescEn, language) : null,
+      localizedCropNameVal: lifecycle ? localizedCropName(language, lifecycle.id, lifecycle.name) : null,
       daysRemaining: Math.max(0, lifecycle.seasonLength - dayOfSeason),
       percent: Math.min(100, Math.round((dayOfSeason / lifecycle.seasonLength) * 100)),
     };
-  }, [lifecycle, profile?.plantingDate]);
+  }, [lifecycle, profile?.plantingDate, language]);
 
   return {
     profile,
@@ -195,6 +210,9 @@ function useFarmDecisionContext(active: boolean): FarmDecisionContext {
     dayOfSeason: stageInfo?.dayOfSeason ?? null,
     stageName: stageInfo?.stageName ?? null,
     stageDescription: stageInfo?.stageDescription ?? null,
+    localizedStageName: stageInfo?.localizedStageName ?? null,
+    localizedStageDescription: stageInfo?.localizedStageDescription ?? null,
+    localizedCropName: stageInfo?.localizedCropNameVal ?? null,
     daysRemaining: stageInfo?.daysRemaining ?? null,
     percent: stageInfo?.percent ?? null,
   };
@@ -215,7 +233,7 @@ function WhatToDoPopup({
   const tr = (en: string, ar: string, fr: string) => copyFor(language, en, ar, fr);
   const ctx = useFarmDecisionContext(open);
 
-  const cropName = ctx.lifecycle?.name ?? ctx.profile?.crop ?? tr('your crop', 'محصولك', 'votre culture');
+  const cropName = ctx.localizedCropName ?? ctx.lifecycle?.name ?? ctx.profile?.crop ?? tr('your crop', 'محصولك', 'votre culture');
   const cropEmoji = ctx.lifecycle?.emoji ?? '🌱';
 
   // Stage-relevant suggested activities
@@ -271,9 +289,9 @@ function WhatToDoPopup({
               <span className="text-2xl">{cropEmoji}</span>
               <div>
                 <div className="font-bold">{cropName}</div>
-                {ctx.stageName && (
+                {ctx.localizedStageName && (
                   <div className="text-xs text-muted-foreground">
-                    {tr('Stage', 'المرحلة', 'Stade')}: <span className="font-semibold text-foreground">{ctx.stageName}</span>
+                    {tr('Stage', 'المرحلة', 'Stade')}: <span className="font-semibold text-foreground">{ctx.localizedStageName}</span>
                   </div>
                 )}
               </div>
@@ -287,9 +305,9 @@ function WhatToDoPopup({
           </div>
 
           {/* Stage description (if any) */}
-          {ctx.stageDescription && (
+          {ctx.localizedStageDescription && (
             <p className="text-xs text-muted-foreground italic leading-relaxed">
-              {ctx.stageDescription}
+              {ctx.localizedStageDescription}
             </p>
           )}
 
@@ -444,10 +462,10 @@ function ShouldIrrigatePopup({
           </div>
 
           {/* Crop + stage */}
-          {ctx.stageName && (
+          {ctx.localizedStageName && (
             <div className="text-xs">
               <span className="text-muted-foreground">{tr('Crop stage', 'مرحلة المحصول', 'Stade culture')}: </span>
-              <span className="font-semibold">{ctx.lifecycle?.emoji} {ctx.lifecycle?.name} — {ctx.stageName}</span>
+              <span className="font-semibold">{ctx.lifecycle?.emoji} {ctx.localizedCropName ?? ctx.lifecycle?.name} — {ctx.localizedStageName}</span>
             </div>
           )}
 
@@ -614,13 +632,13 @@ function ApplyFertilizerPopup({
             {ctx.lifecycle && (
               <div className="flex items-center justify-between text-xs">
                 <span className="text-muted-foreground">{tr('Crop', 'المحصول', 'Culture')}</span>
-                <span className="font-semibold">{ctx.lifecycle.emoji} {ctx.lifecycle.name}</span>
+                <span className="font-semibold">{ctx.lifecycle.emoji} {ctx.localizedCropName ?? ctx.lifecycle.name}</span>
               </div>
             )}
-            {ctx.stageName && (
+            {ctx.localizedStageName && (
               <div className="flex items-center justify-between text-xs">
                 <span className="text-muted-foreground">{tr('Stage', 'المرحلة', 'Stade')}</span>
-                <span className="font-semibold">{ctx.stageName}</span>
+                <span className="font-semibold">{ctx.localizedStageName}</span>
               </div>
             )}
             {ctx.dayOfSeason != null && (
