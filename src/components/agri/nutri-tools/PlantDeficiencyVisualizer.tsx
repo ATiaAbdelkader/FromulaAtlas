@@ -19,29 +19,49 @@ import {
   Activity,
   HeartCrack,
   Flame,
+  RotateCcw,
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
-import { useTranslation } from '@/lib/language-store';
+import { copyFor, useTranslation } from '@/lib/language-store';
+import { toast } from '@/hooks/use-toast';
 import {
   PLANT_ORGANS,
   PLANT_DEFICIENCIES_DATA,
   PlantOrganDeficiency,
 } from '@/lib/plant-deficiency-data';
+import {
+  CalculatorShell,
+  type TrilingualString, type CalculatorPill,
+} from '@/components/agri/nutri-tools/CalculatorShell';
+
+const TITLE: TrilingualString = {
+  en: 'Interactive Botanical Plant Deficiency & Recovery Guide',
+  ar: 'الدليل التفاعلي لتشخيص وعلاج نقص العناصر حسب أعضاء النبات',
+  fr: 'Guide Interactif des Carences et Correction par Organe Végétal',
+};
+
+const DESC: TrilingualString = {
+  en: 'Click any plant organ (Roots, Stem, Leaves, Flower, Fruit) to discover exact deficiency symptoms, microscopic causes & precision emergency recipes.',
+  ar: 'اضغط على أي جزء من أجزاء النبات (الجذور، الساق، الأوراق، الأزهار، الثمار) لمعاينة أعراض النقص والجرعات العلاجية.',
+  fr: 'Cliquez sur un organe végétal pour explorer les symptômes de carence, mécanismes cellulaires et protocoles de correction.',
+};
+
+const PILL_LABEL: TrilingualString = { en: 'Organ:', ar: 'العضو:', fr: 'Organe :' };
+
+const PROTOCOL_NOTE: TrilingualString = {
+  en: 'Mobile nutrients (N, P, K, Mg, Mo) show deficiency on OLD/LOWER leaves first. Immobile nutrients (Ca, B, Fe, Mn, Zn, Cu) show deficiency on YOUNG/TOP shoots first. Apply foliar sprays at the correct growth stage for fastest recovery.',
+  ar: 'العناصر المتحركة (N, P, K, Mg, Mo) تُظهر النقص على الأوراق السفلية القديمة أولاً. العناصر غير المتحركة (Ca, B, Fe, Mn, Zn, Cu) تُظهر النقص على القمم النامية أولاً. رش ورقي في المرحلة المناسبة لأسرع تعافي.',
+  fr: 'Les éléments mobiles (N, P, K, Mg, Mo) montrent une carence sur les VIEILLES feuilles. Les éléments immobiles (Ca, B, Fe, Mn, Zn, Cu) sur les JEUNNES pousses. Pulvérisation foliaire au bon stade.',
+};
 
 export function PlantDeficiencyVisualizer() {
   const { language } = useTranslation();
   const isAr = language === 'ar';
   const isFr = language === 'fr';
 
-  const tr = (enText: string, arText: string, frText?: string) => {
-    if (isAr) return arText;
-    if (isFr && frText) return frText;
-    return enText;
-  };
+  const tr = (en: string, ar: string, fr?: string) => copyFor(language, en, ar, fr);
 
   // Active Organ selection
   const [selectedOrgan, setSelectedOrgan] = useState<string>('fruits');
@@ -78,89 +98,57 @@ export function PlantDeficiencyVisualizer() {
     return PLANT_ORGANS.find((o) => o.id === selectedOrgan) || PLANT_ORGANS[6];
   }, [selectedOrgan]);
 
+  const pills: CalculatorPill[] = [
+    { key: 'all', emoji: '🌐', label: tr('All Organs', 'كل الأعضاء', 'Tous') },
+    ...PLANT_ORGANS.map((o) => ({
+      key: o.id,
+      label: isAr ? o.label_ar : isFr ? o.label_fr : o.label,
+    })),
+  ];
+
+  const handlePillClick = (key: string) => {
+    setSelectedOrgan(key);
+    if (key !== 'all') {
+      const firstInOrgan = PLANT_DEFICIENCIES_DATA.find((d) => d.organ === key);
+      if (firstInOrgan) setSelectedDeficiencyId(firstInOrgan.id);
+    }
+  };
+
+  const handleReset = () => {
+    setSelectedOrgan('fruits');
+    setSelectedDeficiencyId('fruit-ca-ber');
+    setSearchQuery('');
+    setMobilityFilter('all');
+    toast({ title: tr('Reset', 'إعادة تعيين', 'Réinitialiser') });
+  };
+
   return (
-    <Card className="w-full shadow-md border-border/80">
-      <CardHeader className="pb-4 border-b bg-muted/20">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-          <div>
-            <div className="flex items-center gap-2">
-              <div className="p-2 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
-                <Sprout className="h-5 w-5" />
-              </div>
-              <div>
-                <CardTitle className="text-lg md:text-xl font-bold">
-                  {tr(
-                    'Interactive Botanical Plant Deficiency & Recovery Guide',
-                    'الدليل التفاعلي لتشخيص وعلاج نقص العناصر حسب أعضاء النبات',
-                    'Guide Interactif des Carences et Correction par Organe Végétal'
-                  )}
-                </CardTitle>
-                <CardDescription className="text-xs">
-                  {tr(
-                    'Click any plant organ (Roots, Stem, Leaves, Flower, Fruit) to discover exact deficiency symptoms, microscopic causes & precision emergency recipes.',
-                    'اضغط على أي جزء من أجزاء النبات (الجذور، الساق، الأوراق، الأزهار، الثمار) لمعاينة أعراض النقص والجرعات العلاجية.',
-                    'Cliquez sur un organe végétal pour explorer les symptômes de carence, mécanismes cellulaires et protocoles de correction.'
-                  )}
-                </CardDescription>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 flex-wrap">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => window.print()}
-              className="gap-1.5 text-xs h-8"
-            >
-              <Printer className="h-3.5 w-3.5" />
-              <span>{tr('Print / Export PDF', 'طباعة / تصدير PDF', 'Imprimer / PDF')}</span>
-            </Button>
-          </div>
-        </div>
-
-        {/* Quick Organ Filter Bar */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pt-3 pb-1 no-scrollbar">
-          <Button
-            type="button"
-            variant={selectedOrgan === 'all' ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => setSelectedOrgan('all')}
-            className={`text-xs gap-1.5 whitespace-nowrap rounded-lg h-8 transition-all ${
-              selectedOrgan === 'all' ? 'bg-amber-600 hover:bg-amber-700 text-white font-semibold' : 'text-muted-foreground'
-            }`}
-          >
-            <Layers className="h-3.5 w-3.5" />
-            <span>{tr('All Organs', 'كافة أجزاء النبات', 'Tous les Organes')}</span>
-          </Button>
-
-          {PLANT_ORGANS.map((organ) => {
-            const isSelected = selectedOrgan === organ.id;
-            return (
-              <Button
-                key={organ.id}
-                type="button"
-                variant={isSelected ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => {
-                  setSelectedOrgan(organ.id);
-                  const firstInOrgan = PLANT_DEFICIENCIES_DATA.find((d) => d.organ === organ.id);
-                  if (firstInOrgan) setSelectedDeficiencyId(firstInOrgan.id);
-                }}
-                className={`text-xs gap-1.5 whitespace-nowrap rounded-lg h-8 transition-all ${
-                  isSelected ? 'bg-amber-600 hover:bg-amber-700 text-white shadow-xs font-semibold' : 'text-muted-foreground'
-                }`}
-              >
-                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: organ.color }} />
-                <span>{isAr ? organ.label_ar : isFr ? organ.label_fr : organ.label}</span>
-              </Button>
-            );
-          })}
-        </div>
-      </CardHeader>
-
-      <CardContent className="p-4 md:p-6 space-y-6">
+    <CalculatorShell
+      icon={Sprout}
+      title={TITLE}
+      description={DESC}
+      badge="Plant Nutrition"
+      accent="amber"
+      actions={[
+        {
+          icon: Printer,
+          label: { en: 'Print / PDF', ar: 'طباعة / PDF', fr: 'Imprimer' },
+          onClick: () => window.print(),
+          variant: 'primary',
+        },
+        {
+          icon: RotateCcw,
+          label: { en: 'Reset', ar: 'إعادة تعيين', fr: 'Réinitialiser' },
+          onClick: handleReset,
+        },
+      ]}
+      pills={pills}
+      activePill={selectedOrgan}
+      onPillClick={handlePillClick}
+      pillLabel={PILL_LABEL}
+      protocolNote={PROTOCOL_NOTE}
+    >
+      <div className="lg:col-span-12 space-y-6">
         {/* Main 2-Column Grid: Left is Botanical SVG, Right is Deficiency Explorer & Protocol */}
         <div className="grid lg:grid-cols-12 gap-6 items-start">
           
@@ -622,7 +610,7 @@ export function PlantDeficiencyVisualizer() {
 
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </CalculatorShell>
   );
 }

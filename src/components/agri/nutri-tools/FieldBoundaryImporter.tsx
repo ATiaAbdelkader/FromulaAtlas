@@ -9,7 +9,6 @@
  */
 
 import { useState, useMemo, useRef, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -18,7 +17,7 @@ import { Textarea } from '@/components/ui/textarea';
 import {
   Shapes, FileJson, FileCode, FileSpreadsheet, Upload, Download,
   Copy, Check, Trash2, Plus, MapPin, AlertTriangle, CheckCircle2,
-  FileText, ArrowRight,
+  FileText, RotateCcw,
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import {
@@ -27,8 +26,26 @@ import {
   toGeoJSON, toKML, toWKT, toCSV,
 } from '@/lib/field-boundary';
 import { copyFor, useTranslation } from '@/lib/language-store';
+import {
+  CalculatorShell,
+  type TrilingualString, type CalculatorPill,
+} from '@/components/agri/nutri-tools/CalculatorShell';
 
 type Tab = 'import' | 'draw' | 'convert';
+
+const TITLE: TrilingualString = {
+  en: 'Field Boundary Importer',
+  ar: 'مستورد حدود الحقول',
+  fr: 'Importateur de Limites de Parcelle',
+};
+
+const DESC: TrilingualString = {
+  en: 'Import GeoJSON · KML · WKT · CSV boundaries, compute area & perimeter, and convert between formats with SVG preview.',
+  ar: 'استيراد حدود الحقول بصيغ GeoJSON وKML وWKT وCSV، حساب المساحة والمحيط، والتحويل بين التنسيقات مع معاينة SVG.',
+  fr: 'Importer des limites GeoJSON · KML · WKT · CSV, calculer surface & périmètre, et convertir entre formats avec aperçu SVG.',
+};
+
+const PILL_LABEL: TrilingualString = { en: 'Mode:', ar: 'الوضع:', fr: 'Mode :' };
 
 // ============================================================================
 // Main component
@@ -36,23 +53,72 @@ type Tab = 'import' | 'draw' | 'convert';
 
 export function FieldBoundaryImporter() {
   const { language } = useTranslation();
+  const tr = (en: string, ar: string, fr?: string) => copyFor(language, en, ar, fr);
   const [tab, setTab] = useState<Tab>('import');
   const [boundary, setBoundary] = useState<Boundary | null>(null);
   const [sourceFormat, setSourceFormat] = useState<ImportFormat | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const pills: CalculatorPill[] = [
+    { key: 'import', emoji: '📥', label: tr('Import', 'استيراد', 'Importer') },
+    { key: 'draw', emoji: '✏️', label: tr('Draw', 'رسم', 'Dessiner') },
+    { key: 'convert', emoji: '🔄', label: tr('Convert / Export', 'تحويل / تصدير', 'Convertir') },
+  ];
+
+  const handleCopySummary = () => {
+    if (!boundary) {
+      toast({ title: tr('No boundary yet', 'لا توجد حدود بعد', 'Aucune limite') });
+      return;
+    }
+    const m = computeMetrics(boundary);
+    const area = m.areaM2 >= 10_000 ? `${(m.areaM2 / 10_000).toFixed(2)} ha` : `${m.areaM2.toFixed(0)} m²`;
+    const perim = m.perimeterM >= 1000 ? `${(m.perimeterM / 1000).toFixed(2)} km` : `${m.perimeterM.toFixed(0)} m`;
+    const text = `=== FIELD BOUNDARY ===\nName: ${boundary.name}\nType: ${boundary.type}\nArea: ${area}\nPerimeter: ${perim}\nVertices: ${m.vertexCount}\nCentroid: ${m.centroid[1].toFixed(5)}, ${m.centroid[0].toFixed(5)}\nValid: ${m.valid ? 'Yes' : 'No'}`.trim();
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    toast({ title: tr('Summary Copied!', 'تم النسخ!', 'Copié !') });
+    setTimeout(() => setCopied(false), 3000);
+  };
+
+  const handleReset = () => {
+    setBoundary(null);
+    setSourceFormat(null);
+    setTab('import');
+    toast({ title: tr('Cleared', 'تم المسح', 'Effacé') });
+  };
 
   return (
-    <Card className="overflow-hidden border-emerald-100/80 shadow-sm dark:border-emerald-950/60">
-      <CardHeader className="border-b border-emerald-100/70 bg-gradient-to-br from-emerald-50/70 via-card to-card pb-4 dark:border-emerald-950/70 dark:from-emerald-950/30">
-        <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-300"><Shapes className="h-4 w-4" /></span> {copyFor(language, 'Field Boundary Importer', 'مستورد حدود الحقول')}
-        </CardTitle>
-        <div className="mt-3 grid grid-cols-1 gap-1 rounded-xl bg-muted/50 p-1 sm:grid-cols-3">
-          <TabBtn active={tab === 'import'} onClick={() => setTab('import')} icon={Upload} label={copyFor(language, 'Import', 'استيراد')} />
-          <TabBtn active={tab === 'draw'} onClick={() => setTab('draw')} icon={Shapes} label={copyFor(language, 'Draw', 'رسم')} />
-          <TabBtn active={tab === 'convert'} onClick={() => setTab('convert')} icon={ArrowRight} label={copyFor(language, 'Convert / Export', 'تحويل / تصدير')} disabled={!boundary} />
-        </div>
-      </CardHeader>
-      <CardContent className="p-4 sm:p-5">
+    <CalculatorShell
+      icon={Shapes}
+      title={TITLE}
+      description={DESC}
+      badge="GIS Tool"
+      accent="emerald"
+      actions={[
+        {
+          icon: Copy,
+          label: { en: 'Copy Summary', ar: 'نسخ التقرير', fr: 'Copier' },
+          onClick: handleCopySummary,
+          variant: 'primary',
+          showCheck: copied,
+        },
+        {
+          icon: RotateCcw,
+          label: { en: 'Reset', ar: 'إعادة تعيين', fr: 'Réinitialiser' },
+          onClick: handleReset,
+        },
+      ]}
+      pills={pills}
+      activePill={tab}
+      onPillClick={(k) => setTab(k as Tab)}
+      pillLabel={PILL_LABEL}
+      protocolNote={{
+        en: 'GeoJSON is the native format for web maps (Leaflet, Mapbox). KML opens in Google Earth. WKT is used by PostGIS, QGIS expression engine, and spatial SQL. CSV is portable to Excel for paper-records workflows.',
+        ar: 'GeoJSON هو التنسيق الأصلي لخرائط الويب مثل Leaflet وMapbox. يفتح KML في Google Earth. ويُستخدم WKT في PostGIS ومحرك تعبيرات QGIS وSQL المكاني. ويمكن نقل CSV إلى Excel لسير عمل السجلات الورقية.',
+        fr: "GeoJSON est le format natif des cartes web (Leaflet, Mapbox). KML s'ouvre dans Google Earth. WKT est utilisé par PostGIS, QGIS et SQL spatial. CSV est portable vers Excel.",
+      }}
+    >
+      <div className="lg:col-span-12 space-y-4">
         {tab === 'import' && (
           <ImportPanel onImport={(b, fmt) => { setBoundary(b); setSourceFormat(fmt); setTab('convert'); }} />
         )}
@@ -64,11 +130,11 @@ export function FieldBoundaryImporter() {
         )}
         {tab === 'convert' && !boundary && (
           <div className="text-xs text-muted-foreground text-center py-6">
-            {copyFor(language, 'Import or draw a boundary first.', 'استورد أو ارسم حدوداً أولاً.')}
+            {tr('Import or draw a boundary first.', 'استورد أو ارسم حدوداً أولاً.', 'Importez ou dessinez une limite d\'abord.')}
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </CalculatorShell>
   );
 }
 
@@ -497,20 +563,4 @@ function PolygonPreview({ boundary, bbox: bb }: { boundary: Boundary; bbox: Boun
   );
 }
 
-// ============================================================================
-// Shared
-// ============================================================================
 
-function TabBtn({ active, onClick, icon: Icon, label, disabled }: { active: boolean; onClick: () => void; icon: typeof MapPin; label: string; disabled?: boolean }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      aria-pressed={active}
-      className={`flex min-h-9 items-center justify-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${active ? 'bg-emerald-100 text-emerald-700 shadow-sm dark:bg-emerald-950/50 dark:text-emerald-300' : 'text-muted-foreground hover:bg-background/70 hover:text-foreground'}`}
-    >
-      <Icon className="h-3.5 w-3.5" /><span>{label}</span>
-    </button>
-  );
-}

@@ -19,28 +19,49 @@ import {
   HelpCircle,
   Stethoscope,
   Microscope,
+  RotateCcw,
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { useTranslation } from '@/lib/language-store';
+import { copyFor, useTranslation } from '@/lib/language-store';
+import { toast } from '@/hooks/use-toast';
 import {
   DISEASE_ORGANS,
   TOMATO_DISEASES_DATA,
   TomatoDisease,
 } from '@/lib/tomato-disease-data';
+import {
+  CalculatorShell,
+  type TrilingualString, type CalculatorPill,
+} from '@/components/agri/nutri-tools/CalculatorShell';
+
+const TITLE: TrilingualString = {
+  en: 'Interactive Tomato Pathology & Disease Location Map',
+  ar: 'الأطلس التفاعلي لأمراض الطماطم ومواقع الإصابة على النبات',
+  fr: 'Atlas Pathologique Interactif de la Tomate par Organe',
+};
+
+const DESC: TrilingualString = {
+  en: 'Explore common tomato fungal, bacterial, viral & nematode diseases mapped directly onto plant anatomy with IPM protocols, FRAC codes & resistance genes.',
+  ar: 'خريطة تفاعلية لأخطر أمراض الطماطم الفطرية والبكتيرية والفيروسية والنيماتودية موزعة على أجزاء النبات مع برامج المكافحة المتكاملة.',
+  fr: 'Explorez les maladies fongiques, bactériennes et virales de la tomate par organe, avec codes FRAC, lutte biologique et gènes de résistance.',
+};
+
+const PILL_LABEL: TrilingualString = { en: 'Plant zone:', ar: 'المنطقة:', fr: 'Zone :' };
+
+const PROTOCOL_NOTE: TrilingualString = {
+  en: 'Click any organ on the plant map (or pills above) to see diseases affecting that zone. Use the FRAC code rotation to prevent resistance — never apply the same MoA group twice in a row.',
+  ar: 'انقر أي عضو على خريطة النبات (أو الأزرار أعلاه) لرؤية الأمراض المؤثرة على تلك المنطقة. استخدم تدوير أكواد FRAC لمنع المقاومة — لا تكرر نفس مجموعة آلية العمل مرتين متتاليتين.',
+  fr: 'Cliquez sur un organe de la carte (ou pastilles) pour voir les maladies de cette zone. Alternez les codes FRAC pour éviter la résistance.',
+};
 
 export function TomatoDiseaseVisualizer() {
   const { language } = useTranslation();
   const isAr = language === 'ar';
   const isFr = language === 'fr';
 
-  const tr = (enText: string, arText: string, frText?: string) => {
-    if (isAr) return arText;
-    if (isFr && frText) return frText;
-    return enText;
-  };
+  const tr = (en: string, ar: string, fr?: string) => copyFor(language, en, ar, fr);
 
   const [selectedOrgan, setSelectedOrgan] = useState<string>('leaves');
   const [selectedDiseaseId, setSelectedDiseaseId] = useState<string>('early-blight');
@@ -74,89 +95,57 @@ export function TomatoDiseaseVisualizer() {
     return DISEASE_ORGANS.find((o) => o.id === selectedOrgan) || DISEASE_ORGANS[2];
   }, [selectedOrgan]);
 
+  const pills: CalculatorPill[] = [
+    { key: 'all', emoji: '🌐', label: tr('All Zones', 'كل المناطق', 'Toutes') },
+    ...DISEASE_ORGANS.map((o) => ({
+      key: o.id,
+      label: isAr ? o.label_ar : isFr ? o.label_fr : o.label,
+    })),
+  ];
+
+  const handlePillClick = (key: string) => {
+    setSelectedOrgan(key);
+    if (key !== 'all') {
+      const firstInOrgan = TOMATO_DISEASES_DATA.find((d) => d.organ === key);
+      if (firstInOrgan) setSelectedDiseaseId(firstInOrgan.id);
+    }
+  };
+
+  const handleReset = () => {
+    setSelectedOrgan('leaves');
+    setSelectedDiseaseId('early-blight');
+    setPathogenFilter('all');
+    setSearchQuery('');
+    toast({ title: tr('Reset', 'إعادة تعيين', 'Réinitialiser') });
+  };
+
   return (
-    <Card className="w-full shadow-md border-border/80">
-      <CardHeader className="pb-4 border-b bg-muted/20">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-          <div>
-            <div className="flex items-center gap-2">
-              <div className="p-2 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400">
-                <Microscope className="h-5 w-5" />
-              </div>
-              <div>
-                <CardTitle className="text-lg md:text-xl font-bold">
-                  {tr(
-                    'Interactive Tomato Pathology & Disease Location Map',
-                    'الأطلس التفاعلي لأمراض الطماطم ومواقع الإصابة على النبات',
-                    'Atlas Pathologique Interactif de la Tomate par Organe'
-                  )}
-                </CardTitle>
-                <CardDescription className="text-xs">
-                  {tr(
-                    'Explore common tomato fungal, bacterial, viral & nematode diseases mapped directly onto plant anatomy with IPM protocols, FRAC codes & resistance genes.',
-                    'خريطة تفاعلية لأخطر أمراض الطماطم الفطرية والبكتيرية والفيروسية والنيماتودية موزعة على أجزاء النبات مع برامج المكافحة المتكاملة.',
-                    'Explorez les maladies fongiques, bactériennes et virales de la tomate par organe, avec codes FRAC, lutte biologique et gènes de résistance.'
-                  )}
-                </CardDescription>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 flex-wrap">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => window.print()}
-              className="gap-1.5 text-xs h-8"
-            >
-              <Printer className="h-3.5 w-3.5" />
-              <span>{tr('Print / PDF', 'طباعة / PDF', 'Imprimer')}</span>
-            </Button>
-          </div>
-        </div>
-
-        {/* Quick Organ Filter Navigation */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pt-3 pb-1 no-scrollbar">
-          <Button
-            type="button"
-            variant={selectedOrgan === 'all' ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => setSelectedOrgan('all')}
-            className={`text-xs gap-1.5 whitespace-nowrap rounded-lg h-8 transition-all ${
-              selectedOrgan === 'all' ? 'bg-rose-600 hover:bg-rose-700 text-white font-semibold' : 'text-muted-foreground'
-            }`}
-          >
-            <Layers className="h-3.5 w-3.5" />
-            <span>{tr('All Plant Zones', 'كافة أجزاء النبات', 'Toutes les Zones')}</span>
-          </Button>
-
-          {DISEASE_ORGANS.map((organ) => {
-            const isSelected = selectedOrgan === organ.id;
-            return (
-              <Button
-                key={organ.id}
-                type="button"
-                variant={isSelected ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => {
-                  setSelectedOrgan(organ.id);
-                  const firstInOrgan = TOMATO_DISEASES_DATA.find((d) => d.organ === organ.id);
-                  if (firstInOrgan) setSelectedDiseaseId(firstInOrgan.id);
-                }}
-                className={`text-xs gap-1.5 whitespace-nowrap rounded-lg h-8 transition-all ${
-                  isSelected ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-xs font-semibold' : 'text-muted-foreground'
-                }`}
-              >
-                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: organ.color }} />
-                <span>{isAr ? organ.label_ar : isFr ? organ.label_fr : organ.label}</span>
-              </Button>
-            );
-          })}
-        </div>
-      </CardHeader>
-
-      <CardContent className="p-4 md:p-6 space-y-6">
+    <CalculatorShell
+      icon={Bug}
+      title={TITLE}
+      description={DESC}
+      badge="Phytopathology"
+      accent="rose"
+      actions={[
+        {
+          icon: Printer,
+          label: { en: 'Print / PDF', ar: 'طباعة / PDF', fr: 'Imprimer' },
+          onClick: () => window.print(),
+          variant: 'primary',
+        },
+        {
+          icon: RotateCcw,
+          label: { en: 'Reset', ar: 'إعادة تعيين', fr: 'Réinitialiser' },
+          onClick: handleReset,
+        },
+      ]}
+      pills={pills}
+      activePill={selectedOrgan}
+      onPillClick={handlePillClick}
+      pillLabel={PILL_LABEL}
+      protocolNote={PROTOCOL_NOTE}
+    >
+      <div className="lg:col-span-12 space-y-6">
         {/* Main Layout Grid */}
         <div className="grid lg:grid-cols-12 gap-6 items-start">
           
@@ -617,7 +606,7 @@ export function TomatoDiseaseVisualizer() {
 
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </CalculatorShell>
   );
 }

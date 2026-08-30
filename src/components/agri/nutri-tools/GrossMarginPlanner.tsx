@@ -8,22 +8,23 @@ import {
   Download,
   Plus,
   RefreshCw,
-  Scale,
   Trash2,
-  TrendingUp,
   Copy,
   Check,
   ShieldCheck,
   DollarSign,
-  Layers,
-  Sparkles,
+  RotateCcw,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { copyFor, useTranslation } from '@/lib/language-store';
+import {
+  CalculatorShell,
+  type TrilingualString,
+} from '@/components/agri/nutri-tools/CalculatorShell';
 import {
   costPerHaFromEntries,
   calculateGrossMarginPortfolio,
@@ -84,6 +85,24 @@ function numberValue(value: string): number {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : 0;
 }
+
+const TITLE: TrilingualString = {
+  en: 'Gross-Margin & Break-Even Portfolio Planner',
+  ar: 'مخطّط الهامش الإجمالي ونقطة التعادل ومحفظة المحاصيل',
+  fr: 'Planificateur de Marge Brute & Seuil de Rentabilité',
+};
+
+const DESC: TrilingualString = {
+  en: 'Compare multi-crop allocations by variable and fixed expenses, unit revenue, break-even thresholds, and downside sensitivity before committing field acreage.',
+  ar: 'قارن خيارات توزيع المحاصيل حسب التكاليف المتغيرة والثابتة والإيراد ونقاط التعادل وحساسية المخاطر قبل الالتزام بمساحة الحقل.',
+  fr: 'Analysez la rentabilité des cultures, les seuils de rentabilité et la sensibilité aux risques.',
+};
+
+const PROTOCOL_NOTE: TrilingualString = {
+  en: 'Break-even = Total Cost ÷ Price (for yield) or ÷ Yield (for price). Gross Margin = Revenue − Variable Cost. Downside sensitivity tests −10% yield and +10% input costs.',
+  ar: 'معادلة التعادل = التكلفة الإجمالية ÷ السعر (للإنتاج) أو ÷ الإنتاج (للسعر). الهامش الإجمالي = الإيراد − التكلفة المتغيرة. اختبار الحساسية يفحص انخفاض الإنتاج −10% وزيادة التكاليف +10%.',
+  fr: 'Seuil de rentabilité = Coût total ÷ Prix (rendement) ou ÷ Rendement (prix). Marge = Revenu − Coût variable. Sensibilité : −10% rdt et +10% coûts.',
+};
 
 export function GrossMarginPlanner() {
   const { language, isRTL } = useTranslation();
@@ -221,99 +240,39 @@ ${portfolio.scenarios
   }
 
   return (
-    <div className="w-full space-y-6 max-w-7xl mx-auto" dir={isRTL ? 'rtl' : 'ltr'}>
-      {/* Hero Header Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-950 via-stone-900 to-emerald-950 text-white p-6 shadow-xl border border-amber-800/40">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2">
-              <span className="p-2.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 shadow-inner">
-                <Scale className="h-6 w-6 text-amber-300" />
-              </span>
-              <div>
-                <h2 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-                  {tr(
-                    'Gross-Margin & Break-Even Portfolio Planner',
-                    'مخطّط الهامش الإجمالي ونقطة التعادل ومحفظة المحاصيل',
-                    'Planificateur de Marge Brute & Seuil de Rentabilité'
-                  )}
-                  <Badge variant="outline" className="bg-amber-500/20 text-amber-200 border-amber-400/40 text-[10px] uppercase tracking-wider">
-                    Financial Ag
-                  </Badge>
-                </h2>
-              </div>
-            </div>
-            <p className="text-sm text-amber-100/90 max-w-3xl leading-relaxed">
-              {tr(
-                'Compare multi-crop allocations by variable and fixed expenses, unit revenue, break-even thresholds, and downside sensitivity before committing field acreage.',
-                'قارن خيارات توزيع المحاصيل حسب التكاليف المتغيرة والثابتة والإيراد ونقاط التعادل وحساسية المخاطر قبل الالتزام بمساحة الحقل.',
-                'Analysez la rentabilité des cultures, les seuils de rentabilité et la sensibilité aux risques.'
-              )}
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              onClick={handleCopySummary}
-              variant="outline"
-              size="sm"
-              className="bg-white/15 hover:bg-white/25 text-white border-white/25 backdrop-blur font-semibold shadow-sm"
-            >
-              {copied ? (
-                <>
-                  <Check className="h-4 w-4 mr-1 text-emerald-300" />
-                  {tr('Copied!', 'تم النسخ!', 'Copié !')}
-                </>
-              ) : (
-                <>
-                  <Copy className="h-4 w-4 mr-1 text-amber-300" />
-                  {tr('Copy Plan', 'نسخ الخطة', 'Copier')}
-                </>
-              )}
-            </Button>
-            <Button
-              onClick={printPlan}
-              variant="outline"
-              size="sm"
-              className="bg-white/15 hover:bg-white/25 text-white border-white/25 backdrop-blur font-semibold shadow-sm"
-            >
-              <Download className="h-4 w-4 mr-1 text-amber-300" />
-              {tr('Print PDF', 'طباعة PDF', 'Imprimer')}
-            </Button>
-          </div>
-        </div>
-
-        {/* Quick Toolbar */}
-        <div className="mt-5 pt-4 border-t border-white/15 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2 flex-wrap">
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={loadSavedBaseline}
-              className="bg-white/10 hover:bg-white/20 text-white border-white/20 backdrop-blur text-xs"
-            >
-              <RefreshCw className="h-3.5 w-3.5 mr-1" />
-              {tr('Load Financial Store Baseline', 'استيراد السجلات المالية المحفوظة', 'Charger base compta')}
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={resetScenarios}
-              className="bg-white/10 hover:bg-white/20 text-white border-white/20 backdrop-blur text-xs"
-            >
-              {tr('Reset Scenarios', 'إعادة ضبط', 'Réinitialiser')}
-            </Button>
-          </div>
-
-          <div className="flex items-center gap-2 text-xs text-amber-200/80">
-            <ShieldCheck className="h-4 w-4 text-emerald-400" />
-            <span>{tr('Break-even = Total Cost ÷ Price / Yield', 'معادلة التعادل = التكلفة الإجمالية ÷ السعر أو الإنتاج', 'Seuil = Coût total ÷ Prix / Rdt')}</span>
-          </div>
-        </div>
-      </div>
-
+    <CalculatorShell
+      icon={DollarSign}
+      title={TITLE}
+      description={DESC}
+      badge="Financial Ag"
+      accent="emerald"
+      actions={[
+        {
+          icon: Copy,
+          label: { en: 'Copy Summary', ar: 'نسخ التقرير', fr: 'Copier' },
+          onClick: handleCopySummary,
+          variant: 'primary',
+          showCheck: copied,
+        },
+        {
+          icon: Download,
+          label: { en: 'Print PDF', ar: 'طباعة PDF', fr: 'Imprimer' },
+          onClick: printPlan,
+        },
+        {
+          icon: RefreshCw,
+          label: { en: 'Load Baseline', ar: 'استيراد الأساس', fr: 'Base compta' },
+          onClick: loadSavedBaseline,
+        },
+        {
+          icon: RotateCcw,
+          label: { en: 'Reset', ar: 'إعادة تعيين', fr: 'Réinitialiser' },
+          onClick: resetScenarios,
+        },
+      ]}
+      protocolNote={PROTOCOL_NOTE}
+    >
+      <div className="lg:col-span-12 space-y-6">
       {savedBaseline !== null && (
         <div className="p-3.5 rounded-2xl border border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 text-xs text-emerald-800 dark:text-emerald-200 flex items-center gap-2">
           <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
@@ -635,6 +594,7 @@ ${portfolio.scenarios
           {tr('Add Crop Scenario', 'إضافة سيناريو محصول آخر', 'Ajouter un scénario')}
         </Button>
       </div>
-    </div>
+      </div>
+    </CalculatorShell>
   );
 }

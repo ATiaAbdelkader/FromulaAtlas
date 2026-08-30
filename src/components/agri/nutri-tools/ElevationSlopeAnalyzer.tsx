@@ -20,8 +20,7 @@
  *             frost pockets (north-facing, low-lying)?"
  */
 
-import { useState, useMemo, useCallback, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -29,6 +28,7 @@ import { Badge } from '@/components/ui/badge';
 import {
   Mountain, MapPin, Route, Grid3x3, RefreshCw, AlertTriangle,
   CheckCircle2, ArrowRight, Compass, Sun, TrendingUp, Snowflake,
+  Copy, Check, RotateCcw,
 } from 'lucide-react';
 import {
   type PathProfile, type SlopeGrid, type ElevationPoint,
@@ -36,33 +36,97 @@ import {
   classifySlope, SLOPE_CLASS_INFO, aspectCompass16, frostRiskFromAspect,
   formatElevation, formatSlope,
 } from '@/lib/elevation';
+import { copyFor, useTranslation } from '@/lib/language-store';
+import { toast } from '@/hooks/use-toast';
+import {
+  CalculatorShell,
+  type TrilingualString, type CalculatorPill,
+} from '@/components/agri/nutri-tools/CalculatorShell';
 
 type Tab = 'point' | 'path' | 'grid';
 
 const LAST_LOC_KEY = 'elevation_analyzer_last_loc_v1';
 
+const TITLE: TrilingualString = {
+  en: 'Elevation & Slope Analyzer',
+  ar: 'محلل الارتفاع والانحدار',
+  fr: 'Analyseur d\'Élévation & Pente',
+};
+
+const DESC: TrilingualString = {
+  en: 'Free Open-Meteo elevation API · no key required · point lookup · path profile · slope / aspect / hillshade / frost risk grid.',
+  ar: 'واجهة Open-Meteo المجانية للارتفاع — بدون مفتاح — نقطة، مقطع مسار، شبكة انحدار/توجيه/تظليل/خطر الصقيع.',
+  fr: 'API Open-Meteo gratuite · sans clé · point · profil de pente · grille de pente / aspect / ombrage / risque de gel.',
+};
+
+const PILL_LABEL: TrilingualString = { en: 'Mode:', ar: 'الوضع:', fr: 'Mode :' };
+
+const PROTOCOL_NOTE: TrilingualString = {
+  en: 'Elevation affects growing season length (≈0.6 °C cooler per 100 m), frost risk, and pump head for irrigation. Use this to plan crop variety selection and pipeline sizing. Each 10 m of rise ≈1 bar extra pump pressure.',
+  ar: 'يؤثر الارتفاع على طول موسم النمو (≈ 0.6 °م أبرد كل 100 م) وخطر الصقيع ورفع مضخة الري. استخدمه لتخطيط اختيار الأصناف وتحديد حجم الأنابيب. كل 10 م ارتفاع ≈ 1 بار ضغط إضافي للمضخة.',
+  fr: 'L\'élévation affecte la durée de saison (≈0,6 °C moins par 100 m), le risque de gel et la hauteur de pompage. Chaque 10 m de dénivelé ≈ 1 bar supplémentaire.',
+};
+
 export function ElevationSlopeAnalyzer() {
+  const { language } = useTranslation();
+  const tr = (en: string, ar: string, fr?: string) => copyFor(language, en, ar, fr);
   const [tab, setTab] = useState<Tab>('point');
+  const [copied, setCopied] = useState(false);
+  const [resetKey, setResetKey] = useState(0);
+  const summaryRef = useRef<(() => string) | null>(null);
+
+  const pills: CalculatorPill[] = [
+    { key: 'point', emoji: '📍', label: tr('Point', 'نقطة', 'Point') },
+    { key: 'path', emoji: '🛣️', label: tr('Path Profile', 'مقطع المسار', 'Profil') },
+    { key: 'grid', emoji: '🗺️', label: tr('Slope Grid', 'شبكة الانحدار', 'Grille') },
+  ];
+
+  const handleCopySummary = () => {
+    const text = summaryRef.current?.() ?? tr('No data yet — fetch elevation first.', 'لا توجد بيانات بعد — اجلب الارتفاع أولاً.', 'Aucune donnée — récupérez l\'élévation d\'abord.');
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    toast({ title: tr('Summary Copied!', 'تم النسخ!', 'Copié !') });
+    setTimeout(() => setCopied(false), 3000);
+  };
+
+  const handleReset = () => {
+    setResetKey(k => k + 1);
+    toast({ title: tr('Reset', 'إعادة تعيين', 'Réinitialiser') });
+  };
 
   return (
-    <Card className="overflow-hidden border-stone-200/80 shadow-sm dark:border-stone-800/80">
-      <CardHeader className="border-b border-stone-200/70 bg-gradient-to-br from-stone-50/80 via-card to-card pb-4 dark:border-stone-800/70 dark:from-stone-950/30">
-        <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-stone-100 text-stone-700 dark:bg-stone-900 dark:text-stone-300"><Mountain className="h-4 w-4" /></span> Elevation &amp; Slope Analyzer
-        </CardTitle>
-        <p className="text-[10px] text-muted-foreground">Free Open-Meteo elevation API · no key required · slope / aspect / hillshade / frost risk</p>
-        <div className="mt-3 grid grid-cols-3 gap-1 rounded-xl bg-muted/50 p-1">
-          <TabBtn active={tab === 'point'} onClick={() => setTab('point')} icon={MapPin} label="Point" />
-          <TabBtn active={tab === 'path'} onClick={() => setTab('path')} icon={Route} label="Path Profile" />
-          <TabBtn active={tab === 'grid'} onClick={() => setTab('grid')} icon={Grid3x3} label="Slope Grid" />
-        </div>
-      </CardHeader>
-      <CardContent className="p-4 sm:p-5">
-        {tab === 'point' && <PointTab />}
-        {tab === 'path' && <PathTab />}
-        {tab === 'grid' && <GridTab />}
-      </CardContent>
-    </Card>
+    <CalculatorShell
+      icon={Mountain}
+      title={TITLE}
+      description={DESC}
+      badge="Open-Meteo API"
+      accent="amber"
+      actions={[
+        {
+          icon: Copy,
+          label: { en: 'Copy Summary', ar: 'نسخ التقرير', fr: 'Copier' },
+          onClick: handleCopySummary,
+          variant: 'primary',
+          showCheck: copied,
+        },
+        {
+          icon: RotateCcw,
+          label: { en: 'Reset', ar: 'إعادة تعيين', fr: 'Réinitialiser' },
+          onClick: handleReset,
+        },
+      ]}
+      pills={pills}
+      activePill={tab}
+      onPillClick={(k) => setTab(k as Tab)}
+      pillLabel={PILL_LABEL}
+      protocolNote={PROTOCOL_NOTE}
+    >
+      <div className="lg:col-span-12 space-y-4">
+        {tab === 'point' && <PointTab key={`point-${resetKey}`} onRegisterSummary={(fn) => { summaryRef.current = fn; }} />}
+        {tab === 'path' && <PathTab key={`path-${resetKey}`} onRegisterSummary={(fn) => { summaryRef.current = fn; }} />}
+        {tab === 'grid' && <GridTab key={`grid-${resetKey}`} onRegisterSummary={(fn) => { summaryRef.current = fn; }} />}
+      </div>
+    </CalculatorShell>
   );
 }
 
@@ -70,12 +134,21 @@ export function ElevationSlopeAnalyzer() {
 // Tab 1 — Point elevation
 // ============================================================================
 
-function PointTab() {
+function PointTab({ onRegisterSummary }: { onRegisterSummary?: (fn: () => string) => void }) {
   const [lat, setLat] = useState('37.77');
   const [lng, setLng] = useState('-122.42');
   const [elev, setElev] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const frost = elev !== null ? frostRiskFromAspect(0, parseFloat(lat) >= 0 ? 'N' : 'S') : null;
+
+  useEffect(() => {
+    onRegisterSummary?.(() => {
+      if (elev === null) return 'No elevation data yet.';
+      return `=== ELEVATION LOOKUP ===\nLat: ${lat}\nLng: ${lng}\nElevation: ${formatElevation(elev)} (${elev.toFixed(1)} m)\nFrost risk: ${frost?.risk ?? 'n/a'}`;
+    });
+  }, [elev, lat, lng, frost, onRegisterSummary]);
 
   // Restore last location from localStorage on mount.
   useEffect(() => {
@@ -108,8 +181,6 @@ function PointTab() {
 
   // Auto-fetch on mount.
   useEffect(() => { fetchElev(); }, []);
-
-  const frost = elev !== null ? frostRiskFromAspect(0, parseFloat(lat) >= 0 ? 'N' : 'S') : null;
 
   return (
     <div className="space-y-3">
@@ -165,7 +236,7 @@ function PointTab() {
 // Tab 2 — Path profile
 // ============================================================================
 
-function PathTab() {
+function PathTab({ onRegisterSummary }: { onRegisterSummary?: (fn: () => string) => void }) {
   const [aLat, setALat] = useState('37.77');
   const [aLng, setALng] = useState('-122.42');
   const [bLat, setBLat] = useState('37.85');
@@ -174,6 +245,13 @@ function PathTab() {
   const [profile, setProfile] = useState<PathProfile | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    onRegisterSummary?.(() => {
+      if (!profile) return 'No path profile yet.';
+      return `=== PATH PROFILE ===\nA: ${aLat}, ${aLng}\nB: ${bLat}, ${bLng}\nAscent: ${formatElevation(profile.ascent)}\nDescent: ${formatElevation(profile.descent)}\nMax: ${formatElevation(profile.maxElev)}\nMin: ${formatElevation(profile.minElev)}\nDistance: ${(profile.totalDistance / 1000).toFixed(2)} km\nAvg slope: ${formatSlope(profile.avgSlope)}\nMax slope: ${formatSlope(profile.maxSlope)}`;
+    });
+  }, [profile, aLat, aLng, bLat, bLng, onRegisterSummary]);
 
   const fetchProfile = useCallback(async () => {
     setLoading(true); setError(null);
@@ -269,7 +347,7 @@ function PathTab() {
 // Tab 3 — Slope grid
 // ============================================================================
 
-function GridTab() {
+function GridTab({ onRegisterSummary }: { onRegisterSummary?: (fn: () => string) => void }) {
   const [nLat, setNLat] = useState('37.86');
   const [sLat, setSLat] = useState('37.83');
   const [eLng, setELng] = useState('-122.47');
@@ -280,6 +358,13 @@ function GridTab() {
   const [grid, setGrid] = useState<SlopeGrid | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    onRegisterSummary?.(() => {
+      if (!grid) return 'No slope grid yet.';
+      return `=== SLOPE GRID ===\nGrid: ${grid.cols}×${grid.rows}\nCell size: ${grid.cellSizeM.toFixed(0)} m\nAvg elevation: ${formatElevation(grid.stats.avgElevation)}\nAvg slope: ${formatSlope(grid.stats.avgSlope)}\nMax slope: ${formatSlope(grid.stats.maxSlope)}`;
+    });
+  }, [grid, onRegisterSummary]);
 
   const fetchGrid = useCallback(async () => {
     setLoading(true); setError(null);
@@ -568,15 +653,4 @@ function Stat({ icon: Icon, color, label, value, rotate }: {
   );
 }
 
-function TabBtn({ active, onClick, icon: Icon, label }: { active: boolean; onClick: () => void; icon: typeof MapPin; label: string }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={`flex min-h-9 items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium transition-colors ${active ? 'bg-stone-100 text-stone-700 shadow-sm dark:bg-stone-950/50 dark:text-stone-300' : 'text-muted-foreground hover:bg-background/70 hover:text-foreground'}`}
-    >
-      <Icon className="h-3.5 w-3.5" /><span>{label}</span>
-    </button>
-  );
-}
+// TabBtn removed — replaced by CalculatorShell pills bar.

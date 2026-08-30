@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -9,15 +8,38 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Settings, Droplets, Plus, Trash2, Download, Gauge, Sun, Trees,
-  Activity, Zap,
+  Activity, Zap, Copy, Check, RotateCcw,
 } from 'lucide-react';
 import { copyFor, useTranslation } from '@/lib/language-store';
+import { toast } from '@/hooks/use-toast';
 import {
   NOZZLES, ARC_ANGLES, getNozzle, recommendValve, recommendPipeSize,
   PLANT_WATER_NEEDS, DRIP_DEFAULTS, sizePump,
   precipitationRate,
   gpmToLpm, psiToBar, psiToKpa, hpToKw,
 } from '@/lib/irrigation-design-data';
+import {
+  CalculatorShell,
+  type TrilingualString,
+} from '@/components/agri/nutri-tools/CalculatorShell';
+
+const TITLE: TrilingualString = {
+  en: 'Irrigation System Designer',
+  ar: 'مصمم نظام الري',
+  fr: 'Concepteur de Système d\'Irrigation',
+};
+
+const DESC: TrilingualString = {
+  en: 'Multi-zone sprinkler / drip / bubbler designer with valve & pipe sizing, pump selection, and PDF export.',
+  ar: 'مصمم متعدد المناطق للرش والتنقيط والري الفقاعي مع تحديد حجم الصمامات والأنابيب، واختيار المضخة، وتصدير PDF.',
+  fr: 'Concepteur multi-zones aspersion / goutte-à-goutte / bulleur avec dimensionnement vannes & tuyaux, sélection pompe et export PDF.',
+};
+
+const PROTOCOL_NOTE: TrilingualString = {
+  en: 'Add one zone per valve or irrigation method, then size the pump from the highest-flow station. Precipitation rate = flow ÷ area. Pump head = static lift + friction loss (~1 bar per 10 m of pipe run).',
+  ar: 'أضف منطقة لكل صمام أو طريقة ري، ثم حدّد حجم المضخة وفقاً لأعلى محطة تدفقاً. معدل الهطول = التدفق ÷ المساحة. رفع المضخة = الرفع الساكن + فقد الاحتكاك (حوالي 1 بار لكل 10 أمتار من الأنبوب).',
+  fr: 'Ajoutez une zone par vanne ou méthode d\'irrigation, puis dimensionnez la pompe selon le débit max. Précipitation = débit ÷ surface. Hauteur = levée statique + pertes de charge (~1 bar par 10 m de tuyau).',
+};
 
 type ZoneType = 'sprinkler' | 'drip' | 'bubbler';
 
@@ -170,6 +192,7 @@ const localizeZoneName = (name: string, language: Parameters<typeof copyFor>[0])
 // ====================================================================
 export function IrrigationSystemDesigner() {
   const { language } = useTranslation();
+  const tr = (en: string, ar: string, fr?: string) => copyFor(language, en, ar, fr);
   const [zones, setZones] = useState<Zone[]>(sampleZones);
   const [pumpInput, setPumpInput] = useState({
     maxStationFlow_gpm: '0',
@@ -178,6 +201,7 @@ export function IrrigationSystemDesigner() {
     numberOfDutyPumps: '1',
     numberOfStandbyPumps: '1',
   });
+  const [copied, setCopied] = useState(false);
 
   const zoneFlows = zones.map(zoneGpm);
   const totalFlow = zoneFlows.reduce((a, b) => a + b, 0);
@@ -191,6 +215,32 @@ export function IrrigationSystemDesigner() {
       numberOfStandbyPumps: parseInt(pumpInput.numberOfStandbyPumps) || 0,
     });
   }, [pumpInput, maxZoneFlow]);
+
+  const handleCopySummary = () => {
+    const lines = zones.map((z, i) => {
+      const gpm = zoneFlows[i].toFixed(2);
+      const valve = recommendValve(zoneFlows[i]);
+      const pipe = recommendPipeSize(zoneFlows[i]);
+      return `${localizeZoneName(z.name, language)} (${copyFor(language, ZONE_BADGES[z.type].label, ZONE_TYPE_AR[z.type])}): ${gpm} GPM | Valve: ${valve.model} ${valve.size} | Pipe: ${pipe}`;
+    });
+    const text = `=== IRRIGATION SYSTEM DESIGN ===\nZones: ${zones.length}\nTotal flow: ${totalFlow.toFixed(2)} GPM\nMax zone flow: ${maxZoneFlow.toFixed(2)} GPM\nPump power: ${pumpResult.pumpPower_hp.toFixed(2)} HP\nTotal head: ${pumpResult.totalHead_m.toFixed(2)} m\nPressure: ${pumpResult.pressure_psi.toFixed(1)} psi\n\n${lines.join('\n')}`.trim();
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    toast({ title: tr('Summary Copied!', 'تم النسخ!', 'Copié !') });
+    setTimeout(() => setCopied(false), 3000);
+  };
+
+  const handleReset = () => {
+    setZones(sampleZones());
+    setPumpInput({
+      maxStationFlow_gpm: '0',
+      staticHead_m: '15',
+      maxDistance_m: '120',
+      numberOfDutyPumps: '1',
+      numberOfStandbyPumps: '1',
+    });
+    toast({ title: tr('Reset to sample zones', 'تمت الاستعادة للمناطق النموذجية', 'Réinitialisé') });
+  };
 
   // Mutators ---------------------------------------------------------
   const addZone = (type: ZoneType) => {
@@ -284,12 +334,29 @@ h3{color:#4338ca;margin-top:18px}</style></head><body>
 
   // Render -----------------------------------------------------------
   return (
-    <Card className="overflow-hidden border-indigo-100 shadow-sm dark:border-indigo-900/60">
-      <CardHeader className="border-b border-border/60 bg-indigo-50/50 pb-4 dark:bg-indigo-950/10">
-        <CardTitle className="flex items-center gap-2 text-base"><span className="rounded-lg bg-indigo-100 p-2 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300"><Settings className="h-4 w-4" /></span> {copyFor(language, 'Irrigation System Designer', 'مصمم نظام الري')}</CardTitle>
-        <CardDescription className="mt-1 text-xs leading-relaxed">{copyFor(language, 'Multi-zone sprinkler / drip / bubbler designer with valve &amp; pipe sizing, pump selection, and PDF export.', 'مصمم متعدد المناطق للرش والتنقيط والري الفقاعي مع تحديد حجم الصمامات والأنابيب، واختيار المضخة، وتصدير PDF.')}</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <CalculatorShell
+      icon={Droplets}
+      title={TITLE}
+      description={DESC}
+      badge="Hydraulic Design"
+      accent="sky"
+      actions={[
+        {
+          icon: Copy,
+          label: { en: 'Copy Summary', ar: 'نسخ التقرير', fr: 'Copier' },
+          onClick: handleCopySummary,
+          variant: 'primary',
+          showCheck: copied,
+        },
+        {
+          icon: RotateCcw,
+          label: { en: 'Reset', ar: 'إعادة تعيين', fr: 'Réinitialiser' },
+          onClick: handleReset,
+        },
+      ]}
+      protocolNote={PROTOCOL_NOTE}
+    >
+      <div className="lg:col-span-12 space-y-4">
         {/* Summary cards */}
         <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
           {[
@@ -421,10 +488,10 @@ h3{color:#4338ca;margin-top:18px}</style></head><body>
         </div>
 
         <Button onClick={handleExport} variant="outline" size="sm" className="h-10 w-full">
-          <Download className="h-4 w-4 mr-1" /> {copyFor(language, 'Export Design to PDF', 'تصدير التصميم إلى PDF')}
+          <Download className="h-4 w-4 mr-1" /> {tr('Export Design to PDF', 'تصدير التصميم إلى PDF', 'Exporter en PDF')}
         </Button>
-      </CardContent>
-    </Card>
+      </div>
+    </CalculatorShell>
   );
 }
 
