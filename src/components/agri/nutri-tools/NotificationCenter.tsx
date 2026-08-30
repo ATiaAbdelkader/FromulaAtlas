@@ -1,15 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import {
   Bell, Loader2, AlertTriangle, AlertCircle, Info, CheckCircle2,
-  CloudRain, Thermometer, Bug, Calendar, X, MapPin, RefreshCw,
+  CloudRain, Bug, Calendar, MapPin, RefreshCw, RotateCcw,
 } from 'lucide-react';
 import { useTranslation, type Language } from '@/lib/language-store';
+import { toast } from '@/hooks/use-toast';
+import {
+  CalculatorShell,
+  type TrilingualString,
+} from '@/components/agri/nutri-tools/CalculatorShell';
 
 interface Alert {
   id: string;
@@ -116,19 +119,31 @@ function localizeAlert(alert: Alert, language: Language): Alert {
   return { ...alert, title, message, action };
 }
 
+const TITLE: TrilingualString = {
+  en: 'Predictive Alerts Center',
+  ar: 'مركز التنبيهات التنبؤية',
+  fr: 'Centre d\'Alertes Prédictives',
+};
+
+const DESC: TrilingualString = {
+  en: 'Proactive warnings for the next 7 days — weather, disease models, and phenology. Enter your location and crop, then check alerts.',
+  ar: 'تحذيرات استباقية للأيام الـ7 القادمة — الطقس ونماذج الأمراض والفينولوجيا. أدخل موقعك ومحصولك ثم تحقّق من التنبيهات.',
+  fr: 'Avertissements proactifs pour les 7 prochains jours — météo, modèles de maladies et phénologie. Saisissez localisation et culture.',
+};
+
 export function NotificationCenter() {
-  const [open, setOpen] = useState(false);
+  const { language, isRTL } = useTranslation();
+  const tr = (en: string, ar: string, fr: string) => copyFor(language, en, ar, fr);
+
   const [loading, setLoading] = useState(false);
   const [alerts, setAlerts] = useState<AlertsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { language } = useTranslation();
 
   // Form state
   const [lat, setLat] = useState('19.4326');
   const [lng, setLng] = useState('-99.1332');
   const [crop, setCrop] = useState('tomato');
   const [plantingDate, setPlantingDate] = useState(() => {
-    // Default: 8 weeks ago
     const d = new Date();
     d.setDate(d.getDate() - 56);
     return d.toISOString().slice(0, 10);
@@ -163,7 +178,7 @@ export function NotificationCenter() {
 
   const useMyLocation = () => {
     if (!navigator.geolocation) {
-      setError('Geolocation not available in this browser');
+      setError(tr('Geolocation not available in this browser', 'تحديد الموقع غير متاح في هذا المتصفح', 'Géolocalisation indisponible'));
       return;
     }
     navigator.geolocation.getCurrentPosition(
@@ -175,80 +190,96 @@ export function NotificationCenter() {
     );
   };
 
-  // Badge count for the bell icon
+  const handleReset = () => {
+    setAlerts(null);
+    setError(null);
+    setLat('19.4326');
+    setLng('-99.1332');
+    setCrop('tomato');
+    const d = new Date();
+    d.setDate(d.getDate() - 56);
+    setPlantingDate(d.toISOString().slice(0, 10));
+    toast({ title: tr('Reset', 'إعادة', 'Réinitialisé') });
+  };
+
   const alertCount = alerts ? (alerts.summary.critical + alerts.summary.action) : 0;
 
   return (
-    <>
-      {/* Floating bell button — bottom-right (above AI Agronomist) */}
-      <button
-        onClick={() => setOpen(v => !v)}
-        className="fixed bottom-6 right-6 z-40 flex items-center justify-center h-12 w-12 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all"
-        style={{ bottom: open ? 'auto' : '6rem' }}
-        title={copyFor(language, 'Predictive alerts', 'Alertes prédictives', 'تنبيهات تنبؤية')}
-      >
-        <Bell className="h-5 w-5" />
-        {alertCount > 0 && (
-          <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-600 text-white text-[10px] font-bold flex items-center justify-center border-2 border-background">
-            {alertCount}
-          </span>
-        )}
-      </button>
-
-      {/* Alert panel */}
-      {open && (
-        <div dir={language === 'ar' ? 'rtl' : 'ltr'} className="fixed bottom-24 right-6 z-40 w-[min(440px,calc(100vw-3rem))] max-h-[70vh] flex flex-col rounded-xl border border-border bg-background shadow-2xl overflow-hidden">
-          {/* Header */}
-          <div className="flex items-center justify-between p-3 border-b border-border bg-gradient-to-br from-amber-500 to-orange-600 text-white">
-            <div className="flex items-center gap-2">
-              <div className="flex items-center justify-center h-8 w-8 rounded-full bg-white/20 backdrop-blur">
-                <Bell className="h-4 w-4" />
-              </div>
-              <div>
-                <div className="text-sm font-semibold leading-tight">{copyFor(language, 'Predictive Alerts', 'Alertes prédictives', 'التنبيهات التنبؤية')}</div>
-                <div className="text-[10px] text-amber-100/90 leading-tight">{copyFor(language, 'Weather + disease + phenology', 'Météo + maladies + phénologie', 'الطقس + الأمراض + الفينولوجيا')}</div>
-              </div>
-            </div>
-            <button onClick={() => setOpen(false)} className="text-amber-100 hover:text-white p-1 rounded hover:bg-white/10">
-              <X className="h-4 w-4" />
-            </button>
+    <CalculatorShell
+      icon={Bell}
+      title={TITLE}
+      description={DESC}
+      badge={tr('7-day forecast', 'توقعات 7 أيام', '7 jours')}
+      accent="amber"
+      actions={[
+        {
+          icon: RotateCcw,
+          label: { en: 'Reset', ar: 'إعادة', fr: 'Réinitialiser' },
+          onClick: handleReset,
+        },
+      ]}
+    >
+      <CalculatorShell.Inputs>
+        <div className="p-4 rounded-2xl border bg-card shadow-xs space-y-4">
+          <div className="flex items-center justify-between border-b pb-3">
+            <span className="text-base font-bold flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-amber-600" />
+              {tr('Location & Crop', 'الموقع والمحصول', 'Localisation & Culture')}
+            </span>
+            {alertCount > 0 && (
+              <span className="font-mono text-xs font-bold bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300 border border-red-300 rounded-full px-2 py-0.5">
+                {alertCount} {tr('priority', 'أولوية', 'priorité')}
+              </span>
+            )}
           </div>
 
-          {/* Form */}
-          <div className="p-3 border-b border-border space-y-2 bg-muted/20">
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="text-[10px] text-muted-foreground uppercase tracking-wide">{copyFor(language, 'Latitude', 'Latitude', 'خط العرض')}</label>
-                <Input value={lat} onChange={e => setLat(e.target.value)} className="h-8 text-xs" />
-              </div>
-              <div>
-                <label className="text-[10px] text-muted-foreground uppercase tracking-wide">{copyFor(language, 'Longitude', 'Longitude', 'خط الطول')}</label>
-                <Input value={lng} onChange={e => setLng(e.target.value)} className="h-8 text-xs" />
-              </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-[10px] font-bold text-foreground uppercase tracking-wide">{tr('Latitude', 'خط العرض', 'Latitude')}</label>
+              <Input value={lat} onChange={e => setLat(e.target.value)} className="mt-1 h-9 text-xs font-mono" />
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="text-[10px] text-muted-foreground uppercase tracking-wide">{copyFor(language, 'Crop', 'Culture', 'المحصول')}</label>
-                <Input value={crop} onChange={e => setCrop(e.target.value)} className="h-8 text-xs" />
-              </div>
-              <div>
-                <label className="text-[10px] text-muted-foreground uppercase tracking-wide">{copyFor(language, 'Planting date', 'Date de plantation', 'تاريخ الزراعة')}</label>
-                <Input type="date" value={plantingDate} onChange={e => setPlantingDate(e.target.value)} className="h-8 text-xs" />
-              </div>
+            <div>
+              <label className="text-[10px] font-bold text-foreground uppercase tracking-wide">{tr('Longitude', 'خط الطول', 'Longitude')}</label>
+              <Input value={lng} onChange={e => setLng(e.target.value)} className="mt-1 h-9 text-xs font-mono" />
             </div>
-            <div className="flex gap-2">
-              <Button size="sm" variant="outline" onClick={useMyLocation} className="gap-1.5 text-xs h-8">
-                <MapPin className="h-3 w-3" /> GPS
-              </Button>
-              <Button size="sm" onClick={fetchAlerts} disabled={loading} className="gap-1.5 text-xs h-8 flex-1">
-                {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
-                {copyFor(language, 'Check alerts', 'Vérifier les alertes', 'تحقّق من التنبيهات')}
-              </Button>
+            <div>
+              <label className="text-[10px] font-bold text-foreground uppercase tracking-wide">{tr('Crop', 'المحصول', 'Culture')}</label>
+              <Input value={crop} onChange={e => setCrop(e.target.value)} className="mt-1 h-9 text-xs" />
+            </div>
+            <div>
+              <label className="text-[10px] font-bold text-foreground uppercase tracking-wide">{tr('Planting date', 'تاريخ الزراعة', 'Date de plantation')}</label>
+              <Input type="date" value={plantingDate} onChange={e => setPlantingDate(e.target.value)} className="mt-1 h-9 text-xs" />
             </div>
           </div>
 
-          {/* Results */}
-          <div className="flex-1 overflow-y-auto p-3 space-y-2">
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={useMyLocation} className="gap-1.5 text-xs h-9">
+              <MapPin className="h-3.5 w-3.5" /> GPS
+            </Button>
+            <Button size="sm" onClick={fetchAlerts} disabled={loading} className="gap-1.5 text-xs h-9 flex-1 bg-amber-500 hover:bg-amber-600 text-white">
+              {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+              {tr('Check alerts', 'تحقّق من التنبيهات', 'Vérifier les alertes')}
+            </Button>
+          </div>
+
+          <div className="text-[10px] text-muted-foreground bg-muted/30 rounded p-2 leading-relaxed">
+            💡 {tr('Alerts combine Open-Meteo forecasts with disease models (Late Blight Smith Period, FAST) and crop phenology.', 'تجمع التنبيهات بين توقعات Open-Meteo ونماذج الأمراض (لفحة متأخرة فترة سميث، FAST) وفينولوجيا المحصول.', 'Les alertes combinent les prévisions Open-Meteo avec les modèles de maladies (Late Blight Smith Period, FAST) et la phénologie.')}
+          </div>
+        </div>
+      </CalculatorShell.Inputs>
+
+      <CalculatorShell.Results>
+        <div className="p-4 rounded-2xl border bg-card shadow-xs space-y-3 h-full">
+          <div className="flex items-center justify-between border-b pb-3 bg-gradient-to-r from-amber-50 via-transparent to-orange-50/50 dark:from-amber-950/30 dark:to-orange-950/20 -mx-4 -mt-4 px-4 pt-4 rounded-t-2xl">
+            <span className="text-base font-bold flex items-center gap-2">
+              🔔 {tr('Alerts', 'التنبيهات', 'Alertes')}
+            </span>
+            {alerts && (
+              <span className="text-xs text-muted-foreground">{alerts.summary.total} {tr('alerts', 'تنبيهات', 'alertes')}</span>
+            )}
+          </div>
+
+          <div dir={isRTL ? 'rtl' : 'ltr'} className="space-y-2 max-h-[460px] overflow-y-auto pr-1">
             {error && (
               <div className="text-xs text-destructive bg-destructive/10 rounded p-2 border border-destructive/30 flex items-start gap-2">
                 <AlertCircle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
@@ -258,14 +289,14 @@ export function NotificationCenter() {
 
             {loading && (
               <div className="flex items-center justify-center gap-2 py-6 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" /> {copyFor(language, 'Fetching forecast + running disease models...', 'Récupération des prévisions et exécution des modèles de maladies…', 'جلب التوقعات + تشغيل نماذج الأمراض...')}
+                <Loader2 className="h-4 w-4 animate-spin" /> {tr('Fetching forecast + running disease models...', 'جلب التوقعات + تشغيل نماذج الأمراض...', 'Récupération des prévisions et exécution des modèles de maladies…')}
               </div>
             )}
 
             {!loading && !alerts && !error && (
               <div className="text-center py-6 text-sm text-muted-foreground">
                 <Bell className="h-8 w-8 mx-auto mb-2 opacity-40" />
-                {copyFor(language, 'Enter your location and crop, then click "Check alerts" to get proactive warnings for the next 7 days.', 'Saisissez votre localisation et votre culture, puis cliquez sur « Vérifier les alertes » pour obtenir des avertissements préventifs pour les 7 prochains jours.', 'أدخل موقعك ومحصولك، ثم اضغط «تحقّق من التنبيهات» للحصول على تحذيرات استباقية للأيام الـ7 القادمة.')}
+                {tr('Enter your location and crop, then click "Check alerts" to get proactive warnings for the next 7 days.', 'أدخل موقعك ومحصولك، ثم اضغط «تحقّق من التنبيهات» للحصول على تحذيرات استباقية للأيام الـ7 القادمة.', 'Saisissez votre localisation et votre culture, puis cliquez sur « Vérifier les alertes » pour obtenir des avertissements préventifs pour les 7 prochains jours.')}
               </div>
             )}
 
@@ -273,19 +304,18 @@ export function NotificationCenter() {
               <>
                 {/* Summary */}
                 <div className="flex items-center gap-2 flex-wrap text-xs mb-2">
-                  <Badge variant="outline" className="text-[10px]">
-                    {copyFor(language, `Week ${alerts.currentWeek}/${alerts.totalWeeks}`, `Semaine ${alerts.currentWeek}/${alerts.totalWeeks}`, `أسبوع ${alerts.currentWeek}/${alerts.totalWeeks}`)}
-                  </Badge>
-                  <Badge variant="outline" className="text-[10px] capitalize">
+                  <span className="text-[10px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 rounded-full px-2 py-0.5">
+                    {tr(`Week ${alerts.currentWeek}/${alerts.totalWeeks}`, `أسبوع ${alerts.currentWeek}/${alerts.totalWeeks}`, `Semaine ${alerts.currentWeek}/${alerts.totalWeeks}`)}
+                  </span>
+                  <span className="text-[10px] font-bold bg-muted text-muted-foreground border border-border rounded-full px-2 py-0.5 capitalize">
                     {language === 'ar' ? (STAGE_AR[alerts.currentStage] ?? alerts.currentStage) : alerts.currentStage}
-                  </Badge>
-                  <span className="text-muted-foreground ml-auto">{alerts.summary.total} {copyFor(language, 'alerts', 'alertes', 'تنبيهات')}</span>
+                  </span>
                 </div>
 
                 {alerts.alerts.length === 0 ? (
                   <div className="flex items-center gap-2 p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900 text-sm">
                     <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                    <span>{copyFor(language, 'No alerts — conditions look good for the next 7 days.', 'Aucune alerte — les conditions semblent bonnes pour les 7 prochains jours.', 'لا تنبيهات — تبدو الظروف جيدة للأيام الـ7 القادمة.')}</span>
+                    <span>{tr('No alerts — conditions look good for the next 7 days.', 'لا تنبيهات — تبدو الظروف جيدة للأيام الـ7 القادمة.', 'Aucune alerte — les conditions semblent bonnes pour les 7 prochains jours.')}</span>
                   </div>
                 ) : (
                   alerts.alerts.map(rawAlert => {
@@ -306,7 +336,7 @@ export function NotificationCenter() {
                             <div className="flex items-center gap-2">
                               <span className="text-xs font-semibold" style={{ color: style.color }}>{a.title}</span>
                               {a.forecastDays != null && a.forecastDays >= 0 && (
-                                <span className="text-[9px] text-muted-foreground">{copyFor(language, `in ${a.forecastDays}d`, `dans ${a.forecastDays} j`, `خلال ${a.forecastDays}ي`)}</span>
+                                <span className="text-[9px] text-muted-foreground">{tr(`in ${a.forecastDays}d`, `خلال ${a.forecastDays}ي`, `dans ${a.forecastDays} j`)}</span>
                               )}
                             </div>
                             <p className="text-xs text-foreground mt-0.5 leading-snug">{a.message}</p>
@@ -325,7 +355,7 @@ export function NotificationCenter() {
             )}
           </div>
         </div>
-      )}
-    </>
+      </CalculatorShell.Results>
+    </CalculatorShell>
   );
 }
