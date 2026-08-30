@@ -33,9 +33,16 @@ import {
   ArrowRight,
   ShieldCheck,
   ShieldAlert,
+  RotateCcw,
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useTranslation, copyFor } from '@/lib/language-store';
+import {
+  CalculatorShell,
+  type TrilingualString,
+  type CalculatorAction,
+  type CalculatorPill,
+} from '@/components/agri/nutri-tools/CalculatorShell';
 
 // ============================================================================
 // Types & Chemical Database
@@ -516,6 +523,34 @@ export const PRESET_RECIPES: PresetRecipe[] = [
 ];
 
 // ============================================================================
+// Trilingual UI Strings
+// ============================================================================
+
+const TITLE: TrilingualString = {
+  en: 'Fertigation Tank Mix & Compatibility Solver (A & B Tanks)',
+  ar: 'حاسبة خلط وتنظيم خزانات التسميد (الخزان أ و ب والأحماض)',
+  fr: 'Calculateur de Mélange Fertigation (Bacs A, B & Acide)',
+};
+
+const DESCRIPTION: TrilingualString = {
+  en: 'Closed-loop stock solution solver preventing tricalcium phosphate & gypsum precipitation, calculating precise dilution injection rates, and delivering target ppm and dripper EC.',
+  ar: 'نظام خبير لحساب محاليل الأم وتوزيع الأسمدة الذائبة ومنع الترسيب الكيميائي وانسداد النقاطات مع ضبط الـ EC والـ ppm بدقة متناهية.',
+  fr: 'Calcul des solutions mères, compatibilité chimique stricte et calcul d’injection selon la CE et ppm cibles.',
+};
+
+const PILL_LABEL: TrilingualString = {
+  en: 'Quick Crop Presets:',
+  ar: 'نماذج محاصيل سريعة:',
+  fr: 'Formules rapides :',
+};
+
+const PROTOCOL_NOTE: TrilingualString = {
+  en: 'Always separate Calcium (Tank A) from Phosphates and Sulfates (Tank B) to prevent insoluble precipitates (Tricalcium Phosphate, Gypsum). Concentrated acids (HNO₃, H₃PO₄) go in Tank C for pH regulation.',
+  ar: 'افصل دائمًا الكالسيوم (الخزان أ) عن الفوسفات والكبريتات (الخزان ب) لمنع الترسيب غير الذائب (فوسفات ثلاثي الكالسيوم، الجبس). الأحماض المركزة (HNO₃، H₃PO₄) في الخزان ج لضبط الحموضة.',
+  fr: 'Séparez toujours le Calcium (Bac A) des Phosphates et Sulfates (Bac B) pour éviter les précipités insolubles (Phosphate Tricalcique, Gypse). Les acides concentrés (HNO₃, H₃PO₄) vont dans le Bac C pour la régulation du pH.',
+};
+
+// ============================================================================
 // Main Component
 // ============================================================================
 
@@ -554,6 +589,9 @@ export function FertigationTankMixer() {
   // Active view tab
   const [activeTab, setActiveTab] = useState<'tanks' | 'dripper' | 'compat' | 'acid' | 'export'>('tanks');
 
+  // Copy action checkmark state
+  const [copied, setCopied] = useState(false);
+
   // Load Preset
   const handleLoadPreset = (presetId: string) => {
     const p = PRESET_RECIPES.find((x) => x.id === presetId);
@@ -569,6 +607,121 @@ export function FertigationTankMixer() {
     toast({
       title: tr('Preset Loaded', 'تم تحميل التركيبة النموذجية', 'Recette chargée'),
       description: isAr ? p.name_ar : isFr ? p.name_fr : p.name,
+    });
+  };
+
+  // ==========================================================================
+  // Copy Summary to Clipboard
+  // ==========================================================================
+  const handleCopySummary = () => {
+    const buildTankBreakdown = (tank: 'A' | 'B' | 'C', unit: string) =>
+      additions
+        .filter((a) => a.tank === tank && a.kgPerTank > 0)
+        .map((a) => {
+          const f = STOCK_FERTILIZERS.find((x) => x.id === a.fertilizerId);
+          return `  - ${f?.name ?? a.fertilizerId}: ${a.kgPerTank} ${unit}`;
+        })
+        .join('\n');
+
+    const summary = [
+      'FERTIGATION TANK MIXER — RECIPE SUMMARY',
+      '=========================================',
+      '',
+      'SYSTEM PARAMETERS',
+      `  Stock Tank Volume  : ${tankCapacityL} L`,
+      `  Dilution Ratio    : 1:${dilutionRatio} (${(100 / dilutionRatio).toFixed(1)}%)`,
+      `  Source Water EC    : ${waterEC} dS/m`,
+      `  Water HCO3-        : ${waterHCO3} mg/L`,
+      `  Target Dripper pH : ${targetDripperPH}`,
+      `  Water Temperature : ${waterTempC} °C`,
+      '',
+      'FINAL DRIPPER OUTPUT',
+      `  Delivered EC      : ${finalDripperNutrients.finalEC} dS/m`,
+      `    Water EC         : ${waterEC} dS/m`,
+      `    Fertilizer EC    : ${finalDripperNutrients.fertilizerEC} dS/m`,
+      '',
+      'TANK A (Calcium + Iron)',
+      buildTankBreakdown('A', 'kg') || '  (empty)',
+      `  Total: ${tankStats.tanks.A.totalKg.toFixed(1)} kg @ ${tankStats.concA.toFixed(1)} g/L`,
+      '',
+      'TANK B (Phosphates + Sulfates + Micros)',
+      buildTankBreakdown('B', 'kg') || '  (empty)',
+      `  Total: ${tankStats.tanks.B.totalKg.toFixed(1)} kg @ ${tankStats.concB.toFixed(1)} g/L`,
+      '',
+      'TANK C (Acid / pH Control)',
+      buildTankBreakdown('C', 'L') || '  (empty)',
+      `  Total: ${tankStats.tanks.C.totalKg.toFixed(1)} L`,
+      '',
+      'MACRO NUTRIENTS AT DRIPPER (ppm / meq/L)',
+      `  N-NO3 : ${finalDripperNutrients.n_no3} ppm  (${finalDripperNutrients.no3_meq} meq/L)`,
+      `  N-NH4 : ${finalDripperNutrients.n_nh4} ppm  (${finalDripperNutrients.nh4_meq} meq/L)`,
+      `  P     : ${finalDripperNutrients.p} ppm  (${finalDripperNutrients.h2po4_meq} meq/L)`,
+      `  K     : ${finalDripperNutrients.k} ppm  (${finalDripperNutrients.k_meq} meq/L)`,
+      `  Ca    : ${finalDripperNutrients.ca} ppm  (${finalDripperNutrients.ca_meq} meq/L)`,
+      `  Mg    : ${finalDripperNutrients.mg} ppm  (${finalDripperNutrients.mg_meq} meq/L)`,
+      `  S     : ${finalDripperNutrients.s} ppm  (${finalDripperNutrients.so4_meq} meq/L)`,
+      '',
+      'MICRO NUTRIENTS AT DRIPPER (ppm)',
+      `  Fe: ${finalDripperNutrients.fe}  Mn: ${finalDripperNutrients.mn}  Zn: ${finalDripperNutrients.zn}`,
+      `  Cu: ${finalDripperNutrients.cu}  B : ${finalDripperNutrients.b}  Mo: ${finalDripperNutrients.mo}`,
+      '',
+      'ACID NEUTRALIZATION REQUIREMENT',
+      `  HCO3- to neutralize : ${acidRequirement.meqToNeutralize} meq/L`,
+      `  Nitric Acid (60%)   : ${acidRequirement.nitricLPerTank} L per ${tankCapacityL}L tank`,
+      `  Phosphoric Acid 85% : ${acidRequirement.phosphoricLPerTank} L per ${tankCapacityL}L tank`,
+      '',
+      '=========================================',
+    ].join('\n');
+
+    try {
+      navigator.clipboard?.writeText(summary);
+    } catch {
+      // Clipboard API not available — ignore silently
+    }
+    setCopied(true);
+    toast({
+      title: tr('Summary Copied', 'تم نسخ الملخص', 'Résumé Copié'),
+      description: tr(
+        'Recipe details copied to clipboard',
+        'تم نسخ تفاصيل التركيبة إلى الحافظة',
+        'Détails de la recette copiés dans le presse-papiers'
+      ),
+    });
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  // ==========================================================================
+  // Reset All Parameters to Defaults
+  // ==========================================================================
+  const handleReset = () => {
+    setTankCapacityL(1000);
+    setDilutionRatio(100);
+    setWaterEC(0.5);
+    setWaterHCO3(180);
+    setTargetDripperPH(5.8);
+    setWaterTempC(20);
+    setAdditions([
+      { fertilizerId: 'calcium-nitrate', tank: 'A', kgPerTank: 90 },
+      { fertilizerId: 'potassium-nitrate-a', tank: 'A', kgPerTank: 35 },
+      { fertilizerId: 'fe-eddha', tank: 'A', kgPerTank: 1.8 },
+      { fertilizerId: 'mkp-b', tank: 'B', kgPerTank: 30 },
+      { fertilizerId: 'sop-b', tank: 'B', kgPerTank: 45 },
+      { fertilizerId: 'magnesium-sulfate-b', tank: 'B', kgPerTank: 50 },
+      { fertilizerId: 'zinc-sulfate-b', tank: 'B', kgPerTank: 0.15 },
+      { fertilizerId: 'manganese-sulfate-b', tank: 'B', kgPerTank: 0.18 },
+      { fertilizerId: 'borax-solubor-b', tank: 'B', kgPerTank: 0.12 },
+      { fertilizerId: 'nitric-acid-c', tank: 'C', kgPerTank: 8.0 },
+    ]);
+    setSelectedFertToAdd('map-b');
+    setSelectedTargetTank('B');
+    setActiveTab('tanks');
+    toast({
+      title: tr('Reset Complete', 'تمت إعادة التعيين', 'Réinitialisation Terminée'),
+      description: tr(
+        'All parameters restored to defaults',
+        'تمت استعادة جميع القيم الافتراضية',
+        'Tous les paramètres réinitialisés aux valeurs par défaut'
+      ),
     });
   };
 
@@ -879,71 +1032,44 @@ export function FertigationTankMixer() {
     };
   }, [waterHCO3, tankCapacityL, dilutionRatio]);
 
+  // ==========================================================================
+  // CalculatorShell Actions & Pills
+  // ==========================================================================
+  const actions: CalculatorAction[] = [
+    {
+      icon: Copy,
+      label: { en: 'Copy Summary', ar: 'نسخ الملخص', fr: 'Copier le Résumé' },
+      onClick: handleCopySummary,
+      variant: 'primary',
+      showCheck: copied,
+    },
+    {
+      icon: RotateCcw,
+      label: { en: 'Reset', ar: 'إعادة تعيين', fr: 'Réinitialiser' },
+      onClick: handleReset,
+      variant: 'ghost',
+    },
+  ];
+
+  const pills: CalculatorPill[] = PRESET_RECIPES.map((preset) => ({
+    key: preset.id,
+    label: isAr ? preset.name_ar : isFr ? preset.name_fr : preset.name,
+  }));
+
   return (
-    <div className="space-y-6">
-      {/* Signature Hero Header Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-950 via-teal-900 to-indigo-950 text-white p-6 shadow-xl border border-emerald-700/40">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2">
-              <span className="p-2.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 shadow-inner">
-                <FlaskConical className="h-6 w-6 text-emerald-300" />
-              </span>
-              <div>
-                <h2 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-                  {tr(
-                    'Fertigation Tank Mix & Compatibility Solver (A & B Tanks)',
-                    'حاسبة خلط وتنظيم خزانات التسميد (الخزان أ و ب والأحماض)',
-                    'Calculateur de Mélange Fertigation (Bacs A, B & Acide)'
-                  )}
-                  <Badge variant="outline" className="bg-emerald-500/20 text-emerald-200 border-emerald-400/40 text-[10px] uppercase tracking-wider">
-                    Closed-Loop Solver
-                  </Badge>
-                </h2>
-              </div>
-            </div>
-            <p className="text-sm text-emerald-100/90 max-w-3xl leading-relaxed">
-              {tr(
-                'Closed-loop stock solution solver preventing tricalcium phosphate & gypsum precipitation, calculating precise dilution injection rates, and delivering target ppm and dripper EC.',
-                'نظام خبير لحساب محاليل الأم وتوزيع الأسمدة الذائبة ومنع الترسيب الكيميائي وانسداد النقاطات مع ضبط الـ EC والـ ppm بدقة متناهية.',
-                'Calcul des solutions mères, compatibilité chimique stricte et calcul d’injection selon la CE et ppm cibles.'
-              )}
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <Select onValueChange={handleLoadPreset} defaultValue="tomato-fruiting-hydro">
-              <SelectTrigger className="h-9 w-[220px] text-xs font-semibold bg-white/15 text-white border-white/25 backdrop-blur">
-                <SelectValue placeholder={tr('Load Crop Preset...', 'اختر تركيبة محصول جاهزة...', 'Charger recette...')} />
-              </SelectTrigger>
-              <SelectContent>
-                {PRESET_RECIPES.map((preset) => (
-                  <SelectItem key={preset.id} value={preset.id} className="text-xs">
-                    {isAr ? preset.name_ar : isFr ? preset.name_fr : preset.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        {/* Quick Presets Pills */}
-        <div className="mt-5 pt-4 border-t border-white/15 flex flex-wrap items-center gap-2">
-          <span className="text-xs text-emerald-200/80 font-medium mr-1">
-            {tr('Quick Crop Presets:', 'نماذج محاصيل سريعة:', 'Formules rapides :')}
-          </span>
-          {PRESET_RECIPES.map((preset) => (
-            <button
-              key={preset.id}
-              onClick={() => handleLoadPreset(preset.id)}
-              className="px-3 py-1 rounded-xl text-xs font-semibold bg-white/10 hover:bg-white/20 text-emerald-100 transition-all shadow-xs"
-            >
-              {isAr ? preset.name_ar : isFr ? preset.name_fr : preset.name}
-            </button>
-          ))}
-        </div>
-      </div>
-
+    <CalculatorShell
+      icon={FlaskConical}
+      title={TITLE}
+      description={DESCRIPTION}
+      badge="Closed-Loop Solver"
+      accent="teal"
+      actions={actions}
+      pills={pills}
+      onPillClick={handleLoadPreset}
+      pillLabel={PILL_LABEL}
+      protocolNote={PROTOCOL_NOTE}
+    >
+      <div className="lg:col-span-12 space-y-6">
       {/* Quick System Parameters Bar */}
       <Card className="border-border shadow-xs bg-card">
         <CardContent className="p-4">
@@ -1744,6 +1870,7 @@ export function FertigationTankMixer() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+      </div>
+    </CalculatorShell>
   );
 }
