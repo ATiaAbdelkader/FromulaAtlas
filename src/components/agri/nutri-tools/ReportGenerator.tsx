@@ -1,14 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
-  FileText, Download, Eye, CheckCircle2, Sparkles,
+  FileText, Download, Eye, CheckCircle2, Copy, RotateCcw,
 } from 'lucide-react';
 import {
   DEFAULT_CONFIG, generateReport, generateRecommendations, type ReportConfig,
@@ -17,26 +14,53 @@ import {
   getSoilTests, getLatestTest, computeTrends,
 } from '@/lib/soil-history-store';
 import { getEntries, computeSummary } from '@/lib/financial-store';
-import { CROP_IRRIGATION_DATA } from '@/lib/irrigation-crop-data';
 import { copyFor, useTranslation } from '@/lib/language-store';
+import { toast } from '@/hooks/use-toast';
+import {
+  CalculatorShell, type TrilingualString, type CalculatorPill,
+} from '@/components/agri/nutri-tools/CalculatorShell';
 
-const SECTION_LABELS: { key: keyof ReportConfig['includeSections']; label: string; label_ar: string; emoji: string }[] = [
-  { key: 'farmSummary', label: 'Farm Summary', label_ar: 'ملخّص المزرعة', emoji: '📋' },
-  { key: 'soilAnalysis', label: 'Soil Analysis & Trends', label_ar: 'تحليل التربة والاتجاهات', emoji: '🧪' },
-  { key: 'irrigationPlan', label: 'Irrigation Plan', label_ar: 'خطة الري', emoji: '💧' },
-  { key: 'seasonPlan', label: 'Season Plan', label_ar: 'خطة الموسم', emoji: '📅' },
-  { key: 'scoutingLog', label: 'Scouting Summary', label_ar: 'ملخّص الكشف', emoji: '🔍' },
-  { key: 'financialSummary', label: 'Financial Summary', label_ar: 'ملخّص مالي', emoji: '💰' },
-  { key: 'sustainabilityScore', label: 'Sustainability Scorecard', label_ar: 'بطاقة الاستدامة', emoji: '🌿' },
-  { key: 'weatherForecast', label: 'Weather Forecast', label_ar: 'توقعات الطقس', emoji: '🌤️' },
-  { key: 'recommendations', label: 'AI Recommendations', label_ar: 'توصيات بالذكاء', emoji: '💡' },
+const SECTION_LABELS: { key: keyof ReportConfig['includeSections']; en: string; ar: string; fr: string; emoji: string }[] = [
+  { key: 'farmSummary',          en: 'Farm Summary',              ar: 'ملخّص المزرعة',           fr: 'Résumé Ferme',           emoji: '📋' },
+  { key: 'soilAnalysis',         en: 'Soil Analysis & Trends',    ar: 'تحليل التربة والاتجاهات', fr: 'Analyse Sol & Tendances', emoji: '🧪' },
+  { key: 'irrigationPlan',       en: 'Irrigation Plan',           ar: 'خطة الري',               fr: 'Plan d\'Irrigation',     emoji: '💧' },
+  { key: 'seasonPlan',          en: 'Season Plan',               ar: 'خطة الموسم',              fr: 'Plan Saisonnier',       emoji: '📅' },
+  { key: 'scoutingLog',          en: 'Scouting Summary',          ar: 'ملخّص الكشف',             fr: 'Résumé Scout',           emoji: '🔍' },
+  { key: 'financialSummary',    en: 'Financial Summary',         ar: 'ملخّص مالي',              fr: 'Résumé Financier',      emoji: '💰' },
+  { key: 'sustainabilityScore',  en: 'Sustainability Scorecard',  ar: 'بطاقة الاستدامة',         fr: 'Scorecard Durabilité',  emoji: '🌿' },
+  { key: 'weatherForecast',      en: 'Weather Forecast',          ar: 'توقعات الطقس',            fr: 'Prévisions Météo',      emoji: '🌤️' },
+  { key: 'recommendations',      en: 'AI Recommendations',        ar: 'توصيات بالذكاء',          fr: 'Recommandations IA',    emoji: '💡' },
 ];
+
+const REPORT_TYPES = [
+  { key: 'comprehensive',  en: 'Comprehensive',  ar: 'شامل',          fr: 'Complet' },
+  { key: 'season_plan',    en: 'Season Plan',    ar: 'خطة الموسم',    fr: 'Plan Saisonnier' },
+  { key: 'soil_analysis',  en: 'Soil Analysis',  ar: 'تحليل التربة',  fr: 'Analyse Sol' },
+  { key: 'financial',      en: 'Financial',      ar: 'مالي',          fr: 'Financier' },
+  { key: 'irrigation',     en: 'Irrigation',     ar: 'ري',            fr: 'Irrigation' },
+] as const;
+
+const TITLE: TrilingualString = {
+  en: 'Report Generator',
+  ar: 'مولّد التقارير',
+  fr: 'Générateur de Rapport',
+};
+
+const DESC: TrilingualString = {
+  en: 'Pulls data from every saved tool — soil tests, financial dashboard, scouting log, season plan, irrigation program, and sustainability scorecard — and combines them into a branded multi-page PDF.',
+  ar: 'يجمع البيانات من كل أدواتك المحفوظة — سجل تحاليل التربة، اللوحة المالية، سجل الكشف، خطة الموسم، برنامج الري، وبطاقة الاستدامة — في PDF متعدّد الصفحات بهوية موحّدة.',
+  fr: 'Compile les données de tous vos outils enregistrés — historique sol, tableau financier, journal scout, plan saisonnier, programme d\'irrigation et scorecard durabilité — en un PDF multi-pages.',
+};
+
+const PILL_LABEL: TrilingualString = { en: 'Report type:', ar: 'نوع التقرير:', fr: 'Type :' };
 
 export function ReportGenerator() {
   const [config, setConfig] = useState<ReportConfig>(DEFAULT_CONFIG);
   const [preview, setPreview] = useState<string | null>(null);
-  const { isRTL, language } = useTranslation();
-  const sectionLabel = (s: typeof SECTION_LABELS[number]) => isRTL ? s.label_ar : s.label;
+  const [copied, setCopied] = useState(false);
+  const { language } = useTranslation();
+  const tr = (en: string, ar: string, fr?: string) => copyFor(language, en, ar, fr);
+  const sectionLabel = (s: typeof SECTION_LABELS[number]) => tr(s.en, s.ar, s.fr);
 
   useEffect(() => {
     // Auto-fill farm name from profile if available
@@ -131,95 +155,159 @@ export function ReportGenerator() {
     setTimeout(() => win.print(), 500);
   };
 
+  const handleReset = () => {
+    setConfig(DEFAULT_CONFIG);
+    setPreview(null);
+    toast({ title: tr('Reset done', 'تمت إعادة التعيين', 'Réinitialisé') });
+  };
+
+  const handleCopy = () => {
+    const enabledSections = SECTION_LABELS
+      .filter(s => config.includeSections[s.key])
+      .map(s => `${s.emoji} ${tr(s.en, s.ar, s.fr)}`)
+      .join('\n');
+    const text = `=== FARM REPORT ===\nFarm: ${config.farmName}\nFarmer: ${config.farmerName}\nDate: ${config.reportDate}\nType: ${config.reportType}\nSections (${Object.values(config.includeSections).filter(Boolean).length}):\n${enabledSections}`.trim();
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    toast({ title: tr('Summary copied!', 'تم النسخ!', 'Copié !') });
+    setTimeout(() => setCopied(false), 3000);
+  };
+
   const enabledCount = Object.values(config.includeSections).filter(Boolean).length;
+  const reportTypeLabel = (key: string) => {
+    const r = REPORT_TYPES.find(t => t.key === key);
+    return r ? tr(r.en, r.ar, r.fr) : key;
+  };
+
+  const pills: CalculatorPill[] = REPORT_TYPES.map(t => ({
+    key: t.key,
+    label: tr(t.en, t.ar, t.fr),
+  }));
 
   return (
-    <Card dir={isRTL ? 'rtl' : 'ltr'}>
-      {/* Report config */}
-      <div className="grid grid-cols-3 gap-2">
-        <div>
-          <Label className="text-[10px]">{isRTL ? 'اسم المزرعة' : 'Farm name'}</Label>
-          <Input value={config.farmName} onChange={e => setConfig({ ...config, farmName: e.target.value })} className="h-8 text-xs mt-0.5" />
-        </div>
-        <div>
-          <Label className="text-[10px]">{isRTL ? 'اسم المزارع' : 'Farmer name'}</Label>
-          <Input value={config.farmerName} onChange={e => setConfig({ ...config, farmerName: e.target.value })} className="h-8 text-xs mt-0.5" />
-        </div>
-        <div>
-          <Label className="text-[10px]">{isRTL ? 'تاريخ التقرير' : 'Report date'}</Label>
-          <Input type="date" value={config.reportDate} onChange={e => setConfig({ ...config, reportDate: e.target.value })} className="h-8 text-xs mt-0.5" />
-        </div>
-      </div>
-
-      {/* Report type */}
-      <div className="flex gap-1.5 flex-wrap">
-        {(['comprehensive', 'season_plan', 'soil_analysis', 'financial', 'irrigation'] as const).map(t => {
-          const labelMap: Record<string, { en: string; ar: string }> = {
-            comprehensive: { en: 'Comprehensive', ar: 'شامل' },
-            season_plan: { en: 'Season Plan', ar: 'خطة الموسم' },
-            soil_analysis: { en: 'Soil Analysis', ar: 'تحليل التربة' },
-            financial: { en: 'Financial', ar: 'مالي' },
-            irrigation: { en: 'Irrigation', ar: 'ري' },
-          };
-          return (
-            <button
-              key={t}
-              onClick={() => setConfig({ ...config, reportType: t })}
-              className={`text-[10px] px-2.5 py-1.5 rounded-md border transition-all ${config.reportType === t ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-background border-border text-muted-foreground hover:border-emerald-300'}`}
-            >
-              {isRTL ? labelMap[t].ar : labelMap[t].en}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Section toggles */}
-      <div>
-        <div className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold mb-2">{isRTL ? `تضمين الأقسام (${enabledCount} مُختار)` : `Include Sections (${enabledCount} selected)`}</div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-          {SECTION_LABELS.map(s => (
-            <label key={s.key} className="flex items-center gap-2 p-2 rounded-lg border border-border hover:bg-muted/40 cursor-pointer transition-colors">
-              <Checkbox checked={config.includeSections[s.key]} onCheckedChange={() => toggleSection(s.key)} />
-              <span className="text-xs">{s.emoji} {sectionLabel(s)}</span>
-            </label>
-          ))}
-        </div>
-      </div>
-
-      {/* Actions */}
-      <div className="flex gap-2">
-        <Button onClick={generate} variant="outline" size="sm" className="gap-1.5 text-xs flex-1">
-          <Eye className="h-3.5 w-3.5" /> {isRTL ? 'معاينة التقرير' : 'Preview Report'}
-        </Button>
-        <Button onClick={printReport} size="sm" className="gap-1.5 text-xs flex-1 bg-emerald-600 hover:bg-emerald-700">
-          <Download className="h-3.5 w-3.5" /> {isRTL ? 'تصدير PDF' : 'Generate PDF'}
-        </Button>
-      </div>
-
-      {/* Preview */}
-      {preview && (
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
-              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /> {isRTL ? `التقرير جاهز (${enabledCount} أقسام)` : `Report Ready (${enabledCount} sections)`}
+    <CalculatorShell
+      icon={FileText}
+      title={TITLE}
+      description={DESC}
+      badge="Branded PDF"
+      accent="violet"
+      actions={[
+        {
+          icon: Copy,
+          label: { en: 'Copy Summary', ar: 'نسخ الملخّص', fr: 'Copier' },
+          onClick: handleCopy,
+          variant: 'primary',
+          showCheck: copied,
+        },
+        {
+          icon: RotateCcw,
+          label: { en: 'Reset', ar: 'إعادة تعيين', fr: 'Réinitialiser' },
+          onClick: handleReset,
+        },
+      ]}
+      pills={pills}
+      activePill={config.reportType}
+      onPillClick={(k) => setConfig(c => ({ ...c, reportType: k as ReportConfig['reportType'] }))}
+      pillLabel={PILL_LABEL}
+      protocolNote={{
+        en: 'How it works: The report generator pulls data from all your saved tools — soil test history, financial dashboard, scouting log, season plan, irrigation program, and sustainability scorecard. It combines them into a branded multi-page PDF with cover page, data tables, and AI recommendations. Click "Generate PDF" to open the print dialog.',
+        ar: 'كيف يعمل: مولّد التقارير يسحب البيانات من كل أدواتك المحفوظة — سجل تحاليل التربة، اللوحة المالية، سجل الكشف، خطة الموسم، برنامج الري، وبطاقة الاستدامة. يجمعها في PDF متعدّد الصفحات بهوية مع صفحة غلاف وجداول بيانات وتوصيات بالذكاء الاصطناعي. اضغط «تصدير PDF» لفتح حوار الطباعة.',
+        fr: 'Comment ça marche : le générateur compile les données de tous vos outils enregistrés — historique sol, tableau financier, journal scout, plan saisonnier, programme d\'irrigation et scorecard durabilité — en un PDF multi-pages avec page de garde, tableaux et recommandations IA. Cliquez sur « Générer PDF » pour ouvrir la boîte d\'impression.',
+      }}
+    >
+      <CalculatorShell.Inputs>
+        <div className="p-4 rounded-2xl border bg-card shadow-xs space-y-4">
+          <div className="flex items-center justify-between border-b pb-3">
+            <span className="text-base font-bold flex items-center gap-2">
+              <FileText className="h-4 w-4 text-violet-600" />
+              {tr('Report Configuration', 'إعداد التقرير', 'Configuration du rapport')}
             </span>
-            <Badge variant="outline" className="text-[9px]">{copyFor(language, config.reportType.replace('_', ' '), config.reportType === 'season_plan' ? 'خطة الموسم' : config.reportType === 'soil_analysis' ? 'تحليل التربة' : config.reportType === 'comprehensive' ? 'شامل' : config.reportType === 'financial' ? 'مالي' : 'ري')}</Badge>
           </div>
-          <iframe srcDoc={preview} className="w-full h-[500px] rounded-lg border border-border" title={copyFor(language, 'Report Preview', 'معاينة التقرير')} />
-        </div>
-      )}
 
-      {/* Info */}
-      <div className="rounded-lg p-3 border border-sky-200 dark:border-sky-900 bg-sky-50/50 dark:bg-sky-950/20">
-        <div className="flex items-start gap-2 text-xs text-sky-700 dark:text-sky-400">
-          <Sparkles className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
-          <div>
-            <strong>{isRTL ? 'كيف يعمل:' : 'How it works:'}</strong> {isRTL
-              ? 'مولّد التقارير يسحب البيانات من كل أدواتك المحفوظة — سجل تحاليل التربة، اللوحة المالية، سجل الكشف، خطة الموسم، برنامج الري، وبطاقة الاستدامة. يجمعها في PDF متعدّد الصفحات بهوية مع صفحة غلاف وجداول بيانات وتوصيات بالذكاء الاصطناعي. اضغط «تصدير PDF» لفتح حوار الطباعة.'
-              : 'The report generator pulls data from all your saved tools — soil test history, financial dashboard, scouting log, season plan, irrigation program, and sustainability scorecard. It combines them into a branded multi-page PDF with cover page, data tables, and AI recommendations. Click "Generate PDF" to open the print dialog.'}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <CalculatorShell.InputField
+              label={tr('Farm name', 'اسم المزرعة', 'Nom de la ferme')}
+              value={config.farmName}
+              onChange={(v) => setConfig({ ...config, farmName: v })}
+              type="text"
+            />
+            <CalculatorShell.InputField
+              label={tr('Farmer name', 'اسم المزارع', 'Nom de l\'agriculteur')}
+              value={config.farmerName}
+              onChange={(v) => setConfig({ ...config, farmerName: v })}
+              type="text"
+            />
+            <CalculatorShell.InputField
+              label={tr('Report date', 'تاريخ التقرير', 'Date du rapport')}
+              type="date"
+              value={config.reportDate}
+              onChange={(v) => setConfig({ ...config, reportDate: v })}
+            />
           </div>
+
+          <div>
+            <div className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold mb-2">
+              {tr(`Include Sections (${enabledCount} selected)`, `تضمين الأقسام (${enabledCount} مُختار)`, `Sections incluses (${enabledCount} sélectionnées)`)}
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+              {SECTION_LABELS.map(s => (
+                <label
+                  key={s.key}
+                  className="flex items-center gap-2 p-2 rounded-lg border border-border hover:bg-muted/40 cursor-pointer transition-colors"
+                >
+                  <Checkbox checked={config.includeSections[s.key]} onCheckedChange={() => toggleSection(s.key)} />
+                  <span className="text-xs">{s.emoji} {sectionLabel(s)}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <Button onClick={generate} variant="outline" size="sm" className="gap-1.5 text-xs w-full">
+            <Eye className="h-3.5 w-3.5" /> {tr('Preview Report', 'معاينة التقرير', 'Aperçu du rapport')}
+          </Button>
         </div>
-      </div>
-    </Card>
+      </CalculatorShell.Inputs>
+
+      <CalculatorShell.Results>
+        <div className="p-4 rounded-2xl border bg-card shadow-xs h-full space-y-4">
+          <div className="flex items-center justify-between border-b pb-3">
+            <span className="text-base font-bold flex items-center gap-2">
+              ✨ {tr('Report Output', 'مخرجات التقرير', 'Sortie du rapport')}
+            </span>
+            {preview && (
+              <Badge variant="outline" className="text-[9px]">{reportTypeLabel(config.reportType)}</Badge>
+            )}
+          </div>
+
+          {preview ? (
+            <div className="space-y-2">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                {tr(`Report Ready (${enabledCount} sections)`, `التقرير جاهز (${enabledCount} أقسام)`, `Rapport prêt (${enabledCount} sections)`)}
+              </div>
+              <iframe
+                srcDoc={preview}
+                className="w-full h-[500px] rounded-lg border border-border"
+                title={tr('Report Preview', 'معاينة التقرير', 'Aperçu du rapport')}
+              />
+              <Button onClick={printReport} size="sm" className="gap-1.5 text-xs w-full bg-violet-600 hover:bg-violet-700">
+                <Download className="h-3.5 w-3.5" /> {tr('Generate PDF', 'تصدير PDF', 'Générer PDF')}
+              </Button>
+            </div>
+          ) : (
+            <div className="text-center py-10">
+              <FileText className="h-10 w-10 mx-auto text-muted-foreground/40 mb-2" />
+              <div className="text-sm text-muted-foreground">
+                {tr(
+                  'Select sections and click "Preview Report" to generate a branded PDF.',
+                  'اختر الأقسام واضغط «معاينة التقرير» لإنشاء PDF بهوية.',
+                  'Sélectionnez les sections et cliquez sur « Aperçu » pour générer un PDF.',
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </CalculatorShell.Results>
+    </CalculatorShell>
   );
 }
