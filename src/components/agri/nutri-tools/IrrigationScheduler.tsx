@@ -18,20 +18,22 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { copyFor, useTranslation } from '@/lib/language-store';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
 import {
   Clock, Plus, Trash2, Download, Copy, Check, Calendar as CalendarIcon,
-  Settings, Layers, Zap, Sun, Cloud, RefreshCw, AlertTriangle,
-  CheckCircle2, Play, Pause, ChevronRight, FileJson, FileCode, FileSpreadsheet,
-  Bell, Flame, Droplets, ShieldAlert, Sparkles, Send, Volume2, Globe,
+  Settings, Layers, Zap, Sun, RefreshCw,
+  Play, Pause, ChevronRight, FileJson, FileCode, FileSpreadsheet,
+  Bell, Flame, Droplets, Send, RotateCcw,
 } from 'lucide-react';
+import {
+  CalculatorShell,
+  type TrilingualString,
+} from '@/components/agri/nutri-tools/CalculatorShell';
 import {
   type IrrigationSystem, type Controller, type Zone, type Schedule, type Sequence, type SequenceZone,
   type Weekday, type Month, type ScheduleTime, type DayFilter,
@@ -54,6 +56,24 @@ import { toast } from '@/hooks/use-toast';
 const STORAGE_KEY = 'irrigation_scheduler_v1';
 const MULTI_FIELDS_KEY = 'nutriplant_fields_v1';
 
+const TITLE: TrilingualString = {
+  en: 'Irrigation Scheduler',
+  ar: 'جدولة الري',
+  fr: "Planificateur d'Irrigation",
+};
+
+const DESC: TrilingualString = {
+  en: 'Design controllers, zones, schedules, and sequences — then generate a 7-day calendar and export to YAML / CSV / JSON. Compatible with the Irrigation Unlimited Home Assistant integration.',
+  ar: 'صمّم وحدات التحكم والمناطق والجداول والتسلسلات، ثم أنشئ تقويمًا لسبعة أيام وصدّر إلى YAML / CSV / JSON. متوافق مع تكامل Irrigation Unlimited في Home Assistant.',
+  fr: "Concevez contrôleurs, zones, programmations et séquences — puis générez un calendrier sur 7 jours et exportez en YAML / CSV / JSON. Compatible avec l'intégration Irrigation Unlimited de Home Assistant.",
+};
+
+const PROTOCOL_NOTE: TrilingualString = {
+  en: 'Preamble opens the master valve before any zone (pump prime). Postamble keeps it open after zones close (prevents water hammer). Eco-mode enables cycle-and-soak for clay soils to prevent runoff. Sun events use Open-Meteo sunrise/sunset from the location configured on the Calendar tab.',
+  ar: 'التهيئة تفتح الصمام الرئيسي قبل أي منطقة (تشغيل المضخة). الختام يبقيه مفتوحًا بعد إغلاق المناطق (يمنع المطرقة المائية). الوضع الاقتصادي يفعّل الدورات والنقع للتربة الطينية لمنع الجريان السطحي. تستخدم أحداث الشمس وقت الشروق والغروب من Open-Meteo وموقع تبويب التقويم.',
+  fr: "Le préambule ouvre la vanne maîtresse avant toute zone (amorçage pompe). Le postambule la maintient ouverte après fermeture (évite le coup de bélier). L'éco-mode active cycle-et-trempage pour sols argileux. Les événements solaires utilisent les lever/coucher Open-Meteo de l'onglet Calendrier.",
+};
+
 type Tab = 'zones' | 'schedules' | 'calendar' | 'drought-alerts';
 
 interface SavedField {
@@ -65,8 +85,10 @@ interface SavedField {
 
 export function IrrigationScheduler() {
   const { language } = useTranslation();
+  const tr = (en: string, ar: string, fr: string) => copyFor(language, en, ar, fr);
   const [tab, setTab] = useState<Tab>('zones');
   const [system, setSystem] = useState<IrrigationSystem | null>(null);
+  const [copiedSummary, setCopiedSummary] = useState(false);
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -180,23 +202,88 @@ export function IrrigationScheduler() {
     } : s);
   }, []);
 
+  const handleCopySummary = () => {
+    if (!system) return;
+    const totalZones = system.controllers.reduce((s, c) => s + c.zones.length, 0);
+    const totalSchedules = system.controllers.reduce(
+      (s, c) => s + c.zones.reduce((z, zz) => z + zz.schedules.length, 0),
+      0,
+    );
+    const ecoZones = system.controllers.reduce(
+      (s, c) => s + c.zones.filter(z => z.ecoMode).length,
+      0,
+    );
+    const lines: string[] = [];
+    lines.push('=== IRRIGATION SCHEDULER SUMMARY ===');
+    lines.push(`Controllers: ${system.controllers.length}`);
+    lines.push(`Zones: ${totalZones}`);
+    lines.push(`Schedules: ${totalSchedules}`);
+    lines.push(`Eco-mode zones: ${ecoZones}`);
+    lines.push('');
+    lines.push('Controllers:');
+    for (const c of system.controllers) {
+      const cScheds = c.zones.reduce((z, zz) => z + zz.schedules.length, 0);
+      lines.push(`  - ${c.name} (${c.zones.length} zones, ${cScheds} schedules)`);
+      for (const z of c.zones) {
+        const tags: string[] = [];
+        if (z.crop) tags.push(`[${z.crop}]`);
+        if (z.stage) tags.push(`(${z.stage})`);
+        if (z.ecoMode) tags.push('⚡eco');
+        tags.push(z.enabled ? '✓' : '✗');
+        lines.push(`    • ${z.name} ${tags.join(' ')} — ${z.schedules.length} schedule(s)`);
+      }
+    }
+    navigator.clipboard.writeText(lines.join('\n'));
+    setCopiedSummary(true);
+    toast({ title: tr('Summary Copied!', 'تم النسخ!', 'Copié !') });
+    setTimeout(() => setCopiedSummary(false), 2500);
+  };
+
+  const handleReset = () => {
+    setSystem(createDefaultSystem());
+    setTab('zones');
+    toast({
+      title: tr('Reset to default system', 'تمت الاستعادة للنظام الافتراضي', 'Réinitialisé'),
+      description: tr('All controllers, zones, and schedules restored to defaults.', 'تمت استعادة جميع وحدات التحكم والمناطق والجداول إلى الإعدادات الافتراضية.', 'Tous les contrôleurs, zones et programmations ont été réinitialisés.'),
+    });
+  };
+
   if (!system) {
     return <div className="text-xs text-muted-foreground p-4">Loading…</div>;
   }
 
   return (
-    <Card className="overflow-hidden border-cyan-100 shadow-sm dark:border-cyan-900/60">
-      <CardHeader className="border-b border-border/60 bg-cyan-50/40 pb-4 dark:bg-cyan-950/10">
-        <CardTitle className="flex items-center gap-2 text-base"><span className="rounded-lg bg-cyan-100 p-2 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300"><Clock className="h-4 w-4" /></span> {copyFor(language, 'Irrigation Scheduler', 'جدولة الري')}</CardTitle>
-        <p className="text-[10px] text-muted-foreground">{copyFor(language, 'Controllers · Zones · Schedules · Sequences · Cycle-and-soak · YAML/CSV/JSON export', 'وحدات التحكم · المناطق · الجداول · التسلسلات · الدورات والنقع · تصدير YAML/CSV/JSON')}</p>
-        <div className="mt-3 grid grid-cols-2 gap-1 rounded-xl border border-border/70 bg-background/70 p-1 sm:grid-cols-4">
-          <TabBtn active={tab === 'zones'} onClick={() => setTab('zones')} icon={Settings} label={copyFor(language, 'Zones', 'المناطق')} />
-          <TabBtn active={tab === 'schedules'} onClick={() => setTab('schedules')} icon={CalendarIcon} label={copyFor(language, 'Schedules', 'الجداول')} />
-          <TabBtn active={tab === 'calendar'} onClick={() => setTab('calendar')} icon={Layers} label={copyFor(language, 'Calendar & Export', 'التقويم والتصدير')} />
-          <TabBtn active={tab === 'drought-alerts'} onClick={() => setTab('drought-alerts')} icon={Flame} label={copyFor(language, 'Drought Alerts', 'تنبيهات الجفاف')} />
+    <CalculatorShell
+      icon={Droplets}
+      title={TITLE}
+      description={DESC}
+      badge="Irrigation Unlimited"
+      accent="sky"
+      actions={[
+        {
+          icon: Copy,
+          label: { en: 'Copy Summary', ar: 'نسخ التقرير', fr: 'Copier' },
+          onClick: handleCopySummary,
+          variant: 'primary',
+          showCheck: copiedSummary,
+        },
+        {
+          icon: RotateCcw,
+          label: { en: 'Reset', ar: 'إعادة تعيين', fr: 'Réinitialiser' },
+          onClick: handleReset,
+        },
+      ]}
+      protocolNote={PROTOCOL_NOTE}
+    >
+      <div className="lg:col-span-12 space-y-4">
+        {/* Tab navigation */}
+        <div className="grid grid-cols-2 gap-1 rounded-xl border border-border/70 bg-background/70 p-1 sm:grid-cols-4">
+          <TabBtn active={tab === 'zones'} onClick={() => setTab('zones')} icon={Settings} label={copyFor(language, 'Zones', 'المناطق', 'Zones')} />
+          <TabBtn active={tab === 'schedules'} onClick={() => setTab('schedules')} icon={CalendarIcon} label={copyFor(language, 'Schedules', 'الجداول', 'Programmations')} />
+          <TabBtn active={tab === 'calendar'} onClick={() => setTab('calendar')} icon={Layers} label={copyFor(language, 'Calendar & Export', 'التقويم والتصدير', 'Calendrier & Export')} />
+          <TabBtn active={tab === 'drought-alerts'} onClick={() => setTab('drought-alerts')} icon={Flame} label={copyFor(language, 'Drought Alerts', 'تنبيهات الجفاف', 'Alertes Sécheresse')} />
         </div>
-      </CardHeader>
-      <CardContent>
+
         {tab === 'zones' && (
           <ZonesTab
             system={system}
@@ -223,8 +310,8 @@ export function IrrigationScheduler() {
             onUpdateZone={updateZone}
           />
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </CalculatorShell>
   );
 }
 
