@@ -25,12 +25,18 @@ import {
   Eye,
   EyeOff,
   Crosshair,
+  Copy,
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { copyFor, useTranslation } from '@/lib/language-store';
+import { toast } from '@/hooks/use-toast';
+import {
+  CalculatorShell,
+  type TrilingualString,
+  type CalculatorAction,
+} from '@/components/agri/nutri-tools/CalculatorShell';
 
 // ============================================================================
 // Types & Definitions
@@ -692,7 +698,7 @@ function computeIdwGrid(
 // ============================================================================
 
 export function SoilNutrientHeatmap({ className = '' }: { className?: string }) {
-  const { language, isRTL } = useTranslation();
+  const { language } = useTranslation();
   const tr = useCallback(
     (en: string, fr: string, ar: string) => copyFor(language, en, ar, fr),
     [language]
@@ -729,6 +735,7 @@ export function SoilNutrientHeatmap({ className = '' }: { className?: string }) 
     screenY: number;
   } | null>(null);
   const [isAddingSampleMode, setIsAddingSampleMode] = useState<boolean>(false);
+  const [copied, setCopied] = useState<boolean>(false);
 
   // DOM Refs
   const svgRef = useRef<SVGSVGElement | null>(null);
@@ -1340,115 +1347,151 @@ export function SoilNutrientHeatmap({ className = '' }: { className?: string }) 
   const selectedSample = samples.find((s) => s.id === selectedSampleId);
 
   // ============================================================================
+  // Copy Summary + CalculatorShell Header Configuration
+  // ============================================================================
+
+  const copySummary = useCallback(() => {
+    const preset = FIELD_PRESETS.find((p) => p.id === selectedPresetId);
+    const lang = language === 'ar' ? 'ar' : language === 'fr' ? 'fr' : 'en';
+    const lines = [
+      '=== Soil Nutrient Spatial Heatmap Summary ===',
+      `Field: ${preset?.name[lang] ?? selectedPresetId}`,
+      `Dimensions: ${fieldWidthM}m x ${fieldLengthM}m`,
+      `Area: ${fieldAreaHa} Ha`,
+      `Samples: ${samples.length} points`,
+      `Sampling Density: ${(samples.length / fieldAreaHa).toFixed(1)} / Ha`,
+      '',
+      `Active Nutrient: ${currentMeta.name[lang]}`,
+      `Unit: ${currentMeta.unit}`,
+      `Mean: ${stats.mean.toFixed(2)} ${currentMeta.unit}`,
+      `Median: ${stats.median.toFixed(2)} ${currentMeta.unit}`,
+      `Min: ${stats.min.toFixed(2)} ${currentMeta.unit}`,
+      `Max: ${stats.max.toFixed(2)} ${currentMeta.unit}`,
+      `Std Dev: ${stats.stdDev.toFixed(2)}`,
+      `Coefficient of Variation: ${stats.cv.toFixed(1)}%`,
+      `Optimal Range: ${currentMeta.optimalMin} - ${currentMeta.optimalMax} ${currentMeta.unit}`,
+      '',
+      `Prescription (${prescription.urgency}): ${prescription.actionText[lang]}`,
+    ];
+    if (prescription.rateKgHa > 0) {
+      lines.push(`VRA Dosage: ${prescription.rateKgHa} kg/ha`);
+      lines.push(`Total Parcel Need: ${prescription.totalKg} kg`);
+    }
+    lines.push('', `Interpolation: IDW (power=${idwPower}, grid=${gridResolution}x${gridResolution})`);
+
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(lines.join('\n')).catch(() => {});
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+    toast({ title: tr('Summary copied to clipboard', 'Résumé copié dans le presse-papiers', 'تم نسخ الملخص إلى الحافظة') });
+  }, [
+    selectedPresetId, language, fieldWidthM, fieldLengthM, fieldAreaHa,
+    samples.length, currentMeta, stats, prescription, idwPower, gridResolution, tr,
+  ]);
+
+  const actions: CalculatorAction[] = [
+    {
+      icon: Copy,
+      label: { en: 'Copy Summary', ar: 'نسخ الملخص', fr: 'Copier le résumé' },
+      onClick: copySummary,
+      variant: 'primary',
+      showCheck: copied,
+    },
+    {
+      icon: Download,
+      label: { en: 'Export SVG', ar: 'تصدير SVG', fr: 'Exporter SVG' },
+      onClick: exportSvgMap,
+      variant: 'ghost',
+    },
+    {
+      icon: RotateCcw,
+      label: { en: 'Reset to Preset', ar: 'إعادة للنموذج', fr: 'Réinitialiser' },
+      onClick: resetToPreset,
+      variant: 'ghost',
+    },
+  ];
+
+  const shellTitle: TrilingualString = {
+    en: 'Soil Nutrient Spatial Heatmap (D3.js)',
+    ar: 'خريطة التوزيع الحراري لمغذيات التربة (D3.js)',
+    fr: 'Cartographie Spatiale des Nutriments du Sol (D3.js)',
+  };
+
+  const shellDescription: TrilingualString = {
+    en: 'Interpolates core soil sample coordinates (N, P, K, SOM, pH, EC, CEC, Zn) across field geometries using Inverse Distance Weighting and D3 contour polygons.',
+    ar: 'نمذجة مكانية لاستيفاء عينات التربة (N, P, K, SOM, pH, EC, CEC, Zn) عبر إحداثيات الحقل باستخدام مضلعات الكنتور واستيفاء مقلوب المسافة الموزونة.',
+    fr: 'Interpole les coordonnées d’échantillons de sol (N, P, K, MOS, pH, CE, CEC, Zn) sur les parcelles par pondération inverse de la distance et contours D3.',
+  };
+
+  const shellProtocolNote: TrilingualString = {
+    en: 'IDW (Inverse Distance Weighting) interpolation with power=2.0, smoothing=0.4, 40×40 grid resolution. Contour isobands are generated via d3.contours with configurable thresholds. Color scales follow per-nutrient agronomic ranges (YlGn for N, Viridis for P, Plasma for K, Spectral for pH, RdYlBu-inverted for EC).',
+    ar: 'استيفاء IDW (مقلوب المسافة الموزونة) بقوة 2.0 وتنعيم 0.4 وشبكة بدقة 40×40. تتولد خطوط الكنتور عبر d3.contours مع عتبات قابلة للضبط. تتبع أنظمة الألوان النطاقات الزراعية لكل عنصر (YlGn للنيتروجين، Viridis للفوسفور، Plasma للبوتاسيوم، Spectral لـ pH، RdYlBu معكوس للملوحة).',
+    fr: 'Interpolation IDW (pondération inverse de la distance) avec puissance=2.0, lissage=0.4, grille 40×40. Les isobandes sont générées via d3.contours avec seuils configurables. Les palettes suivent les gammes agronomiques par nutriment (YlGn pour N, Viridis pour P, Plasma pour K, Spectral pour pH, RdYlBu inversé pour EC).',
+  };
+
+  // ============================================================================
   // Render JSX
   // ============================================================================
 
   return (
-    <Card
+    <div
       id="soil-nutrient-d3-heatmap-card"
-      dir={isRTL ? 'rtl' : 'ltr'}
-      className={`border-emerald-200/70 shadow-sm dark:border-emerald-900/60 ${className}`}
+      className={className}
     >
-      {/* Header Section */}
-      <CardHeader className="border-b bg-gradient-to-r from-emerald-50/70 via-background to-teal-50/40 pb-4 dark:from-emerald-950/30 dark:via-background dark:to-teal-950/20">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-600/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400">
-                <Grid3X3 className="h-4 w-4" />
-              </span>
-              <CardTitle className="text-base sm:text-lg font-bold tracking-tight">
-                {tr(
-                  'Soil Nutrient Spatial Heatmap (D3.js)',
-                  'Cartographie Spatiale des Nutriments du Sol (D3.js)',
-                  'خريطة التوزيع الحراري لمغذيات التربة (D3.js)'
-                )}
-              </CardTitle>
-              <Badge variant="outline" className="text-[10px] font-mono border-emerald-500/30 text-emerald-700 dark:text-emerald-300">
-                IDW Spatial Model
-              </Badge>
-            </div>
-            <p className="mt-1 text-xs text-muted-foreground max-w-2xl leading-relaxed">
-              {tr(
-                'Interpolates core soil sample coordinates (N, P, K, SOM, pH, EC, CEC, Zn) across field geometries using Inverse Distance Weighting and D3 contour polygons.',
-                'Interpole les coordonnées d’échantillons de sol (N, P, K, MOS, pH, CE, CEC, Zn) sur les parcelles par pondération inverse de la distance et contours D3.',
-                'نمذجة مكانية لاستيفاء عينات التربة (N, P, K, SOM, pH, EC, CEC, Zn) عبر إحداثيات الحقل باستخدام مضلعات الكنتور واستيفاء مقلوب المسافة الموزونة.'
-              )}
-            </p>
-          </div>
-
-          {/* Header Action Buttons */}
-          <div className="flex items-center gap-2 self-start sm:self-auto">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={exportSvgMap}
-              className="gap-1.5 text-xs h-8"
-              title={tr('Export Heatmap as SVG', 'Exporter la carte en SVG', 'تصدير الخريطة بصيغة SVG')}
-            >
-              <Download className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">{tr('Export SVG', 'Exporter SVG', 'تصدير SVG')}</span>
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={resetToPreset}
-              className="gap-1.5 text-xs h-8"
-              title={tr('Reset to Preset', 'Réinitialiser au préréglage', 'إعادة تعيين للنموذج')}
-            >
-              <RotateCcw className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">{tr('Reset', 'Réinitialiser', 'إعادة ضبط')}</span>
-            </Button>
-          </div>
-        </div>
-
-        {/* Field Preset Selector & Dimension Indicators */}
-        <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2 border-t border-border/50 text-xs">
-          <div>
-            <label className="text-[11px] font-medium text-muted-foreground block mb-1">
-              {tr('Field Parcel Preset', 'Parcelle de terrain', 'نموذج القطعة الحقلية')}
-            </label>
-            <select
-              value={selectedPresetId}
-              onChange={(e) => handlePresetSelect(e.target.value)}
-              className="w-full rounded-md border border-input bg-background px-2.5 py-1.5 text-xs font-medium focus:ring-1 focus:ring-emerald-500"
-            >
-              {FIELD_PRESETS.map((preset) => (
-                <option key={preset.id} value={preset.id}>
-                  {preset.name[language === 'ar' ? 'ar' : language === 'fr' ? 'fr' : 'en']}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex items-center justify-between sm:justify-start gap-4 px-3 py-1 rounded-md bg-muted/40 border text-[11px]">
+      <CalculatorShell
+        icon={Grid3X3}
+        title={shellTitle}
+        description={shellDescription}
+        badge="IDW Spatial Model"
+        accent="emerald"
+        actions={actions}
+        protocolNote={shellProtocolNote}
+      >
+        <div className="lg:col-span-12 space-y-4">
+          {/* Field Preset Selector & Dimension Indicators */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
             <div>
-              <span className="text-muted-foreground">{tr('Dimensions:', 'Dimensions :', 'الأبعاد:')}</span>{' '}
-              <span className="font-mono font-semibold">{fieldWidthM}m × {fieldLengthM}m</span>
+              <label className="text-[11px] font-medium text-muted-foreground block mb-1">
+                {tr('Field Parcel Preset', 'Parcelle de terrain', 'نموذج القطعة الحقلية')}
+              </label>
+              <select
+                value={selectedPresetId}
+                onChange={(e) => handlePresetSelect(e.target.value)}
+                className="w-full rounded-md border border-input bg-background px-2.5 py-1.5 text-xs font-medium focus:ring-1 focus:ring-emerald-500"
+              >
+                {FIELD_PRESETS.map((preset) => (
+                  <option key={preset.id} value={preset.id}>
+                    {preset.name[language === 'ar' ? 'ar' : language === 'fr' ? 'fr' : 'en']}
+                  </option>
+                ))}
+              </select>
             </div>
-            <div>
-              <span className="text-muted-foreground">{tr('Area:', 'Superficie :', 'المساحة:')}</span>{' '}
-              <span className="font-mono font-semibold text-emerald-600 dark:text-emerald-400">{fieldAreaHa} Ha</span>
+
+            <div className="flex items-center justify-between sm:justify-start gap-4 px-3 py-1 rounded-md bg-muted/40 border text-[11px]">
+              <div>
+                <span className="text-muted-foreground">{tr('Dimensions:', 'Dimensions :', 'الأبعاد:')}</span>{' '}
+                <span className="font-mono font-semibold">{fieldWidthM}m × {fieldLengthM}m</span>
+              </div>
+              <div>
+                <span className="text-muted-foreground">{tr('Area:', 'Superficie :', 'المساحة:')}</span>{' '}
+                <span className="font-mono font-semibold text-emerald-600 dark:text-emerald-400">{fieldAreaHa} Ha</span>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between sm:justify-start gap-4 px-3 py-1 rounded-md bg-muted/40 border text-[11px]">
+              <div>
+                <span className="text-muted-foreground">{tr('Samples:', 'Échantillons :', 'العينات:')}</span>{' '}
+                <span className="font-mono font-semibold">{samples.length} points</span>
+              </div>
+              <div>
+                <span className="text-muted-foreground">{tr('Density:', 'Densité :', 'الكثافة:')}</span>{' '}
+                <span className="font-mono font-semibold">{(samples.length / fieldAreaHa).toFixed(1)} / Ha</span>
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center justify-between sm:justify-start gap-4 px-3 py-1 rounded-md bg-muted/40 border text-[11px]">
-            <div>
-              <span className="text-muted-foreground">{tr('Samples:', 'Échantillons :', 'العينات:')}</span>{' '}
-              <span className="font-mono font-semibold">{samples.length} points</span>
-            </div>
-            <div>
-              <span className="text-muted-foreground">{tr('Density:', 'Densité :', 'الكثافة:')}</span>{' '}
-              <span className="font-mono font-semibold">{(samples.length / fieldAreaHa).toFixed(1)} / Ha</span>
-            </div>
-          </div>
-        </div>
-      </CardHeader>
-
-      <CardContent className="p-4 sm:p-5 space-y-4">
-        {/* Nutrient Selection Tabs */}
+          {/* Nutrient Selection Tabs */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 scrollbar-thin">
           {(Object.keys(NUTRIENT_METADATA) as NutrientKey[]).map((key) => {
             const meta = NUTRIENT_METADATA[key];
@@ -1822,7 +1865,8 @@ export function SoilNutrientHeatmap({ className = '' }: { className?: string }) 
             )}
           </div>
         </div>
-      </CardContent>
-    </Card>
+        </div>
+      </CalculatorShell>
+    </div>
   );
 }
