@@ -4,35 +4,48 @@
  * Service Integrations — settings panel for plugging in third-party free-tier
  * services that enhance the app once the user (or operator) adds API keys.
  *
- * Each integration:
+ * Wrapped in CalculatorShell (violet accent, Settings icon) so it visually
+ * matches the rest of the Farm-tab tools. Each integration:
  *   - Documents what it does and the free-tier limits (from free-for.dev)
  *   - Has a single input field for the key/URL
  *   - Saves to localStorage with the key `integration_<id>_v1`
  *   - Shows a "ready" badge when a key is present
  *   - Exports a `.env.local` snippet to copy-paste into Next.js env vars
- *
- * This is intentionally UI-only. The actual integrations (Clerk auth, OneSignal
- * push, MapTiler map tiles, Neon Postgres connection string, Supabase URL)
- * would be wired in follow-up PRs by reading these values from `process.env`
- * (server-side) or from a `/api/integrations` endpoint that injects them.
  */
 
 import { useState, useEffect, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Settings, Key, CheckCircle2, Copy, Check, ExternalLink,
-  Database, Bell, Map as MapIcon, Lock, Cloud, Sparkles,
+  Database, Bell, Map as MapIcon, Lock, Cloud, Sparkles, RotateCcw,
 } from 'lucide-react';
-import { useTranslation, type Language } from '@/lib/language-store';
+import { copyFor, useTranslation, type Language } from '@/lib/language-store';
+import { toast } from '@/hooks/use-toast';
+import {
+  CalculatorShell,
+  type TrilingualString,
+} from '@/components/agri/nutri-tools/CalculatorShell';
 
-function copyFor(language: Language, en: string, fr: string, ar: string) {
-  return language === 'ar' ? ar : language === 'fr' ? fr : en;
-}
+const TITLE: TrilingualString = {
+  en: 'Service Integrations',
+  ar: 'تكاملات الخدمات',
+  fr: 'Intégrations de Services',
+};
+
+const DESC: TrilingualString = {
+  en: 'Plug-in free-tier services (Clerk, Neon, Supabase, OneSignal, MapTiler, Gemini) — all have free plans, no credit card required to start.',
+  ar: 'اربط خدمات مجانية (Clerk، Neon، Supabase، OneSignal، MapTiler، Gemini) — جميعها بخطط مجانية وبدون بطاقة ائتمان للبدء.',
+  fr: 'Branchez des services gratuits (Clerk, Neon, Supabase, OneSignal, MapTiler, Gemini) — tous avec un plan gratuit, sans carte bancaire.',
+};
+
+const PROTOCOL_NOTE: TrilingualString = {
+  en: 'Keys never leave your browser until you deploy. They are only sent to the corresponding service API endpoint when that integration is actually used. The Open-Meteo weather integration needs no key — it is genuinely free.',
+  ar: 'المفاتيح لا تغادر متصفّحك حتى تنشر. تُرسَل فقط إلى نقطة API للخدمة المقابلة عند استخدام التكامل فعلياً. تكامل Open-Meteo للطقس لا يحتاج مفتاحاً — إنه مجاني فعلاً.',
+  fr: 'Les clés ne quittent jamais votre navigateur avant le déploiement. Elles ne sont envoyées qu’au point d’API du service correspondant lors de l’utilisation réelle. L’intégration Open-Meteo ne nécessite aucune clé — réellement gratuite.',
+};
 
 interface Integration {
   id: string;
@@ -137,8 +150,8 @@ const INTEGRATIONS: Integration[] = [
     id: 'maptiler',
     name: 'MapTiler — Vector map tiles',
     name_ar: 'MapTiler — بلاطات خرائط متجهة',
-    description: 'Real slippy maps for the Field Boundary Importer (#2) — replaces static SVG preview.',
-    description_ar: 'خرائط حقيقية لمستورد حدود الحقل (#2) — يستبدل معاينة SVG الثابتة.',
+    description: 'Real slippy maps for the Field Boundary Importer — replaces static SVG preview.',
+    description_ar: 'خرائط حقيقية لمستورد حدود الحقل — يستبدل معاينة SVG الثابتة.',
     freeTier: 'Free vector tiles + 4 map styles, weekly updates. 100K tile loads/mo free for non-commercial.',
     freeTier_ar: 'بلاطات متجهة مجانية + 4 أنماط خرائط، تحديثات أسبوعية. 100 ألف تحميل بلاطة/شهر مجاناً لغير التجاري.',
     unlocks: 'Interactive maps in Field Boundary Importer. Real satellite imagery basemap for scouting.',
@@ -175,6 +188,7 @@ const LS_KEYS = INTEGRATIONS.map(i => i.storageKey);
 
 export function ServiceIntegrations() {
   const { language, isRTL } = useTranslation();
+  const tr = (en: string, ar: string, fr: string) => copyFor(language, en, ar, fr);
   const [values, setValues] = useState<Record<string, string>>({});
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [showEnv, setShowEnv] = useState(false);
@@ -205,13 +219,14 @@ export function ServiceIntegrations() {
 
   const envSnippet = useMemo(() => {
     const lines = [
-      language === 'ar' ? '# .env.local — ألصق هذه القيم في جذر مشروع Next.js' : language === 'fr' ? '# .env.local — collez ces valeurs à la racine de votre projet Next.js' : '# .env.local — paste these into your Next.js project root',
-      language === 'ar' ? '# تم الإنشاء من لوحة تكاملات الخدمات' : language === 'fr' ? '# Généré par le panneau Intégrations des services' : '# Generated by Service Integrations panel',
+      tr('# .env.local — paste these into your Next.js project root', '# .env.local — ألصق هذه القيم في جذر مشروع Next.js', '# .env.local — collez ces valeurs à la racine de votre projet Next.js'),
+      tr('# Generated by Service Integrations panel', '# تم الإنشاء من لوحة تكاملات الخدمات', '# Généré par le panneau Intégrations des services'),
       '',
     ];
     for (const i of INTEGRATIONS) {
       const v = values[i.id]?.trim();
-      lines.push(`# ${language === 'ar' && i.name_ar ? i.name_ar : i.name}`);
+      const name = isRTL && i.name_ar ? i.name_ar : i.name;
+      lines.push(`# ${name}`);
       lines.push(`${i.envVar}=${v || `<your_${i.id}_here>`}`);
       lines.push('');
     }
@@ -221,23 +236,45 @@ export function ServiceIntegrations() {
   const copyEnv = () => {
     navigator.clipboard.writeText(envSnippet);
     setCopiedId('env');
+    toast({ title: tr('Copied .env.local', 'تم نسخ .env.local', '.env.local copié') });
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  const handleReset = () => {
+    for (const k of LS_KEYS) localStorage.removeItem(k);
+    setValues({});
+    setShowEnv(false);
+    toast({ title: tr('All keys cleared', 'تم مسح جميع المفاتيح', 'Toutes les clés effacées') });
+  };
+
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2">
-          <Settings className="h-4 w-4 text-slate-600" /> {isRTL ? 'تكاملات الخدمات' : 'Service Integrations'}
-        </CardTitle>
-        <div className="flex items-center gap-2 mt-1">
+    <CalculatorShell
+      icon={Settings}
+      title={TITLE}
+      description={DESC}
+      badge={tr('Settings', 'إعدادات', 'Réglages')}
+      accent="violet"
+      actions={[
+        {
+          icon: RotateCcw,
+          label: { en: 'Clear All Keys', ar: 'مسح كل المفاتيح', fr: 'Effacer les clés' },
+          onClick: handleReset,
+          variant: 'primary',
+        },
+      ]}
+      protocolNote={PROTOCOL_NOTE}
+    >
+      <div className="lg:col-span-12 space-y-3">
+        {/* Ready count banner */}
+        <div className="flex items-center gap-2 flex-wrap">
           <Badge variant={readyCount > 0 ? 'default' : 'outline'} className="text-[10px]">
-            {readyCount}/{INTEGRATIONS.length} {isRTL ? 'جاهز' : 'ready'}
+            {readyCount}/{INTEGRATIONS.length} {tr('ready', 'جاهز', 'prêtes')}
           </Badge>
-          <span className="text-[10px] text-muted-foreground">{isRTL ? 'كل الخدمات لها خطط مجانية — لا حاجة لبطاقة ائتمان للبدء.' : 'All services have free tiers — no credit card required to start.'}</span>
+          <span className="text-[10px] text-muted-foreground">
+            {tr('All services have free tiers — no credit card required to start.', 'كل الخدمات لها خطط مجانية — لا حاجة لبطاقة ائتمان للبدء.', 'Tous les services ont un plan gratuit — sans carte bancaire.')}
+          </span>
         </div>
-      </CardHeader>
-      <CardContent className="space-y-3">
+
         {/* Each integration */}
         <div className="space-y-2">
           {INTEGRATIONS.map(i => (
@@ -266,7 +303,11 @@ export function ServiceIntegrations() {
             className="gap-1.5 text-xs w-full"
           >
             <Key className="h-3.5 w-3.5" />
-            {copyFor(language, `${showEnv ? 'Hide' : 'Show'} .env.local export (${readyCount} keys set)`, `${showEnv ? 'Masquer' : 'Afficher'} l’export .env.local (${readyCount} clés configurées)`, `${showEnv ? 'إخفاء' : 'إظهار'} تصدير .env.local (${readyCount} مفاتيح مضبوطة)`)}
+            {tr(
+              `${showEnv ? 'Hide' : 'Show'} .env.local export (${readyCount} keys set)`,
+              `${showEnv ? 'إخفاء' : 'إظهار'} تصدير .env.local (${readyCount} مفاتيح مضبوطة)`,
+              `${showEnv ? 'Masquer' : 'Afficher'} l’export .env.local (${readyCount} clés configurées)`,
+            )}
           </Button>
           {showEnv && (
             <div className="mt-2 space-y-2">
@@ -277,21 +318,20 @@ export function ServiceIntegrations() {
               />
               <Button size="sm" onClick={copyEnv} className="gap-1.5 text-xs w-full">
                 {copiedId === 'env' ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
-                {copyFor(language, 'Copy .env.local to clipboard', 'Copier .env.local dans le presse-papiers', 'نسخ .env.local إلى الحافظة')}
+                {tr('Copy .env.local to clipboard', 'نسخ .env.local إلى الحافظة', 'Copier .env.local dans le presse-papiers')}
               </Button>
               <p className="text-[10px] text-muted-foreground">
-                {copyFor(language, '💡 Keys entered here are stored in your browser\'s localStorage (per-device). To deploy to production, paste the snippet above into your hosting provider\'s environment variables.', '💡 Les clés saisies ici sont stockées dans le localStorage de votre navigateur (par appareil). Pour déployer en production, collez le fragment ci-dessus dans les variables d’environnement de votre hébergeur.', '💡 المفاتيح المُدخلة هنا تُخزَّن في localStorage متصفّحك (لكل جهاز). للنشر الإنتاجي، الصق المقتطف أعلاه في متغيّرات البيئة لدى مزوّد الاستضافة.')}
+                {tr(
+                  '💡 Keys entered here are stored in your browser\'s localStorage (per-device). To deploy to production, paste the snippet above into your hosting provider\'s environment variables.',
+                  '💡 المفاتيح المُدخلة هنا تُخزَّن في localStorage متصفّحك (لكل جهاز). للنشر الإنتاجي، الصق المقتطف أعلاه في متغيّرات البيئة لدى مزوّد الاستضافة.',
+                  '💡 Les clés saisies ici sont stockées dans le localStorage de votre navigateur (par appareil). Pour déployer en production, collez le fragment ci-dessus dans les variables d’environnement de votre hébergeur.',
+                )}
               </p>
             </div>
           )}
         </div>
-
-        {/* Privacy note */}
-        <div className="rounded-md border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 p-2 text-[10px] text-muted-foreground">
-          <strong className="text-slate-700 dark:text-slate-300">{copyFor(language, 'Privacy:', 'Confidentialité :', 'الخصوصية:')}</strong> {copyFor(language, 'Keys never leave your browser until you deploy. They are only sent to the corresponding service\'s API endpoint when that integration is actually used in the app. The Open-Meteo weather integration in the ET Tracker above needs no key — it\'s genuinely free.', 'Les clés ne quittent jamais votre navigateur avant le déploiement. Elles sont envoyées uniquement au point d’API du service correspondant lorsque l’intégration est réellement utilisée. L’intégration météo Open-Meteo du suivi ET ci-dessus ne nécessite aucune clé — elle est réellement gratuite.', 'المفاتيح لا تغادر متصفّحك حتى تنشر. تُرسَل فقط إلى نقطة API للخدمة المقابلة عند استخدام التكامل فعلياً في التطبيق. تكامل Open-Meteo للطقس في متعقّب ET أعلاه لا يحتاج مفتاحاً — إنه مجاني فعلاً.')}
-        </div>
-      </CardContent>
-    </Card>
+      </div>
+    </CalculatorShell>
   );
 }
 
@@ -310,9 +350,8 @@ function IntegrationRow({
   isRTL: boolean;
   language: Language;
 }) {
+  const tr = (en: string, ar: string, fr: string) => copyFor(language, en, ar, fr);
   const ready = value.trim().length > 0;
-  const masked = i.type !== 'url' && value && !copied;
-    // No actual masking here — keep simple. The point is the user can copy.
 
   const Icon = i.icon;
   const name = isRTL && i.name_ar ? i.name_ar : i.name;
@@ -320,7 +359,7 @@ function IntegrationRow({
   const freeTier = isRTL && i.freeTier_ar ? i.freeTier_ar : i.freeTier;
   const unlocks = isRTL && i.unlocks_ar ? i.unlocks_ar : i.unlocks;
   return (
-    <div className={`rounded-md border p-2.5 transition-colors ${ready ? 'border-emerald-300 dark:border-emerald-800 bg-emerald-50/30 dark:bg-emerald-950/10' : 'border-border bg-background'}`}>
+    <div className={`rounded-md border p-2.5 transition-colors ${ready ? 'border-violet-300 dark:border-violet-800 bg-violet-50/30 dark:bg-violet-950/10' : 'border-border bg-background'}`}>
       <div className="flex items-start gap-2">
         <div
           className="shrink-0 w-8 h-8 rounded-md flex items-center justify-center"
@@ -333,10 +372,10 @@ function IntegrationRow({
             <span className="font-medium text-xs">{name}</span>
             {ready ? (
               <Badge variant="default" className="text-[9px] bg-emerald-600">
-                <CheckCircle2 className="h-2.5 w-2.5 mr-0.5" /> {copyFor(language, 'Ready', 'Prêt', 'جاهز')}
+                <CheckCircle2 className="h-2.5 w-2.5 mr-0.5" /> {tr('Ready', 'جاهز', 'Prêt')}
               </Badge>
             ) : (
-              <Badge variant="outline" className="text-[9px]">{copyFor(language, 'Not configured', 'Non configuré', 'غير مُعدّ')}</Badge>
+              <Badge variant="outline" className="text-[9px]">{tr('Not configured', 'غير مُعدّ', 'Non configuré')}</Badge>
             )}
             {i.signupUrl && (
               <a
@@ -345,14 +384,14 @@ function IntegrationRow({
                 rel="noopener noreferrer"
                 className="ml-auto text-[10px] text-blue-600 hover:underline flex items-center gap-0.5"
               >
-                {copyFor(language, 'Sign up', 'S’inscrire', 'سجّل')} <ExternalLink className="h-2.5 w-2.5" />
+                {tr('Sign up', 'سجّل', 'S’inscrire')} <ExternalLink className="h-2.5 w-2.5" />
               </a>
             )}
           </div>
           <p className="text-[10px] text-muted-foreground mt-0.5">{description}</p>
           <div className="mt-1 grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-0.5 text-[10px]">
-            <div><span className="text-muted-foreground">{copyFor(language, 'Free tier:', 'Offre gratuite :', 'الخطة المجانية:')}</span> {freeTier}</div>
-            <div><span className="text-muted-foreground">{copyFor(language, 'Unlocks:', 'Débloque :', 'يفتح:')}</span> {unlocks}</div>
+            <div><span className="text-muted-foreground">{tr('Free tier:', 'الخطة المجانية:', 'Offre gratuite :')}</span> {freeTier}</div>
+            <div><span className="text-muted-foreground">{tr('Unlocks:', 'يفتح:', 'Débloque :')}</span> {unlocks}</div>
           </div>
           <div className="mt-2 flex gap-1.5 items-center">
             <Input
