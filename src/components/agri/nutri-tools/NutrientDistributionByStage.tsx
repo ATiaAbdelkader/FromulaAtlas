@@ -1,22 +1,42 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Copy, RotateCcw, FlaskConical, Plus } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 import {
   STAGE_BASE, STAGE_OPTIONAL, STAGE_DEFAULTS, STAGE_DEFAULT_PCT, STAGE_COLORS,
 } from '@/lib/nutri-tools-data';
+import { copyFor, useTranslation } from '@/lib/language-store';
 import { CropPresetDropdown } from './CropPresetDropdown';
 import type { CropPreset } from '@/lib/crop-presets';
+import {
+  CalculatorShell,
+  type TrilingualString,
+} from '@/components/agri/nutri-tools/CalculatorShell';
 
 interface NutrientRow { id: string; label: string; total: number; }
+
+const TITLE: TrilingualString = {
+  en: 'Nutrient Distribution by Stage',
+  ar: 'توزيع العناصر الغذائية حسب المرحلة',
+  fr: 'Distribution des nutriments par stade',
+};
+
+const DESC: TrilingualString = {
+  en: 'Edit the % of total nutrient applied at each phenological stage to compute per-stage kg/ha demand.',
+  ar: 'عدّل نسبة العنصر الغذائي المطبّقة في كل مرحلة فينولوجية لحساب الاحتياج بـ كغ/هكتار لكل مرحلة.',
+  fr: "Modifiez le % d'élément nutritif total appliqué à chaque stade phénologique pour calculer la demande kg/ha par stade.",
+};
 
 /**
  * Tool 10 — Nutrient Distribution by Stage
  */
 export function NutrientDistributionByStage() {
+  const { language } = useTranslation();
+  const tr = (en: string, ar: string, fr?: string) => copyFor(language, en, ar, fr);
+
   const [nutrients, setNutrients] = useState<NutrientRow[]>(
     STAGE_BASE.map(n => ({ ...n })),
   );
@@ -28,6 +48,7 @@ export function NutrientDistributionByStage() {
     return out;
   });
   const [preset, setPreset] = useState<CropPreset | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const applyCropPreset = (p: CropPreset) => {
     setPreset(p);
@@ -106,6 +127,8 @@ export function NutrientDistributionByStage() {
       for (const n of STAGE_BASE) out[n.id] = [...STAGE_DEFAULT_PCT[n.id]];
       return out;
     });
+    setPreset(null);
+    toast({ title: tr('Reset to defaults', 'تمت استعادة الافتراضي', 'Réinitialisé') });
   };
 
   // per-nutrient sums, per-stage totals (kg/ha), and chart series
@@ -137,29 +160,74 @@ export function NutrientDistributionByStage() {
   const xAt = (i: number) => PADL + (stages.length <= 1 ? (W - PADL - PADR) / 2 : (i / (stages.length - 1)) * (W - PADL - PADR));
   const yAt = (v: number) => PADT + (H - PADT - PADB) * (1 - v / maxY);
 
+  const handleCopy = () => {
+    const lines: string[] = [];
+    lines.push('=== NUTRIENT DISTRIBUTION BY STAGE ===');
+    if (preset) lines.push(`Crop: ${preset.emoji} ${preset.name}`);
+    lines.push(`Stages: ${stages.join(' | ')}`);
+    lines.push('');
+    lines.push('Per-nutrient totals and stage splits:');
+    nutrients.forEach(n => {
+      const arr = ensureLength(pct[n.id] || [], stages.length);
+      const sum = arr.reduce((a, b) => a + (b || 0), 0);
+      const kg = arr.map(p => (n.total * (p || 0)) / 100);
+      lines.push(
+        `- ${n.label}: total ${n.total} kg/ha, Σ ${sum.toFixed(1)}% | ${stages
+          .map((s, i) => `${s}=${kg[i].toFixed(1)}kg (${arr[i] ?? 0}%)`)
+          .join(', ')}`,
+      );
+    });
+    lines.push('');
+    lines.push('Stage totals (kg/ha):');
+    computed.stageTotals.forEach((v, i) => lines.push(`- ${stages[i]}: ${v.toFixed(1)}`));
+    navigator.clipboard.writeText(lines.join('\n'));
+    setCopied(true);
+    toast({ title: tr('Summary Copied!', 'تم النسخ!', 'Copié !') });
+    setTimeout(() => setCopied(false), 3000);
+  };
+
   return (
-    <Card>
-      <CardHeader className="pb-3">
+    <CalculatorShell
+      icon={FlaskConical}
+      title={TITLE}
+      description={DESC}
+      accent="emerald"
+      actions={[
+        {
+          icon: Copy,
+          label: { en: 'Copy Summary', ar: 'نسخ الملخص', fr: 'Copier le résumé' },
+          onClick: handleCopy,
+          variant: 'primary',
+          showCheck: copied,
+        },
+        {
+          icon: RotateCcw,
+          label: { en: 'Reset', ar: 'إعادة تعيين', fr: 'Réinitialiser' },
+          onClick: reset,
+        },
+      ]}
+    >
+      <div className="lg:col-span-12 space-y-4">
+        {/* Top controls */}
         <div className="flex items-center justify-between gap-2 flex-wrap">
-          <div>
-            <CardTitle className="text-base">Nutrient Distribution by Stage</CardTitle>
-            <p className="text-xs text-muted-foreground">Edit the % of total nutrient applied at each phenological stage.</p>
-          </div>
+          <CropPresetDropdown onSelect={applyCropPreset} value={preset?.id ?? null} />
           <div className="flex items-center gap-2 flex-wrap">
-            <CropPresetDropdown onSelect={applyCropPreset} value={preset?.id ?? null} />
-            <Button size="sm" variant="outline" onClick={addNutrient} disabled={nutrients.length >= STAGE_BASE.length + STAGE_OPTIONAL.length}>+ Nutrient</Button>
-            <Button size="sm" variant="outline" onClick={addStage} disabled={stages.length >= 10}>+ Stage</Button>
-            <Button size="sm" variant="ghost" onClick={reset}>Reset</Button>
+            <Button size="sm" variant="outline" onClick={addNutrient} disabled={nutrients.length >= STAGE_BASE.length + STAGE_OPTIONAL.length}>
+              <Plus className="h-3.5 w-3.5 mr-1" /> {tr('Nutrient', 'عنصر', 'Nutriment')}
+            </Button>
+            <Button size="sm" variant="outline" onClick={addStage} disabled={stages.length >= 10}>
+              <Plus className="h-3.5 w-3.5 mr-1" /> {tr('Stage', 'مرحلة', 'Stade')}
+            </Button>
           </div>
         </div>
+
         {preset && (
-          <div className="text-[11px] rounded-md border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-200 px-2.5 py-1.5 mt-1">
+          <div className="text-[11px] rounded-md border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-200 px-2.5 py-1.5">
             <strong className="font-medium">{preset.emoji} {preset.name}:</strong>{' '}
             {preset.nutrientDistribution.notes}
           </div>
         )}
-      </CardHeader>
-      <CardContent className="space-y-4">
+
         <div className="overflow-x-auto rounded-lg border border-border/60">
           <table className="w-full text-xs">
             <thead className="bg-muted/40">
@@ -275,7 +343,7 @@ export function NutrientDistributionByStage() {
             ))}
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </CalculatorShell>
   );
 }
