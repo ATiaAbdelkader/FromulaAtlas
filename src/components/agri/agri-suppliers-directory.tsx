@@ -17,6 +17,8 @@ import {
   Layers,
   Filter,
   ShieldCheck,
+  Map as MapIcon,
+  List,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -24,6 +26,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { useTranslation, copyFor } from '@/lib/language-store';
 import { ALGERIAN_AGRI_STORES, type AgriStore } from '@/lib/algerian-agri-stores-data';
+import { AgriDealerMap } from '@/components/agri/agri-dealer-map';
 
 interface AgriSuppliersDirectoryProps {
   initialWilaya?: string;
@@ -33,6 +36,7 @@ interface AgriSuppliersDirectoryProps {
 export function AgriSuppliersDirectory({ initialWilaya = 'All', sunMode = false }: AgriSuppliersDirectoryProps) {
   const { language } = useTranslation();
   const tr = (en: string, ar: string, fr: string) => copyFor(language, en, ar, fr);
+  const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedWilaya, setSelectedWilaya] = useState<string>(initialWilaya);
@@ -85,9 +89,38 @@ export function AgriSuppliersDirectory({ initialWilaya = 'All', sunMode = false 
               </CardDescription>
             </div>
           </div>
+          {/* Map / List toggle */}
+          <div className="flex items-center gap-1 shrink-0">
+            <Button
+              variant={viewMode === 'map' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('map')}
+              className="h-8 gap-1 text-xs"
+            >
+              <MapIcon className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">{tr('Map', 'خريطة', 'Carte')}</span>
+            </Button>
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('list')}
+              className="h-8 gap-1 text-xs"
+            >
+              <List className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">{tr('List', 'قائمة', 'Liste')}</span>
+            </Button>
+          </div>
         </div>
 
-        {/* Search and Filters Bar */}
+        {/* Interactive Map View */}
+        {viewMode === 'map' && (
+          <div className="pt-3">
+            <AgriDealerMap />
+          </div>
+        )}
+
+        {/* Search and Filters Bar — only in list view */}
+        {viewMode === 'list' && (
         <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 pt-3 border-t mt-3 text-xs">
           <div className="sm:col-span-6 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
@@ -132,8 +165,11 @@ export function AgriSuppliersDirectory({ initialWilaya = 'All', sunMode = false 
             </select>
           </div>
         </div>
+        )}
+
       </CardHeader>
 
+      {viewMode === 'list' && (
       <CardContent className="p-4 sm:p-6 space-y-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* List of Retailers */}
@@ -301,6 +337,7 @@ export function AgriSuppliersDirectory({ initialWilaya = 'All', sunMode = false 
           </div>
         </div>
       </CardContent>
+      )}
     </Card>
   );
 }
