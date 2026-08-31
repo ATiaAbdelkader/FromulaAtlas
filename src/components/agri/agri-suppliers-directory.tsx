@@ -26,7 +26,13 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { useTranslation, copyFor } from '@/lib/language-store';
 import { ALGERIAN_AGRI_STORES, type AgriStore } from '@/lib/algerian-agri-stores-data';
-import { AgriDealerMap } from '@/components/agri/agri-dealer-map';
+import dynamic from 'next/dynamic';
+
+// Leaflet accesses `window` at import time — must be loaded client-side only.
+const AgriDealerMap = dynamic(
+  () => import('@/components/agri/agri-dealer-map').then((m) => m.AgriDealerMap),
+  { ssr: false, loading: () => <div className="h-[500px] flex items-center justify-center text-muted-foreground text-sm">Loading map…</div> },
+);
 
 interface AgriSuppliersDirectoryProps {
   initialWilaya?: string;

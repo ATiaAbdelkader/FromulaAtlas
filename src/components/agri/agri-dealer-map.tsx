@@ -30,13 +30,15 @@ import { useTranslation, copyFor } from '@/lib/language-store';
 import { ALGERIAN_AGRI_STORES, type AgriStore } from '@/lib/algerian-agri-stores-data';
 import { cn } from '@/lib/utils';
 
-// Fix Leaflet default icon issue with Next.js
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-});
+// Fix Leaflet default icon issue with Next.js — guard for SSR
+if (typeof window !== 'undefined') {
+  delete (L.Icon.Default.prototype as any)._getIconUrl;
+  L.Icon.Default.mergeOptions({
+    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+  });
+}
 
 // Category colors for pins
 const CATEGORY_COLORS: Record<string, string> = {
@@ -134,7 +136,7 @@ export function AgriDealerMap() {
 
   // Find nearest dealers
   const handleFindNearest = () => {
-    if (!navigator.geolocation) {
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
       alert(tr('Geolocation not supported by your browser', 'المتصفح لا يدعم تحديد الموقع', 'Géolocalisation non supportée'));
       return;
     }
