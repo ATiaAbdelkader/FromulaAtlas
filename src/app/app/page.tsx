@@ -851,11 +851,11 @@ export default function Page() {
       {/* AI Agronomist Assistant — floating chat, available on all tabs */}
       <AgronomistAssistant />
 
-      {/* Field Data Capture — floating scan button, available on all tabs */}
-      <FieldDataCapture />
+      {/* Field Data Capture — floating scan button, only on Farm + My Field tabs */}
+      {(activeTab === 'farm' || activeTab === 'myfield') && <FieldDataCapture />}
 
-      {/* Predictive Alerts — floating bell button, available on all tabs */}
-      <NotificationCenter />
+      {/* Predictive Alerts — floating bell button, only on Farm + Insights tabs */}
+      {(activeTab === 'farm' || activeTab === 'insights') && <NotificationCenter />}
 
       {/* Command Palette — Cmd+K global search, available on all tabs */}
       <CommandPalette
