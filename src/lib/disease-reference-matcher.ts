@@ -46,6 +46,9 @@ const CROP_ALIASES: Record<string, string> = {
   rice: 'rice', riz: 'rice', أرز: 'rice',
   citrus: 'citrus', agrume: 'citrus', agrumes: 'citrus', حمضيات: 'citrus', برتقال: 'citrus',
   strawberry: 'strawberry', fraise: 'strawberry', فراولة: 'strawberry',
+  // CCMT / Makerere crops
+  cashew: 'cashew', anacardier: 'cashew', anacarde: 'cashew', كاجو: 'cashew', الكاجو: 'cashew',
+  cassava: 'cassava', manioc: 'cassava', yuca: 'cassava', كاسافا: 'cassava', الكاسافا: 'cassava',
 };
 
 function normalizeText(value: unknown): string {

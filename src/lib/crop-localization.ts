@@ -27,6 +27,9 @@ const CROP_LABELS: Record<string, CropLabel> = {
   'bell-pepper': { en: 'Bell Pepper', fr: 'Poivron', ar: 'الفلفل الحلو' },
   cucumber: { en: 'Cucumber (Fresh Market)', fr: 'Concombre (marché du frais)', ar: 'الخيار (السوق الطازجة)' },
   grapes: { en: 'Grapes (Wine)', fr: 'Raisin (vin)', ar: 'العنب (النبيذ)' },
+  // === CCMT / Makerere dataset crops ===
+  cassava: { en: 'Cassava', fr: 'Manioc', ar: 'الكاسافا' },
+  cashew: { en: 'Cashew', fr: 'Anacardier', ar: 'الكاجو' },
 };
 
 export function localizedCropName(language: Language, cropId: string, fallback: string): string {
