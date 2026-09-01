@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useMemo, useState, useEffect, useRef } from 'react';
-import { Search, Sprout, Layers, BookOpen, X, Leaf, Home, Wrench, Bug, TrendingUp, Droplets, Settings, Calendar, Satellite, ShoppingCart, Users, DollarSign, RefreshCw, Beef, FlaskConical, CloudRain, Cloud, Compass, FileText, Trophy, Tractor, Sparkles, Download, Database, CheckCircle2, MapPin, Shapes, Sun, Mountain, FlaskConical as Flask, CalendarDays, Clock, Warehouse, Recycle, Wind, Flame, Snowflake, Gauge, Shield, Moon, Microscope, Activity, Scale, MessageCircle, Info, Beaker } from 'lucide-react';
+import { Search, Sprout, Layers, BookOpen, X, Leaf, Home, Wrench, Bug, TrendingUp, Droplets, Settings, Calendar, Satellite, ShoppingCart, Users, DollarSign, RefreshCw, Beef, FlaskConical, CloudRain, Cloud, Compass, FileText, Trophy, Tractor, Sparkles, Download, Database, CheckCircle2, MapPin, Shapes, Sun, Mountain, FlaskConical as Flask, CalendarDays, Clock, Warehouse, Recycle, Wind, Flame, Snowflake, Gauge, Shield, Moon, Microscope, Activity, Scale, MessageCircle, Info, Beaker, ScanFace } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -26,6 +26,7 @@ import { SustainabilityScorecard } from '@/components/agri/nutri-tools/Sustainab
 import { FieldScoutingLog } from '@/components/agri/nutri-tools/FieldScoutingLog';
 import { FieldRecordBook } from '@/components/agri/field-record-book';
 import { AIFieldScout } from '@/components/agri/ai-field-scout';
+import { DiseaseDetectionModel } from '@/components/agri/nutri-tools/DiseaseDetectionModel';
 import { CollapsibleSection } from '@/components/agri/nutri-tools/CollapsibleSection';
 import { IrrigationProgramGenerator } from '@/components/agri/nutri-tools/IrrigationProgramGenerator';
 import { IrrigationSystemDesigner } from '@/components/agri/nutri-tools/IrrigationSystemDesigner';
@@ -578,6 +579,7 @@ export default function Page() {
           <div className="space-y-3">
             <SubHeader emoji="🛡️" label={t.plantProtection} groupId="protection" />
             <CollapsibleSection title={tr('AI Field Scout', 'كشاف الحقل بالذكاء الاصطناعي', language)} description={tr('Photo and observation-based crop scouting with evidence cards, verification prompts, and safety gates', 'Prospection des cultures par photo et observation avec preuves, vérification et garde-fous de sécurité', language)} icon={Sparkles} color="#0f766e" storageKey="collapse_ai_scout" defaultOpen={false} enableExport><div className="p-4"><AIFieldScout onOpenFarmTool={(storageKey) => openTool('farm', storageKey)} /></div></CollapsibleSection>
+            <CollapsibleSection title={tr('AI Disease Detection (CNN Model)', 'كشف الأمراض بالذكاء الاصطناعي (نموذج CNN)', language)} description={tr('Upload a leaf photo → instant disease detection with 15 classes across pepper, potato, and tomato — runs in-browser, no internet needed', 'ارفع صورة ورقة ← كشف فوري للمرض عبر 15 فئة للفلفل والبطاطا والطماطم — يعمل في المتصفح بدون إنترنت', language)} icon={ScanFace} color="#dc2626" storageKey="collapse_disease_detection_cnn" defaultOpen={false} enableExport><div className="p-4"><DiseaseDetectionModel /></div></CollapsibleSection>
             <CollapsibleSection title={tr('Field Scouting Log', 'سجل الكشف الحقلي', language)} description={tr('Voice + photo field observations with severity tagging', 'ملاحظات حقلية بالصوت والصورة مع وسم درجة الخطورة', language)} icon={Sprout} color="#84cc16" storageKey="collapse_scouting" defaultOpen={false} enableExport><div className="p-4"><FieldScoutingLog /></div></CollapsibleSection>
             <CollapsibleSection title={tr('IPM Action Planner', 'مخطّط عمل الإدارة المتكاملة للآفات', language)} description={tr('Scouting evidence · action thresholds · lower-risk controls · responsible treatment review', 'أدلة الكشف · عتبات التدخل · وسائل المكافحة الأقل خطراً · مراجعة المعالجة المسؤولة', language)} icon={Bug} color="#e11d48" storageKey="collapse_ipm_action" defaultOpen={false} enableExport><div className="p-4"><IpmActionPlanner /></div></CollapsibleSection>
             {level !== 'farmer' && (
