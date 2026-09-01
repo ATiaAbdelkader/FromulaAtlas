@@ -41,6 +41,7 @@ import { CropRotationPlanner } from '@/components/agri/nutri-tools/CropRotationP
 import { SoilHealthPlanner } from '@/components/agri/nutri-tools/SoilHealthPlanner';
 import { LivestockIntegration } from '@/components/agri/nutri-tools/LivestockIntegration';
 import { SoilTestHistoryTracker } from '@/components/agri/nutri-tools/SoilTestHistoryTracker';
+import { SoilFertilityScoreWidget } from '@/components/agri/soil-fertility-score-widget';
 import { WeatherRadar } from '@/components/agri/nutri-tools/WeatherRadar';
 import { ReportGenerator } from '@/components/agri/nutri-tools/ReportGenerator';
 import { GamificationPanel } from '@/components/agri/nutri-tools/GamificationPanel';
@@ -615,6 +616,7 @@ export default function Page() {
           <div className="space-y-3">
             <SubHeader emoji="🧪" label={t.soilAndLivestock} groupId="soil" />
             <CollapsibleSection title={tr('Soil Test History Tracker', 'متعقّب سجل تحاليل التربة', language)} description={tr('Multi-year soil test tracking · Trend charts · Amendment recommendations · PDF export', 'تتبع تحاليل التربة لسنوات متعددة · رسوم بيانية للاتجاه · توصيات التعديل · تصدير PDF', language)} icon={FlaskConical} color="#8b5cf6" storageKey="collapse_soil_history" defaultOpen={false} enableExport><div className="p-4"><SoilTestHistoryTracker /></div></CollapsibleSection>
+            <CollapsibleSection title={tr('Soil Fertility Score Calculator', 'حاسبة درجة خصوبة التربة', language)} description={tr('Enter your soil test values → get a 0-100 fertility score with per-parameter breakdown + amendment recommendations · 15 parameters · weighted scoring', 'أدخل قيم تحليل التربة ← احصل على درجة خصوبة 0-100 مع تفصيل لكل معيار + توصيات التعديل · 15 معيار · تقييم موزون', language)} icon={Sprout} color="#16a34a" storageKey="collapse_fertility_score" defaultOpen={false} enableExport><div className="p-4"><SoilFertilityScoreWidget /></div></CollapsibleSection>
             {level !== 'farmer' && (
             <CollapsibleSection title={tr('Soil Color Identifier', 'معرّف لون التربة', language)} description={tr('Munsell color → mineral + drainage + iron status · US state soils · 13 minerals · 50 states', 'لون مونسيل → المعادن + الصرف + حالة الحديد · تربة الولايات المتحدة · 13 معدناً · 50 ولاية', language)} icon={Mountain} color="#78716c" storageKey="collapse_soil_color" defaultOpen={false} enableExport><div className="p-4"><SoilColorIdentifier /></div></CollapsibleSection>
             )}
