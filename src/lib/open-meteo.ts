@@ -250,12 +250,53 @@ const DAILY_VARS = [
   'uv_index_max',
 ].join(',');
 
+// ---------------------------------------------------------------------------
+// Forecast cache — prevents 429 Too Many Requests errors by caching
+// responses in memory for 30 minutes. Each cache key is based on
+// rounded lat/lng (2 decimal places ≈ 1.1 km precision) + days param.
+// ---------------------------------------------------------------------------
+
+const FORECAST_CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
+const forecastCache = new Map<string, { data: Promise<ForecastResult>; timestamp: number }>();
+
+function forecastCacheKey(lat: number, lng: number, days: number): string {
+  // Round to 2 decimal places (~1.1 km) so nearby locations share cache
+  return `${Math.round(lat * 100) / 100},${Math.round(lng * 100) / 100},${days}`;
+}
+
 /**
  * Get current + 7-day forecast for a location.
- * Free; no API key.
+ * Free; no API key. Cached for 30 minutes to avoid rate-limiting.
  */
 export async function getForecast(lat: number, lng: number, opts: { days?: number } = {}): Promise<ForecastResult> {
   const days = opts.days ?? 7;
+  const key = forecastCacheKey(lat, lng, days);
+  const now = Date.now();
+
+  // Check cache — return existing promise if still fresh
+  const cached = forecastCache.get(key);
+  if (cached && now - cached.timestamp < FORECAST_CACHE_TTL_MS) {
+    return cached.data;
+  }
+
+  // Create new fetch promise and cache it immediately (deduplicates concurrent calls)
+  const fetchPromise = fetchForecastUncached(lat, lng, days);
+  forecastCache.set(key, { data: fetchPromise, timestamp: now });
+
+  // Clean old entries (prevent memory leak)
+  if (forecastCache.size > 20) {
+    for (const [k, v] of forecastCache.entries()) {
+      if (now - v.timestamp > FORECAST_CACHE_TTL_MS) {
+        forecastCache.delete(k);
+      }
+    }
+  }
+
+  return fetchPromise;
+}
+
+/** Internal: actual API call without caching. */
+async function fetchForecastUncached(lat: number, lng: number, days: number): Promise<ForecastResult> {
   const url = `${BASE}/forecast?latitude=${lat}&longitude=${lng}&current=${FORECAST_VARS}&hourly=${HOURLY_VARS}&daily=${DAILY_VARS}&timezone=auto&forecast_days=${days}`;
   const res = await fetch(url);
   if (!res.ok) {
@@ -432,14 +473,33 @@ export interface SoilMoistureTrendResult {
  * Aggregates multi-depth volumetric soil moisture and FAO-56 Penman-Monteith ET₀.
  * Derives a 3-day predictive soil moisture curve from the 7-day historical momentum and forecasted ET₀ demand.
  */
+// Soil moisture cache (same pattern as forecast cache)
+const SM_CACHE_TTL_MS = 60 * 60 * 1000; // 60 minutes (soil moisture changes slowly)
+const smCache = new Map<string, { data: Promise<SoilMoistureTrendResult>; timestamp: number }>();
+
 export async function getSoilMoistureAndEt0Trend(
   lat: number,
   lng: number,
   opts: { pastDays?: number; forecastDays?: number } = {}
 ): Promise<SoilMoistureTrendResult> {
   const pastDays = opts.pastDays ?? 7;
-  const forecastDays = opts.forecastDays ?? 4; // Defaults to today + 3 forecast days
+  const forecastDays = opts.forecastDays ?? 4;
 
+  // Check cache
+  const smKey = `${Math.round(lat * 100) / 100},${Math.round(lng * 100) / 100},${pastDays},${forecastDays}`;
+  const smCached = smCache.get(smKey);
+  if (smCached && Date.now() - smCached.timestamp < SM_CACHE_TTL_MS) {
+    return smCached.data;
+  }
+
+  // Create the fetch promise and cache it immediately
+  const smFetchPromise = fetchSoilMoistureUncached(lat, lng, pastDays, forecastDays);
+  smCache.set(smKey, { data: smFetchPromise, timestamp: Date.now() });
+  return smFetchPromise;
+}
+
+/** Internal: actual soil moisture API call without caching. */
+async function fetchSoilMoistureUncached(lat: number, lng: number, pastDays: number, forecastDays: number): Promise<SoilMoistureTrendResult> {
   const hourlyVars = [
     'soil_moisture_0_to_1cm',
     'soil_moisture_1_to_3cm',
@@ -703,7 +763,7 @@ export async function getSoilMoistureAndEt0Trend(
     recommendedAction = 'hold_drainage';
   }
 
-  return {
+  const result: SoilMoistureTrendResult = {
     location: { lat, lng },
     timezone: data.timezone || 'auto',
     points,
@@ -720,6 +780,8 @@ export async function getSoilMoistureAndEt0Trend(
       projectedStressDate,
     },
   };
+
+  return result;
 }
 
 // ============================================================================

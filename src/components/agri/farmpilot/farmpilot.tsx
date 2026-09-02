@@ -39,9 +39,10 @@ import { getForecast, type ForecastResult } from '@/lib/open-meteo';
 import { WeatherAlertBanner } from '@/components/agri/weather-alert-banner';
 import {
   buildFieldRecordTimeline, getFieldRecordBookStats,
-  FIELD_RECORD_BOOK_CHANGED_EVENT,
-  type FieldRecord, type FieldRecordBookStats,
+  FIELD_RECORD_BOOK_CHANGED_EVENT, appendManualFieldRecord,
+  type FieldRecord, type FieldRecordBookStats, type FieldRecordKind,
 } from '@/lib/field-record-book';
+import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
 import {
@@ -1879,7 +1880,40 @@ function TodayView({
             key={task.id}
             task={task}
             completed={!!completed[task.id]}
-            onToggle={() => setCompleted((prev) => ({ ...prev, [task.id]: !prev[task.id] }))}
+            onToggle={() => {
+              const isNowCompleted = !completed[task.id];
+              setCompleted((prev) => ({ ...prev, [task.id]: isNowCompleted }));
+
+              // When marking as complete, record to Field Record Book
+              if (isNowCompleted) {
+                try {
+                  const fieldRecordKind = task.category === 'irrigation' ? 'irrigation'
+                    : task.category === 'fertilization' ? 'input'
+                    : task.category === 'inspection' ? 'observation'
+                    : task.category === 'field_work' ? 'input'
+                    : 'note';
+
+                  const today = new Date().toISOString().slice(0, 10);
+                  const cropName = crop ? crop.name[language] : plan.cropId;
+
+                  appendManualFieldRecord({
+                    fieldName: 'FarmPilot',
+                    crop: cropName,
+                    date: today,
+                    kind: fieldRecordKind as FieldRecordKind,
+                    title: task.title[language],
+                    summary: `${task.detail[language]} [FarmPilot ✓]`,
+                  });
+
+                  toast({
+                    title: tr('Task completed & recorded', 'تمت المهمة وتم تسجيلها', 'Tâche terminée et enregistrée'),
+                    description: task.title[language],
+                  });
+                } catch {
+                  // Silent fail — don't block the checkbox toggle
+                }
+              }
+            }}
           />
         ))}
       </div>

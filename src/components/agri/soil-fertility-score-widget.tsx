@@ -11,7 +11,7 @@
  * Can be used standalone or embedded inside other soil tools.
  */
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -22,8 +22,10 @@ import { useTranslation, copyFor } from '@/lib/language-store';
 import { toast } from '@/hooks/use-toast';
 import {
   calculateFertilityScore, bandColor, bandLabel, gradeColor,
+  soilTestToFertilityInput,
   type SoilFertilityInput, type FertilityResult,
 } from '@/lib/soil-fertility-score';
+import { getSoilTests, getLatestTest } from '@/lib/soil-history-store';
 import { cn } from '@/lib/utils';
 
 interface SoilFertilityScoreWidgetProps {
@@ -58,17 +60,39 @@ export function SoilFertilityScoreWidget({ initialData, compact = false }: SoilF
   const [inputs, setInputs] = useState<Record<string, string>>({});
   const [copied, setCopied] = useState(false);
   const [showAllFields, setShowAllFields] = useState(false);
+  const [autoLoaded, setAutoLoaded] = useState(false);
 
-  // Pre-fill from initialData
-  useState(() => {
+  // Auto-fill from latest soil test (from SoilTestHistoryTracker) on mount
+  useEffect(() => {
+    if (autoLoaded || initialData) return;
+    try {
+      const tests = getSoilTests();
+      const latest = getLatestTest(tests);
+      if (latest) {
+        const fertilityInput = soilTestToFertilityInput(latest);
+        const prefilled: Record<string, string> = {};
+        for (const [k, v] of Object.entries(fertilityInput)) {
+          if (v != null && Number.isFinite(v)) prefilled[k] = String(v);
+        }
+        if (Object.keys(prefilled).length > 0) {
+          setInputs(prefilled);
+          setAutoLoaded(true);
+        }
+      }
+    } catch { /* ignore */ }
+  }, [autoLoaded, initialData]);
+
+  // Pre-fill from initialData prop (overrides auto-load)
+  useEffect(() => {
     if (initialData) {
       const prefilled: Record<string, string> = {};
       for (const [k, v] of Object.entries(initialData)) {
         if (v != null && Number.isFinite(v)) prefilled[k] = String(v);
       }
       setInputs(prefilled);
+      setAutoLoaded(true);
     }
-  });
+  }, [initialData]);
 
   const parsedInput: SoilFertilityInput = useMemo(() => {
     const result: SoilFertilityInput = {};

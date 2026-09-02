@@ -501,6 +501,73 @@ export function calculateFertilityScore(input: SoilFertilityInput): FertilityRes
 }
 
 // ---------------------------------------------------------------------------
+// Convert SoilTestEntry (from soil-history-store) to SoilFertilityInput
+// ---------------------------------------------------------------------------
+
+export interface SoilTestEntryLike {
+  ph: number;
+  om: number;
+  cec: number;
+  ca: number;
+  mg: number;
+  k: number;
+  na: number;
+  p: number;
+  ec_ds_m?: number;
+  // Optional micronutrients (may not be in all soil tests)
+  zincPpm?: number;
+  ironPpm?: number;
+  boronPpm?: number;
+  copperPpm?: number;
+  manganesePpm?: number;
+}
+
+/**
+ * Convert a SoilTestEntry (from soil-history-store) to a SoilFertilityInput
+ * so the Fertility Score widget can auto-fill from saved soil tests.
+ *
+ * Key conversions:
+ *   - SoilTestEntry uses meq/100g (cmol+/kg) for Ca, Mg, K, Na — same unit as SoilFertilityInput
+ *   - P is already in ppm (Olsen) — matches SoilFertilityInput.phosphorusPpm
+ *   - EC is optional — only filled if present
+ *   - ESP (exchangeable sodium percentage) is computed from Na / CEC × 100
+ *   - N (nitrogen) is NOT in SoilTestEntry — left as undefined (most soil tests don't include it)
+ *   - Micronutrients (Zn, Fe, B, Cu, Mn) are optional — only filled if present
+ */
+export function soilTestToFertilityInput(test: SoilTestEntryLike): SoilFertilityInput {
+  const cec = test.cec || 1; // avoid division by zero
+  const esp = (test.na / cec) * 100;
+
+  return {
+    ph: test.ph,
+    organicMatterPct: test.om,
+    ecDsm: test.ec_ds_m,
+    phosphorusPpm: test.p,
+    // Convert K from meq/100g to ppm: 1 meq/100g K = 391 ppm K
+    potassiumPpm: meqToPpm_K(test.k),
+    cecCmolKg: test.cec,
+    calciumCmolKg: test.ca,
+    magnesiumCmolKg: test.mg,
+    sodiumPct: Math.round(esp * 10) / 10,
+    nitrogenPpm: undefined,
+    zincPpm: test.zincPpm,
+    ironPpm: test.ironPpm,
+    boronPpm: test.boronPpm,
+    copperPpm: test.copperPpm,
+    manganesePpm: test.manganesePpm,
+  };
+}
+
+/**
+ * Convert meq/100g K to ppm K.
+ * 1 meq/100g K = 391 mg/kg (ppm)
+ * (K atomic weight = 39.1 g/mol × 10 = 391 mg per meq/100g)
+ */
+export function meqToPpm_K(meqPer100g: number): number {
+  return meqPer100g * 391;
+}
+
+// ---------------------------------------------------------------------------
 // Helpers for UI
 // ---------------------------------------------------------------------------
 
