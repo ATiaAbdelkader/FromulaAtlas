@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useMemo, useState, useEffect, useRef } from 'react';
-import { Search, Sprout, Layers, BookOpen, X, Leaf, Home, Wrench, Bug, TrendingUp, Droplets, Settings, Calendar, Satellite, ShoppingCart, Users, DollarSign, RefreshCw, Beef, FlaskConical, CloudRain, Cloud, Compass, FileText, Trophy, Tractor, Sparkles, Download, Database, CheckCircle2, MapPin, Shapes, Sun, Mountain, FlaskConical as Flask, CalendarDays, Clock, Warehouse, Recycle, Wind, Flame, Snowflake, Gauge, Shield, Moon, Microscope, Activity, Scale, MessageCircle, Info, Beaker, ScanFace } from 'lucide-react';
+import { Search, Sprout, Layers, BookOpen, X, Leaf, Home, Wrench, Bug, TrendingUp, Droplets, Settings, Calendar, Satellite, ShoppingCart, Users, DollarSign, RefreshCw, Beef, FlaskConical, CloudRain, Cloud, Compass, FileText, Trophy, Tractor, Sparkles, Download, Database, CheckCircle2, MapPin, Shapes, Sun, Mountain, FlaskConical as Flask, CalendarDays, Clock, Warehouse, Recycle, Wind, Flame, Snowflake, Gauge, Shield, Moon, Microscope, Activity, Scale, MessageCircle, Info, Beaker, ScanFace, Bell } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -136,6 +136,8 @@ import { SoilSensorDashboard } from '@/components/agri/soil-sensor-dashboard';
 import { ClimateScenarioSimulator } from '@/components/agri/climate-scenario-simulator';
 import { YourGuide } from '@/components/agri/your-guide';
 import { FarmPilot } from '@/components/agri/farmpilot/farmpilot';
+import { WhatsappDailyBrief } from '@/components/agri/whatsapp-daily-brief';
+import { NotificationSchedulerWidget } from '@/components/agri/notification-scheduler-widget';
 
 
 /** French labels for the app shell's farm and insights tool index. */
@@ -228,6 +230,10 @@ const FRENCH_TOOL_COPY: Record<string, string> = {
   'Search': 'Rechercher',
   'Mobile navigation': 'Navigation mobile',
   'Tools': 'Outils',
+  'WhatsApp Daily Brief': 'Brief quotidien WhatsApp',
+  'Generate a one-tap daily farm brief: weather, irrigation, fertilizer, top tasks, and alerts — then send via WhatsApp.': 'Générez en un clic un brief quotidien de votre ferme : météo, irrigation, fertilisation, priorités et alertes — puis envoyez-le sur WhatsApp.',
+  'Push Notification Scheduler': 'Planificateur de notifications',
+  'Schedule daily reminders and weather alerts — everything runs in your browser, no account needed.': 'Planifiez des rappels quotidiens et des alertes météo — tout tourne dans votre navigateur, sans compte.',
 };
 
 /**
@@ -499,6 +505,10 @@ export default function Page() {
           </div>
 
           <FarmTabToolbar />
+
+          <CollapsibleSection title={tr('WhatsApp Daily Brief', 'ملخّص واتساب اليومي', language)} description={tr('Generate a one-tap daily farm brief: weather, irrigation, fertilizer, top tasks, and alerts — then send via WhatsApp.', 'أنشئ ملخّصاً يومياً للمزرعة بنقرة واحدة: الطقس والري والتسميد وأهم المهام والتنبيهات — ثم أرسله عبر واتساب.', language)} icon={MessageCircle} color="#059669" storageKey="collapse_whatsapp_brief" defaultOpen={false} enableExport group="overview"><div className="p-4"><WhatsappDailyBrief /></div></CollapsibleSection>
+
+          <CollapsibleSection title={tr('Push Notification Scheduler', 'مجدّل التنبيهات', language)} description={tr('Schedule daily reminders and weather alerts — everything runs in your browser, no account needed.', 'جدولة التذكيرات اليومية وتنبيهات الطقس — كل شيء يعمل في متصفحك دون حساب.', language)} icon={Bell} color="#0d9488" storageKey="collapse_notification_scheduler" defaultOpen={false} enableExport group="overview"><div className="p-4"><NotificationSchedulerWidget /></div></CollapsibleSection>
 
           <CollapsibleSection title={tr('Workspace & Access', 'مساحة العمل والوصول', language)} description={tr('Manage your workspace, data backup, field mode, and app settings', 'أدر مساحة عملك ونسخ احتياطي للبيانات ووضع الحقل وإعدادات التطبيق', language)} icon={Settings} color="#64748b" storageKey="collapse_workspace" defaultOpen={false} enableExport group="overview"><div className="p-4"><WorkspacePanel /></div></CollapsibleSection>
 
