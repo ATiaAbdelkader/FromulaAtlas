@@ -138,6 +138,8 @@ import { YourGuide } from '@/components/agri/your-guide';
 import { FarmPilot } from '@/components/agri/farmpilot/farmpilot';
 import { WhatsappDailyBrief } from '@/components/agri/whatsapp-daily-brief';
 import { NotificationSchedulerWidget } from '@/components/agri/notification-scheduler-widget';
+import { PdfReportWidget } from '@/components/agri/pdf-report-widget';
+import { MarketPriceWidget } from '@/components/agri/market-price-widget';
 
 
 /** French labels for the app shell's farm and insights tool index. */
@@ -525,6 +527,10 @@ export default function Page() {
           )}
 
           <CollapsibleSection title={tr('Field Record Book', 'دفتر سجل الحقل', language)} description={tr('Traceable timeline for field decisions, scouting, soil tests, satellite checks, inputs, irrigation, and harvest', 'سجل زمني قابل للتتبع لقرارات الحقل والكشف وتحاليل التربة والأقمار الصناعية والمدخلات والري والحصاد', language)} icon={BookOpen} color="#047857" storageKey="collapse_field_records" defaultOpen={true} enableExport><div className="p-4"><FieldRecordBook /></div></CollapsibleSection>
+
+          <CollapsibleSection title={tr('Trilingual PDF Report Generator', 'مولّد تقرير PDF ثلاثي اللغات', language)} description={tr('One-click printable farm report — soil summary + fertility gauge, today\'s irrigation & fertilizer, 4-day weather, field records timeline, and economics — opens in a new window ready to save as PDF', 'تقرير مزرعة قابل للطباعة بنقرة واحدة — ملخص التربة + مؤشر الخصوبة، ري وتسميد اليوم، طقس 4 أيام، سجل الحقل، والاقتصاد — يفتح في نافذة جديدة جاهزة للحفظ كـ PDF', language)} icon={FileText} color="#7c3aed" storageKey="collapse_pdf_report" defaultOpen={false} enableExport group="overview"><div className="p-4"><PdfReportWidget /></div></CollapsibleSection>
+
+          <CollapsibleSection title={tr('Market Price Crowd-Sourcing', 'أسعار السوق بمساهمة المزارعين', language)} description={tr('Report local market prices · see what other farmers are reporting · 30-day trend chart · 10 crops · 15 wilayas · crowd-sourced', 'سجّل أسعار السوق المحلية · اطّلع على بلاغات المزارعين الآخرين · رسم اتجاه 30 يوماً · 10 محاصيل · 15 ولاية · مساهمة جماعية', language)} icon={DollarSign} color="#f59e0b" storageKey="collapse_market_prices" defaultOpen={false} enableExport group="business"><div className="p-4"><MarketPriceWidget /></div></CollapsibleSection>
 
           <CollapsibleSection title={tr('Disease Encyclopedia', 'موسوعة الأمراض', language)} description={tr('Browse 20+ diseases by crop or search by symptom — chemical + organic treatments, precautions, and INPV-registered active substances', 'تصفّح 20+ مرضاً حسب المحصول أو ابحث بالعَرَض — علاجات كيميائية وعضوية، احتياطات، ومواد فعالة مسجلة INPV', language)} icon={Bug} color="#dc2626" storageKey="collapse_disease_encyclopedia" defaultOpen={false} enableExport group="protection"><div className="p-4"><DiseaseEncyclopedia /></div></CollapsibleSection>
 

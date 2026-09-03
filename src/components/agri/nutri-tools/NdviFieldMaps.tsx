@@ -5,12 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
   Satellite, MapPin, Loader2, Download, AlertTriangle,
-  Grid3x3, Eye, Copy, RotateCcw,
+  Grid3x3, Eye, Copy, RotateCcw, Info,
 } from 'lucide-react';
 import {
   simulateNdvi, ndviColor, healthLabel, healthRecommendation,
   fieldFromCenter, type NdviResult, type NdviZone,
 } from '@/lib/satellite-service';
+import { fetchNdviSeries, type NdviData } from '@/lib/sentinel-ndvi';
 import { copyFor, useTranslation } from '@/lib/language-store';
 import { toast } from '@/hooks/use-toast';
 import {
@@ -53,16 +54,27 @@ export function NdviFieldMaps() {
   const [selectedZone, setSelectedZone] = useState<NdviZone | null>(null);
   const [showGrid, setShowGrid] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [seriesPoint, setSeriesPoint] = useState<NdviData | null>(null);
 
   const analyze = () => {
     setLoading(true);
     setSelectedZone(null);
+    setSeriesPoint(null);
     // Simulate API delay
     setTimeout(() => {
       const field = fieldFromCenter(parseFloat(lat), parseFloat(lng), parseFloat(areaHa), fieldName);
       const ndvi = simulateNdvi(field, crop);
       setResult(ndvi);
       setLoading(false);
+      // Fetch an NDVI time-series from the hybrid sentinel-ndvi client.
+      // This returns either real Sentinel-2 data (if user has configured an API
+      // key) or a clearly-labelled Atlas estimate. We surface the latest point
+      // so the user can see the provenance of the data shown on the map.
+      fetchNdviSeries(parseFloat(lat), parseFloat(lng), 14, { crop: crop.toLowerCase() })
+        .then((series) => {
+          if (series.length > 0) setSeriesPoint(series[series.length - 1]);
+        })
+        .catch(() => { /* silent — the simulated map is still shown */ });
     }, 1200);
   };
 
@@ -167,9 +179,9 @@ export function NdviFieldMaps() {
       onPillClick={setCrop}
       pillLabel={PILL_LABEL}
       protocolNote={{
-        en: 'Uses Sentinel-2 satellite data (simulated for demo — connect Sentinel Hub API key for real imagery). Click any zone on the map to see detailed analysis and AI recommendations.',
-        ar: 'يستخدم بيانات قمر Sentinel-2 (محاكاة للعرض — اربط مفتاح Sentinel Hub API للحصول على صور حقيقية). اضغط أي منطقة على الخريطة لرؤية التحليل المفصّل والتوصيات بالذكاء الاصطناعي.',
-        fr: 'Utilise les données Sentinel-2 (simulées pour la démo — connectez une clé API Sentinel Hub pour des images réelles). Cliquez sur une zone de la carte pour l\'analyse détaillée et les recommandations IA.',
+        en: 'Data source: Atlas estimate (configure Sentinel Hub API key for real satellite data). The 8×8 grid is a simulated Sentinel-2 NDVI pattern; click any zone to see detailed analysis and AI recommendations.',
+        ar: 'مصدر البيانات: تقدير أطلس (اضبط مفتاح Sentinel Hub API للحصول على بيانات أقمار صناعية حقيقية). الشبكة 8×8 هي نمط NDVI محاكى من Sentinel-2؛ اضغط أي منطقة لرؤية التحليل المفصّل والتوصيات.',
+        fr: 'Source des données : estimation Atlas (configurez une clé API Sentinel Hub pour des données satellite réelles). La grille 8×8 est une simulation NDVI Sentinel-2 ; cliquez sur une zone pour l\'analyse détaillée et les recommandations IA.',
       }}
     >
       <CalculatorShell.Inputs>
@@ -329,6 +341,44 @@ export function NdviFieldMaps() {
                 <Satellite className="h-3 w-3" />
                 {tr('Source', 'المصدر', 'Source')}: {result.satellite} · {tr('Cloud', 'الغيوم', 'Nuages')}: {result.cloudCover}% · {tr('Grid', 'الشبكة', 'Grille')}: {GRID_SIZE}×{GRID_SIZE} = {GRID_SIZE * GRID_SIZE} {tr('zones', 'مناطق', 'zones')}
               </div>
+
+              {/* Latest NDVI reading from the hybrid sentinel-ndvi client */}
+              {seriesPoint && (
+                <div className="text-[10px] rounded-lg p-2 bg-violet-50 dark:bg-violet-950/20 border border-violet-200 dark:border-violet-900 flex items-start gap-2">
+                  <Info className="h-3 w-3 text-violet-600 shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <div className="font-semibold text-violet-800 dark:text-violet-300">
+                      {tr('Latest NDVI reading', 'أحدث قراءة NDVI', 'Dernière lecture NDVI')}:{' '}
+                      <span className="font-mono">{seriesPoint.ndvi.toFixed(3)}</span>
+                      {' · '}
+                      <span>{seriesPoint.date}</span>
+                    </div>
+                    <div className="text-muted-foreground mt-0.5">
+                      {tr('Data source', 'مصدر البيانات', 'Source des données')}:{' '}
+                      <Badge variant="outline" className="text-[9px] mx-1 px-1.5 py-0">
+                        {seriesPoint.source === 'sentinel'
+                          ? tr('Sentinel Hub (real)', 'Sentinel Hub (حقيقي)', 'Sentinel Hub (réel)')
+                          : tr('Atlas estimate', 'تقدير أطلس', 'Estimation Atlas')}
+                      </Badge>
+                      · {tr('Confidence', 'الثقة', 'Confiance')}:{' '}
+                      <span className="font-semibold">
+                        {seriesPoint.confidence === 'high'
+                          ? tr('high', 'عالية', 'élevée')
+                          : seriesPoint.confidence === 'medium'
+                          ? tr('medium', 'متوسطة', 'moyenne')
+                          : tr('low', 'منخفضة', 'faible')}
+                      </span>
+                    </div>
+                    <div className="text-muted-foreground mt-0.5 italic">
+                      {tr(
+                        'Configure a Sentinel Hub API key (localStorage: sentinel_hub_token) to fetch real satellite data.',
+                        'اضبط مفتاح Sentinel Hub API (localStorage: sentinel_hub_token) لجلب بيانات الأقمار الصناعية الحقيقية.',
+                        'Configurez une clé API Sentinel Hub (localStorage: sentinel_hub_token) pour récupérer des données satellite réelles.',
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
             </>
           ) : (
             <div className="text-center py-10">
