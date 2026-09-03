@@ -26,7 +26,23 @@ export const metadata: Metadata = {
   description: `${FORMULA_COUNT} agronomic formulas, ${INTERACTIVE_TOOL_COUNT} interactive tools, ${CALCULATOR_COUNT} free calculators, AI agronomist, satellite NDVI maps, irrigation programs, marketplace, community, and predictive alerts.`,
   keywords: ["agriculture", "agronomy", "formulas", "metrics", "crop", "livestock", "sustainability", "farm economics"],
   authors: [{ name: "Formula Atlas" }],
+  manifest: "/manifest.json",
+  themeColor: "#059669",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "FormulaAtlas",
+  },
 };
+
+// Register service worker for PWA offline support
+const SW_SCRIPT = `
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    });
+  }
+`;
 
 export default function RootLayout({
   children,
@@ -35,6 +51,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: SW_SCRIPT }} />
+      </head>
       <body
         className={`${cairo.variable} ${geistMono.variable} font-cairo antialiased bg-background text-foreground`}
       >

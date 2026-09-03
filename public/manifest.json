@@ -1,21 +1,15 @@
 {
-  "name": "Formula Atlas — Your AI-powered agronomy platform",
-  "short_name": "Formula Atlas",
-  "description": "332 agronomic formulas, 218 interactive calculators, AI agronomist, satellite NDVI maps, irrigation programs, marketplace, community, and predictive alerts.",
-  "start_url": "/",
-  "scope": "/",
+  "name": "Formula Atlas — AI Agronomy Platform",
+  "short_name": "FormulaAtlas",
+  "description": "Algerian agricultural decision-support platform: FarmPilot, WUR fertigation, AI disease detection, 100+ calculators",
+  "start_url": "/app",
   "display": "standalone",
-  "orientation": "portrait-primary",
   "background_color": "#ffffff",
   "theme_color": "#059669",
-  "categories": [
-    "education",
-    "productivity",
-    "utilities",
-    "agriculture"
-  ],
+  "orientation": "portrait-primary",
+  "categories": ["agriculture", "productivity", "education"],
   "lang": "en",
-  "dir": "ltr",
+  "dir": "auto",
   "icons": [
     {
       "src": "/icon.svg",
@@ -24,24 +18,27 @@
       "purpose": "any"
     },
     {
-      "src": "/icon.svg",
-      "sizes": "192x192 512x512",
-      "type": "image/svg+xml",
-      "purpose": "maskable"
+      "src": "/favicon.ico",
+      "sizes": "32x32",
+      "type": "image/x-icon",
+      "purpose": "any"
     }
   ],
   "shortcuts": [
     {
-      "name": "Browse formulas",
-      "short_name": "Formulas",
-      "description": "Open the formula library",
-      "url": "/?tab=formulas"
+      "name": "FarmPilot",
+      "url": "/app?tab=farmpilot",
+      "description": "Your Farm Decision Assistant"
     },
     {
-      "name": "Tools",
-      "short_name": "Tools",
-      "description": "Open guided workflows and tools",
-      "url": "/?tab=tools"
+      "name": "My Field",
+      "url": "/app?tab=myfield",
+      "description": "Single-field dashboard"
+    },
+    {
+      "name": "Farm Tools",
+      "url": "/app?tab=farm",
+      "description": "All agricultural calculators and tools"
     }
   ]
 }

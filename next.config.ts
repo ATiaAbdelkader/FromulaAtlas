@@ -1,9 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  typescript: {
-    ignoreBuildErrors: true,
-  },
+  // TS errors are now clean (0 errors) — removed ignoreBuildErrors
+  // to let Vercel CI catch real type regressions
   reactStrictMode: false,
   experimental: {
     cpus: 1,
