@@ -70,6 +70,7 @@ import {
 import { SmartDayPlannerPanel } from '@/components/agri/smart-day-planner-panel';
 import { CropPhenologyTimeline } from '@/components/agri/crop-phenology-timeline';
 import { type SmartPlannerItem } from '@/lib/smart-day-planner';
+import { toAlgeriaCalendarId } from '@/lib/crop-id-unified';
 
 // Distinct, eye-safe colors for months matching seasonal rhythm
 const MONTH_ACCENTS = [
@@ -170,6 +171,10 @@ export function AlgeriaCropCalendar({ onSetupFarm }: { onSetupFarm?: () => void 
   const [showCropPicker, setShowCropPicker] = useState(false);
   const [selectedZone, setSelectedZone] = useState<'littoral' | 'plateaus' | 'sahara'>('littoral');
   const [selectedLifecycleCrop, setSelectedLifecycleCrop] = useState<string>('wheat');
+  // Translate the canonical lifecycle crop ID (e.g. 'wheat', 'grapes') to the
+  // CROP_PHENOLOGY_DATA ID (e.g. 'durum-wheat', 'grapevine') expected by the
+  // CropPhenologyTimeline. Done in one place via the unified crop ID mapper.
+  const phenologyCropId = toAlgeriaCalendarId(selectedLifecycleCrop);
   const [completedChecklistTasks, setCompletedChecklistTasks] = useState<Record<string, boolean>>({});
 
   // Fast pre-calculated crop keys
@@ -1071,7 +1076,7 @@ export function AlgeriaCropCalendar({ onSetupFarm }: { onSetupFarm?: () => void 
       {/* VIEW: VISUAL CROP PHENOLOGY & MULTI-TRACK TIMELINE */}
       {viewMode === 'phenology' && (
         <CropPhenologyTimeline
-          initialCropId={selectedLifecycleCrop === 'wheat' ? 'durum-wheat' : selectedLifecycleCrop === 'potato' ? 'potato' : selectedLifecycleCrop === 'tomato' ? 'tomato' : selectedLifecycleCrop === 'olive' ? 'olive' : selectedLifecycleCrop === 'date_palm' ? 'date-palm' : selectedLifecycleCrop === 'citrus' ? 'citrus' : selectedLifecycleCrop === 'grapevine' ? 'grapevine' : 'durum-wheat'}
+          initialCropId={phenologyCropId}
           onSendTaskToPlanner={task => {
             toast({
               title: copyFor(language, 'Task Synced with Planner', 'تمت مزامنة المهمة مع المخطط', 'Tâche synchronisée avec le planificateur'),
@@ -1104,7 +1109,7 @@ export function AlgeriaCropCalendar({ onSetupFarm }: { onSetupFarm?: () => void 
 
             <TabsContent value="phenology" className="mt-4">
               <CropPhenologyTimeline
-                initialCropId={selectedLifecycleCrop === 'wheat' ? 'durum-wheat' : selectedLifecycleCrop === 'potato' ? 'potato' : selectedLifecycleCrop === 'tomato' ? 'tomato' : selectedLifecycleCrop === 'olive' ? 'olive' : selectedLifecycleCrop === 'date_palm' ? 'date-palm' : selectedLifecycleCrop === 'citrus' ? 'citrus' : selectedLifecycleCrop === 'grapevine' ? 'grapevine' : 'durum-wheat'}
+                initialCropId={phenologyCropId}
               />
             </TabsContent>
 

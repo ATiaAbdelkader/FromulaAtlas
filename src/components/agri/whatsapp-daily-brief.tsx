@@ -60,12 +60,12 @@ import {
 // Types
 // ---------------------------------------------------------------------------
 
-interface WeatherAlert {
+export interface WeatherAlert {
   kind: 'frost' | 'heat' | 'wind';
   day: DailyForecast;
 }
 
-interface BriefContext {
+export interface BriefContext {
   profile: FarmProfile;
   crop: FarmPilotCrop;
   plan: FarmPilotPlan;
@@ -162,16 +162,21 @@ const COPY = {
 
 // ---------------------------------------------------------------------------
 // Helpers
+// (Exported so they can be unit-tested by scripts/test-whatsapp-brief.ts —
+//  the React component itself is too heavy for unit testing, but the
+//  message-building logic is pure and easy to lock.)
 // ---------------------------------------------------------------------------
 
-function pick<T extends { en: string; fr: string; ar: string }>(
+/** Pick a trilingual string by language. */
+export function pick<T extends { en: string; fr: string; ar: string }>(
   lang: Language,
   obj: T,
 ): string {
   return obj[lang];
 }
 
-function timeGreeting(lang: Language, date: Date = new Date()): string {
+/** Time-of-day greeting in the requested language. */
+export function timeGreeting(lang: Language, date: Date = new Date()): string {
   const h = date.getHours();
   let en = 'Good evening';
   let fr = 'Bonsoir';
@@ -190,7 +195,7 @@ function timeGreeting(lang: Language, date: Date = new Date()): string {
   return en;
 }
 
-function findWilaya(profile: FarmProfile) {
+export function findWilaya(profile: FarmProfile) {
   if (profile.lat && profile.lng) {
     const lat = parseFloat(profile.lat);
     const lng = parseFloat(profile.lng);
@@ -210,7 +215,7 @@ function findWilaya(profile: FarmProfile) {
   return undefined;
 }
 
-function wilayaName(lang: Language, w: ReturnType<typeof findWilaya>): string {
+export function wilayaName(lang: Language, w: ReturnType<typeof findWilaya>): string {
   if (!w) return '';
   if (lang === 'ar') return w.nameAr;
   if (lang === 'fr') return w.nameFr;
@@ -248,7 +253,7 @@ function readPlan(profile: FarmProfile, crop: FarmPilotCrop): FarmPilotPlan {
   }
 }
 
-function detectAlerts(
+export function detectAlerts(
   daily: DailyForecast[] | undefined,
 ): WeatherAlert[] {
   if (!daily || daily.length === 0) return [];
@@ -261,7 +266,7 @@ function detectAlerts(
   return alerts;
 }
 
-function alertLabel(lang: Language, alert: WeatherAlert): string {
+export function alertLabel(lang: Language, alert: WeatherAlert): string {
   const dateStr = new Date(`${alert.day.date}T00:00`).toLocaleDateString(
     lang === 'ar' ? 'ar-DZ' : lang === 'fr' ? 'fr-DZ' : 'en-DZ',
     { weekday: 'short', month: 'short', day: 'numeric' },
@@ -292,7 +297,7 @@ function alertLabel(lang: Language, alert: WeatherAlert): string {
 // Message builder
 // ---------------------------------------------------------------------------
 
-function buildBriefMessage(ctx: BriefContext, lang: Language): string {
+export function buildBriefMessage(ctx: BriefContext, lang: Language): string {
   const lines: string[] = [];
   const { profile, crop, plan, activeStage, today, irrigation, tasks, alerts } = ctx;
   const farmName = profile.name?.trim() || {

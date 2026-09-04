@@ -44,28 +44,23 @@ import {
 } from '@/lib/farmpilot-engine';
 
 // ---------------------------------------------------------------------------
-// Crop ID mapper — CROP_LIFECYCLES uses different IDs than FARMPILOT_CROPS
+// Crop ID translation — uses the unified canonical crop ID mapper
+// (src/lib/crop-id-unified.ts). NEVER write a local crop-ID lookup table;
+// always go through `toFarmPilotId` / `canonicalCropId` / etc.
 // ---------------------------------------------------------------------------
 
-const LIFECYCLE_TO_FARMPILOT: Record<string, string> = {
-  potato: 'potato',
-  tomato: 'tomato',
-  onion: 'onion',
-  carrot: 'carrot',
-  wheat: 'wheat_durum',
-  barley: 'barley',
-  maize: 'maize',
-  lettuce: 'lettuce',
-  'bell-pepper': 'bell_pepper',
-  cucumber: 'cucumber',
-  alfalfa: 'alfalfa',
-  // Crops in CROP_LIFECYCLES but not in FARMPILOT_CROPS (no engine data):
-  // rice, soybean, cotton, coffee, apple, sunflower, citrus, sorghum, canola, grapes
-};
+import { toFarmPilotId } from '@/lib/crop-id-unified';
 
+/**
+ * Maps a CROP_LIFECYCLES crop ID (the canonical form used by the farm
+ * profile) to the FARMPILOT_CROPS ID expected by the FarmPilot engine.
+ * Returns `undefined` when no crop is set. Returns the input unchanged
+ * if it isn't a known canonical crop (lets unknown crops pass through
+ * so the engine can decide whether to support them).
+ */
 export function mapLifecycleIdToFarmPilotId(lifecycleId: string | undefined): string | undefined {
   if (!lifecycleId) return undefined;
-  return LIFECYCLE_TO_FARMPILOT[lifecycleId];
+  return toFarmPilotId(lifecycleId);
 }
 
 // ---------------------------------------------------------------------------

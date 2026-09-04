@@ -1124,3 +1124,58 @@ Stage Summary:
 - Popups work trilingually (tested Arabic + English)
 - All CTAs navigate to the correct tool / collapsible
 - Farmer mode Home tab is now production-ready
+
+---
+Task ID: features-7-to-12-test-coverage
+Agent: main (Super Z)
+Task: Add test coverage + light refactors for Features #7-#12 (WhatsApp brief, push notifications, crop ID unification, trilingual PDF reports, NDVI satellite API, market price crowd-sourcing)
+
+Work Log:
+- #9 Crop ID unification (FOUNDATIONAL):
+  * Audited: `src/lib/crop-id-unified.ts` already existed with full canonical ID system + mappers for 6 source systems, but was NOT imported anywhere (dead code).
+  * Discovered a 7th ID system: `CROP_PHENOLOGY_DATA` (crop-phenology-data.ts) uses 'durum-wheat', 'grapevine', 'date-palm' (kebab-case with longer names) — different from both canonical ('wheat', 'grapes', 'date-palm') and FarmPilot ('wheat_durum').
+  * Extended crop-id-unified.ts:
+    - Added 'durum-wheat' and 'grapevine' to CROP_ALIASES
+    - Added `toAlgeriaCalendarId()` + `toPhenologyId()` alias for canonical → phenology mapping
+  * Refactored `farmpilot-decision-card.tsx`:
+    - Removed 16-line local `LIFECYCLE_TO_FARMPILOT` lookup table
+    - Now imports `toFarmPilotId` from crop-id-unified (single source of truth)
+    - Behavior preserved (unknown crops still pass through to engine, which returns undefined)
+  * Refactored `algeria-crop-calendar.tsx`:
+    - Removed 2 copies of an ugly 7-branch nested ternary `selectedLifecycleCrop === 'wheat' ? 'durum-wheat' : ...` (200+ chars each)
+    - Replaced with `phenologyCropId = toAlgeriaCalendarId(selectedLifecycleCrop)` derived once
+    - BONUS FIX: the old ternary checked `=== 'date_palm'` (underscore) but `selectedLifecycleCrop` is canonical `'date-palm'` (hyphen) — so the old code never matched and fell through to default 'durum-wheat'. Now `date-palm` correctly maps to `date-palm` in the phenology timeline.
+  * Wrote `scripts/test-crop-id-unified.ts` (165 tests) covering: canonical normalization, all 4 system mappers (FarmPilot/Suitability/SeedRate/Phenology), round-trip stability for 23 crops, trilingual display names (with Arabic char validation), isKnownCrop.
+
+- #10 Trilingual PDF reports:
+  * Existing: `src/lib/pdf-report-generator.ts` (899 lines) — full trilingual EN/FR/AR report with 7 sections (farm header, soil, irrigation, fertilizer, weather, records, economics), RTL support, fertility gauge SVG, print-to-PDF via window.print(). Already mounted in UI as `PdfReportWidget` collapsible.
+  * Wrote `scripts/test-pdf-report.ts` (77 tests) covering: SSR safety (no-op without window), HTML structure (all 7 sections render in each language), lang/dir attributes, Arabic char validation, empty-data graceful degradation, HTML escaping (XSS protection), no artificial "End of Report" markers.
+
+- #8 Push notification scheduling:
+  * Existing: `src/lib/notification-scheduler.ts` (420 lines) — full client-side scheduler with localStorage persistence, Notification API, recurring daily reminders, 60s polling. Already mounted as `NotificationSchedulerWidget`. Already integrated with #7 WhatsApp daily brief.
+  * Wrote `scripts/test-notification-scheduler.ts` (58 tests) covering: SSR safety, scheduleNotification (HH:MM + ISO), recurring daily dedup, sort + 60s grace window, cancel + clear, checkAndFireNotifications (fires due + reschedules recurring + drops one-shot), permission denied (no Notification instances), polling idempotency, localStorage persistence, Daily Brief schedule set/get/toggle, language switching, requestNotificationPermission flow.
+
+- #12 Market price crowd-sourcing:
+  * Existing: `src/lib/market-price-store.ts` (323 lines) — localStorage store with 50 seed reports across 10 crops / 15 wilayas, deterministic PRNG, price stats, 30-day trend with forward-fill + back-fill, trilingual crop labels, reporter type labels. Already mounted as `MarketPriceWidget`.
+  * Wrote `scripts/test-market-price-store.ts` (97 tests) covering: SSR safety, seed data (50 reports, 10 crops, sorted newest-first), seed determinism, savePriceReport (head insertion, id generation, default date), filter by crop (case-insensitive), getAveragePrice (min/max/avg/count), getPriceTrend (forward-fill, back-fill, day clamping), listCrops (sorted distinct), resetToSeed, localizeCrop (trilingual + Arabic char check), validation (invalid entries dropped on read), getTotalReportCount.
+
+- #11 Real NDVI satellite API:
+  * Existing: `src/lib/sentinel-ndvi.ts` (407 lines) — hybrid client: PRIMARY Sentinel Hub Process API (with evalscript NDVI = (B08-B04)/(B08+B04)), FALLBACK Atlas estimate (deterministic seasonal NDVI simulation with 15 crop profiles, latitude adjustment, rainfall adjustment via Open-Meteo). Already mounted in NdviFieldMaps.tsx.
+  * Wrote `scripts/test-sentinel-ndvi.ts` (41 tests) covering: SSR safety, Atlas estimate fallback (no token), Sentinel Hub success path (mock fetch returns float32 TIFF buffer, verifies URL/headers/body shape), Sentinel Hub failure → fallback (401), network error → fallback (CORS), days clamping [1, 90], latestNdvi/meanNdvi helpers (incl. NaN handling), token config round-trip, crop profile effects (citrus high baseline, wheat off-season), latitude effects (tropical > northern), determinism (same inputs → same NDVI values).
+
+- #7 WhatsApp daily brief:
+  * Existing: `src/components/agri/whatsapp-daily-brief.tsx` (819 lines) — full WhatsApp-shareable farm brief with greeting, weather, irrigation, fertilizer, top 3 tasks, weather alerts, footer. Already mounted as `WhatsappDailyBrief` collapsible. Integrated with #8 notification scheduler (Schedule Daily button).
+  * Exported 7 helper functions (previously private) so they can be unit-tested: `pick`, `timeGreeting`, `findWilaya`, `wilayaName`, `detectAlerts`, `alertLabel`, `buildBriefMessage`, plus `WeatherAlert` + `BriefContext` types.
+  * Wrote `scripts/test-whatsapp-brief.ts` (93 tests) covering: timeGreeting (morning/afternoon/evening + boundary at 12:00 and 17:00 + 3 langs), pick, findWilaya (El Oued + Algiers + missing/invalid coords), wilayaName (trilingual), detectAlerts (frost/heat/wind thresholds + boundary conditions + slice(0,3) limit), alertLabel (trilingual + temp inclusion), buildBriefMessage (full structure across 3 langs + alerts section + empty-data graceful degradation + missing farm name default + conditional fertilizer section + no artificial ending markers + Arabic char validation).
+
+Verification:
+  npx tsc --noEmit     -> 0 errors
+  6 new test suites    -> 531 new tests passing (165+77+58+97+41+93)
+  Pre-existing failure -> test-user-level-tool-visibility.ts still fails on a stale assertion from the previous farmer-home-14-fixes task (NOT caused by my changes — verified via git diff that I didn't touch level-home.tsx, home-dashboard.tsx, or today-tasks.tsx)
+
+Stage Summary:
+- All 6 features (#7-#12) now have comprehensive test coverage (531 new tests)
+- Crop ID system consolidated: 7 different crop ID spellings across the codebase are now translated through a single source of truth (crop-id-unified.ts). Two ad-hoc inline mappers removed (LIFECYCLE_TO_FARMPILOT, 200-char nested ternary).
+- Latent bug fixed: algeria-crop-calendar.tsx was passing 'durum-wheat' as default phenology ID when user selected 'date-palm' (because the old ternary checked 'date_palm' with underscore but canonical uses hyphen)
+- All test suites wired into `npm run test:domain` runner
+- All tests are deterministic (no network calls — fetch is mocked in sentinel-ndvi tests; open-meteo calls in atlas estimate gracefully catch and continue)

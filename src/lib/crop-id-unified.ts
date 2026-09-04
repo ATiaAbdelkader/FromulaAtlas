@@ -1,7 +1,7 @@
 /**
  * Unified Crop ID Mapper
  *
- * Resolves crop ID mismatches across the 6 different crop ID systems
+ * Resolves crop ID mismatches across the 7 different crop ID systems
  * used in Formula Atlas:
  *
  * 1. CROP_LIFECYCLES (crop-lifecycle.ts)     — 'maize', 'wheat', 'bell-pepper'
@@ -10,11 +10,19 @@
  * 4. ALGERIA_CROP_SUITABILITY_RULES          — 'wheat_durum', 'corn_grain', 'tomato_greenhouse'
  * 5. SeedRateCalculator CROP_SEEDS           — 'wheat', 'corn', 'rice', 'canola'
  * 6. CCMT/Makerere expanded diseases         — 'cashew', 'cassava', 'maize', 'tomato'
+ * 7. CROP_PHENOLOGY_DATA (crop-phenology-data.ts) — 'durum-wheat', 'grapevine', 'date-palm'
  *
- * This file provides:
+ * This file is the SINGLE SOURCE OF TRUTH for crop ID translation.
+ * Components should NEVER write their own ad-hoc mappers (e.g.
+ * `LIFECYCLE_TO_FARMPILOT` inline objects, nested ternaries on
+ * `selectedLifecycleCrop === 'wheat' ? 'durum-wheat' : ...`).
+ *
+ * Provided:
  *   - A canonical crop ID (the CROP_LIFECYCLES format, which is the most complete)
- *   - Mappers to/from each system
- *   - A unified lookup that works regardless of which system the ID came from
+ *   - Mappers to/from each system (toFarmPilotId, toSuitabilityId, toSeedRateId,
+ *     toAlgeriaCalendarId, toPhenologyId — aliases of the same thing)
+ *   - A unified resolver canonicalCropId() that accepts any ID from any system
+ *   - Trilingual display name resolver cropDisplayName()
  */
 
 // ---------------------------------------------------------------------------
@@ -52,6 +60,7 @@ const CROP_ALIASES: Record<string, CanonicalCropId> = {
   // Common alternate names
   'durum_wheat': 'wheat',
   'bread_wheat': 'wheat',
+  'durum-wheat': 'wheat',
   'field_corn': 'maize',
   'sweet_pepper': 'bell-pepper',
   'capsicum': 'bell-pepper',
@@ -98,6 +107,28 @@ export function toSeedRateId(canonicalId: string): string {
   };
   return reverse[canonicalId] ?? canonicalId;
 }
+
+/**
+ * Maps a canonical crop ID to the CROP_PHENOLOGY_DATA ID
+ * (crop-phenology-data.ts — used by CropPhenologyTimeline and
+ * AlgeriaCropCalendar). This ID system uses kebab-case with longer
+ * names like 'durum-wheat', 'grapevine'.
+ *
+ * Also exported as `toPhenologyId` for readability at call sites that
+ * specifically deal with phenology timelines.
+ */
+export function toAlgeriaCalendarId(canonicalId: string): string {
+  const reverse: Record<string, string> = {
+    'wheat': 'durum-wheat',
+    'grapes': 'grapevine',
+    // The following are already the same in both systems:
+    // potato, tomato, olive, date-palm, citrus
+  };
+  return reverse[canonicalId] ?? canonicalId;
+}
+
+/** Alias for toAlgeriaCalendarId — same mapping, clearer name at phenology call sites. */
+export const toPhenologyId = toAlgeriaCalendarId;
 
 // ---------------------------------------------------------------------------
 // Main resolver — takes any crop ID from any system, returns canonical
