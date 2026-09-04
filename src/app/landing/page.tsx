@@ -308,7 +308,9 @@ export default function LandingPage() {
           </div>
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
             <Link href="/" className="hover:text-foreground">Open App</Link>
+            <Link href="/pricing" className="hover:text-foreground">Pricing</Link>
             <Link href="/about" className="hover:text-foreground">About</Link>
+            <Link href="/privacy" className="hover:text-foreground">Privacy</Link>
             <span>© {new Date().getFullYear()}</span>
           </div>
         </div>

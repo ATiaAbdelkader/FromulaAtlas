@@ -28,6 +28,7 @@ import { getUserLevelOption, localizedUserLevelCopy, type UserLevel, type TabId 
 import { FarmProfileWizard, needsFarmProfileSetup } from '@/components/agri/farm-profile-wizard';
 import { ProductOfTheDay } from '@/components/agri/product-of-the-day';
 import { FarmerDecisionPopups, type DecisionPopupType } from '@/components/agri/farmer-decision-popups';
+import { TodayCard } from '@/components/agri/today-card';
 
 type ExperienceTab = TabId;
 
@@ -122,6 +123,11 @@ function FarmerHome({ onOpenTool, onOpenSearch }: Pick<LevelHomeProps, 'onOpenTo
             </Button>
           </div>
         </div>
+      )}
+
+      {/* Today card — the farmer's morning brief (30-second scan) */}
+      {hasProfile && (
+        <TodayCard onOpenTool={onOpenTool as (tab: string, storageKey?: string) => void} />
       )}
 
       {/* Main Agro-Intelligence & Farmer Command Dashboard */}

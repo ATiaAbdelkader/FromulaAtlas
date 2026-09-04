@@ -34,6 +34,7 @@ import {
 import { CROP_LIFECYCLES } from '@/lib/crop-lifecycle';
 import { localizedCropName } from '@/lib/crop-localization';
 import { useTranslation, type Language } from '@/lib/language-store';
+import { pushFarmProfileToServer } from '@/lib/farm-profile-sync';
 
 const FARM_PROFILE_KEY = 'farm_profile_v1';
 const ET_TRACKER_LOC_KEY = 'et_tracker_last_loc_v1';
@@ -119,6 +120,8 @@ export function FarmProfileWizard({ open, onOpenChange, onSaved }: FarmProfileWi
         }));
       }
     } catch { /* ignore */ }
+    // Sync to Postgres (for the WhatsApp cron — no-op if not logged in)
+    pushFarmProfileToServer().catch(() => { /* silent — localStorage is source of truth */ });
     onSaved?.();
     onOpenChange(false);
   };

@@ -72,6 +72,7 @@ model Farmer {
   subscription  Subscription?
   briefLogs     BriefLog[]
   farmProfile   FarmProfile?
+  proSubscription ProSubscription?
 
   @@index([phoneE164])
 }
@@ -173,6 +174,33 @@ model BriefLog {
 }
 
 // ---------------------------------------------------------------------------
+// ProSubscription — paid tier via Chargily (CIB + Edahabia)
+//
+// One subscription per farmer. When `status=ACTIVE` and `expiresAt > now()`,
+// the farmer has Pro access. Checked by the isProFarmer() helper.
+//
+// Foundation mode: no Chargily key configured → checkout returns a stub URL.
+// When CHARGILY_SECRET_KEY is set, real checkout sessions are created.
+// ---------------------------------------------------------------------------
+
+model ProSubscription {
+  id              String          @id @default(cuid())
+  farmerId        String          @unique
+  farmer          Farmer          @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  status          ProStatus       @default(PENDING)
+  plan            String          @default("pro_monthly")  // "pro_monthly" | "pro_annual" | "coop_monthly"
+  amountDzd       Int             // amount charged in DZD (not centimes)
+  checkoutId      String?         // Chargily checkout session ID
+  checkoutUrl     String?         // Chargily checkout URL (stored for debugging)
+  paidAt          DateTime?
+  expiresAt       DateTime?       // null = no expiry (coop annual)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([farmerId, status])
+}
+
+// ---------------------------------------------------------------------------
 // Enums
 // ---------------------------------------------------------------------------
 
@@ -194,4 +222,11 @@ enum BriefStatus {
 enum SendMode {
   STUB  // WHATSAPP_SEND_MODE=stub — log to BriefLog, don't actually send
   LIVE  // WHATSAPP_SEND_MODE=live — real WhatsApp Business Cloud API send
+}
+
+enum ProStatus {
+  PENDING   // checkout created, not yet paid
+  ACTIVE    // paid, Pro access active
+  EXPIRED   // past expiresAt
+  CANCELLED // cancelled by user or failed payment
 }

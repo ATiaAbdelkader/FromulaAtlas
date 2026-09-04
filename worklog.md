@@ -1545,3 +1545,60 @@ Stage Summary:
 - Total: 8 new test suites, 357 new tests (34+46+25+30+72+93+77+41+97 = varying counts across phases)
 - Zero ongoing cost in Foundation mode (Vercel Hobby + Vercel Postgres free + Open-Meteo free = $0/month)
 - Switch-on path when funded: set 6 env vars (WHATSAPP_SEND_MODE=live, WHATSAPP_ACCESS_TOKEN, WHATSAPP_PHONE_NUMBER_ID, WHATSAPP_APP_SECRET, WHATSAPP_WEBHOOK_VERIFY_TOKEN, CRON_SECRET) + redeploy. No code changes.
+
+---
+Task ID: growth-features-batch
+Agent: main (Super Z)
+Task: Ship 4 growth features — farm profile sync, admin dashboard, Chargily payment, Today screen.
+
+Work Log:
+- #3 Farm profile sync (localStorage → Postgres):
+  * Created src/lib/farm-profile-sync.ts with pushFarmProfileToServer() + pullFarmProfileFromServer() + useSyncedFarmProfile() hook
+  * Modified farm-profile-wizard.tsx save() to call pushFarmProfileToServer() after localStorage write (no-op if not logged in)
+  * Critical bridge: without this, the WhatsApp cron has no farm data to build briefs from
+  * If a logged-in farmer has no localStorage (new phone), pulls from Postgres on first load
+
+- #4 Admin dashboard (/admin):
+  * Created GET /api/admin/stats — auth via x-admin-secret header (ADMIN_SECRET env var)
+  * Returns: total farmers, active/unsubscribed counts, today's brief stats (sent/delivered/read/failed/skipped), 7-day trend, recent 20 BriefLog entries with masked phones
+  * Created /admin page — shared-secret login (sessionStorage), summary cards, today's stat tiles, 7-day bar chart (sent/failed/skipped), recent logs with status icons + preview
+
+- #2 Chargily payment integration (CIB + Edahabia):
+  * Created src/lib/chargily-client.ts — createCheckoutSession() (stub/live), verifyChargilyWebhookSignature()
+  * Added ProSubscription model to Prisma (farmerId, status, plan, amountDzd, checkoutId, paidAt, expiresAt)
+  * Added ProStatus enum (PENDING/ACTIVE/EXPIRED/CANCELLED)
+  * Created POST /api/checkout/create — auth-required, creates ProSubscription row + Chargily checkout session
+  * Created POST /api/chargily/webhook — signature-verified, activates ProSubscription on payment
+  * Created GET /api/pro-status — checks if farmer has active Pro
+  * Created /pricing page — 3 tiers (Free/Pro/Cooperative), trilingual, CTA triggers checkout
+  * Created /payment-pending + /payment-success pages
+  * Foundation mode: no CHARGILY_SECRET_KEY → returns stub URL, records intent in DB
+  * 3 plans: Free (0 DZD), Pro Monthly (1,500 DZD), Pro Annual (15,000 DZD), Cooperative Monthly (15,000 DZD)
+
+- #1 Today screen (TodayCard):
+  * Created src/components/agri/today-card.tsx — the farmer's 30-second morning brief
+  * Shows: greeting + farm name + date, weather chip (temp/rain/ET₀), irrigation recommendation (m³ + duration), top 3 tasks (with checkboxes), weather alerts (frost/heat/wind), quick links
+  * Reuses same FarmPilot engine functions as WhatsApp brief (calculateIrrigation, generateTodayTasks, getActiveStage) — in-app card and WhatsApp message always show the same recommendations
+  * Task checkboxes persist in component state (done/not-done)
+  * Mounted at the top of FarmerHome (above HomeDashboard) — first thing the farmer sees
+  * Trilingual EN/FR/AR with RTL support
+  * If no farm profile: shows "Set up your farm" CTA instead
+
+- Navigation updates:
+  * Added /pricing, /privacy links to both landing page footer and main app page footer
+  * Trilingual labels for each link
+
+- Updated .env.example with 3 new env vars: CHARGILY_SECRET_KEY, CHARGILY_WEBHOOK_SECRET, ADMIN_SECRET
+
+Verification:
+  npx prisma generate  -> regenerated (ProSubscription model now typed)
+  npx tsc --noEmit     -> 0 errors
+
+Stage Summary:
+- 4 growth features shipped in one batch:
+  1. Farm profile sync — the critical bridge that makes the WhatsApp pipeline have data
+  2. Admin dashboard — visibility into pipeline metrics (send counts, delivery rates, recent logs)
+  3. Chargily payment — full checkout flow with CIB/Edahabia support (stub mode until key set)
+  4. Today card — the 30-second morning brief that makes the app a daily habit
+- All 4 features work in Foundation mode (zero cost) and are ready to switch on when funded
+- Pricing page live at /pricing, admin at /admin, WhatsApp subscribe at /subscribe
