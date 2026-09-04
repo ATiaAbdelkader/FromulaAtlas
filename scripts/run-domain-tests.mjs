@@ -27,6 +27,7 @@ const suites = [
   'scripts/test-whatsapp-client.ts',
   'scripts/test-otp-store.ts',
   'scripts/test-unsubscribe-token.ts',
+  'scripts/test-brief-pipeline.ts',
   'scripts/test-farm-digital-twin.ts',
   'scripts/test-satellite-health.ts',
   'scripts/test-field-record-book.ts',

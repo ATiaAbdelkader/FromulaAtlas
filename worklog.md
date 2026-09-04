@@ -1406,3 +1406,78 @@ Stage Summary:
 - All API routes enforce auth where required; public endpoints use signed tokens
 - Foundation mode: no WhatsApp messages sent, but Subscription table populated correctly
 - Next: Phase 4 (Vercel Cron at 05:30 UTC + brief pipeline) — the actual daily job that reads subscriptions + sends briefs.
+
+---
+Task ID: whatsapp-foundation-phase-4
+Agent: main (Super Z)
+Task: Phase 4 of WhatsApp outbound backend — the actual daily brief pipeline. Vercel Cron at 05:30 UTC + brief builder service + BriefLog writes.
+
+Work Log:
+- Extended Prisma schema with FarmProfile model (server-side snapshot of localStorage farm_profile_v1 + farmpilot_plan):
+  * id, farmerId (1:1), name, lat, lng, crop, plantingDate, areaHa, planJson
+  * Cascade delete with Farmer
+  * Indexed on farmerId
+  * The cron job reads from this table (can't access browser localStorage)
+- Created src/lib/brief/weather-cache.ts:
+  * getCachedForecast(lat, lng) — 5-min TTL cache keyed on rounded-to-0.1° coords
+  * One wilaya = one fetch (covers all farmers within ~10km)
+  * Returns null on fetch failure (caller falls back to Atlas default ET₀=5.0)
+  * Failure cached for 1 min to avoid hammering on outage
+  * getTodayFromForecast() — picks today's date, falls back to first day if missing
+  * _clearWeatherCache() — test helper
+- Created src/lib/brief/brief-builder.ts:
+  * buildBriefForFarmer(farmerId) — assembles BriefContext from Postgres + Open-Meteo
+  * Steps: load FarmProfile → resolve crop (canonical→FarmPilot via toFarmPilotId) → compute active stage → fetch weather → compute irrigation → generate tasks → detect alerts
+  * Returns { context, skipReason?, weatherSource } — skipReason is 'no_farm_profile' | 'no_crop' | 'unsupported_crop' | 'no_planting_date'
+  * Falls back to default FarmPilotPlan if planJson is missing or corrupt
+  * Pure logic — no WhatsApp sends, no DB writes (easy to test)
+- Created src/app/api/cron/daily-brief/route.ts (POST + GET):
+  * Auth: requires x-cron-secret header matching CRON_SECRET env var (refuses to run if not set)
+  * Pipeline: query due subscriptions → for each: build brief → send via WhatsApp → log to BriefLog → advance nextSendAt
+  * Batches: processes all due subs in one invocation (50-farmer batches via sequential loop, ~500ms each, fits in 60s Vercel limit)
+  * SKIPPED status: farmer has no profile/crop (logged but not failed)
+  * FAILED status: send failed or exception (logged with errorMessage)
+  * SENT status: success (logged with messageId + briefPreview first 200 chars)
+  * nextSendAt advanced to tomorrow's preferredTime (Algeria UTC+1, no DST) — always, even on failure, to prevent infinite retries
+  * GET endpoint: health check — returns dueCount + sendMode + recent 10 BriefLog entries (for debugging)
+- Created src/app/api/farm-profile/route.ts (GET + POST):
+  * GET: returns farmer's saved FarmProfile + parsed plan
+  * POST: zod-validated upsert (name, lat, lng, crop, plantingDate, areaHa, plan)
+  * Auth required (farmer ID from session, not body)
+  * This is what the UI calls to sync localStorage → Postgres so the cron can read it
+- Configured Vercel Cron in vercel.json:
+  * Single cron: /api/cron/daily-brief at "30 5 * * *" (05:30 UTC = 06:30 Algeria)
+  * Vercel Hobby allows 2 cron jobs (we use 1)
+  * Vercel automatically sends x-cron-secret header matching CRON_SECRET env var
+- Created scripts/test-brief-pipeline.ts (30 tests):
+  * getTodayFromForecast: picks today, falls back to first day, handles null/empty
+  * Weather cache behavior: fetch failure returns null (not throws)
+  * Weather cache invalid coords: NaN/Infinity return null
+  * Unsubscribe token in brief: generates + verifies, URL format correct
+  * Token uniqueness per farmer: 3 different farmers → 3 different tokens
+  * nextSendAt advancement math: 4 cases including edge (23:30 UTC crossing midnight in Algeria)
+  * Brief message structure smoke test: buildBriefMessage produces non-empty output with farm name + footer in all 3 languages
+
+Verification:
+  npx prisma generate  -> regenerated (FarmProfile model now typed)
+  npx tsc --noEmit     -> 0 errors
+  test-brief-pipeline  -> 30 passed, 0 failed
+  All existing test suites still passing
+
+Stage Summary:
+- The full daily brief pipeline is now end-to-end functional:
+  1. Vercel Cron triggers POST /api/cron/daily-brief at 05:30 UTC
+  2. Auth via x-cron-secret header (refuses without CRON_SECRET set)
+  3. Queries subscriptions where nextSendAt <= now() AND enabled=true AND unsubscribedAt IS NULL
+  4. For each farmer:
+     a. buildBriefForFarmer() loads FarmProfile + computes brief context
+     b. If skipped (no profile/crop): logs SKIPPED + advances nextSendAt
+     c. buildBriefMessage() produces trilingual message (reuses tested helpers)
+     d. Appends unsubscribe link with signed token (7-day expiry)
+     e. WhatsApp client sends (stub: logs; live: real Graph API call)
+     f. BriefLog row written (status, mode, messageId, preview, length, weatherSource, language)
+     g. nextSendAt advanced to tomorrow's preferredTime
+  5. Returns summary { sent, failed, skipped, total, durationMs }
+- In Foundation mode (default): every brief is logged to BriefLog with mode=STUB but no WhatsApp message sent. The "view past briefs" UI can show farmers what they would have received.
+- When WHATSAPP_SEND_MODE=live: same code sends real WhatsApp messages via Meta Graph API. No code changes.
+- Phase 5 (webhook for STOP replies + delivery receipts) is the only remaining piece.

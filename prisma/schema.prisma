@@ -71,8 +71,41 @@ model Farmer {
 
   subscription  Subscription?
   briefLogs     BriefLog[]
+  farmProfile   FarmProfile?
 
   @@index([phoneE164])
+}
+
+// ---------------------------------------------------------------------------
+// FarmProfile (server-side snapshot)
+//
+// Mirrors the localStorage `farm_profile_v1` shape, persisted to Postgres
+// so the cron job can read it without access to the farmer's browser.
+//
+// Synced lazily: when a logged-in farmer saves their farm profile in the
+// UI, the existing localStorage write fires AND a background POST
+// /api/farm-profile upserts this row.
+//
+// If the farmer has no profile, the cron skips them with BriefLog
+// status=SKIPPED + reason="no_farm_profile".
+// ---------------------------------------------------------------------------
+
+model FarmProfile {
+  id              String   @id @default(cuid())
+  farmerId        String   @unique
+  farmer          Farmer   @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  name            String?
+  lat             Float?
+  lng             Float?
+  crop            String?  // canonical crop id (e.g. 'potato', 'wheat')
+  plantingDate    String?  // ISO YYYY-MM-DD
+  areaHa          Float?
+  // Snapshot of FarmPilotPlan (irrigation system, fertilizer, target yield)
+  planJson        String?  // JSON.stringify(FarmPilotPlan)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([farmerId])
 }
 
 // ---------------------------------------------------------------------------
