@@ -29,6 +29,7 @@ import { FarmProfileWizard, needsFarmProfileSetup } from '@/components/agri/farm
 import { ProductOfTheDay } from '@/components/agri/product-of-the-day';
 import { FarmerDecisionPopups, type DecisionPopupType } from '@/components/agri/farmer-decision-popups';
 import { TodayCard } from '@/components/agri/today-card';
+import { GoProBanner } from '@/components/agri/go-pro-banner';
 
 type ExperienceTab = TabId;
 
@@ -124,6 +125,9 @@ function FarmerHome({ onOpenTool, onOpenSearch }: Pick<LevelHomeProps, 'onOpenTo
           </div>
         </div>
       )}
+
+      {/* Go Pro upgrade banner — only shown for logged-in free users */}
+      <GoProBanner />
 
       {/* Today card — the farmer's morning brief (30-second scan) */}
       {hasProfile && (

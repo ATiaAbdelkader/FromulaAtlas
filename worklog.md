@@ -1602,3 +1602,51 @@ Stage Summary:
   4. Today card — the 30-second morning brief that makes the app a daily habit
 - All 4 features work in Foundation mode (zero cost) and are ready to switch on when funded
 - Pricing page live at /pricing, admin at /admin, WhatsApp subscribe at /subscribe
+
+---
+Task ID: growth-features-batch-2
+Agent: main (Super Z)
+Task: 5 follow-up items — Today card sync, Go Pro banner, deployment guide, cooperative dashboard, review.
+
+Work Log:
+- #1 Today card sync:
+  * Replaced useFarmProfile with useSyncedFarmProfile in today-card.tsx
+  * Falls back to useFarmProfile if synced hook returns null (logged-out users)
+  * Logged-in farmers now get their server-side profile (pulls from Postgres if localStorage is empty — e.g., new phone)
+- #2 Go Pro upgrade banner:
+  * Created src/components/agri/go-pro-banner.tsx — checks /api/pro-status, shows banner if logged-in + not Pro
+  * Banner is dismissable for the current session (sessionStorage)
+  * Trilingual (EN/FR/AR), gradient background, Crown icon, "Go Pro" CTA → /pricing
+  * Mounted at top of FarmerHome (above TodayCard)
+- #3 Deployment guide:
+  * Created DEPLOYMENT-GUIDE.md (~400 lines)
+  * 5 phases: Vercel deploy, WhatsApp setup, Chargily setup, custom domain, cron verification
+  * Includes env var checklist, troubleshooting, cost-at-scale table
+  * Break-even analysis: 4 Pro subs cover 100 free farmers
+- #4 Cooperative dashboard:
+  * Added 3 Prisma models: Cooperative, CoopMember, CoopRole enum
+  * Created src/lib/coop-utils.ts: generateJoinCode() (6-char, excludes 0/O/1/I), canViewAllFarms(), canManageMembers()
+  * Created GET/POST /api/coop (list + create cooperative)
+  * Created POST /api/coop/join (join via 6-char code, with consent toggle)
+  * Created GET /api/coop/stats?id=<coopId> (aggregate stats, anonymized for MEMBERS, per-member for ADMIN/AGRONOMIST)
+  * Created /coop page (full trilingual dashboard):
+    - Create cooperative form (name + description)
+    - Join form (6-char code + consent checkbox)
+    - Coop list with role badges (Crown for ADMIN)
+    - Selected coop detail: aggregate stats (members, sharing, farms, total area), crop distribution bar chart, members table (admin/agronomist only), join code with copy button (admin only)
+  * Privacy by design: members must explicitly consent to share farm data with agronomists. Non-consenting members are counted in aggregate but not visible in per-member view.
+  * Added /coop link to main app footer
+- #5 Review: documented in this worklog entry + final summary below.
+
+Verification:
+  npx prisma generate  -> regenerated (Cooperative, CoopMember, CoopRole now typed)
+  npx tsc --noEmit     -> 0 errors
+
+Stage Summary:
+- All 5 follow-up items shipped:
+  1. Today card pulls from Postgres for logged-in farmers (no more "new phone = lost data")
+  2. Free users see upgrade banner → /pricing conversion path
+  3. Deployment guide covers full Vercel + Meta + Chargily setup
+  4. Cooperative dashboard live at /coop with full multi-member management
+  5. Review documented
+- The cooperative feature opens a new revenue vertical: coop admins pay 15,000 DZD/mo for 20-50 members

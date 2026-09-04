@@ -745,6 +745,7 @@ export default function LandingPage() {
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
             <Link href="/app" className="hover:text-foreground transition-colors">{isRTL ? 'فتح التطبيق' : 'Open Workspace'}</Link>
             <Link href="/pricing" className="hover:text-foreground transition-colors">{isRTL ? 'الأسعار' : 'Pricing'}</Link>
+            <Link href="/coop" className="hover:text-foreground transition-colors">{isRTL ? 'التعاونيات' : 'Cooperatives'}</Link>
             <Link href="/about" className="hover:text-foreground transition-colors">{isRTL ? 'حول المنصة' : 'About & Roadmap'}</Link>
             <Link href="/privacy" className="hover:text-foreground transition-colors">{isRTL ? 'الخصوصية' : 'Privacy'}</Link>
             <span>© {new Date().getFullYear()}</span>

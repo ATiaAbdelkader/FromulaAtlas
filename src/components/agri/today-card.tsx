@@ -26,6 +26,7 @@ import {
   Thermometer, Wind,
 } from 'lucide-react';
 import { useFarmProfile } from '@/components/agri/farm-profile-wizard';
+import { useSyncedFarmProfile } from '@/lib/farm-profile-sync';
 import { useTranslation, copyFor } from '@/lib/language-store';
 import { getForecast, type ForecastResult, type DailyForecast } from '@/lib/open-meteo';
 import {
@@ -52,7 +53,13 @@ export function TodayCard({ onOpenTool }: TodayCardProps) {
   const DirectionArrow = isRTL ? ArrowLeft : ArrowRight;
   const t = (en: string, ar: string, fr: string) => (isArabic ? ar : isFrench ? fr : en);
 
-  const profile = useFarmProfile();
+  // Use synced profile — pulls from Postgres if logged in + localStorage empty,
+  // otherwise uses localStorage (fast). Falls back to useFarmProfile if the
+  // synced hook isn't available (e.g., during SSR).
+  const { profile, loading: profileLoading } = useSyncedFarmProfile();
+  const localProfile = useFarmProfile();
+  // Prefer synced profile; fall back to local (covers logged-out users)
+  const effectiveProfile = profile ?? localProfile;
   const [forecast, setForecast] = useState<ForecastResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -60,14 +67,14 @@ export function TodayCard({ onOpenTool }: TodayCardProps) {
 
   // Load forecast
   useEffect(() => {
-    if (!profile?.lat || !profile?.lng) {
+    if (!effectiveProfile?.lat || !effectiveProfile?.lng) {
       setLoading(false);
       return;
     }
     let cancelled = false;
     (async () => {
       try {
-        const f = await getForecast(parseFloat(profile.lat!), parseFloat(profile.lng!), { days: 4 });
+        const f = await getForecast(parseFloat(effectiveProfile.lat!), parseFloat(effectiveProfile.lng!), { days: 4 });
         if (!cancelled) {
           setForecast(f);
           setError(null);
@@ -79,17 +86,17 @@ export function TodayCard({ onOpenTool }: TodayCardProps) {
       }
     })();
     return () => { cancelled = true; };
-  }, [profile?.lat, profile?.lng]);
+  }, [effectiveProfile?.lat, effectiveProfile?.lng]);
 
   // Compute brief data (mirrors buildBriefForFarmer logic)
   const briefData = useMemo(() => {
-    if (!profile?.crop || !profile?.plantingDate) return null;
+    if (!effectiveProfile?.crop || !effectiveProfile?.plantingDate) return null;
 
-    const farmPilotCropId = toFarmPilotId(profile.crop);
+    const farmPilotCropId = toFarmPilotId(effectiveProfile.crop);
     const crop = farmPilotCropId ? getCropById(farmPilotCropId) : undefined;
     if (!crop) return null;
 
-    const activeStage = getActiveStage(crop, profile.plantingDate);
+    const activeStage = getActiveStage(crop, effectiveProfile.plantingDate);
     const today = forecast?.daily?.[0];
 
     const etoMmPerDay = today?.et0 ?? 5.0;
@@ -97,8 +104,8 @@ export function TodayCard({ onOpenTool }: TodayCardProps) {
 
     const plan: FarmPilotPlan = {
       cropId: crop.id,
-      plantingDate: profile.plantingDate,
-      areaHa: profile.area ?? 0.5,
+      plantingDate: effectiveProfile.plantingDate,
+      areaHa: effectiveProfile.area ?? 0.5,
       productionSystem: 'open_field',
       irrigationSystem: 'drip',
       irrigationFlowLph: 2000,
@@ -130,7 +137,7 @@ export function TodayCard({ onOpenTool }: TodayCardProps) {
     }
 
     return { crop, activeStage, today, irrigation, tasks, alerts };
-  }, [profile, forecast]);
+  }, [effectiveProfile, forecast]);
 
   // Greeting based on time of day
   const greeting = useMemo(() => {
@@ -150,7 +157,7 @@ export function TodayCard({ onOpenTool }: TodayCardProps) {
   }, []);
 
   // No farm profile set up
-  if (!profile?.setupCompleted) {
+  if (!effectiveProfile?.setupCompleted) {
     return (
       <Card className="border-emerald-200 bg-emerald-50/50 dark:border-emerald-900/30 dark:bg-emerald-950/10">
         <CardContent className="pt-6 text-center">

@@ -73,6 +73,7 @@ model Farmer {
   briefLogs     BriefLog[]
   farmProfile   FarmProfile?
   proSubscription ProSubscription?
+  coopMemberships CoopMember[]
 
   @@index([phoneE164])
 }
@@ -229,4 +230,52 @@ enum ProStatus {
   ACTIVE    // paid, Pro access active
   EXPIRED   // past expiresAt
   CANCELLED // cancelled by user or failed payment
+}
+
+enum CoopRole {
+  ADMIN     // can invite members, view all farms, manage settings
+  AGRONOMIST // can view all farms, add notes, no billing access
+  MEMBER    // can view their own farm + aggregated (anonymized) coop stats
+}
+
+// ---------------------------------------------------------------------------
+// Cooperative — a group of farmers sharing a dashboard
+//
+// A cooperative is created by an ADMIN (typically a coop president or an
+// agronomist). They invite members via a join code. Members see their own
+// farm + anonymized aggregate stats (total area, crop distribution, avg yield).
+//
+// Agronomists get read access to all member farms (with consent).
+// Admins can manage members + see billing.
+//
+// One farmer can be a member of multiple cooperatives.
+// ---------------------------------------------------------------------------
+
+model Cooperative {
+  id              String       @id @default(cuid())
+  name            String
+  description     String?
+  joinCode        String       @unique  // 6-char code farmers enter to join
+  adminFarmerId   String       // the farmer who created / owns the coop
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  members         CoopMember[]
+
+  @@index([adminFarmerId])
+}
+
+model CoopMember {
+  id              String   @id @default(cuid())
+  cooperativeId   String
+  cooperative     Cooperative @relation(fields: [cooperativeId], references: [id], onDelete: Cascade)
+  farmerId        String
+  farmer          Farmer   @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  role            CoopRole @default(MEMBER)
+  // Consent: members must explicitly allow agronomists to see their farm data
+  consentShareData Boolean  @default(false)
+  joinedAt        DateTime @default(now())
+
+  @@unique([cooperativeId, farmerId])  // a farmer can only be in a coop once
+  @@index([cooperativeId, role])
 }
