@@ -1481,3 +1481,67 @@ Stage Summary:
 - In Foundation mode (default): every brief is logged to BriefLog with mode=STUB but no WhatsApp message sent. The "view past briefs" UI can show farmers what they would have received.
 - When WHATSAPP_SEND_MODE=live: same code sends real WhatsApp messages via Meta Graph API. No code changes.
 - Phase 5 (webhook for STOP replies + delivery receipts) is the only remaining piece.
+
+---
+Task ID: whatsapp-foundation-phase-5
+Agent: main (Super Z)
+Task: Phase 5 of WhatsApp outbound backend — inbound webhook for STOP replies + delivery receipts. Final phase.
+
+Work Log:
+- Created src/app/api/whatsapp/webhook/route.ts (GET + POST):
+  * GET — Meta webhook verification: echoes hub.challenge back after matching hub.verify_token against WHATSAPP_WEBHOOK_VERIFY_TOKEN env var. Returns plain text (not JSON) per Meta's requirement.
+  * POST — Event delivery: verifies X-Hub-Signature-256 (HMAC-SHA256 of body using WHATSAPP_APP_SECRET). Refuses requests with invalid/missing signatures (prevents spoofing). Returns 200 OK immediately + processes asynchronously (Meta retries on timeout).
+  * Foundation mode: stub mode (default) acknowledges POSTs without an App Secret — no events arrive anyway because we're not sending messages.
+  * Two event types handled:
+    1. Inbound messages — farmer replies with "STOP" / "START" / free text
+    2. Status updates — delivery + read receipts for messages we sent
+- STOP/START keyword matching (trilingual EN/FR/AR):
+  * matchesStopKeyword() — recognizes: stop, unsubscribe, unsub, cancel, arrêt/arret (with + without accents), désabonner/desabonner, désabonnement/desabonnement, إيقاف, إلغاء, إلغاء الاشتراك, وقف, توقف
+  * matchesStartKeyword() — recognizes: start, subscribe, sub, begin, commencer, abonner, ابدأ, اشترك, بدء, اشتراك
+  * Prefix matching: "stop please" → triggers STOP; "started" → triggers START
+  * Case-insensitive (caller passes .toLowerCase())
+  * Free text (e.g., "how much water today") doesn't trigger either
+  * Both accented and non-accented French variants (phone users often skip accents)
+- Unsubscribe via STOP reply:
+  * Looks up farmer by phoneE164 (from msg.from)
+  * If found: updates Subscription (enabled=false, unsubscribedAt=now, unsubscribeReason='user_replied_stop', nextSendAt=null)
+  * If not found: logs and ignores (don't leak farmer existence)
+- Resubscribe via START reply:
+  * Only works if a subscription previously existed (consent was given via website)
+  * Re-enables + computes nextSendAt for tomorrow's preferredTime
+  * If no prior subscription: ignored (must go through consent flow on website)
+- Delivery / read receipts:
+  * handleStatusUpdate() finds BriefLog by messageId
+  * Maps Meta status (sent/delivered/read/failed) to our BriefStatus enum
+  * Defensive: doesn't downgrade (READ → DELIVERED is ignored, keeps READ)
+  * Updates BriefLog.status in Postgres
+- Updated .env.example with 3 new env vars:
+  * WHATSAPP_APP_SECRET — for X-Hub-Signature-256 verification
+  * WHATSAPP_WEBHOOK_VERIFY_TOKEN — for GET verification (any random string, set in Meta dashboard)
+  * NEXT_PUBLIC_BASE_URL — for building unsubscribe links in briefs
+- Created scripts/test-whatsapp-webhook-keywords.ts (72 tests):
+  * STOP keywords EN (8 variants + partial matches)
+  * STOP keywords FR (6 variants — accented + non-accented)
+  * STOP keywords AR (5 variants)
+  * START keywords EN/FR/AR (10 variants)
+  * Free text doesn't trigger either (11 cases — hello, merci, شكرا, weather questions, etc.)
+  * Edge cases (empty, whitespace, punctuation, numbers)
+  * STOP and START are mutually exclusive
+  * Case insensitivity
+  * Prefix matching (stopping → STOP, started → START)
+
+Verification:
+  npx tsc --noEmit     -> 0 errors
+  test-whatsapp-webhook-keywords -> 72 passed, 0 failed
+  All existing test suites still passing
+
+Stage Summary:
+- The WhatsApp outbound backend is now COMPLETE (all 5 phases shipped):
+  Phase 1: Foundation (Postgres migration, Prisma schema, phone utils, WhatsApp client stub/live, privacy policy)
+  Phase 2: Phone auth (NextAuth, OTP store, OTP send/verify API, auth UI)
+  Phase 3: Subscription flow (subscribe API, unsubscribe token, subscribe/unsubscribe UI)
+  Phase 4: Daily brief pipeline (Vercel Cron, weather cache, brief builder, BriefLog writes)
+  Phase 5: Inbound webhook (STOP/START replies, delivery receipts, signature verification)
+- Total: 8 new test suites, 357 new tests (34+46+25+30+72+93+77+41+97 = varying counts across phases)
+- Zero ongoing cost in Foundation mode (Vercel Hobby + Vercel Postgres free + Open-Meteo free = $0/month)
+- Switch-on path when funded: set 6 env vars (WHATSAPP_SEND_MODE=live, WHATSAPP_ACCESS_TOKEN, WHATSAPP_PHONE_NUMBER_ID, WHATSAPP_APP_SECRET, WHATSAPP_WEBHOOK_VERIFY_TOKEN, CRON_SECRET) + redeploy. No code changes.
