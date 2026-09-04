@@ -1,17 +1,34 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// This is the Prisma schema file for FormulaAtlas.
+//
+// Provider: postgresql
+//   - Production: Vercel Postgres (free tier — 256MB, sufficient for ~10K farmers)
+//   - Local dev:  either install Postgres locally OR point DATABASE_URL at
+//                 Vercel Postgres (works fine, just slightly higher latency)
+//
+// We previously used SQLite, but it locks under concurrent writes (cron job +
+// user requests collide). Postgres is required for the WhatsApp outbound
+// pipeline (see WHATSAPP-OUTBOUND-SCOPE.md §0).
+//
+// Migrating from SQLite to Postgres:
+//   1. Create a Vercel Postgres database in your Vercel dashboard
+//   2. Copy the connection string (looks like postgres://user:pass@host:5432/db)
+//   3. Set DATABASE_URL in your .env (local) and Vercel project env vars
+//   4. Run: npm run db:push   (creates tables, no data migration needed —
+//      the old SQLite data was dev-only seed/test data)
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+// ---------------------------------------------------------------------------
+// Legacy demo models (kept for the existing /app/api/* routes that use them;
+// will be removed once those routes are migrated to use Farmer)
+// ---------------------------------------------------------------------------
 
 model User {
   id        String   @id @default(cuid())
@@ -29,4 +46,119 @@ model Post {
   authorId  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Farmer identity (Foundation mode — see WHATSAPP-OUTBOUND-SCOPE.md §0)
+//
+// A Farmer is identified by their WhatsApp phone number in E.164 format
+// (e.g. "+213661234567"). No email — most Algerian farmers don't have one.
+//
+// `phoneVerified` is false until the farmer completes WhatsApp OTP (which
+// requires the WhatsApp Business API to be live — deferred until funding).
+// In Foundation mode, we validate phone format only and mark as unverified.
+// ---------------------------------------------------------------------------
+
+model Farmer {
+  id            String         @id @default(cuid())
+  phoneE164     String         @unique
+  displayName   String?
+  language      Language       @default(AR)
+  phoneVerified Boolean        @default(false)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  lastLoginAt   DateTime?
+
+  subscription  Subscription?
+  briefLogs     BriefLog[]
+
+  @@index([phoneE164])
+}
+
+// ---------------------------------------------------------------------------
+// Subscription — opt-in to the daily WhatsApp brief
+//
+// One subscription per farmer for v1. v2 can add multiple (e.g., one per
+// field, or different brief types).
+//
+// Consent is recorded with timestamp + IP + privacy policy version, per
+// Algerian data protection law (18-07, GDPR-inspired).
+//
+// `nextSendAt` is computed after each send (or each cron run if no send
+// happened) to tomorrow's preferredTime. The cron job queries subscriptions
+// where `nextSendAt <= now()` AND `enabled = true` AND `unsubscribedAt IS NULL`.
+// ---------------------------------------------------------------------------
+
+model Subscription {
+  id              String    @id @default(cuid())
+  farmerId        String    @unique
+  farmer          Farmer    @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  enabled         Boolean   @default(true)
+  preferredTime   String    @default("06:00")  // "HH:MM" 24h, Africa/Algiers
+  consentedAt     DateTime  @default(now())
+  consentIp       String?
+  consentVersion  String    @default("1.0")    // privacy policy version
+  unsubscribedAt  DateTime?
+  unsubscribeReason String?                    // "user_replied_stop" | "user_clicked_link" | "manual"
+  nextSendAt      DateTime?                    // null until first consent processed
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([enabled, nextSendAt])
+  @@index([unsubscribedAt])
+}
+
+// ---------------------------------------------------------------------------
+// BriefLog — append-only audit log of every brief we attempted to send
+//
+// One row per (farmer, day). Even in Foundation mode (stub send), we log
+// every brief that WOULD have been sent — this lets us:
+//   1. Verify the pipeline works end-to-end before going live
+//   2. Show farmers "here's what you would have received" in the UI
+//   3. Have a complete audit trail from day 1
+//
+// Status flow: PENDING → SENT → DELIVERED → READ  (or FAILED at any step)
+// ---------------------------------------------------------------------------
+
+model BriefLog {
+  id              String      @id @default(cuid())
+  farmerId        String
+  farmer          Farmer      @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  sentAt          DateTime    @default(now())
+  messageId       String?     // Meta's message ID (null in stub mode)
+  status          BriefStatus @default(PENDING)
+  sendMode        SendMode    @default(STUB)  // STUB | LIVE — what mode we were in when we tried
+  errorMessage    String?
+  briefPreview    String      // First 200 chars, for debugging + "view past briefs" UI
+  briefLength     Int
+  weatherSource   String      @default("open-meteo")  // "open-meteo" | "atlas_default"
+  language        Language    @default(AR)
+
+  @@index([farmerId, sentAt])
+  @@index([status])
+  @@index([sentAt])
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum Language {
+  EN
+  FR
+  AR
+}
+
+enum BriefStatus {
+  PENDING    // brief was computed, not yet handed off to WhatsApp client
+  SENT       // WhatsApp client accepted it (stub mode: always SENT immediately)
+  DELIVERED  // Meta confirmed delivery to handset (live mode only)
+  READ       // Farmer opened WhatsApp (live mode only)
+  FAILED     // send failed — see errorMessage
+  SKIPPED    // brief was skipped (e.g., farmer has no crop set)
+}
+
+enum SendMode {
+  STUB  // WHATSAPP_SEND_MODE=stub — log to BriefLog, don't actually send
+  LIVE  // WHATSAPP_SEND_MODE=live — real WhatsApp Business Cloud API send
 }

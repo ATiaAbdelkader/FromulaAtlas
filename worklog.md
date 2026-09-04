@@ -1179,3 +1179,69 @@ Stage Summary:
 - Latent bug fixed: algeria-crop-calendar.tsx was passing 'durum-wheat' as default phenology ID when user selected 'date-palm' (because the old ternary checked 'date_palm' with underscore but canonical uses hyphen)
 - All test suites wired into `npm run test:domain` runner
 - All tests are deterministic (no network calls — fetch is mocked in sentinel-ndvi tests; open-meteo calls in atlas estimate gracefully catch and continue)
+
+---
+Task ID: whatsapp-foundation-phase-1
+Agent: main (Super Z)
+Task: Phase 1 of WhatsApp outbound backend — Foundation mode (zero ongoing cost). Build all the plumbing so that switching on real WhatsApp sends later requires only env var changes, no code changes.
+
+Work Log:
+- Strategy pivot: user has no funding yet, so build everything on free tiers with stub for actual WhatsApp sends. Defer Meta Business Account setup until funded.
+- Updated WHATSAPP-OUTBOUND-SCOPE.md with new §0 "Foundation mode" explaining what we build now vs. defer.
+- Prisma schema migration SQLite → Postgres:
+  * Provider changed from `sqlite` to `postgresql` in schema.prisma
+  * Existing User + Post models preserved (legacy routes still work)
+  * Added 3 new models: Farmer, Subscription, BriefLog
+  * Added 3 enums: Language (EN/FR/AR), BriefStatus (PENDING/SENT/DELIVERED/READ/FAILED/SKIPPED), SendMode (STUB/LIVE)
+  * Schema includes indexes on (enabled, nextSendAt), (farmerId, sentAt), (status), (sentAt)
+  * Cascade deletes configured (Farmer delete cascades to Subscription + BriefLog)
+- Created src/lib/phone-utils.ts:
+  * normalizeAlgerianPhone() — accepts 6+ input formats (local, intl, +213, 00213, with spaces/dots/dashes) → "+213XXXXXXXXX"
+  * Validates Algerian mobile prefixes (5/6/7 only — landlines rejected)
+  * prettyAlgerianPhone() — "+213661234567" → "0661 23 45 67" for UI display
+  * maskAlgerianPhone() — "+213661234567" → "+213 ••• •• 45 67" for admin lists
+- Created src/lib/whatsapp-client.ts:
+  * WhatsAppClient interface (sendTemplate + verifyNumber + readonly mode)
+  * StubWhatsAppClient — logs to console, returns success with fake message ID, zero cost
+  * LiveWhatsAppClient — real Meta Graph API integration (POST /v21.0/{phone_id}/messages)
+  * getWhatsAppSendMode() — reads WHATSAPP_SEND_MODE env var, validates credentials present, falls back to stub if missing
+  * getWhatsAppClient() — singleton accessor that returns stub or live based on mode
+  * _resetWhatsAppClient() — test helper to reset singleton between tests
+  * Switching from stub to live when funding arrives: set 2 env vars + redeploy, NO code changes
+- Created src/app/privacy/page.tsx — public privacy policy (trilingual EN/FR/AR):
+  * 10 sections covering: who we are, data collected, legal basis, usage, third parties (Meta/Open-Meteo/Vercel), retention, rights (access/rectify/erase/portability/object/withdraw), security, children, changes
+  * Version 1.0 (matches Subscription.consentVersion in Prisma schema)
+  * Last updated: 2026-09-04
+  * Compliant with Algerian data protection law 18-07 (GDPR-inspired)
+  * Required for WhatsApp Business subscription consent flow
+- Created scripts/test-whatsapp-client.ts (34 tests):
+  * Phone normalization across 17 input formats (valid + invalid)
+  * Pretty-printing + masking
+  * Mode resolution: defaults to stub, explicit stub, live-without-credentials → falls back to stub, live-with-credentials → live
+  * Stub client sendTemplate: returns success + fake message ID + mode=stub
+  * Stub client verifyNumber: accepts valid E.164, rejects invalid format
+- Updated .env.example to document WHATSAPP_SEND_MODE, WHATSAPP_ACCESS_TOKEN, WHATSAPP_PHONE_NUMBER_ID, WHATSAPP_API_VERSION, CRON_SECRET env vars + Foundation mode summary
+- Created empty route directories for next-phase work:
+  * src/app/api/cron/daily-brief/ (Phase 4)
+  * src/app/api/whatsapp/webhook/ (Phase 5)
+  * src/app/unsubscribe/ (Phase 3)
+
+Verification:
+  npx tsc --noEmit     -> 0 errors
+  test-whatsapp-client -> 34 passed, 0 failed
+  test-whatsapp-brief  -> 93 passed, 0 failed (no regressions)
+  Existing legacy routes that use User/Post models still compile (schema preserved them)
+
+Stage Summary:
+- Foundation is in place. The day funding arrives:
+  1. Create Vercel Postgres database (free tier)
+  2. Set DATABASE_URL env var
+  3. Run `npm run db:push` (creates the 5 tables: User, Post, Farmer, Subscription, BriefLog)
+  4. Create Meta Business Account + register WhatsApp number
+  5. Submit 4 message templates for review
+  6. Set WHATSAPP_ACCESS_TOKEN + WHATSAPP_PHONE_NUMBER_ID env vars
+  7. Flip WHATSAPP_SEND_MODE from "stub" to "live"
+  8. Redeploy — first real WhatsApp brief goes out next morning at 06:30
+- Total switch-on dev time: ~2 hours. Total wall-clock: ~1 week (Meta template review is the long pole).
+- Zero ongoing cost in Foundation mode: Vercel Hobby + Vercel Postgres free tier + Open-Meteo free = $0/month.
+- Next phases (auth UI, subscription flow, cron pipeline, webhook) build on this foundation without touching the data model.

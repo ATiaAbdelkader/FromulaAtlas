@@ -1,9 +1,59 @@
 # WhatsApp Outbound Backend — Scope Document
 
-**Status:** Draft for review
+**Status:** Revised — Foundation mode approved 2026-09-04
 **Author:** Super Z
 **Date:** 2026-09-04
 **Predecessor work:** Features #7 (WhatsApp brief UI), #8 (push notification scheduler), #9 (crop ID unification)
+
+---
+
+## 0. Foundation mode (current operating mode)
+
+**Constraint:** No funding yet. Everything must run on free tiers with zero ongoing cost. When funding arrives, the WhatsApp send capability should be switchable with **one env var flip** (`WHATSAPP_SEND_MODE=live`) + a Meta Business Account setup — no code changes, no migrations.
+
+### What we build now (zero cost, all on free tiers)
+- ✅ Postgres migration (Vercel Postgres free tier — 256MB, sufficient for ~10K farmers)
+- ✅ Prisma schema for `Farmer`, `Subscription`, `BriefLog` (tables exist, no live data)
+- ✅ Phone-based auth via NextAuth (credentials provider, OTP logic stubbed — phone format validation only, no actual OTP send)
+- ✅ Subscription flow UI (consent checkbox, language picker, time picker) — works end-to-end, marks `Subscription.enabled=true` but doesn't send anything
+- ✅ Daily brief pipeline as a Vercel Cron job — runs at 05:30 UTC, computes briefs for all subscribed farmers, **logs them to `BriefLog` with `status=PENDING`** instead of sending
+- ✅ WhatsApp client wrapper with a **stub implementation** (`console.log` instead of HTTP call) — same interface as the real one
+- ✅ Privacy policy page at `/privacy` (public URL needed for consent flow)
+- ✅ Unsubscribe page at `/unsubscribe` (works via link in future briefs)
+- ✅ Feature flag `WHATSAPP_SEND_MODE` (default: `stub`) — when set to `live`, the stub swaps to the real Graph API client
+
+### What we defer until funded
+- ⏸️ Meta Business Account creation (user-side, ~1 day)
+- ⏸️ 4 WhatsApp message templates submitted for review (user-side, 2h work + 2-5 days wait)
+- ⏸️ Real WhatsApp Business Cloud API sends (just flip `WHATSAPP_SEND_MODE=live` + set `WHATSAPP_ACCESS_TOKEN` env var)
+- ⏸️ OTP-via-WhatsApp (backfill to verify all stored phone numbers once WhatsApp is live)
+- ⏸️ Chargily payment integration for Pro tier
+- ⏸️ Vercel Pro upgrade (only if we exceed Hobby limits — unlikely until 500+ active users)
+
+### Switch-on cost when funding arrives
+The day funding lands, the path to live WhatsApp sends is:
+1. Create Meta Business Account (1 day, user-side)
+2. Submit 4 templates for review (2h work + 2-5 days wall-clock wait)
+3. Buy local SIM in Algeria, register WhatsApp Business number (1 day, user-side)
+4. Get `WHATSAPP_PHONE_NUMBER_ID` + `WHATSAPP_ACCESS_TOKEN` from Meta dashboard
+5. Set 2 env vars in Vercel: `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`
+6. Flip `WATSAPP_SEND_MODE` from `stub` to `live`
+7. Run backfill script to send OTPs to all stored farmers → verify phone ownership
+8. First real brief goes out next morning at 06:30
+
+**Total dev time on my side:** ~2 hours. **Total wall-clock:** ~1 week (dominated by Meta review).
+
+### Free-tier budget
+| Service | Free tier | Our expected usage at 1000 farmers | Headroom |
+|---|---|---|---|
+| Vercel Hobby | 100GB-hours serverless / mo | ~5GB-hours (cron + auth routes) | 20× |
+| Vercel Postgres | 256MB storage, 60 compute hours | ~50MB (10K rows × 5KB avg) | 5× |
+| Vercel Cron (Hobby) | 2 jobs | 1 job (daily brief) | 2× |
+| Open-Meteo | 10K calls/day | ~60 calls/day (one per wilaya, cached) | 166× |
+| NextAuth | Free (self-hosted) | N/A | ∞ |
+| **Total fixed cost** | **$0/month** | | |
+
+We can comfortably support ~1000 free-tier farmers without paying anyone anything. Past 1000, we'd hit Postgres storage limits first — Vercel Pro ($20/mo) lifts that to 1GB and unlocks more cron slots.
 
 ---
 
