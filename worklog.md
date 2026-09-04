@@ -1321,3 +1321,88 @@ Stage Summary:
 - NextAuth session cookie persists for 30 days
 - All routes SSR-safe (AuthProvider is client-only, no breakage on public pages)
 - Next: Phase 3 (subscription flow) + Phase 4 (cron pipeline) — these build on the auth foundation without changes to the data model.
+
+---
+Task ID: whatsapp-foundation-phase-3
+Agent: main (Super Z)
+Task: Phase 3 of WhatsApp outbound backend — subscription flow + unsubscribe via token link.
+
+Work Log:
+- Created src/lib/auth/server.ts:
+  * getFarmerFromRequest() — server-side helper that extracts the authenticated farmer from a Next.js Request using getServerSession
+  * Returns AuthenticatedFarmer (id, phoneE164, language, displayName, phoneVerified)
+  * Returns null if not authenticated OR if the session's farmerId no longer exists in DB
+  * Used by all subscription API routes to enforce auth without IDOR
+- Created src/app/api/subscribe/route.ts (GET + POST + DELETE):
+  * GET: returns current farmer's subscription status (enabled, preferredTime, consentedAt, nextSendAt)
+  * POST: validates body with zod (enabled, preferredTime HH:MM, consentAccepted=true literal, consentVersion)
+  * POST: extracts IP from x-forwarded-for / x-real-ip for consent audit
+  * POST: computes nextSendAt = next occurrence of preferredTime in Africa/Algiers (UTC+1, no DST)
+  * POST: upserts Subscription row (1:1 with farmer)
+  * POST: sends welcome_v1 WhatsApp template on first subscription (live mode only; logs in stub mode)
+  * DELETE: sets enabled=false + unsubscribedAt + reason + nulls nextSendAt
+  * DELETE: sends unsubscribe_confirmation_v1 (live mode only)
+  * All 3 endpoints require authentication (401 if no session)
+  * Farmer ID comes from session, NOT request body (prevents IDOR)
+- Created src/lib/unsubscribe-token.ts:
+  * generateUnsubscribeToken(farmerId) — HMAC-signed token, 7-day expiry
+  * Token format: base64url(JSON{farmerId,exp}).base64url(HMAC-SHA256)
+  * Uses NEXTAUTH_SECRET as HMAC key — same secret as auth JWT
+  * verifyUnsubscribeToken(token) returns { valid, farmerId?, reason? }
+  * Reasons: invalid_format / bad_signature / expired / invalid_farmer_id
+  * timingSafeEqual used for signature comparison (no timing attacks)
+  * cuid format validated via regex (prevents path traversal attacks)
+- Created src/app/api/unsubscribe/route.ts (POST, public — no auth):
+  * Body: { token, reason? }
+  * Verifies token signature + expiry
+  * Sets Subscription.enabled=false + unsubscribedAt + reason
+  * Sends unsubscribe_confirmation_v1 template (live mode)
+  * Returns alreadyUnsubscribed=true if no sub or already unsubscribed (don't leak existence)
+  * Status codes: 410 (expired), 403 (bad signature), 400 (invalid format)
+- Created src/app/subscribe/page.tsx (authenticated UI):
+  * Loads current subscription on mount (redirects to /auth if 401)
+  * Shows current status badge (Subscribed / Not subscribed) with consent date
+  * Phone number shown read-only (pretty-printed)
+  * Time picker: 5 presets (05:30, 06:00, 06:30, 07:00, 19:00) + custom time input
+  * Consent checkbox with explicit privacy policy v1.0 link
+  * Subscribe/Update button (disabled until consent accepted)
+  * Unsubscribe button (only shown when subscribed)
+  * Foundation mode banner (amber) explaining WhatsApp not yet sending
+  * Trilingual EN/FR/AR with RTL support
+- Created src/app/unsubscribe/page.tsx (public UI):
+  * Reads ?token= from URL params
+  * Shows "Before you go…" warning with bullet points (what they'll lose, data not deleted, STOP alternative)
+  * Confirmation button → POST /api/unsubscribe
+  * Success state: green checkmark + "You are unsubscribed"
+  * Already-unsubscribed state: green checkmark + "Already unsubscribed"
+  * Error state: red alert + retry option
+  * No-token state: red alert with explanation
+  * Footer: privacy policy link + privacy email
+  * Trilingual + RTL
+  * Wrapped in Suspense for useSearchParams (Next.js 14+ requirement)
+- Created scripts/test-unsubscribe-token.ts (25 tests):
+  * Round-trip (generate → verify → farmerId matches)
+  * Invalid format (5 malformed inputs)
+  * Bad signature (tampered sig char)
+  * Tampered payload (payload from token A + sig from token B)
+  * Expired token (8 days old — rejected)
+  * Invalid farmerId format (path traversal, too short, too long, empty)
+  * Secret rotation (old token invalid after NEXTAUTH_SECRET changes)
+  * Token valid at 6 days (just under 7-day expiry)
+  * Token uniqueness (different farmers → different tokens)
+  * Same farmer generates valid tokens (multiple times)
+
+Verification:
+  npx tsc --noEmit     -> 0 errors
+  test-unsubscribe-token -> 25 passed, 0 failed
+  All existing test suites still passing
+
+Stage Summary:
+- Subscription flow is end-to-end functional:
+  Authenticated: /subscribe → pick time + accept consent → POST /api/subscribe → row in DB
+  Public: /unsubscribe?token=... → confirm → POST /api/unsubscribe → row updated
+- Consent audit trail complete: consentedAt, consentIp, consentVersion, unsubscribedAt, unsubscribeReason
+- Token-based unsubscribe works without login (clicks from WhatsApp)
+- All API routes enforce auth where required; public endpoints use signed tokens
+- Foundation mode: no WhatsApp messages sent, but Subscription table populated correctly
+- Next: Phase 4 (Vercel Cron at 05:30 UTC + brief pipeline) — the actual daily job that reads subscriptions + sends briefs.
