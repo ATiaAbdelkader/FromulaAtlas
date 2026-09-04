@@ -3,6 +3,7 @@ import { Cairo, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/theme-provider";
+import { AuthProvider } from "@/components/auth-provider";
 import { CALCULATOR_COUNT, FORMULA_COUNT, INTERACTIVE_TOOL_COUNT } from "@/lib/catalog-stats";
 
 // Cairo supports both Latin and Arabic glyphs, so the entire app
@@ -58,8 +59,10 @@ export default function RootLayout({
         className={`${cairo.variable} ${geistMono.variable} font-cairo antialiased bg-background text-foreground`}
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange={false}>
-          {children}
-          <Toaster />
+          <AuthProvider>
+            {children}
+            <Toaster />
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

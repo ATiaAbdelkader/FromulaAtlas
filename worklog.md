@@ -1245,3 +1245,79 @@ Stage Summary:
 - Total switch-on dev time: ~2 hours. Total wall-clock: ~1 week (Meta template review is the long pole).
 - Zero ongoing cost in Foundation mode: Vercel Hobby + Vercel Postgres free tier + Open-Meteo free = $0/month.
 - Next phases (auth UI, subscription flow, cron pipeline, webhook) build on this foundation without touching the data model.
+
+---
+Task ID: whatsapp-foundation-phase-2
+Agent: main (Super Z)
+Task: Phase 2 of WhatsApp outbound backend — phone-based authentication via NextAuth + WhatsApp OTP.
+
+Work Log:
+- Created src/lib/otp-store.ts (in-memory OTP store with hash + TTL):
+  * 6-digit codes generated via crypto.randomInt
+  * Stored as SHA-256 hash (with phoneE164 + NEXTAUTH_SECRET as salt) — never plaintext
+  * 10-minute TTL, max 5 verify attempts, then lockout + clear
+  * Rate limit: 3 OTPs per phone per 10 min
+  * In stub mode (default): OTP returned in API response for dev visibility
+  * In live mode: OTP only sent via WhatsApp, never in API response
+  * timingSafeEqual used for hash comparison (no timing attacks)
+- Created src/lib/auth/auth-options.ts (NextAuth config):
+  * CredentialsProvider with id='phone-otp' (phone + otp fields)
+  * On authorize: verifies OTP, finds-or-creates Farmer row in Postgres
+  * Sets Farmer.phoneVerified=true on successful auth
+  * JWT strategy, 30-day session
+  * Session callback exposes farmerId + phoneE164 + language to client
+  * Custom pages: /auth (sign-in)
+  * Dev-only secret fallback (production refuses to start without NEXTAUTH_SECRET)
+- Created src/app/api/auth/[...nextauth]/route.ts — NextAuth handler mounted at /api/auth/*
+- Created src/app/api/auth/otp/send/route.ts:
+  * Validates phone format (Algerian mobile only — 5/6/7 prefix)
+  * Generates OTP via otp-store
+  * In live mode: sends via WhatsApp template 'otp_verify_v1' through whatsapp-client
+  * In stub mode: logs to console + returns OTP in response (for dev visibility)
+  * Rate limit: 429 if 3 OTPs in 10 min
+- Created src/app/api/auth/otp/verify/route.ts:
+  * Normalizes phone + validates OTP is 6 digits
+  * Calls otp-store.verifyOtp (returns structured error: not_found / expired / wrong_code / max_attempts)
+  * On success: returns phoneE164 — client then calls NextAuth signIn() to set session cookie
+  * Why separate endpoint (vs. just signIn): structured error responses with attemptsRemaining
+- Created src/components/auth-provider.tsx — SessionProvider wrapper (mounted in root layout)
+- Modified src/app/layout.tsx — wrapped children in <AuthProvider> (no SSR breakage)
+- Created src/app/auth/page.tsx (full trilingual phone auth UI):
+  * Step 1: phone entry (validates Algerian format inline, shows error if invalid)
+  * Step 2: OTP entry (6-digit, auto-formats, shows countdown for rate limit)
+  * Step 3: success → redirect to /app
+  * In stub mode: shows dev hint banner with the OTP code on screen (amber callout)
+  * In live mode: dev hint hidden, user must check WhatsApp
+  * Trilingual EN/FR/AR with RTL support
+  * Includes privacy policy link in the consent copy
+  * "Why phone only?" callout explains the design choice
+- Created scripts/test-otp-store.ts (46 tests):
+  * generateOtp basic (6-digit code, hash stored, expiresInMs)
+  * Rate limiting (3 per 10 min, 4th rejected with rate_limited)
+  * verifyOtp correct (success + consumes entry — re-verify fails)
+  * verifyOtp wrong code (5 attempts, then lockout, all entries cleared)
+  * verifyOtp wrong-then-correct (within 5 attempts succeeds)
+  * Non-existent phone (returns not_found)
+  * clearOtps (wipes all entries)
+  * Phone independence (cross-phone verify fails)
+  * Live mode (OTP not returned in response, but still stored)
+  * OTP format (always 6 digits, zero-padded)
+
+Verification:
+  npx prisma generate  -> regenerated client (Farmer model now typed)
+  npx tsc --noEmit     -> 0 errors
+  test-otp-store       -> 46 passed, 0 failed
+  All existing test suites still passing
+
+Stage Summary:
+- Phone auth flow is now end-to-end functional in stub mode:
+  1. Visit /auth
+  2. Enter Algerian phone (06XX XXX XXX or +213 6XX XXX XXX)
+  3. See dev hint with OTP code on screen (stub mode)
+  4. Enter OTP
+  5. Signed in — redirected to /app
+- When WHATSAPP_SEND_MODE=live: dev hint hidden, OTP sent via WhatsApp template
+- Database writes are functional (Farmer created on first auth, updated on subsequent logins)
+- NextAuth session cookie persists for 30 days
+- All routes SSR-safe (AuthProvider is client-only, no breakage on public pages)
+- Next: Phase 3 (subscription flow) + Phase 4 (cron pipeline) — these build on the auth foundation without changes to the data model.
