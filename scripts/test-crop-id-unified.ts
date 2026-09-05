@@ -221,7 +221,7 @@ const ROUND_TRIP_CROPS = [
   'tomato', 'potato', 'lettuce', 'onion', 'alfalfa',
   'coffee', 'apple', 'sunflower', 'citrus', 'sorghum',
   'barley', 'canola', 'bell-pepper', 'cucumber', 'grapes',
-  'date-palm', 'olive', 'pepper',
+  'date-palm', 'olive', 'pepper', 'oil-palm',
 ];
 
 for (const crop of ROUND_TRIP_CROPS) {
@@ -267,7 +267,7 @@ const CANONICAL_CROPS = [
   'coffee', 'apple', 'sunflower', 'citrus', 'sorghum',
   'barley', 'canola', 'bell-pepper', 'cucumber', 'grapes',
   'cassava', 'cashew', 'carrot', 'strawberry', 'date-palm',
-  'olive', 'pepper',
+  'olive', 'pepper', 'oil-palm',
 ];
 
 for (const crop of CANONICAL_CROPS) {

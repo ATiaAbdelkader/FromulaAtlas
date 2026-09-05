@@ -747,6 +747,7 @@ export default function LandingPage() {
             <Link href="/pricing" className="hover:text-foreground transition-colors">{isRTL ? 'الأسعار' : 'Pricing'}</Link>
             <Link href="/coop" className="hover:text-foreground transition-colors">{isRTL ? 'التعاونيات' : 'Cooperatives'}</Link>
             <Link href="/pilot" className="hover:text-foreground transition-colors">{isRTL ? 'البرنامج التجريبي' : 'Pilot Program'}</Link>
+            <Link href="/targeting" className="hover:text-foreground transition-colors">{isRTL ? 'استهداف المناطق' : 'Targeting'}</Link>
             <Link href="/about" className="hover:text-foreground transition-colors">{isRTL ? 'حول المنصة' : 'About & Roadmap'}</Link>
             <Link href="/privacy" className="hover:text-foreground transition-colors">{isRTL ? 'الخصوصية' : 'Privacy'}</Link>
             <span>© {new Date().getFullYear()}</span>

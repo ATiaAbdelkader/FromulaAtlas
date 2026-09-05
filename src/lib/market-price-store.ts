@@ -306,6 +306,7 @@ export const MARKET_CROPS: { id: string; en: string; fr: string; ar: string; emo
   { id: 'citrus',    en: 'Citrus',    fr: 'Agrumes',        ar: 'الحمضيات',   emoji: '🍊' },
   { id: 'olive_oil', en: 'Olive Oil', fr: 'Huile d\'olive', ar: 'زيت الزيتون', emoji: '🫒' },
   { id: 'dates',     en: 'Dates',     fr: 'Dattes',         ar: 'التمور',     emoji: '🌴' },
+  { id: 'oil_palm',  en: 'Oil Palm',  fr: 'Palmier à huile', ar: 'نخيل الزيت', emoji: '🌴' },
   { id: 'pepper',    en: 'Pepper',    fr: 'Poivron',        ar: 'الفلفل',     emoji: '🫑' },
   { id: 'carrot',    en: 'Carrot',    fr: 'Carotte',        ar: 'الجزر',      emoji: '🥕' },
 ];

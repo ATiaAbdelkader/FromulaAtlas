@@ -36,7 +36,7 @@ export type CanonicalCropId =
   | 'barley' | 'canola' | 'bell-pepper' | 'cucumber' | 'grapes'
   // Added crops (not in CROP_LIFECYCLES but in other systems)
   | 'carrot' | 'strawberry' | 'date-palm' | 'cassava' | 'cashew'
-  | 'olive' | 'pepper';
+  | 'olive' | 'pepper' | 'oil-palm';
 
 // ---------------------------------------------------------------------------
 // Aliases — maps non-canonical IDs to canonical ones
@@ -72,6 +72,9 @@ const CROP_ALIASES: Record<string, CanonicalCropId> = {
   'vitis': 'grapes',
   'datepalm': 'date-palm',
   'phoenix': 'date-palm',
+  'oil_palm': 'oil-palm',
+  'oilpalm': 'oil-palm',
+  'elaeis': 'oil-palm',
 };
 
 // ---------------------------------------------------------------------------
@@ -161,7 +164,7 @@ const CROP_LABELS_EXISTS: Record<string, boolean> = {
   coffee: true, apple: true, sunflower: true, citrus: true, sorghum: true,
   barley: true, canola: true, 'bell-pepper': true, cucumber: true, grapes: true,
   cassava: true, cashew: true, carrot: true, strawberry: true, 'date-palm': true,
-  olive: true, pepper: true,
+  olive: true, pepper: true, 'oil-palm': true,
 };
 
 // ---------------------------------------------------------------------------
@@ -206,6 +209,7 @@ export function cropDisplayName(
     carrot: { en: 'Carrot', fr: 'Carotte', ar: 'الجزر' },
     strawberry: { en: 'Strawberry', fr: 'Fraise', ar: 'الفراولة' },
     'date-palm': { en: 'Date Palm', fr: 'Palmier dattier', ar: 'نخيل التمر' },
+    'oil-palm': { en: 'Oil Palm', fr: 'Palmier à huile', ar: 'نخيل الزيت' },
     olive: { en: 'Olive', fr: 'Olivier', ar: 'الزيتون' },
     pepper: { en: 'Pepper', fr: 'Piment', ar: 'الفلفل' },
   };
