@@ -257,12 +257,22 @@ model Cooperative {
   description     String?
   joinCode        String       @unique  // 6-char code farmers enter to join
   adminFarmerId   String       // the farmer who created / owns the coop
+  // Pilot program: pilot coops get free Pro features for 60 days.
+  // When pilotExpiresAt passes, the coop reverts to standard billing.
+  // Set via admin endpoint: POST /api/coop/pilot { coopId, days: 60 }
+  isPilot         Boolean      @default(false)
+  pilotExpiresAt  DateTime?
+  pilotStartedAt  DateTime?
+  // Case study tracking — collected at end of pilot period
+  caseStudyRequested Boolean   @default(false)
+  caseStudySubmittedAt DateTime?
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 
   members         CoopMember[]
 
   @@index([adminFarmerId])
+  @@index([isPilot, pilotExpiresAt])
 }
 
 model CoopMember {

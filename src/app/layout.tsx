@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/components/auth-provider";
+import { PostHogProvider } from "@/components/posthog-provider";
 import { CALCULATOR_COUNT, FORMULA_COUNT, INTERACTIVE_TOOL_COUNT } from "@/lib/catalog-stats";
 
 // Cairo supports both Latin and Arabic glyphs, so the entire app
@@ -60,8 +61,10 @@ export default function RootLayout({
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange={false}>
           <AuthProvider>
-            {children}
-            <Toaster />
+            <PostHogProvider>
+              {children}
+              <Toaster />
+            </PostHogProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

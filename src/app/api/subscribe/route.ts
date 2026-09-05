@@ -15,6 +15,7 @@ import { NextResponse } from 'next/server';
 import { getFarmerFromRequest } from '@/lib/auth/server';
 import { db } from '@/lib/db';
 import { getWhatsAppClient } from '@/lib/whatsapp-client';
+import { trackServerEvent } from '@/lib/telemetry';
 import { z } from 'zod';
 
 // ---------------------------------------------------------------------------
@@ -158,6 +159,13 @@ export async function POST(req: Request) {
         console.log(`[subscribe:stub] Would send welcome_v1 to ${farmer.phoneE164}`);
       }
     }
+
+    // Track subscription event
+    await trackServerEvent(farmer.id, 'subscription_created', {
+      preferredTime,
+      language: farmer.language,
+      wasResubscribing: sub.unsubscribedAt !== null,
+    });
 
     return NextResponse.json({ success: true, subscription: sub });
   } catch (e) {

@@ -24,6 +24,7 @@ import type { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { db } from '@/lib/db';
 import { verifyOtp } from '@/lib/otp-store';
+import { identifyServerUser, trackServerEvent } from '@/lib/telemetry';
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -71,6 +72,17 @@ export const authOptions: NextAuthOptions = {
           }
 
           // Return user object — NextAuth will encode the id + phoneE164 in JWT
+          // Track auth success in telemetry (no-op if PostHog not configured)
+          await identifyServerUser(farmer.id, {
+            phoneE164: farmer.phoneE164,
+            language: farmer.language,
+            createdAt: farmer.createdAt,
+          });
+          await trackServerEvent(farmer.id, 'user_signed_in', {
+            isNewUser: farmer.createdAt.getTime() > Date.now() - 60_000,  // created in last minute = new
+            language: farmer.language,
+          });
+
           return {
             id: farmer.id,
             name: farmer.displayName ?? undefined,

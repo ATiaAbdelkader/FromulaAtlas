@@ -1650,3 +1650,63 @@ Stage Summary:
   4. Cooperative dashboard live at /coop with full multi-member management
   5. Review documented
 - The cooperative feature opens a new revenue vertical: coop admins pay 15,000 DZD/mo for 20-50 members
+
+---
+Task ID: growth-phase-3
+Agent: main (Super Z)
+Task: 3 strategic growth moves — PostHog telemetry, pilot cooperative program, Today card iteration.
+
+Work Log:
+- #1 PostHog telemetry:
+  * Installed posthog-js (client) + posthog-node (server)
+  * Created src/components/posthog-provider.tsx — PostHogProvider wrapper, no-op without NEXT_PUBLIC_POSTHOG_KEY
+  * Created src/lib/telemetry.ts — trackEvent, identifyUser, resetUser (client) + trackServerEvent, identifyServerUser (server)
+  * All functions are no-ops if PostHog key not set — Foundation mode is silent
+  * Privacy: respects Do Not Track, no IP capture, uses localStorage (not cookies), autocapture disabled (explicit events only)
+  * Mounted PostHogProvider in root layout (wraps AuthProvider + children)
+  * Wired telemetry into key flows:
+    - Auth: identifyServerUser + trackServerEvent('user_signed_in') on login
+    - Subscribe: trackServerEvent('subscription_created') with preferredTime + language
+    - Checkout: trackServerEvent('checkout_started') with plan + amountDzd + mode
+  * Wired client-side telemetry into Today card (task completed, share clicked, irrigation opened, etc.)
+
+- #2 Pilot cooperative program:
+  * Extended Cooperative model with 5 new fields: isPilot, pilotExpiresAt, pilotStartedAt, caseStudyRequested, caseStudySubmittedAt
+  * Updated /api/pro-status to grant Pro access to pilot coop members (source='pilot_coop')
+  * Created POST/DELETE /api/coop/pilot (admin-only via ADMIN_SECRET) — marks a coop as pilot for N days (default 60), tracks pilot_started event for each member
+  * Created POST /api/case-study — coop admin submits story + results + quotes, tracked as case_study_submitted event
+  * Created /pilot landing page (trilingual EN/FR/AR):
+    - Explains the program: 60 days free Pro for 3 pilot coops
+    - 4 benefits (free Pro, 60 days, multi-farm dashboard, case study requested)
+    - 4-step how-it-works (create coop, apply via email, we activate, share story)
+    - CTA → /coop (if logged in) or /auth (if not)
+    - Fine print: 3 coop limit, 10 member minimum, pilot ends after 60 days, case study required
+  * Added /pilot link to main app footer
+
+- #3 Today card iteration:
+  * Added telemetry events: today_card_task_completed, today_card_task_uncompleted, today_card_streak_incremented, today_card_all_tasks_completed, today_card_share_clicked, today_card_open_farm_clicked, today_card_subscribe_clicked, today_card_open_irrigation_clicked
+  * Added streak counter (localStorage-based, counts consecutive days with ≥1 task completed):
+    - Flame icon + "N day streak" shown below quick actions (only if streak > 0)
+    - Auto-increments on first task completion of the day
+    - Resets if a day is missed
+  * Added celebration banner — shows when all top-3 tasks are complete:
+    - 🎉 "All tasks done! Great work today." (trilingual)
+    - Auto-hides after 3 seconds
+    - Tracked as today_card_all_tasks_completed event
+  * Added share button (ghost variant, Share2 icon):
+    - Uses navigator.share() if available (mobile native share sheet)
+    - Falls back to clipboard copy
+    - Tracked as today_card_share_clicked event
+  * All button clicks now have telemetry (open farm, subscribe, open irrigation)
+
+Verification:
+  npx prisma generate  -> regenerated (Cooperative pilot fields now typed)
+  npx tsc --noEmit     -> 0 errors
+
+Stage Summary:
+- 3 strategic growth moves shipped:
+  1. PostHog telemetry — Foundation mode silent, switch on with 1 env var. Tracks auth, subscription, checkout, Today card interactions.
+  2. Pilot program — 60-day free Pro for 3 cooperatives. Full infrastructure: admin endpoint, case study submission, landing page.
+  3. Today card iteration — streak counter (gamification), celebration banner (positive reinforcement), share button (viral growth), 8 telemetry events for measuring engagement.
+- The app now has measurement built in from day 1. When you deploy + set NEXT_PUBLIC_POSTHOG_KEY, you'll immediately see what farmers click, where they drop off, and what features they use.
+- The pilot program gives you a concrete growth lever: 3 cooperatives × 20-50 members = 60-150 farmers in your first 60 days, all generating case studies for future marketing.

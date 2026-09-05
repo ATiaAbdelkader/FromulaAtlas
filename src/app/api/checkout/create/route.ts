@@ -15,6 +15,7 @@ import { NextResponse } from 'next/server';
 import { getFarmerFromRequest } from '@/lib/auth/server';
 import { db } from '@/lib/db';
 import { createCheckoutSession, getChargilyMode } from '@/lib/chargily-client';
+import { trackServerEvent } from '@/lib/telemetry';
 import { z } from 'zod';
 
 const PLANS: Record<string, { amountDzd: number; description: string; durationDays: number | null }> = {
@@ -100,6 +101,13 @@ export async function POST(req: Request) {
       checkoutId: checkout.checkoutId ?? null,
       checkoutUrl: checkout.checkoutUrl ?? null,
     },
+  });
+
+  // Track checkout started
+  await trackServerEvent(farmer.id, 'checkout_started', {
+    plan,
+    amountDzd: planConfig.amountDzd,
+    mode: checkout.mode,
   });
 
   return NextResponse.json({

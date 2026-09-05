@@ -23,11 +23,12 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Sun, CloudRain, Droplets, FlaskConical, CheckCircle2, Circle,
   AlertTriangle, Bell, ArrowRight, ArrowLeft, Loader2, RefreshCw,
-  Thermometer, Wind,
+  Thermometer, Wind, Share2, Flame,
 } from 'lucide-react';
 import { useFarmProfile } from '@/components/agri/farm-profile-wizard';
 import { useSyncedFarmProfile } from '@/lib/farm-profile-sync';
 import { useTranslation, copyFor } from '@/lib/language-store';
+import { trackEvent } from '@/lib/telemetry';
 import { getForecast, type ForecastResult, type DailyForecast } from '@/lib/open-meteo';
 import {
   getCropById, getActiveStage, calculateIrrigation, generateTodayTasks,
@@ -64,6 +65,32 @@ export function TodayCard({ onOpenTool }: TodayCardProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [completedTasks, setCompletedTasks] = useState<Set<string>>(new Set());
+  const [streak, setStreak] = useState(0);
+  const [showCelebration, setShowCelebration] = useState(false);
+
+  // Load streak from localStorage (counts consecutive days with ≥1 task completed)
+  useEffect(() => {
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      const lastDay = localStorage.getItem('today_card_last_active_day');
+      const currentStreak = parseInt(localStorage.getItem('today_card_streak') ?? '0', 10);
+      if (lastDay === today) {
+        // Same day — keep streak
+        setStreak(currentStreak);
+      } else {
+        // Check if yesterday was the last active day
+        const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+        if (lastDay === yesterday) {
+          // Continue streak
+          setStreak(currentStreak);
+        } else {
+          // Streak broken — reset to 0
+          setStreak(0);
+          localStorage.setItem('today_card_streak', '0');
+        }
+      }
+    } catch { /* ignore */ }
+  }, []);
 
   // Load forecast
   useEffect(() => {
@@ -150,11 +177,57 @@ export function TodayCard({ onOpenTool }: TodayCardProps) {
   const toggleTask = useCallback((taskId: string) => {
     setCompletedTasks(prev => {
       const next = new Set(prev);
-      if (next.has(taskId)) next.delete(taskId);
-      else next.add(taskId);
+      const isCompleting = !next.has(taskId);
+      if (isCompleting) {
+        next.add(taskId);
+        // Track task completion
+        trackEvent('today_card_task_completed', { taskId });
+        // Update streak — first completion today increments
+        try {
+          const today = new Date().toISOString().slice(0, 10);
+          const lastDay = localStorage.getItem('today_card_last_active_day');
+          if (lastDay !== today) {
+            // First completion today — increment streak
+            const newStreak = streak + 1;
+            setStreak(newStreak);
+            localStorage.setItem('today_card_streak', String(newStreak));
+            localStorage.setItem('today_card_last_active_day', today);
+            trackEvent('today_card_streak_incremented', { streak: newStreak });
+          }
+        } catch { /* ignore */ }
+      } else {
+        next.delete(taskId);
+        trackEvent('today_card_task_uncompleted', { taskId });
+      }
       return next;
     });
-  }, []);
+  }, [streak]);
+
+  // Show celebration when all tasks are done
+  useEffect(() => {
+    const totalTasks = briefData?.tasks?.slice(0, 3).length ?? 0;
+    if (totalTasks > 0 && completedTasks.size >= totalTasks && !showCelebration) {
+      setShowCelebration(true);
+      trackEvent('today_card_all_tasks_completed', { taskCount: totalTasks });
+      // Auto-hide after 3 seconds
+      setTimeout(() => setShowCelebration(false), 3000);
+    }
+  }, [completedTasks, briefData?.tasks, showCelebration]);
+
+  // Share brief via WhatsApp
+  const handleShare = useCallback(() => {
+    trackEvent('today_card_share_clicked');
+    if (navigator.share) {
+      navigator.share({
+        title: 'FormulaAtlas Daily Brief',
+        text: t('Check my farm brief on FormulaAtlas', 'تحقق من ملخص مزرعتي على فورمولا أطلس', 'Vérifiez mon brief de ferme sur FormulaAtlas'),
+        url: window.location.href,
+      }).catch(() => { /* user cancelled */ });
+    } else {
+      // Fallback: copy URL to clipboard
+      navigator.clipboard?.writeText(window.location.href);
+    }
+  }, [t]);
 
   // No farm profile set up
   if (!effectiveProfile?.setupCompleted) {
@@ -299,7 +372,10 @@ export function TodayCard({ onOpenTool }: TodayCardProps) {
                   variant="link"
                   size="sm"
                   className="h-auto p-0 mt-1 text-xs"
-                  onClick={() => onOpenTool?.('farm', 'collapse_water_budget')}
+                  onClick={() => {
+                    trackEvent('today_card_open_irrigation_clicked');
+                    onOpenTool?.('farm', 'collapse_water_budget');
+                  }}
                 >
                   {t('Open Water Budget', 'افتح ميزانية المياه', 'Ouvrir le budget eau')}
                   <DirectionArrow className="h-3 w-3" />
@@ -348,13 +424,25 @@ export function TodayCard({ onOpenTool }: TodayCardProps) {
         </Card>
       )}
 
+      {/* Celebration banner — shows when all tasks complete */}
+      {showCelebration && (
+        <div className="rounded-lg border border-emerald-300 bg-gradient-to-r from-emerald-50 to-green-50 p-3 text-center dark:border-emerald-800 dark:from-emerald-950/40 dark:to-green-950/30">
+          <p className="text-sm font-medium text-emerald-900 dark:text-emerald-100">
+            🎉 {t('All tasks done! Great work today.', 'جميع المهام منجزة! عمل رائع اليوم.', 'Toutes les tâches sont terminées ! Beau travail.')}
+          </p>
+        </div>
+      )}
+
       {/* Quick actions */}
       <div className="flex gap-2 px-1">
         <Button
           variant="outline"
           size="sm"
           className="flex-1"
-          onClick={() => onOpenTool?.('farm')}
+          onClick={() => {
+            trackEvent('today_card_open_farm_clicked');
+            onOpenTool?.('farm');
+          }}
         >
           {t('Full farm', 'المزرعة كاملة', 'Ferme complète')}
           <DirectionArrow className="h-3.5 w-3.5" />
@@ -363,12 +451,33 @@ export function TodayCard({ onOpenTool }: TodayCardProps) {
           variant="outline"
           size="sm"
           className="flex-1"
-          onClick={() => window.open('/subscribe', '_self')}
+          onClick={() => {
+            trackEvent('today_card_subscribe_clicked');
+            window.open('/subscribe', '_self');
+          }}
         >
           <Bell className="h-3.5 w-3.5" />
           {t('WhatsApp brief', 'ملخص واتساب', 'Brief WhatsApp')}
         </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleShare}
+          aria-label={t('Share', 'مشاركة', 'Partager')}
+        >
+          <Share2 className="h-3.5 w-3.5" />
+        </Button>
       </div>
+
+      {/* Streak indicator (only if streak > 0) */}
+      {streak > 0 && (
+        <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+          <Flame className="h-3.5 w-3.5 text-orange-500" />
+          <span>
+            {streak} {t('day streak', 'يوم متتالي', 'jours de suite')}
+          </span>
+        </div>
+      )}
     </div>
   );
 }

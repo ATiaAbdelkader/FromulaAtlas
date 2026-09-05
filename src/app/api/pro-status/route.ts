@@ -12,6 +12,13 @@ import { NextResponse } from 'next/server';
 import { getFarmerFromRequest } from '@/lib/auth/server';
 import { db } from '@/lib/db';
 
+/**
+ * A farmer has Pro access if ANY of:
+ *   1. They have an active ProSubscription (status=ACTIVE, not expired)
+ *   2. They are a member of a pilot cooperative (isPilot=true, pilotExpiresAt > now)
+ *
+ * Pilot coops get free Pro for all members during the pilot period.
+ */
 export async function GET(req: Request) {
   const farmer = await getFarmerFromRequest(req);
   if (!farmer) {
@@ -19,29 +26,55 @@ export async function GET(req: Request) {
   }
 
   try {
+    // 1. Check direct Pro subscription
     const proSub = await db.proSubscription.findUnique({
       where: { farmerId: farmer.id },
     });
 
-    if (!proSub || proSub.status !== 'ACTIVE') {
-      return NextResponse.json({ isPro: false });
+    if (proSub && proSub.status === 'ACTIVE') {
+      // Check expiry
+      if (proSub.expiresAt && proSub.expiresAt < new Date()) {
+        await db.proSubscription.update({
+          where: { id: proSub.id },
+          data: { status: 'EXPIRED' },
+        });
+      } else {
+        return NextResponse.json({
+          isPro: true,
+          plan: proSub.plan,
+          expiresAt: proSub.expiresAt?.toISOString() ?? null,
+          source: 'subscription',
+        });
+      }
     }
 
-    // Check expiry
-    if (proSub.expiresAt && proSub.expiresAt < new Date()) {
-      // Expired — update status
-      await db.proSubscription.update({
-        where: { id: proSub.id },
-        data: { status: 'EXPIRED' },
-      });
-      return NextResponse.json({ isPro: false });
-    }
-
-    return NextResponse.json({
-      isPro: true,
-      plan: proSub.plan,
-      expiresAt: proSub.expiresAt?.toISOString() ?? null,
+    // 2. Check pilot cooperative membership
+    const pilotMembership = await db.coopMember.findFirst({
+      where: {
+        farmerId: farmer.id,
+        cooperative: {
+          isPilot: true,
+          pilotExpiresAt: { gt: new Date() },
+        },
+      },
+      include: {
+        cooperative: {
+          select: { id: true, name: true, pilotExpiresAt: true },
+        },
+      },
     });
+
+    if (pilotMembership) {
+      return NextResponse.json({
+        isPro: true,
+        plan: 'pilot',
+        expiresAt: pilotMembership.cooperative.pilotExpiresAt?.toISOString() ?? null,
+        source: 'pilot_coop',
+        coopName: pilotMembership.cooperative.name,
+      });
+    }
+
+    return NextResponse.json({ isPro: false });
   } catch (e) {
     console.error('[pro-status]', e);
     return NextResponse.json({ isPro: false });
