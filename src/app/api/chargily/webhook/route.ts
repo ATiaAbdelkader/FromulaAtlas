@@ -33,8 +33,20 @@ export async function POST(req: Request) {
   const signature = req.headers.get('signature');
 
   const webhookSecret = process.env.CHARGILY_WEBHOOK_SECRET;
+  const chargilyLive = Boolean(process.env.CHARGILY_SECRET_KEY);
+
   if (!webhookSecret) {
-    // Foundation mode — acknowledge but do nothing
+    // If Chargily is in live mode but webhook secret is missing, REFUSE to
+    // process — this is a config error that would cause farmers to pay but
+    // never get Pro access (webhook activations silently no-op).
+    if (chargilyLive) {
+      console.error('[chargily:webhook] CRITICAL: CHARGILY_SECRET_KEY is set but CHARGILY_WEBHOOK_SECRET is missing — refusing to process. Set CHARGILY_WEBHOOK_SECRET in Vercel env vars.');
+      return NextResponse.json(
+        { error: 'Webhook not configured — CHARGILY_WEBHOOK_SECRET required when CHARGILY_SECRET_KEY is set' },
+        { status: 503 },
+      );
+    }
+    // Foundation mode — no Chargily key at all, acknowledge but do nothing
     console.log('[chargily:webhook] No CHARGILY_WEBHOOK_SECRET set — stub mode');
     return NextResponse.json({ ok: true, mode: 'stub' });
   }

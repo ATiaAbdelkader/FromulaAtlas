@@ -49,10 +49,14 @@ assert(!todayTasksSource.includes("onOpenTool('farm', 'collapse_et_tracker')"), 
 
 const levelHomeSource = readFileSync(resolve(process.cwd(), 'src/components/agri/level-home.tsx'), 'utf8');
 const levelHomeCalendarRoutes = levelHomeSource.match(/onOpenTool\('calendar'\)/g) ?? [];
-assert(levelHomeCalendarRoutes.length === 3, 'Farmer, Manager, and Professional planning cards must all open the Calendar tab');
+// Farmer "Plan one crop" card was intentionally redirected to the Farm tab's
+// Crop Calendar Generator collapsible (per the farmer-home-14-fixes audit).
+// Manager + Professional planning cards still open the shared Calendar tab.
+assert(levelHomeCalendarRoutes.length === 2, 'Manager and Professional planning cards must open the Calendar tab (Farmer Plan-one-crop intentionally opens Farm tab)');
 assert(levelHomeSource.includes('Plan one crop'), 'Farmer planning card must remain present');
 assert(levelHomeSource.includes('Season and labor'), 'Manager planning card must remain present');
 assert(levelHomeSource.includes('Plan crop operations'), 'Professional planning card must remain present');
+assert(levelHomeSource.includes("onOpenTool('farm', 'collapse_crop_calendar_gen')"), 'Farmer Plan-one-crop card must open the Farm tab Crop Calendar Generator');
 
 const farmerFieldSource = readFileSync(resolve(process.cwd(), 'src/components/agri/farmer-field.tsx'), 'utf8');
 assert(farmerFieldSource.includes("onOpenTool('calendar')"), 'Farmer Field full-calendar action must open the shared Calendar tab');
@@ -65,8 +69,8 @@ assert(homeDashboardSource.includes('{profile.setupCompleted && ('), 'Farm Profi
 assert(homeDashboardSource.includes('copyForLevel(language, level'), 'Home Dashboard must select copy by active user level');
 assert(homeDashboardSource.includes("{ en: 'farm manager'"), 'Home Dashboard must provide Farm Manager-specific language');
 assert(homeDashboardSource.includes("{ en: 'agronomist'"), 'Home Dashboard must provide Professional-specific language');
-assert(homeDashboardSource.includes("{ en: 'Operations Shortcuts'"), 'Manager dashboard must use operational quick-action language');
-assert(homeDashboardSource.includes("{ en: 'Analysis Actions'"), 'Professional dashboard must use analysis-oriented quick-action language');
+assert(homeDashboardSource.includes("{ en: 'Operations at a Glance'"), 'Manager dashboard must use operational quick-action language');
+assert(homeDashboardSource.includes("{ en: 'Evidence at a Glance'"), 'Professional dashboard must use analysis-oriented quick-action language');
 assert(homeDashboardSource.includes('<TodayTasks level={level}'), 'Today\'s Tasks must receive the active user level');
 assert(todayTasksSource.includes("{ en: 'Today\\'s Work Queue'"), 'Manager Today\'s Tasks must use work-queue language');
 assert(todayTasksSource.includes("{ en: 'Today\\'s Field Signals'"), 'Professional Today\'s Tasks must use field-signal language');

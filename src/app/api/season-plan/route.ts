@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import ZAI from 'z-ai-web-dev-sdk';
+import { consumeAiRateLimit, getClientKey } from '@/lib/ai-governance';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -220,6 +221,15 @@ async function generateAiSummary(input: SeasonPlanInput, params: CropParams, pla
 }
 
 export async function POST(req: NextRequest) {
+  // Rate limit — protects ZAI API budget from abuse
+  const limit = consumeAiRateLimit(getClientKey(req));
+  if (!limit.allowed) {
+    return NextResponse.json(
+      { error: 'Too many AI requests. Please wait before trying again.', retryAfterSeconds: limit.retryAfterSeconds },
+      { status: 429, headers: { 'Retry-After': String(limit.retryAfterSeconds) } },
+    );
+  }
+
   try {
     const body = await req.json() as Partial<SeasonPlanInput>;
 

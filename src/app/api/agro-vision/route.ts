@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
 import { BENCHMARK_DISEASE_TAXONOMY } from '@/lib/open-datasets-taxonomy';
+import { consumeAiRateLimit, getClientKey } from '@/lib/ai-governance';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -17,6 +18,15 @@ interface VisionApiRequest {
 }
 
 export async function POST(req: NextRequest) {
+  // Rate limit — protects Gemini API budget from abuse
+  const limit = consumeAiRateLimit(getClientKey(req));
+  if (!limit.allowed) {
+    return NextResponse.json(
+      { error: 'Too many AI requests. Please wait before trying again.', retryAfterSeconds: limit.retryAfterSeconds },
+      { status: 429, headers: { 'Retry-After': String(limit.retryAfterSeconds) } },
+    );
+  }
+
   try {
     const body = (await req.json()) as VisionApiRequest;
     const {
