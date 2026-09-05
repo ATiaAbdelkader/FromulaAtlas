@@ -29,6 +29,7 @@ import { getWhatsAppClient } from '@/lib/whatsapp-client';
 import { buildBriefForFarmer } from '@/lib/brief/brief-builder';
 import { buildBriefMessage } from '@/components/agri/whatsapp-daily-brief';
 import { generateUnsubscribeToken } from '@/lib/unsubscribe-token';
+import { anomalyBriefText } from '@/lib/rainfall-anomaly';
 import { checkSecretHeader } from '@/lib/security-utils';
 import type { Language } from '@/lib/language-store';
 // Note: Prisma's Language enum is uppercase (EN/FR/AR); app's Language is lowercase (en/fr/ar).
@@ -177,6 +178,14 @@ async function processSubscription(
   // 2. Build the message (trilingual) — convert Prisma enum (EN/FR/AR) to app language (en/fr/ar)
   const langCode = sub.farmer.language.toLowerCase() as 'en' | 'fr' | 'ar';
   let message = buildBriefMessage(buildResult.context, langCode);
+
+  // 2b. Append rainfall anomaly (drought alert or seasonal summary)
+  if (buildResult.anomaly) {
+    const anomalyLine = anomalyBriefText(buildResult.anomaly, langCode);
+    if (anomalyLine) {
+      message += `\n${anomalyLine}`;
+    }
+  }
 
   // 3. Append unsubscribe link
   const unsubToken = generateUnsubscribeToken(sub.farmer.id);

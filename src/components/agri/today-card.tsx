@@ -29,6 +29,7 @@ import { useFarmProfile } from '@/components/agri/farm-profile-wizard';
 import { useSyncedFarmProfile } from '@/lib/farm-profile-sync';
 import { useTranslation, copyFor } from '@/lib/language-store';
 import { trackEvent } from '@/lib/telemetry';
+import { computeRainfallAnomaly, anomalyStatusLabel, anomalyColor, type RainfallAnomaly } from '@/lib/rainfall-anomaly';
 import { getForecast, type ForecastResult, type DailyForecast } from '@/lib/open-meteo';
 import {
   getCropById, getActiveStage, calculateIrrigation, generateTodayTasks,
@@ -62,6 +63,7 @@ export function TodayCard({ onOpenTool }: TodayCardProps) {
   // Prefer synced profile; fall back to local (covers logged-out users)
   const effectiveProfile = profile ?? localProfile;
   const [forecast, setForecast] = useState<ForecastResult | null>(null);
+  const [anomaly, setAnomaly] = useState<RainfallAnomaly | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [completedTasks, setCompletedTasks] = useState<Set<string>>(new Set());
@@ -101,9 +103,13 @@ export function TodayCard({ onOpenTool }: TodayCardProps) {
     let cancelled = false;
     (async () => {
       try {
-        const f = await getForecast(parseFloat(effectiveProfile.lat!), parseFloat(effectiveProfile.lng!), { days: 4 });
+        const [f, a] = await Promise.all([
+          getForecast(parseFloat(effectiveProfile.lat!), parseFloat(effectiveProfile.lng!), { days: 4 }),
+          computeRainfallAnomaly(parseFloat(effectiveProfile.lat!), parseFloat(effectiveProfile.lng!)),
+        ]);
         if (!cancelled) {
           setForecast(f);
+          setAnomaly(a);
           setError(null);
         }
       } catch (e) {
@@ -328,6 +334,45 @@ export function TodayCard({ onOpenTool }: TodayCardProps) {
       )}
 
       {/* Weather alerts */}
+      {anomaly && anomaly.isDrought && (
+        <Card className={`border-l-4 ${anomaly.severity === 'severe_deficit' ? 'border-l-red-500' : anomaly.severity === 'moderate_deficit' ? 'border-l-orange-500' : 'border-l-amber-500'}`}>
+          <CardContent className="pt-3 pb-3">
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="h-4 w-4 flex-shrink-0 mt-0.5" style={{ color: anomalyColor(anomaly) }} />
+              <div className="flex-1">
+                <p className="text-xs font-semibold" style={{ color: anomalyColor(anomaly) }}>
+                  {t('Rainfall deficit', 'عجز أمطار', 'Déficit pluviométrique')} · {anomalyStatusLabel(anomaly, language)}
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {anomaly.currentSeasonMm}mm {t('received', 'مستلمة', 'reçues')} vs {anomaly.normalSeasonMm}mm {t('normal', 'معدل', 'normale')}
+                  {' · '}
+                  <span className="font-medium" style={{ color: anomalyColor(anomaly) }}>{anomaly.percentOfNormal}%</span>
+                  {' · '}
+                  {t('shortfall', 'العجز', 'manque')}: {Math.round(anomaly.normalSeasonMm - anomaly.currentSeasonMm)}mm
+                </p>
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  {t('Increase irrigation to compensate for the rainfall deficit.', 'زد الري لتعويض عجز الأمطار.', 'Augmentez l\'irrigation pour compenser le déficit.')}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Rainfall anomaly (normal — shown even when no drought) */}
+      {anomaly && !anomaly.isDrought && (
+        <div className="flex items-center gap-2 px-2 text-xs text-muted-foreground">
+          <CloudRain className="h-3.5 w-3.5 text-blue-500" />
+          <span>
+            {t('Seasonal rainfall', 'أمطار الموسم', 'Pluies saisonnières')}: {anomaly.currentSeasonMm}mm
+            {' ('}
+            <span style={{ color: anomalyColor(anomaly) }} className="font-medium">{anomaly.percentOfNormal}%</span>
+            {' '}{t('of normal', 'من المعدل', 'de la normale')})
+          </span>
+        </div>
+      )}
+
+      {/* Weather alerts (existing) */}
       {briefData && briefData.alerts.length > 0 && (
         <div className="space-y-2">
           {briefData.alerts.map((alert, i) => (

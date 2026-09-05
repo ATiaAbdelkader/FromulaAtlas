@@ -11,6 +11,7 @@
 
 import { db } from '@/lib/db';
 import { getCachedForecast, getTodayFromForecast } from '@/lib/brief/weather-cache';
+import { computeRainfallAnomaly, anomalyBriefText, type RainfallAnomaly } from '@/lib/rainfall-anomaly';
 import {
   getCropById,
   getActiveStage,
@@ -44,6 +45,8 @@ export interface BuildBriefResult {
   skipReason?: 'no_farm_profile' | 'no_crop' | 'unsupported_crop' | 'no_planting_date';
   /** Where the weather came from. */
   weatherSource: 'open-meteo' | 'atlas_default';
+  /** Rainfall anomaly for this season (null if unavailable). */
+  anomaly: RainfallAnomaly | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -70,17 +73,17 @@ export async function buildBriefForFarmer(farmerId: string): Promise<BuildBriefR
     where: { farmerId },
   });
   if (!farmProfileRow || !farmProfileRow.crop || !farmProfileRow.lat || !farmProfileRow.lng) {
-    return { context: null, skipReason: 'no_farm_profile', weatherSource: 'atlas_default' };
+    return { context: null, skipReason: 'no_farm_profile', weatherSource: 'atlas_default', anomaly: null };
   }
 
   // 2. Resolve crop
   if (!farmProfileRow.plantingDate) {
-    return { context: null, skipReason: 'no_planting_date', weatherSource: 'atlas_default' };
+    return { context: null, skipReason: 'no_planting_date', weatherSource: 'atlas_default', anomaly: null };
   }
   const farmPilotCropId = toFarmPilotId(farmProfileRow.crop);
   const crop = farmPilotCropId ? getCropById(farmPilotCropId) : undefined;
   if (!crop) {
-    return { context: null, skipReason: 'unsupported_crop', weatherSource: 'atlas_default' };
+    return { context: null, skipReason: 'unsupported_crop', weatherSource: 'atlas_default', anomaly: null };
   }
 
   // 3. Build FarmProfile shape (matches the localStorage format the
@@ -161,5 +164,8 @@ export async function buildBriefForFarmer(farmerId: string): Promise<BuildBriefR
     alerts,
   };
 
-  return { context, weatherSource };
+  // 10. Compute rainfall anomaly (current season vs 1991-2020 normal)
+  const anomaly = await computeRainfallAnomaly(farmProfileRow.lat, farmProfileRow.lng);
+
+  return { context, weatherSource, anomaly };
 }
