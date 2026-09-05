@@ -29,6 +29,7 @@ import { getWhatsAppClient } from '@/lib/whatsapp-client';
 import { buildBriefForFarmer } from '@/lib/brief/brief-builder';
 import { buildBriefMessage } from '@/components/agri/whatsapp-daily-brief';
 import { generateUnsubscribeToken } from '@/lib/unsubscribe-token';
+import { checkSecretHeader } from '@/lib/security-utils';
 import type { Language } from '@/lib/language-store';
 // Note: Prisma's Language enum is uppercase (EN/FR/AR); app's Language is lowercase (en/fr/ar).
 // Convert via .toLowerCase() when passing to UI helpers.
@@ -41,14 +42,7 @@ export const maxDuration = 60;
 // ---------------------------------------------------------------------------
 
 function checkCronSecret(req: Request): boolean {
-  const secret = process.env.CRON_SECRET;
-  if (!secret) {
-    // If no secret configured, refuse to run (don't silently allow public access)
-    console.error('[cron] CRON_SECRET not set — refusing to run');
-    return false;
-  }
-  const header = req.headers.get('x-cron-secret');
-  return header === secret;
+  return checkSecretHeader(req, 'CRON_SECRET', 'x-cron-secret');
 }
 
 // ---------------------------------------------------------------------------

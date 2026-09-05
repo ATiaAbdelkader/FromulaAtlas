@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
       decadal,
     });
   } catch (e) {
-    return NextResponse.json({ error: e instanceof Error ? e.message : 'Failed' }, { status: 500 });
+    return NextResponse.json({ error: 'Internal error' }, { status: 500 });
   }
 }
 

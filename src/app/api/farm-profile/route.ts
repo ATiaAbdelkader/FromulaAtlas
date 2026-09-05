@@ -30,7 +30,20 @@ const FarmProfileBody = z.object({
   crop: z.string().min(1).max(50),
   plantingDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'plantingDate must be YYYY-MM-DD'),
   areaHa: z.number().min(0).max(10000).optional(),
-  plan: z.object({}).passthrough().optional(),  // accept any object as FarmPilotPlan
+  // Strict FarmPilotPlan schema — prevents mass assignment + caps size
+  plan: z.object({
+    cropId: z.string().max(50).optional(),
+    plantingDate: z.string().max(20).optional(),
+    areaHa: z.number().min(0).max(10000).optional(),
+    productionSystem: z.string().max(30).optional(),
+    irrigationSystem: z.string().max(30).optional(),
+    irrigationFlowLph: z.number().min(0).max(100000).optional(),
+    targetYieldTonsHa: z.number().min(0).max(1000).optional(),
+    fertilizerProduct: z.string().max(100).optional(),
+    notes: z.string().max(2000).optional(),
+    createdAt: z.number().optional(),
+    updatedAt: z.number().optional(),
+  }).optional(),
 });
 
 // ---------------------------------------------------------------------------

@@ -24,8 +24,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createHmac, timingSafeEqual } from 'node:crypto';
+import { createHmac } from 'node:crypto';
 import { db } from '@/lib/db';
+import { safeCompare } from '@/lib/security-utils';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -48,7 +49,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Webhook not configured' }, { status: 500 });
   }
 
-  if (mode === 'subscribe' && token === expectedToken) {
+  if (mode === 'subscribe' && safeCompare(token, expectedToken)) {
     console.log('[whatsapp:webhook] Verification successful');
     return new NextResponse(challenge ?? '', {
       status: 200,
@@ -108,12 +109,7 @@ function verifySignature(bodyText: string, signature: string | null, appSecret: 
   }
   const expected = signature.slice(7);
   const computed = createHmac('sha256', appSecret).update(bodyText).digest('hex');
-  if (expected.length !== computed.length) return false;
-  try {
-    return timingSafeEqual(Buffer.from(expected), Buffer.from(computed));
-  } catch {
-    return false;
-  }
+  return safeCompare(expected, computed);
 }
 
 // ---------------------------------------------------------------------------

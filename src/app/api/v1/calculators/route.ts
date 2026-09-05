@@ -61,6 +61,6 @@ export async function POST(req: NextRequest) {
     const result = config.compute(fullValues);
     return NextResponse.json({ code, input: fullValues, result });
   } catch (e) {
-    return NextResponse.json({ error: e instanceof Error ? e.message : 'Compute failed' }, { status: 500 });
+    return NextResponse.json({ error: 'Internal error' }, { status: 500 });
   }
 }

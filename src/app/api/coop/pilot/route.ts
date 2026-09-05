@@ -11,12 +11,11 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { trackServerEvent } from '@/lib/telemetry';
+import { checkSecretHeader } from '@/lib/security-utils';
 import { z } from 'zod';
 
 function checkAdminSecret(req: Request): boolean {
-  const secret = process.env.ADMIN_SECRET;
-  if (!secret) return false;
-  return req.headers.get('x-admin-secret') === secret;
+  return checkSecretHeader(req, 'ADMIN_SECRET');
 }
 
 const Body = z.object({

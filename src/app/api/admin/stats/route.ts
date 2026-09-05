@@ -16,13 +16,12 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { maskAlgerianPhone } from '@/lib/phone-utils';
+import { checkSecretHeader } from '@/lib/security-utils';
 
 export const dynamic = 'force-dynamic';
 
 function checkAdminSecret(req: Request): boolean {
-  const secret = process.env.ADMIN_SECRET;
-  if (!secret) return false;
-  return req.headers.get('x-admin-secret') === secret;
+  return checkSecretHeader(req, 'ADMIN_SECRET');
 }
 
 export async function GET(req: Request) {

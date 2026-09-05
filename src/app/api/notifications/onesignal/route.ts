@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { checkSecretHeader } from '@/lib/security-utils';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -14,6 +15,12 @@ interface OneSignalPushRequest {
 }
 
 export async function POST(req: NextRequest) {
+  // Auth: require admin secret — this route broadcasts to all OneSignal
+  // subscribers, so it MUST NOT be publicly accessible.
+  if (!checkSecretHeader(req, 'ADMIN_SECRET')) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const body = (await req.json()) as OneSignalPushRequest;
 
@@ -24,7 +31,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const appId = body.appId || process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID;
+    // Always use the env var appId — ignore body.appId to prevent spoofing
+    const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID;
     const restApiKey = process.env.ONESIGNAL_REST_API_KEY;
 
     if (!appId) {
