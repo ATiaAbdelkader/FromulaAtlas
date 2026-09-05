@@ -30,6 +30,7 @@ import { useSyncedFarmProfile } from '@/lib/farm-profile-sync';
 import { useTranslation, copyFor } from '@/lib/language-store';
 import { trackEvent } from '@/lib/telemetry';
 import { computeRainfallAnomaly, anomalyStatusLabel, anomalyColor, type RainfallAnomaly } from '@/lib/rainfall-anomaly';
+import { getThermalStage, mapThermalStageToFarmPilot } from '@/lib/thermal-stage';
 import { getForecast, type ForecastResult, type DailyForecast } from '@/lib/open-meteo';
 import {
   getCropById, getActiveStage, calculateIrrigation, generateTodayTasks,
@@ -64,6 +65,7 @@ export function TodayCard({ onOpenTool }: TodayCardProps) {
   const effectiveProfile = profile ?? localProfile;
   const [forecast, setForecast] = useState<ForecastResult | null>(null);
   const [anomaly, setAnomaly] = useState<RainfallAnomaly | null>(null);
+  const [thermalStage, setThermalStage] = useState<{ stage: string; currentGdd: number; daysToNextStage: number | null } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [completedTasks, setCompletedTasks] = useState<Set<string>>(new Set());
@@ -111,6 +113,22 @@ export function TodayCard({ onOpenTool }: TodayCardProps) {
           setForecast(f);
           setAnomaly(a);
           setError(null);
+        }
+        // Fetch thermal stage (non-blocking — uses the same cached forecast)
+        if (!cancelled && effectiveProfile.crop && effectiveProfile.plantingDate) {
+          const ts = await getThermalStage(
+            effectiveProfile.crop,
+            parseFloat(effectiveProfile.lat!),
+            parseFloat(effectiveProfile.lng!),
+            effectiveProfile.plantingDate,
+          );
+          if (!cancelled && ts) {
+            setThermalStage({
+              stage: mapThermalStageToFarmPilot(ts.stage),
+              currentGdd: ts.currentGdd,
+              daysToNextStage: ts.daysToNextStage,
+            });
+          }
         }
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : 'Weather unavailable');
@@ -275,6 +293,10 @@ export function TodayCard({ onOpenTool }: TodayCardProps) {
   const stage = briefData?.activeStage;
   const stageLabel = stage ? `${CROP_STAGE_LABELS[stage.stage].emoji} ${CROP_STAGE_LABELS[stage.stage].label[language]}` : '';
 
+  // If thermal stage is available, prefer it (more accurate than calendar-based)
+  const displayStage = thermalStage ? CROP_STAGE_LABELS[thermalStage.stage as keyof typeof CROP_STAGE_LABELS] : null;
+  const displayStageLabel = displayStage ? `${displayStage.emoji} ${displayStage.label[language]}` : stageLabel;
+
   return (
     <div className="space-y-3">
       {/* Header: greeting + date */}
@@ -295,8 +317,14 @@ export function TodayCard({ onOpenTool }: TodayCardProps) {
             <p className="text-sm font-semibold">
               {briefData.crop.emoji} {briefData.crop.name[language]}
             </p>
-            {stageLabel && (
-              <p className="text-xs text-muted-foreground">{stageLabel}</p>
+            {displayStageLabel && (
+              <p className="text-xs text-muted-foreground">{displayStageLabel}</p>
+            )}
+            {thermalStage && (
+              <p className="text-[10px] text-emerald-600 dark:text-emerald-400 mt-0.5">
+                {thermalStage.currentGdd} GDD
+                {thermalStage.daysToNextStage != null && ` · ~${thermalStage.daysToNextStage}d ${t('to next', 'للتالي', 'au suivant')}`}
+              </p>
             )}
           </div>
         )}
