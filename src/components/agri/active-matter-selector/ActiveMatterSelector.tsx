@@ -30,6 +30,7 @@ import {
   fetchPhytoIndex, indexByActive, normPhyto, type PhytoProduct,
 } from '@/lib/phyto-index';
 import { useTranslation } from '@/lib/language-store';
+import { useFarmProfile } from '@/components/agri/farm-profile-wizard';
 
 // ---------------------------------------------------------------------------
 // Small helpers
@@ -200,6 +201,7 @@ function ConfidenceRing({ value, size = 58 }: { value: number; size?: number }) 
 // ---------------------------------------------------------------------------
 export function ActiveMatterSelector() {
   const { language } = useTranslation();
+  const farmProfile = useFarmProfile();
   const [tab, setTab] = useState('decision');
 
   // ----- decision state -----
@@ -500,16 +502,28 @@ export function ActiveMatterSelector() {
 
           {/* ===== Enhancement: Real-Time Weather Spray Window ===== */}
           {(() => {
-            const lat = 36.75, lng = 3.06; // default Algiers — TODO: use farm profile location
-            try {
-              const saved = localStorage.getItem('et_tracker_last_loc_v1');
-              if (saved) {
-                const obj = JSON.parse(saved);
-                if (parseFloat(obj.lat) && parseFloat(obj.lng)) {
-                  return <SprayWindowWidget lat={parseFloat(obj.lat)} lng={parseFloat(obj.lng)} />;
-                }
+            // Try farm profile first, then ET tracker saved location, then default Algiers
+            let lat = 36.75, lng = 3.06; // default Algiers
+            // 1. Farm profile (most reliable — farmer set this explicitly)
+            if (farmProfile?.lat && farmProfile?.lng) {
+              const fpLat = parseFloat(farmProfile.lat);
+              const fpLng = parseFloat(farmProfile.lng);
+              if (Number.isFinite(fpLat) && Number.isFinite(fpLng)) {
+                lat = fpLat; lng = fpLng;
               }
-            } catch { /* ignore */ }
+            }
+            // 2. ET tracker saved location (fallback if farm profile not set)
+            if (!farmProfile?.lat || !farmProfile?.lng) {
+              try {
+                const saved = localStorage.getItem('et_tracker_last_loc_v1');
+                if (saved) {
+                  const obj = JSON.parse(saved);
+                  if (parseFloat(obj.lat) && parseFloat(obj.lng)) {
+                    lat = parseFloat(obj.lat); lng = parseFloat(obj.lng);
+                  }
+                }
+              } catch { /* ignore */ }
+            }
             return <SprayWindowWidget lat={lat} lng={lng} />;
           })()}
 

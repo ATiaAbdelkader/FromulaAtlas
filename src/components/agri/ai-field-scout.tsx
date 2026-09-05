@@ -77,6 +77,10 @@ export function AIFieldScout({ onOpenFarmTool }: AIFieldScoutProps) {
   const [followUpPhoto, setFollowUpPhoto] = useState<string | null>(null);
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [result, setResult] = useState<SymptomResult | null>(null);
+  const [diagnosisId, setDiagnosisId] = useState<string>('');
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+  const [feedbackCorrectDiagnosis, setFeedbackCorrectDiagnosis] = useState('');
+  const [showCorrectInput, setShowCorrectInput] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -194,6 +198,11 @@ export function AIFieldScout({ onOpenFarmTool }: AIFieldScoutProps) {
       const payload = await response.json().catch(() => null);
       if (!response.ok) throw new Error(payload?.error || t('AI analysis failed. Please retry.', 'L’analyse IA a échoué. Réessayez.', 'فشل تحليل الذكاء الاصطناعي. حاول مرة أخرى.'));
       setResult(payload as SymptomResult);
+      // Generate a diagnosis ID for feedback tracking
+      setDiagnosisId(`diag_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`);
+      setFeedbackSubmitted(false);
+      setFeedbackCorrectDiagnosis('');
+      setShowCorrectInput(false);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : t('AI analysis failed. Please retry.', 'L’analyse IA a échoué. Réessayez.', 'فشل تحليل الذكاء الاصطناعي. حاول مرة أخرى.'));
     } finally {
@@ -272,6 +281,30 @@ export function AIFieldScout({ onOpenFarmTool }: AIFieldScoutProps) {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
+  // Submit feedback on diagnosis correctness
+  const submitFeedback = async (wasCorrect: boolean) => {
+    if (!result || !diagnosisId) return;
+    try {
+      await fetch('/api/diagnosis-feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          diagnosisId,
+          problemType: result.problem_type,
+          problemName: result.problem_name,
+          confidence: result.confidence,
+          wasCorrect,
+          correctDiagnosis: wasCorrect ? undefined : feedbackCorrectDiagnosis,
+          crop: crop || undefined,
+          notes: note || undefined,
+        }),
+      });
+      setFeedbackSubmitted(true);
+    } catch {
+      // Silent fail — feedback is best-effort, don't block the farmer
+    }
+  };
+
   const reset = () => {
     setPhoto(null);
     setFollowUpPhoto(null);
@@ -336,6 +369,44 @@ export function AIFieldScout({ onOpenFarmTool }: AIFieldScoutProps) {
           {matchedPhyto.length > 0 && !result.reviewRequired && !result.needsSecondPhoto && <div className="mt-4 rounded-xl border border-emerald-200/80 bg-background/60 p-3 dark:border-emerald-900/60"><div className="flex flex-wrap items-center justify-between gap-2"><div className="text-xs font-bold">{t('Matched Algeria phyto options', 'Options phyto algériennes correspondantes', 'خيارات الوقاية النباتية الجزائرية المطابقة')}</div><Button type="button" variant="outline" size="sm" onClick={() => onOpenFarmTool?.('collapse_ipm_action')} className="h-7 gap-1 text-[10px]"><Sparkles className="h-3 w-3" />{t('Open IPM planner', 'Ouvrir le planificateur IPM', 'فتح مخطط IPM')}</Button></div><div className="mt-2 grid gap-2 sm:grid-cols-2">{matchedPhyto.map((option) => <div key={option.activeMatter.id} className="rounded-lg border bg-background/70 p-2"><div className="text-xs font-semibold">{option.activeMatter.name}</div><div className="mt-0.5 text-[10px] text-muted-foreground">{option.activeMatter.activeSubstance} · {option.activeMatter.applicationRate}</div></div>)}</div></div>}
           {matchedPhyto.length > 0 && (result.reviewRequired || result.needsSecondPhoto) && <p className="mt-3 text-[10px] font-medium text-amber-800 dark:text-amber-200">{t('Phyto matches are held until the reference evidence is verified.', 'Les correspondances phyto sont bloquées jusqu’à la vérification des preuves.', 'تم تعليق خيارات الوقاية النباتية حتى التحقق من الأدلة المرجعية.')}</p>}
           {result.reviewRequired && <p className="mt-3 text-[10px] font-medium text-muted-foreground">{t('AI output is advisory. Verify symptoms, local label registration, dose, pre-harvest interval, and safety requirements with a qualified agronomist before treatment.', 'La sortie IA est indicative. Vérifiez les symptômes, l’homologation locale, la dose, le délai avant récolte et la sécurité avec un agronome qualifié avant traitement.', 'نتيجة الذكاء الاصطناعي إرشادية. تحقق من الأعراض وتسجيل المنتج محلياً والجرعة وفترة ما قبل الحصاد ومتطلبات السلامة مع مهندس زراعي مؤهل قبل المعالجة.')}</p>}
+          {/* Feedback loop — was this diagnosis correct? */}
+          {result.problem_type !== 'unknown' && (
+            <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50/50 p-3 dark:border-slate-700 dark:bg-slate-900/20">
+              {!feedbackSubmitted ? (
+                <>
+                  <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    {t('Was this diagnosis correct?', 'هل كان هذا التشخيص صحيحاً؟', 'Ce diagnostic est-il correct ?')}
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <Button type="button" variant="outline" size="sm" onClick={() => submitFeedback(true)} className="h-7 gap-1.5 text-[10px] text-emerald-700 hover:bg-emerald-50">
+                      <CheckCircle2 className="h-3 w-3" /> {t('Yes, correct', 'نعم، صحيح', 'Oui, correct')}
+                    </Button>
+                    <Button type="button" variant="outline" size="sm" onClick={() => setShowCorrectInput(true)} className="h-7 gap-1.5 text-[10px] text-rose-700 hover:bg-rose-50">
+                      <X className="h-3 w-3" /> {t('No, incorrect', 'لا، غير صحيح', 'Non, incorrect')}
+                    </Button>
+                  </div>
+                  {showCorrectInput && (
+                    <div className="mt-2 space-y-2">
+                      <Input
+                        value={feedbackCorrectDiagnosis}
+                        onChange={(e) => setFeedbackCorrectDiagnosis(e.target.value)}
+                        placeholder={t('What was the actual problem?', 'ما هي المشكلة الفعلية؟', 'Quel était le problème réel ?')}
+                        className="h-8 text-xs"
+                      />
+                      <Button type="button" size="sm" onClick={() => submitFeedback(false)} disabled={!feedbackCorrectDiagnosis.trim()} className="h-7 text-[10px]">
+                        {t('Submit correction', 'إرسال التصحيح', 'Soumettre la correction')}
+                      </Button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <p className="text-xs text-emerald-700 dark:text-emerald-300 flex items-center gap-1.5">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  {t('Thank you! Your feedback helps improve diagnoses for all farmers.', 'شكراً! ملاحظاتك تساعد في تحسين التشخيص لجميع المزارعين.', 'Merci ! Votre retour aide à améliorer les diagnostics pour tous.')}
+                </p>
+              )}
+            </div>
+          )}
         </div>}
 
         <div className="flex flex-col justify-between gap-3 rounded-2xl border bg-muted/20 p-3 sm:flex-row sm:items-center"><div className="flex items-start gap-2 text-xs text-muted-foreground"><Upload className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" /><span>{t('Save the reviewed observation to the Field Intelligence timeline. The Farm Digital Twin will refresh automatically.', 'Enregistrez l’observation vérifiée dans la chronologie. Le Jumeau numérique se mettra à jour automatiquement.', 'احفظ الملاحظة التي تمت مراجعتها في سجل ذكاء الحقل. سيُحدّث التوأم الرقمي نفسه تلقائياً.')}</span></div><div className="flex shrink-0 gap-2"><Button type="button" variant="ghost" size="sm" onClick={reset}>{t('Reset', 'Réinitialiser', 'إعادة ضبط')}</Button><Button type="button" size="sm" onClick={saveObservation} disabled={saving} className="gap-1.5 bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900">{saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}{t('Save observation', 'Enregistrer l’observation', 'حفظ الملاحظة')}</Button></div></div>

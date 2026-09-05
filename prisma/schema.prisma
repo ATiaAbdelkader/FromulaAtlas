@@ -202,6 +202,37 @@ model ProSubscription {
 }
 
 // ---------------------------------------------------------------------------
+// DiagnosisFeedback — farmer feedback on AI symptom identifications.
+//
+// When a farmer uses the AI Field Scout and gets a diagnosis, they can mark
+// it as "correct" or "incorrect" (with an optional correct diagnosis text).
+// This data is gold for future model fine-tuning — it's the labeled
+// Algerian field dataset no competitor has.
+//
+// The `diagnosisId` is a client-generated UUID (passed in the AI response
+// as `diagnosisId`). The full diagnosis JSON is stored for audit.
+// ---------------------------------------------------------------------------
+
+model DiagnosisFeedback {
+  id              String   @id @default(cuid())
+  farmerId        String?
+  diagnosisId     String   // client-generated UUID per diagnosis
+  problemType     String   // 'disease' | 'pest' | 'weed' | ...
+  problemName     String   // what the AI predicted
+  confidence      Float    // AI confidence at time of diagnosis
+  wasCorrect      Boolean  // farmer's verdict
+  correctDiagnosis String? // if wasCorrect=false, what was it really?
+  crop            String?
+  imageUrl        String?  // stored image URL (for future retraining)
+  notes           String?
+  createdAt       DateTime @default(now())
+
+  @@index([farmerId, createdAt])
+  @@index([wasCorrect])
+  @@index([problemName])
+}
+
+// ---------------------------------------------------------------------------
 // Enums
 // ---------------------------------------------------------------------------
 
