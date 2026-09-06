@@ -30,6 +30,7 @@ import { buildBriefForFarmer } from '@/lib/brief/brief-builder';
 import { buildBriefMessage } from '@/components/agri/whatsapp-daily-brief';
 import { generateUnsubscribeToken } from '@/lib/unsubscribe-token';
 import { anomalyBriefText } from '@/lib/rainfall-anomaly';
+import { stressBriefText } from '@/lib/crop-stress-index';
 import { checkSecretHeader } from '@/lib/security-utils';
 import type { Language } from '@/lib/language-store';
 // Note: Prisma's Language enum is uppercase (EN/FR/AR); app's Language is lowercase (en/fr/ar).
@@ -184,6 +185,14 @@ async function processSubscription(
     const anomalyLine = anomalyBriefText(buildResult.anomaly, langCode);
     if (anomalyLine) {
       message += `\n${anomalyLine}`;
+    }
+  }
+
+  // 2c. Append crop stress index (if not low)
+  if (buildResult.stress) {
+    const stressLine = stressBriefText(buildResult.stress, langCode);
+    if (stressLine) {
+      message += `\n${stressLine}`;
     }
   }
 

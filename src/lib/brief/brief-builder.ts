@@ -12,6 +12,7 @@
 import { db } from '@/lib/db';
 import { getCachedForecast, getTodayFromForecast } from '@/lib/brief/weather-cache';
 import { computeRainfallAnomaly, anomalyBriefText, type RainfallAnomaly } from '@/lib/rainfall-anomaly';
+import { computeStressIndex, stressBriefText, type StressResult } from '@/lib/crop-stress-index';
 import {
   getCropById,
   getActiveStage,
@@ -47,6 +48,8 @@ export interface BuildBriefResult {
   weatherSource: 'open-meteo' | 'atlas_default';
   /** Rainfall anomaly for this season (null if unavailable). */
   anomaly: RainfallAnomaly | null;
+  /** Composite crop stress index (null if unavailable). */
+  stress: StressResult | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -73,17 +76,17 @@ export async function buildBriefForFarmer(farmerId: string): Promise<BuildBriefR
     where: { farmerId },
   });
   if (!farmProfileRow || !farmProfileRow.crop || !farmProfileRow.lat || !farmProfileRow.lng) {
-    return { context: null, skipReason: 'no_farm_profile', weatherSource: 'atlas_default', anomaly: null };
+    return { context: null, skipReason: 'no_farm_profile', weatherSource: 'atlas_default', anomaly: null, stress: null };
   }
 
   // 2. Resolve crop
   if (!farmProfileRow.plantingDate) {
-    return { context: null, skipReason: 'no_planting_date', weatherSource: 'atlas_default', anomaly: null };
+    return { context: null, skipReason: 'no_planting_date', weatherSource: 'atlas_default', anomaly: null, stress: null };
   }
   const farmPilotCropId = toFarmPilotId(farmProfileRow.crop);
   const crop = farmPilotCropId ? getCropById(farmPilotCropId) : undefined;
   if (!crop) {
-    return { context: null, skipReason: 'unsupported_crop', weatherSource: 'atlas_default', anomaly: null };
+    return { context: null, skipReason: 'unsupported_crop', weatherSource: 'atlas_default', anomaly: null, stress: null };
   }
 
   // 3. Build FarmProfile shape (matches the localStorage format the
@@ -167,5 +170,14 @@ export async function buildBriefForFarmer(farmerId: string): Promise<BuildBriefR
   // 10. Compute rainfall anomaly (current season vs 1991-2020 normal)
   const anomaly = await computeRainfallAnomaly(farmProfileRow.lat, farmProfileRow.lng);
 
-  return { context, weatherSource, anomaly };
+  // 11. Compute composite crop stress index
+  const stress = computeStressIndex({
+    currentNdvi: null,  // NDVI not fetched in cron (would add latency)
+    expectedNdvi: null,
+    rainfallAnomaly: anomaly,
+    today: today ?? null,
+    optimalTempRange: [18, 28],  // default optimal range
+  });
+
+  return { context, weatherSource, anomaly, stress };
 }

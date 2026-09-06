@@ -29,6 +29,7 @@ const suites = [
   'scripts/test-unsubscribe-token.ts',
   'scripts/test-brief-pipeline.ts',
   'scripts/test-thermal-stage.ts',
+  'scripts/test-crop-stress-index.ts',
   'scripts/test-whatsapp-webhook-keywords.ts',
   'scripts/test-farm-digital-twin.ts',
   'scripts/test-satellite-health.ts',

@@ -31,6 +31,7 @@ import { useTranslation, copyFor } from '@/lib/language-store';
 import { trackEvent } from '@/lib/telemetry';
 import { computeRainfallAnomaly, anomalyStatusLabel, anomalyColor, type RainfallAnomaly } from '@/lib/rainfall-anomaly';
 import { getThermalStage, mapThermalStageToFarmPilot } from '@/lib/thermal-stage';
+import { computeStressIndex, stressLevelLabel, stressColor, stressRecommendationText, type StressResult } from '@/lib/crop-stress-index';
 import { getForecast, type ForecastResult, type DailyForecast } from '@/lib/open-meteo';
 import {
   getCropById, getActiveStage, calculateIrrigation, generateTodayTasks,
@@ -66,6 +67,7 @@ export function TodayCard({ onOpenTool }: TodayCardProps) {
   const [forecast, setForecast] = useState<ForecastResult | null>(null);
   const [anomaly, setAnomaly] = useState<RainfallAnomaly | null>(null);
   const [thermalStage, setThermalStage] = useState<{ stage: string; currentGdd: number; daysToNextStage: number | null } | null>(null);
+  const [stress, setStress] = useState<StressResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [completedTasks, setCompletedTasks] = useState<Set<string>>(new Set());
@@ -198,6 +200,35 @@ export function TodayCard({ onOpenTool }: TodayCardProps) {
     return t('Good evening', 'مساء الخير', 'Bonsoir');
   }, [t]);
 
+  // Compute composite crop stress index when we have the signals
+  useEffect(() => {
+    if (!forecast?.daily?.[0]) {
+      setStress(null);
+      return;
+    }
+    // Get optimal temp range from the crop (if available)
+    let optimalTempRange: [number, number] | null = null;
+    if (briefData?.crop) {
+      // Use FarmPilot crop's optimal temp if available, otherwise use a reasonable default
+      const crop = briefData.crop as any;
+      if (crop.optimalTempMin != null && crop.optimalTempMax != null) {
+        optimalTempRange = [crop.optimalTempMin, crop.optimalTempMax];
+      } else {
+        // Default: 18-28°C is optimal for most Algerian crops
+        optimalTempRange = [18, 28];
+      }
+    }
+
+    const result = computeStressIndex({
+      currentNdvi: null,  // NDVI not fetched in Today card (would need sentinel-ndvi call)
+      expectedNdvi: null,
+      rainfallAnomaly: anomaly,
+      today: forecast.daily[0],
+      optimalTempRange,
+    });
+    setStress(result);
+  }, [forecast, anomaly, briefData?.crop]);
+
   const toggleTask = useCallback((taskId: string) => {
     setCompletedTasks(prev => {
       const next = new Set(prev);
@@ -329,6 +360,33 @@ export function TodayCard({ onOpenTool }: TodayCardProps) {
           </div>
         )}
       </div>
+
+      {/* Crop stress index — single actionable number */}
+      {stress && stress.level !== 'low' && (
+        <Card className={`border-l-4 ${stress.level === 'high' ? 'border-l-red-500' : 'border-l-amber-500'}`}>
+          <CardContent className="pt-3 pb-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">🌿</span>
+                <div>
+                  <p className="text-xs font-semibold" style={{ color: stressColor(stress.level) }}>
+                    {t('Crop stress', 'إجهاد المحصول', 'Stress culture')}: {Math.round(stress.index * 100)}%
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {stressLevelLabel(stress.level, language)}
+                    {stress.dominantFactor !== 'none' && ` · ${stress.dominantFactor === 'rainfall' ? t('rainfall', 'أمطار', 'pluie') : stress.dominantFactor === 'temperature' ? t('heat', 'حرارة', 'chaleur') : t('NDVI', 'NDVI', 'NDVI')}`}
+                  </p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-[10px] font-medium" style={{ color: stressColor(stress.level) }}>
+                  {stressRecommendationText(stress.recommendation, language)}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Weather chip */}
       {today && (
