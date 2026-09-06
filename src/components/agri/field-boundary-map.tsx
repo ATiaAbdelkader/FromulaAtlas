@@ -9,74 +9,23 @@
  *   3. The area is computed automatically (in hectares)
  *   4. The polygon + area are passed to the parent via onChange
  *
- * This replaces the manual "enter your area in hectares" text field —
- * much more intuitive for farmers who know their field by sight.
- *
- * No Python microservice needed — all computation is client-side.
- * For auto-detection from satellite (agribound), that would need a
- * Python backend — deferred until we have 500+ users.
+ * SSR-safe: the actual Leaflet map is loaded via next/dynamic with
+ * { ssr: false } because Leaflet accesses `window` during import.
  */
 
 import { useState, useCallback, useRef, useEffect } from 'react';
-import {
-  MapContainer, TileLayer, Polygon, useMapEvents, Marker, CircleMarker,
-} from 'react-leaflet';
-import L from 'leaflet';
-import { MapPin, Trash2, Check, Ruler } from 'lucide-react';
+import dynamic from 'next/dynamic';
+import { Trash2, Check, Ruler } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/lib/language-store';
 
-// Fix Leaflet default icon issue with bundlers
-delete (L.Icon.Default.prototype as unknown as { _getIconUrl: unknown })._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-});
-
-interface FieldBoundaryMapProps {
-  /** Initial center [lat, lng] — typically from farm profile. */
-  center: [number, number];
-  /** Called when the polygon is closed with the points + computed area. */
-  onChange?: (points: [number, number][], areaHa: number) => void;
-}
-
 // ---------------------------------------------------------------------------
-// Click handler component (must be inside MapContainer)
-// ---------------------------------------------------------------------------
-
-function ClickHandler({
-  points,
-  onAddPoint,
-  onClosePolygon,
-}: {
-  points: [number, number][];
-  onAddPoint: (latlng: [number, number]) => void;
-  onClosePolygon: () => void;
-}) {
-  useMapEvents({
-    click(e) {
-      onAddPoint([e.latlng.lat, e.latlng.lng]);
-    },
-    dblclick() {
-      if (points.length >= 3) {
-        onClosePolygon();
-      }
-    },
-  });
-  return null;
-}
-
-// ---------------------------------------------------------------------------
-// Area computation (Shoelace formula on geographic coordinates)
+// Area computation (pure function — safe to import on server)
 // ---------------------------------------------------------------------------
 
 /**
  * Compute the area of a polygon in hectares using the Shoelace formula
  * with spherical Earth approximation.
- *
- * @param points Array of [lat, lng] pairs
- * @returns Area in hectares
  */
 export function computePolygonAreaHa(points: [number, number][]): number {
   if (points.length < 3) return 0;
@@ -98,23 +47,31 @@ export function computePolygonAreaHa(points: [number, number][]): number {
 }
 
 // ---------------------------------------------------------------------------
-// Main component
+// Props (shared between wrapper + inner component)
 // ---------------------------------------------------------------------------
 
-export function FieldBoundaryMap({ center, onChange }: FieldBoundaryMapProps) {
-  const { language, isRTL } = useTranslation();
+interface FieldBoundaryMapProps {
+  center: [number, number];
+  onChange?: (points: [number, number][], areaHa: number) => void;
+}
+
+// ---------------------------------------------------------------------------
+// Inner component — loaded only in browser (SSR disabled)
+// ---------------------------------------------------------------------------
+
+function FieldBoundaryMapInner({ center, onChange }: FieldBoundaryMapProps) {
+  const { language } = useTranslation();
   const isArabic = language === 'ar';
   const isFrench = language === 'fr';
   const t = (en: string, ar: string, fr: string) => (isArabic ? ar : isFrench ? fr : en);
 
   const [points, setPoints] = useState<[number, number][]>([]);
   const [isClosed, setIsClosed] = useState(false);
-  const mapRef = useRef<L.Map | null>(null);
 
   const areaHa = computePolygonAreaHa(points);
 
   const handleAddPoint = useCallback((latlng: [number, number]) => {
-    if (isClosed) return;  // can't add points after closing
+    if (isClosed) return;
     setPoints(prev => [...prev, latlng]);
   }, [isClosed]);
 
@@ -128,12 +85,43 @@ export function FieldBoundaryMap({ center, onChange }: FieldBoundaryMapProps) {
     onChange?.([], 0);
   }, [onChange]);
 
-  // Notify parent when polygon is closed
   useEffect(() => {
     if (isClosed && points.length >= 3) {
       onChange?.(points, areaHa);
     }
   }, [isClosed, points, areaHa, onChange]);
+
+  // Import Leaflet components lazily (only runs in browser)
+  // We use require() inside the component body because next/dynamic
+  // can't handle named exports from react-leaflet cleanly
+  const { MapContainer, TileLayer, Polygon, CircleMarker, Marker, useMapEvents } = require('react-leaflet');
+  const L = require('leaflet');
+  require('leaflet/dist/leaflet.css');
+
+  // Fix Leaflet default icon
+  delete (L.Icon.Default.prototype as unknown as { _getIconUrl: unknown })._getIconUrl;
+  L.Icon.Default.mergeOptions({
+    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+  });
+
+  // Click handler (must be inside MapContainer)
+  const ClickHandler = ({ points, onAddPoint, onClosePolygon }: {
+    points: [number, number][];
+    onAddPoint: (latlng: [number, number]) => void;
+    onClosePolygon: () => void;
+  }) => {
+    useMapEvents({
+      click(e: { latlng: { lat: number; lng: number } }) {
+        onAddPoint([e.latlng.lat, e.latlng.lng]);
+      },
+      dblclick() {
+        if (points.length >= 3) onClosePolygon();
+      },
+    });
+    return null;
+  };
 
   return (
     <div className="space-y-3">
@@ -142,21 +130,13 @@ export function FieldBoundaryMap({ center, onChange }: FieldBoundaryMapProps) {
           center={center}
           zoom={15}
           style={{ height: '100%', width: '100%' }}
-          ref={(map) => { mapRef.current = map; }}
           doubleClickZoom={false}
         >
           <TileLayer
             attribution='&copy; OpenStreetMap'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-
-          <ClickHandler
-            points={points}
-            onAddPoint={handleAddPoint}
-            onClosePolygon={handleClose}
-          />
-
-          {/* Draw the polygon (or polyline if not closed) */}
+          <ClickHandler points={points} onAddPoint={handleAddPoint} onClosePolygon={handleClose} />
           {points.length >= 2 && (
             <Polygon
               positions={points}
@@ -168,23 +148,14 @@ export function FieldBoundaryMap({ center, onChange }: FieldBoundaryMapProps) {
               }}
             />
           )}
-
-          {/* Draw markers at each point */}
           {points.map((point, i) => (
             <CircleMarker
               key={i}
               center={point}
               radius={5}
-              pathOptions={{
-                color: '#059669',
-                fillColor: '#fff',
-                fillOpacity: 1,
-                weight: 2,
-              }}
+              pathOptions={{ color: '#059669', fillColor: '#fff', fillOpacity: 1, weight: 2 }}
             />
           ))}
-
-          {/* Center marker (farm location) */}
           <Marker position={center} />
         </MapContainer>
 
@@ -196,13 +167,11 @@ export function FieldBoundaryMap({ center, onChange }: FieldBoundaryMapProps) {
                 {points.length === 0
                   ? t('Click to add field corners', 'انقر لإضافة زوايا الحقل', 'Cliquez pour les coins')
                   : points.length < 3
-                    ? t(`${points.length} points — need at least 3`, `${points.length} نقاط — تحتاج 3 على الأقل`, `${points.length} points — min 3`)
-                    : t(`${points.length} points — double-click to close`, `${points.length} نقاط — انقر مزدوج للإغلاق`, `${points.length} points — double-clic pour fermer`)}
+                    ? t(`${points.length} pts — need 3+`, `${points.length} نقاط — تحتاج 3+`, `${points.length} pts — min 3`)
+                    : t(`${points.length} pts — double-click to close`, `${points.length} نقاط — نقر مزدوج للإغلاق`, `${points.length} pts — dbl-clic pour fermer`)}
               </span>
             ) : (
-              <span className="text-emerald-600 font-medium">
-                ✓ {t('Field boundary drawn', 'تم رسم حدود الحقل', 'Limites tracées')}
-              </span>
+              <span className="text-emerald-600 font-medium">✓ {t('Boundary drawn', 'تم رسم الحدود', 'Limites tracées')}</span>
             )}
           </div>
         </div>
@@ -213,16 +182,14 @@ export function FieldBoundaryMap({ center, onChange }: FieldBoundaryMapProps) {
         <div className="flex items-center gap-2 text-sm">
           <Ruler className="h-4 w-4 text-emerald-600" />
           <span className="font-medium">
-            {areaHa > 0
-              ? `${areaHa} ha`
-              : t('Draw your field to compute area', 'ارسم حقلك لحساب المساحة', 'Dessinez pour calculer')}
+            {areaHa > 0 ? `${areaHa} ha` : t('Draw to compute area', 'ارسم لحساب المساحة', 'Dessinez pour calculer')}
           </span>
         </div>
         <div className="flex gap-2">
           {points.length >= 3 && !isClosed && (
             <Button size="sm" variant="default" onClick={handleClose}>
               <Check className="h-3.5 w-3.5" />
-              {t('Close boundary', 'إغلاق الحدود', 'Fermer')}
+              {t('Close', 'إغلاق', 'Fermer')}
             </Button>
           )}
           {points.length > 0 && (
@@ -236,3 +203,23 @@ export function FieldBoundaryMap({ center, onChange }: FieldBoundaryMapProps) {
     </div>
   );
 }
+
+// ---------------------------------------------------------------------------
+// Export — SSR-safe wrapper
+// ---------------------------------------------------------------------------
+
+/**
+ * SSR-safe field boundary map. The actual Leaflet component is loaded
+ * only in the browser via next/dynamic.
+ */
+export const FieldBoundaryMap = dynamic(
+  () => Promise.resolve(FieldBoundaryMapInner),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center h-[350px] rounded-xl border border-border bg-muted/20">
+        <span className="text-sm text-muted-foreground">Loading map…</span>
+      </div>
+    ),
+  },
+);

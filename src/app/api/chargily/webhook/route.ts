@@ -84,6 +84,22 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true });
   }
 
+  // Defense in depth: cross-check that the webhook metadata matches the
+  // ProSubscription we found. If Chargily sent metadata.farmerId or
+  // metadata.proSubId, verify it matches our record. This prevents an
+  // attacker (who somehow bypassed the signature check) from activating
+  // another farmer's subscription by guessing checkoutId.
+  const metadataFarmerId = body.data?.metadata?.farmerId;
+  const metadataProSubId = body.data?.metadata?.proSubId;
+  if (metadataProSubId && metadataProSubId !== proSub.id) {
+    console.warn(`[chargily:webhook] Metadata mismatch: webhook proSubId=${metadataProSubId} vs DB id=${proSub.id}`);
+    return NextResponse.json({ error: 'Metadata mismatch' }, { status: 403 });
+  }
+  if (metadataFarmerId && metadataFarmerId !== proSub.farmerId) {
+    console.warn(`[chargily:webhook] Metadata mismatch: webhook farmerId=${metadataFarmerId} vs DB farmerId=${proSub.farmerId}`);
+    return NextResponse.json({ error: 'Metadata mismatch' }, { status: 403 });
+  }
+
   // Handle payment status
   const status = body.data?.status;
   if (status === 'paid') {

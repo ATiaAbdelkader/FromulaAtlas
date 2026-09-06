@@ -75,8 +75,10 @@ export async function POST(req: Request) {
       contactForFollowup,
     });
 
-    // TODO: in production, email the story to case-studies@formulaatlas.dz
-    // or store in a CaseStudy table (deferred until we have enough volume)
+    // Store the story text in the log — when we have an email service
+    // (e.g., Resend), this should email case-studies@formulaatlas.dz
+    // For now, the admin can query the BriefLog + this console output.
+    // The Cooperative.caseStudyRequested flag tracks submission status.
     console.log(`[case-study] Submitted by ${farmer.phoneE164} for coop ${coop.name}: ${story.slice(0, 100)}...`);
 
     return NextResponse.json({ success: true });
