@@ -35,6 +35,7 @@ import { CROP_LIFECYCLES } from '@/lib/crop-lifecycle';
 import { localizedCropName } from '@/lib/crop-localization';
 import { useTranslation, type Language } from '@/lib/language-store';
 import { pushFarmProfileToServer } from '@/lib/farm-profile-sync';
+import { FieldBoundaryMap, computePolygonAreaHa } from '@/components/agri/field-boundary-map';
 
 const FARM_PROFILE_KEY = 'farm_profile_v1';
 const ET_TRACKER_LOC_KEY = 'et_tracker_last_loc_v1';
@@ -68,6 +69,8 @@ export function FarmProfileWizard({ open, onOpenChange, onSaved }: FarmProfileWi
   const [profile, setProfile] = useState<FarmProfile>({});
   const [locating, setLocating] = useState(false);
   const [locError, setLocError] = useState<string | null>(null);
+  const [useMapForArea, setUseMapForArea] = useState(false);
+  const [boundaryPoints, setBoundaryPoints] = useState<[number, number][]>([]);
   const { language } = useTranslation();
 
   // Load existing profile on open
@@ -134,7 +137,7 @@ export function FarmProfileWizard({ open, onOpenChange, onSaved }: FarmProfileWi
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md" aria-describedby={undefined}>
+      <DialogContent className={useMapForArea ? 'max-w-2xl' : 'max-w-md'} aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Tractor className="h-5 w-5 text-emerald-600" />
@@ -271,18 +274,57 @@ export function FarmProfileWizard({ open, onOpenChange, onSaved }: FarmProfileWi
                 />
               </div>
               <div>
-                <Label className="text-xs flex items-center gap-1">
-                  <Sprout className="h-3 w-3" /> {copyFor(language, 'Total area (hectares)', 'Surface totale (hectares)', 'المساحة الإجمالية (هكتار)')}
-                </Label>
-                <Input
-                  type="number"
-                  step="0.1"
-                  min="0.1"
-                  value={profile.area ?? ''}
-                  onChange={e => update({ area: parseFloat(e.target.value) || undefined })}
-                  placeholder={copyFor(language, 'e.g. 5.0', 'ex. 5,0', 'مثال: 5.0')}
-                  className="mt-1"
-                />
+                <div className="flex items-center justify-between mb-1">
+                  <Label className="text-xs flex items-center gap-1">
+                    <Sprout className="h-3 w-3" /> {copyFor(language, 'Total area (hectares)', 'Surface totale (hectares)', 'المساحة الإجمالية (هكتار)')}
+                  </Label>
+                  {profile.lat && profile.lng && (
+                    <button
+                      type="button"
+                      onClick={() => setUseMapForArea(!useMapForArea)}
+                      className="text-[10px] text-emerald-600 hover:underline"
+                    >
+                      {useMapForArea
+                        ? copyFor(language, 'Enter manually', 'Saisir manuellement', 'إدخال يدوي')
+                        : copyFor(language, 'Draw on map', 'Dessiner sur la carte', 'ارسم على الخريطة')}
+                    </button>
+                  )}
+                </div>
+
+                {useMapForArea && profile.lat && profile.lng ? (
+                  <div className="mt-1">
+                    <FieldBoundaryMap
+                      center={[parseFloat(profile.lat), parseFloat(profile.lng)]}
+                      onChange={(points, areaHa) => {
+                        setBoundaryPoints(points);
+                        if (areaHa > 0) {
+                          update({ area: areaHa });
+                        }
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <Input
+                    type="number"
+                    step="0.1"
+                    min="0.1"
+                    value={profile.area ?? ''}
+                    onChange={e => update({ area: parseFloat(e.target.value) || undefined })}
+                    placeholder={copyFor(language, 'e.g. 5.0', 'ex. 5,0', 'مثال: 5.0')}
+                    className="mt-1"
+                  />
+                )}
+
+                {boundaryPoints.length > 0 && useMapForArea && (
+                  <p className="text-[10px] text-emerald-600 mt-1">
+                    {copyFor(
+                      language,
+                      `${boundaryPoints.length} boundary points · ${profile.area ?? 0} ha`,
+                      `${boundaryPoints.length} points de limite · ${profile.area ?? 0} ha`,
+                      `${boundaryPoints.length} نقاط حدود · ${profile.area ?? 0} هكتار`,
+                    )}
+                  </p>
+                )}
               </div>
               <div className="rounded-md border bg-muted/20 p-2 text-[10px] text-muted-foreground">
                 {copyFor(language, '💡 You can change any of this later from the Home tab → "Edit farm profile".', '💡 Vous pourrez modifier ces informations plus tard depuis l’onglet Accueil → « Modifier le profil de ferme ».', '💡 يمكنك تغيير كل هذا لاحقاً من التبويب الرئيسي ← «تعديل ملف المزرعة».')}
