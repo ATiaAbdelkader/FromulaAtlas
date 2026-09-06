@@ -39,6 +39,12 @@ export interface RainfallAnomaly {
   isDrought: boolean;
   /** Severity: 'normal' | 'mild_deficit' | 'moderate_deficit' | 'severe_deficit' */
   severity: 'normal' | 'mild_deficit' | 'moderate_deficit' | 'severe_deficit';
+  /** Current season ET₀ (mm) — evapotranspiration demand. */
+  currentEt0Mm?: number;
+  /** Normal season ET₀ (mm). */
+  normalEt0Mm?: number;
+  /** Net water balance: rainfall - ET₀ (negative = deficit). */
+  netBalanceMm?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -110,19 +116,21 @@ interface ArchiveResponse {
   daily: {
     time: string[];
     precipitation_sum: (number | null)[];
+    et0_fao_evapotranspiration?: (number | null)[];
   };
 }
 
 /**
- * Fetch daily precipitation for a date range from the Open-Meteo Archive API.
+ * Fetch daily precipitation + ET₀ for a date range from the Open-Meteo Archive API.
+ * Both variables in a single API call (efficient).
  */
-async function fetchDailyPrecipitation(
+async function fetchDailyClimate(
   lat: number,
   lng: number,
   startDate: string,  // YYYY-MM-DD
   endDate: string,    // YYYY-MM-DD
-): Promise<Array<{ date: string; precipitation: number }>> {
-  const url = `${ARCHIVE_API}?latitude=${lat.toFixed(4)}&longitude=${lng.toFixed(4)}&start_date=${startDate}&end_date=${endDate}&daily=precipitation_sum&timezone=auto`;
+): Promise<Array<{ date: string; precipitation: number; et0: number }>> {
+  const url = `${ARCHIVE_API}?latitude=${lat.toFixed(4)}&longitude=${lng.toFixed(4)}&start_date=${startDate}&end_date=${endDate}&daily=precipitation_sum,et0_fao_evapotranspiration&timezone=auto`;
   const res = await fetch(url);
   if (!res.ok) {
     throw new Error(`Archive API failed: ${res.status}`);
@@ -133,65 +141,92 @@ async function fetchDailyPrecipitation(
   return data.daily.time.map((date, i) => ({
     date,
     precipitation: data.daily.precipitation_sum[i] ?? 0,
+    et0: data.daily.et0_fao_evapotranspiration?.[i] ?? 0,
   }));
+}
+
+/**
+ * @deprecated Use fetchDailyClimate instead (also returns ET₀).
+ */
+async function fetchDailyPrecipitation(
+  lat: number,
+  lng: number,
+  startDate: string,
+  endDate: string,
+): Promise<Array<{ date: string; precipitation: number }>> {
+  const data = await fetchDailyClimate(lat, lng, startDate, endDate);
+  return data.map(d => ({ date: d.date, precipitation: d.precipitation }));
 }
 
 // ---------------------------------------------------------------------------
 // Normal computation (cached forever — 1991-2020 doesn't change)
 // ---------------------------------------------------------------------------
 
-const normalCache = new Map<string, { months: Record<number, number>; fetchedAt: number }>();
+interface MonthlyNormals {
+  precipitation: Record<number, number>;  // month → avg mm
+  et0: Record<number, number>;            // month → avg mm
+}
+
+const normalCache = new Map<string, { normals: MonthlyNormals; fetchedAt: number }>();
 
 function normalCacheKey(lat: number, lng: number): string {
   return `${lat.toFixed(2)},${lng.toFixed(2)}`;
 }
 
 /**
- * Fetch the 1991-2020 monthly average rainfall for a location.
- * Returns a map: month (1-12) → average rainfall (mm).
+ * Fetch the 1991-2020 monthly average rainfall + ET₀ for a location.
+ * Returns maps: month (1-12) → average (mm).
  *
  * Cached forever (the 1991-2020 normal doesn't change).
  */
-async function getMonthlyNormals(lat: number, lng: number): Promise<Record<number, number>> {
+async function getMonthlyNormals(lat: number, lng: number): Promise<MonthlyNormals> {
   const key = normalCacheKey(lat, lng);
   const cached = normalCache.get(key);
-  if (cached) return cached.months;
+  if (cached) return cached.normals;
 
   // Fetch 30 years of daily data (one API call — Archive API supports long ranges)
-  const data = await fetchDailyPrecipitation(lat, lng, '1991-01-01', '2020-12-31');
+  const data = await fetchDailyClimate(lat, lng, '1991-01-01', '2020-12-31');
 
-  // Aggregate by month
-  const monthlyTotals: Record<number, number[]> = {};
-  for (let m = 1; m <= 12; m++) monthlyTotals[m] = [];
+  // Track per-year monthly sums for both precipitation and ET₀
+  const yearlyPrecip: Record<string, number> = {};  // "2020-5" → sum
+  const yearlyEt0: Record<string, number> = {};
 
-  // Track per-year monthly sums for averaging
-  const yearlyMonthly: Record<string, number> = {};  // "2020-5" → sum
   for (const day of data) {
     const [year, month] = day.date.split('-').map(Number);
     const ymKey = `${year}-${month}`;
-    yearlyMonthly[ymKey] = (yearlyMonthly[ymKey] ?? 0) + day.precipitation;
+    yearlyPrecip[ymKey] = (yearlyPrecip[ymKey] ?? 0) + day.precipitation;
+    yearlyEt0[ymKey] = (yearlyEt0[ymKey] ?? 0) + day.et0;
   }
 
   // Sum each month per year, then average across 30 years
-  const monthSums: Record<number, number[]> = {};
-  for (let m = 1; m <= 12; m++) monthSums[m] = [];
+  const precipSums: Record<number, number[]> = {};
+  const et0Sums: Record<number, number[]> = {};
+  for (let m = 1; m <= 12; m++) {
+    precipSums[m] = [];
+    et0Sums[m] = [];
+  }
 
   for (let year = 1991; year <= 2020; year++) {
     for (let m = 1; m <= 12; m++) {
       const ymKey = `${year}-${m}`;
-      const sum = yearlyMonthly[ymKey] ?? 0;
-      monthSums[m].push(sum);
+      precipSums[m].push(yearlyPrecip[ymKey] ?? 0);
+      et0Sums[m].push(yearlyEt0[ymKey] ?? 0);
     }
   }
 
   // Average
-  const normals: Record<number, number> = {};
+  const normals: MonthlyNormals = {
+    precipitation: {},
+    et0: {},
+  };
   for (let m = 1; m <= 12; m++) {
-    const sums = monthSums[m];
-    normals[m] = sums.length > 0 ? sums.reduce((s, v) => s + v, 0) / sums.length : 0;
+    const pSums = precipSums[m];
+    normals.precipitation[m] = pSums.length > 0 ? pSums.reduce((s, v) => s + v, 0) / pSums.length : 0;
+    const eSums = et0Sums[m];
+    normals.et0[m] = eSums.length > 0 ? eSums.reduce((s, v) => s + v, 0) / eSums.length : 0;
   }
 
-  normalCache.set(key, { months: normals, fetchedAt: Date.now() });
+  normalCache.set(key, { normals, fetchedAt: Date.now() });
   return normals;
 }
 
@@ -199,44 +234,49 @@ async function getMonthlyNormals(lat: number, lng: number): Promise<Record<numbe
 // Current season rainfall (cached 1 hour)
 // ---------------------------------------------------------------------------
 
-const currentCache = new Map<string, { mm: number; fetchedAt: number }>();
+const currentCache = new Map<string, { mm: number; et0?: number; fetchedAt: number }>();
 const CURRENT_CACHE_TTL = 60 * 60 * 1000;  // 1 hour
 
 /**
  * Fetch the current season's total rainfall (completed months only).
  */
-async function getCurrentSeasonRainfall(
+/**
+ * Fetch the current season's total rainfall + ET₀ (completed months only).
+ * Returns both values in a single pass.
+ */
+async function getCurrentSeasonClimate(
   lat: number,
   lng: number,
   season: Season,
   now: Date = new Date(),
-): Promise<number> {
+): Promise<{ rainfall: number; et0: number }> {
   const seasonMonths = getSeasonMonths(season, now);
-  if (seasonMonths.length === 0) return 0;
+  if (seasonMonths.length === 0) return { rainfall: 0, et0: 0 };
 
   const cacheKey = `${lat.toFixed(2)},${lng.toFixed(2)},${seasonMonths.map(m => `${m.year}-${m.month}`).join(',')}`;
   const cached = currentCache.get(cacheKey);
   if (cached && Date.now() - cached.fetchedAt < CURRENT_CACHE_TTL) {
-    return cached.mm;
+    return { rainfall: cached.mm, et0: cached.et0 ?? 0 };
   }
 
-  // Fetch each completed month
-  let total = 0;
+  let rainfall = 0;
+  let et0 = 0;
   for (const { year, month } of seasonMonths) {
     const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
-    const endDay = new Date(year, month, 0).getDate();  // last day of month
+    const endDay = new Date(year, month, 0).getDate();
     const endDate = `${year}-${String(month).padStart(2, '0')}-${String(endDay).padStart(2, '0')}`;
 
     try {
-      const data = await fetchDailyPrecipitation(lat, lng, startDate, endDate);
-      total += data.reduce((s, d) => s + d.precipitation, 0);
+      const data = await fetchDailyClimate(lat, lng, startDate, endDate);
+      rainfall += data.reduce((s, d) => s + d.precipitation, 0);
+      et0 += data.reduce((s, d) => s + d.et0, 0);
     } catch {
       // Skip failed months — partial data is better than nothing
     }
   }
 
-  currentCache.set(cacheKey, { mm: total, fetchedAt: Date.now() });
-  return total;
+  currentCache.set(cacheKey, { mm: rainfall, et0, fetchedAt: Date.now() });
+  return { rainfall, et0 };
 }
 
 // ---------------------------------------------------------------------------
@@ -257,17 +297,19 @@ export async function computeRainfallAnomaly(
 
   try {
     const season = getCurrentSeason();
-    const [normals, currentMm] = await Promise.all([
+    const [normals, current] = await Promise.all([
       getMonthlyNormals(lat, lng),
-      getCurrentSeasonRainfall(lat, lng, season, now),
+      getCurrentSeasonClimate(lat, lng, season, now),
     ]);
 
     // Compute the normal for this season (sum of monthly normals for season months)
     const seasonMonths = getSeasonMonths(season, now);
-    const normalMm = seasonMonths.reduce((s, { month }) => s + (normals[month] ?? 0), 0);
+    const normalRainMm = seasonMonths.reduce((s, { month }) => s + (normals.precipitation[month] ?? 0), 0);
+    const normalEt0Mm = seasonMonths.reduce((s, { month }) => s + (normals.et0[month] ?? 0), 0);
 
-    const anomalyMm = currentMm - normalMm;
-    const percentOfNormal = normalMm > 0 ? Math.round((currentMm / normalMm) * 100) : 100;
+    const currentMm = current.rainfall;
+    const anomalyMm = currentMm - normalRainMm;
+    const percentOfNormal = normalRainMm > 0 ? Math.round((currentMm / normalRainMm) * 100) : 100;
     const isDrought = percentOfNormal < 80;
 
     let severity: RainfallAnomaly['severity'] = 'normal';
@@ -278,14 +320,20 @@ export async function computeRainfallAnomaly(
     const year = now.getFullYear();
     const seasonLabel = `${season.labelEn} ${year}`;
 
+    // Net water balance: rainfall - ET₀ (negative = crop water deficit)
+    const netBalanceMm = Math.round((currentMm - current.et0) * 10) / 10;
+
     return {
       currentSeasonMm: Math.round(currentMm * 10) / 10,
-      normalSeasonMm: Math.round(normalMm * 10) / 10,
+      normalSeasonMm: Math.round(normalRainMm * 10) / 10,
       anomalyMm: Math.round(anomalyMm * 10) / 10,
       percentOfNormal,
       seasonLabel,
       isDrought,
       severity,
+      currentEt0Mm: Math.round(current.et0 * 10) / 10,
+      normalEt0Mm: Math.round(normalEt0Mm * 10) / 10,
+      netBalanceMm,
     };
   } catch (e) {
     console.warn('[rainfall-anomaly] Failed:', e instanceof Error ? e.message : e);
@@ -329,20 +377,29 @@ export function anomalyBriefText(anomaly: RainfallAnomaly, language: Language): 
   const isArabic = language === 'ar';
   const isFrench = language === 'fr';
 
+  // Net water balance suffix (included when ET₀ data is available)
+  const balanceSuffix = anomaly.netBalanceMm != null
+    ? isArabic
+      ? ` · رصيد المياه: ${anomaly.netBalanceMm} ملم`
+      : isFrench
+        ? ` · Bilan hydrique: ${anomaly.netBalanceMm} mm`
+        : ` · Water balance: ${anomaly.netBalanceMm} mm`
+    : '';
+
   if (!anomaly.isDrought) {
     return isArabic
-      ? `🌧 أمطار هذا الموسم: ${anomaly.currentSeasonMm} ملم (${anomaly.percentOfNormal}% من المعدل الطبيعي)`
+      ? `🌧 أمطار هذا الموسم: ${anomaly.currentSeasonMm} ملم (${anomaly.percentOfNormal}% من المعدل)${balanceSuffix}`
       : isFrench
-        ? `🌧 Pluies saisonnières: ${anomaly.currentSeasonMm} mm (${anomaly.percentOfNormal}% de la normale)`
-        : `🌧 Seasonal rainfall: ${anomaly.currentSeasonMm} mm (${anomaly.percentOfNormal}% of normal)`;
+        ? `🌧 Pluies saisonnières: ${anomaly.currentSeasonMm} mm (${anomaly.percentOfNormal}% de la normale)${balanceSuffix}`
+        : `🌧 Seasonal rainfall: ${anomaly.currentSeasonMm} mm (${anomaly.percentOfNormal}% of normal)${balanceSuffix}`;
   }
 
   const deficit = anomaly.normalSeasonMm - anomaly.currentSeasonMm;
   return isArabic
-    ? `⚠️ عجز أمطار: ${anomaly.currentSeasonMm} ملم هذا الموسم (${anomaly.percentOfNormal}% من المعدل ${anomaly.normalSeasonMm} ملم). العجز: ${Math.round(deficit)} ملم. يوصى بزيادة الري.`
+    ? `⚠️ عجز أمطار: ${anomaly.currentSeasonMm} ملم (${anomaly.percentOfNormal}% من المعدل ${anomaly.normalSeasonMm} ملم). العجز: ${Math.round(deficit)} ملم. يوصى بزيادة الري.${balanceSuffix}`
     : isFrench
-      ? `⚠️ Déficit pluviométrique: ${anomaly.currentSeasonMm} mm cette saison (${anomaly.percentOfNormal}% de la normale ${anomaly.normalSeasonMm} mm). Manque: ${Math.round(deficit)} mm. Irrigation supplémentaire recommandée.`
-      : `⚠️ Rainfall deficit: ${anomaly.currentSeasonMm} mm this season (${anomaly.percentOfNormal}% of normal ${anomaly.normalSeasonMm} mm). Shortfall: ${Math.round(deficit)} mm. Extra irrigation recommended.`;
+      ? `⚠️ Déficit: ${anomaly.currentSeasonMm} mm (${anomaly.percentOfNormal}% de ${anomaly.normalSeasonMm} mm). Manque: ${Math.round(deficit)} mm. Irrigation ++.${balanceSuffix}`
+      : `⚠️ Rainfall deficit: ${anomaly.currentSeasonMm} mm (${anomaly.percentOfNormal}% of normal ${anomaly.normalSeasonMm} mm). Shortfall: ${Math.round(deficit)} mm. Irrigate more.${balanceSuffix}`;
 }
 
 // ---------------------------------------------------------------------------
